@@ -1,22 +1,25 @@
 ## Indexing
 - Indexing is a database optimization technique
 - Improves speed and efficiency of data retrieval
-- Covers: indexing concept, key vs. non-key column indexing, index scan vs. index-only scan, and combining database indexes
 
 ## Basics
+
 A. Purpose
   1. Speed up query execution
   2. Enforce unique constraints on columns
   3. Locate information quickly
+
 B. Types
   1. B-trees, bitmap indexes, and hash indexes
   2. Choice depends on data nature, query type, and DBMS used
 
 ##  Types of Indexes
+
 A. Clustered Index
   - Determines physical order of data
   - One per table
   - Faster data retrieval
+
 B. Non-clustered Index
   - Doesn't affect physical order of data
   - Multiple per table
@@ -95,25 +98,31 @@ After adding the index:
 - Table doesn't change, only index structure is added for faster querying
 
 ## Key vs. Non-Key Column Indexing
+
 A. Key Column Indexing
   1. Index on unique identifying columns
   2. Improves performance for filtering, sorting, or joining
+  
 B. Non-Key Column Indexing
   1. Index on non-unique columns
   2. Improves performance for filtering or sorting
 
 ## Index Scan vs. Index-Only Scan
+
 A. Index Scan
   1. Uses index to locate rows, reads data from table
   2. Improves query performance, may still read data from disk
+  
 B. Index-Only Scan
   1. Uses index to retrieve necessary data without accessing table
   2. Minimizes data read from disk, improves query performance
 
 ## Combining Database Indexes
+
 A. Composite Indexes
   1. Indexes with multiple columns
   2. Consider column order for performance
+
 B. Covering Indexes
   1. Index includes all columns required for a query
   2. Improves performance for specific queries, may consume more space and require more maintenance
