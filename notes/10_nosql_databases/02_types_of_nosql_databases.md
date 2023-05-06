@@ -1,5 +1,5 @@
 ## Types of NoSQL databases
-NoSQL databases are non-relational databases designed for handling various types of data
+NoSQL databases are non-relational databases designed for handling various types of data.
 
 ## Key-Value Stores
 - Stores data as key-value pairs
@@ -15,6 +15,13 @@ NoSQL databases are non-relational databases designed for handling various types
 - Riak
 - Amazon DynamoDB
 
+### Sample Data
+| Key        | Value       |
+|------------|-------------|
+| user123    | John Smith  |
+| user456    | Jane Doe    |
+| session789 | {"id":789, "user": "John Smith", "timestamp": "2023-05-06T12:34:56Z"} |
+
 ## Document Stores
 - Stores data as documents, usually in JSON or BSON format
 - Supports complex data structures and nested data
@@ -28,6 +35,18 @@ NoSQL databases are non-relational databases designed for handling various types
 - MongoDB
 - CouchDB
 - RavenDB
+
+### Sample Data
+{
+  "user123": {
+    "name": "John Smith",
+    "email": "john@example.com",
+    "orders": [
+      {"id": 1, "product": "Laptop", "price": 1200},
+      {"id": 2, "product": "Mouse", "price": 30}
+    ]
+  }
+}
 
 ## Column-Family Stores
 - Stores data as columns grouped into column families
@@ -43,6 +62,12 @@ NoSQL databases are non-relational databases designed for handling various types
 - HBase
 - ScyllaDB
 
+### Sample Data
+| Row Key | Column Family: UserInfo  | Column Family: UserOrders |
+|---------|--------------------------|---------------------------|
+| user123 | name: John, email: john@example.com | order1: Laptop, order2: Mouse |
+| user456 | name: Jane, email: jane@example.com | order1: Keyboard, order2: Monitor |
+
 ## Graph Databases
 - Stores data as nodes and edges in a graph
 - Optimized for querying and traversing relationships between data points
@@ -56,6 +81,16 @@ NoSQL databases are non-relational databases designed for handling various types
 - Neo4j
 - OrientDB
 - Amazon Neptune
+
+### Sample Data
+Nodes:
+- User: {id: 1, name: "John Smith"}
+- User: {id: 2, name: "Jane Doe"}
+- Product: {id: 101, name: "Laptop"}
+
+Edges:
+- (User:1)-[:FRIEND]->(User:2)
+- (User:1)-[:PURCHASED]->(Product:101)
 
 ## Best Practices
 - Understand the characteristics and use cases of each NoSQL database type
