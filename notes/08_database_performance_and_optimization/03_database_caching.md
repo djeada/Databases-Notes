@@ -1,5 +1,5 @@
 ## Database Caching
-- Temporary storage of query results or intermediate data to speed up subsequent query executions
+Temporary storage of query results or intermediate data to speed up subsequent query executions
 
 ### Purpose
 - Reduce the time required to access data
