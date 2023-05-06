@@ -7,10 +7,13 @@ Query optimization is essential for enhancing database performance and efficienc
 - The process of selecting the most efficient way to execute a SQL query
 - Purpose: minimize resource consumption and execution time, improve overall database performance and user experience
 
-### Types of Query Optimization
+## Types of Query Optimization
 
 1. **Heuristic Optimization**: Rule-based optimization using a set of predefined rules and guidelines
+   - Example: If a query filters data based on a specific column, heuristic optimization could suggest using an index on that column to speed up the query execution.
+
 2. **Cost-Based Optimization**: Uses cost estimates to compare and select the best query execution plan
+   - Example: When joining two tables, the cost-based optimizer calculates the cost of various join methods (e.g., nested loop join, hash join) and chooses the one with the lowest cost.
 
 ### Techniques for Query Optimization
 
