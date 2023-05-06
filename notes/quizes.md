@@ -245,6 +245,7 @@ A join in SQL is used to retrieve data from multiple tables by referencing colum
 DDL (Data Definition Language) commands deal with database schemas and data structure, e.g., CREATE TABLE or ALTER TABLE. DML (Data Manipulation Language) commands handle data manipulation, e.g., SELECT, INSERT. DCL (Data Control Language) commands manage rights and permissions on the database, e.g., GRANT, REVOKE.
 </details>
 
+<details>
 <summary>What are some common types of database management systems (DBMS), and how do they differ?</summary><br>
 Some common types of DBMS include relational (e.g., MySQL, PostgreSQL, SQL Server), NoSQL (e.g., MongoDB, Couchbase, Cassandra), and in-memory (e.g., Redis, Memcached). Relational DBMS use tables and SQL for data storage and manipulation, emphasizing data consistency and relationships. NoSQL DBMS offer more flexible data models and are designed for handling unstructured or semi-structured data, often providing horizontal scaling and high availability. In-memory DBMS store data in memory rather than on disk, offering extremely fast data access and manipulation but typically having limited data persistence capabilities.
 </details>
@@ -308,6 +309,7 @@ WHERE
 ```
 </details>
 
+<details>
 <summary>What is a deadlock in a database, and how can it be resolved?</summary><br>
 A deadlock occurs when two or more transactions are waiting for each other to release a resource, causing a circular dependency that prevents any of the transactions from proceeding. Deadlocks can be resolved by implementing timeouts, setting a lock hierarchy to prevent circular dependencies, using optimistic concurrency control, or using a deadlock detection algorithm to identify and break the deadlock by rolling back one of the transactions.
 </details>
