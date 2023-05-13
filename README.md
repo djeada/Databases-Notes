@@ -17,7 +17,6 @@ Sql interpreters online:
 * https://www.sql-practice.com/
 * http://sqlforever.com/
 * https://dbfiddle.uk/
-* https://www.w3schools.com/sql/trysql.asp?filename=trysql_select_al
 
 Sample Databases:
 
