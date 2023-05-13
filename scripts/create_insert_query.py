@@ -5,14 +5,14 @@ def create_insert_query(table_name, data):
     # Add each row of data
     for i, row in enumerate(data):
         # Convert each value to a string and escape quotes
-        row = [f"'{str(val).replace("'", "''")}'" for val in row]
-        
+        row = ["'{}'".format(str(val).replace("'", "''")) for val in row]
+
         # Join the values together, separated by commas
-        row_str = ', '.join(row)
-        
+        row_str = ", ".join(row)
+
         # Add the row to the query
         query += f"({row_str})"
-        
+
         # If this is not the last row, add a comma and a space
         if i < len(data) - 1:
             query += ", "
@@ -21,11 +21,12 @@ def create_insert_query(table_name, data):
     query += ";"
 
     return query
-  
-if __name__ == "__main__": 
-  data = [
-      ['John', 'Doe', 'john.doe@example.com'],
-      ['Jane', 'Doe', 'jane.doe@example.com']
-  ]
 
-  print(create_insert_query('users', data))
+
+if __name__ == "__main__":
+    data = [
+        ["John", "Doe", "john.doe@example.com"],
+        ["Jane", "Doe", "jane.doe@example.com"],
+    ]
+
+    print(create_insert_query("users", data))
