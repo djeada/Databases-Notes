@@ -1,51 +1,60 @@
-## Shared and exclusive locks
-- Shared and exclusive locks are locking mechanisms in databases
-- Used to manage concurrent access to resources and maintain data integrity
+## Shared and Exclusive Locks in Database Systems
 
-## Shared Locks
-- A lock that allows multiple transactions to read a resource concurrently
+Shared and exclusive locks are mechanisms used in database systems to manage concurrent access to resources, maintaining data consistency and integrity.
 
-### Purpose
-- Prevent modifications to a resource while it's being read by other transactions
-- Ensure consistent reads for multiple transactions
+```
+Shared Locks
+------------
+Transaction A  |--> Read Resource X -- Shared Lock (S) -->|
+Transaction B  |--> Read Resource X -- Shared Lock (S) -->|
 
-### Characteristics
-- Multiple shared locks can be held on a resource simultaneously
-- Conflicts with exclusive locks
+Exclusive Lock
+--------------
+Transaction C  |--> Modify Resource Y -- Exclusive Lock (X) --> No other transactions can modify Y
+Transaction D  | Blocked trying to get Exclusive Lock (X) on Resource Y
+```
 
-## Exclusive Locks
-- A lock that allows only one transaction to access a resource for modification
+- Transaction A and Transaction B both are able to read Resource X simultaneously as they hold a shared lock (S). The shared locks allow multiple transactions to read the same resource concurrently.
+- Transaction C has an exclusive lock (X) on Resource Y as it is modifying it. During this period, no other transaction can read or modify Resource Y. As depicted, Transaction D is blocked while trying to get an exclusive lock (X) on Resource Y, demonstrating how exclusive locks limit access to a resource to a single transaction.
 
-### Purpose
-- Ensure data integrity by preventing concurrent modifications to a resource
-- Prevent other transactions from reading or modifying a resource during an update
-
-### Characteristics
-- Only one exclusive lock can be held on a resource at a time
-- Conflicts with both shared locks and other exclusive locks
-
-## Differences Between Shared and Exclusive Locks
-
-### Access Mode
-- Shared locks allow concurrent reads, while exclusive locks allow exclusive access for modifications
-
-### Conflicts
-- Shared locks do not conflict with other shared locks, but conflict with exclusive locks
-- Exclusive locks conflict with both shared locks and other exclusive locks
-
-### Impact on Concurrency
-- Shared locks promote higher concurrency for read operations
-- Exclusive locks limit concurrency for modification operations to ensure data integrity
-
-## Use Cases
 
 ### Shared Locks
-- Read-heavy workloads with frequent concurrent reads
-- Situations where data consistency is a priority during concurrent reads
+
+Shared locks (also known as 'read locks') allow multiple transactions to read (but not modify) the same resource concurrently.
+
+**Characteristics of Shared Locks:**
+- Allow concurrent reads: Multiple transactions can hold shared locks on the same resource simultaneously.
+- Prevent modifications: Shared locks restrict any modification on the locked resource.
+- Conflict with exclusive locks: A shared lock cannot be placed on a resource if an exclusive lock on the resource exists.
+
+**Use Cases for Shared Locks:**
+- Applicable in read-heavy workloads where data consistency during concurrent reads is a priority.
 
 ### Exclusive Locks
-- Update or delete operations where data integrity must be maintained
-- Situations requiring exclusive access to a resource for modification
+
+Exclusive locks (also known as 'write locks') ensure a single transaction has exclusive access to a resource for modification, preventing all other transactions from accessing the resource during the lock period.
+
+**Characteristics of Exclusive Locks:**
+- Allow a single transaction access for modification: Only one exclusive lock can be held on a resource at any given time.
+- Conflict with both shared and exclusive locks: An exclusive lock cannot be placed on a resource if any shared lock or another exclusive lock exists on the resource.
+
+**Use Cases for Exclusive Locks:**
+- Crucial for update or delete operations to ensure data integrity.
+- Required when exclusive access to a resource for modification is necessary.
+
+### Comparing Shared and Exclusive Locks
+
+**Access Mode:**
+- Shared locks support concurrency for read operations.
+- Exclusive locks allow only one transaction for modification, thus limiting concurrency.
+
+**Conflicts:**
+- Shared locks can coexist with other shared locks but not with exclusive locks.
+- Exclusive locks conflict with both shared and other exclusive locks.
+
+**Concurrency Impact:**
+- Shared locks allow higher concurrency levels for read operations.
+- Exclusive locks restrict concurrency for modification operations to ensure data integrity.
 
 ## Best Practices
 - Understand the differences between shared and exclusive locks and their impact on concurrency and data integrity
