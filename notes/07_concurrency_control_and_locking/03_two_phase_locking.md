@@ -9,6 +9,18 @@ Two-phase locking is a protocol that dictates how transactions acquire and relea
 - Ensure serializability and consistency in concurrent transactions.
 - Prevent conflicts and maintain isolation between transactions.
 
+```
+Growing Phase       Shrinking Phase
+  |                     |
+  v                     v
+Lock A --> Lock B --> Unlock A --> Unlock B
+  ^                     ^
+  |                     |
+Start Transaction     Commit/Rollback Transaction
+```
+
+In this diagram, a transaction acquires Lock A and Lock B during the growing phase. Once all locks are acquired and the transaction is ready to commit or rollback, it enters the shrinking phase where it releases Lock A and Lock B.
+
 ### Phases of Two-Phase Locking
 
 The operation of 2PL is divided into two distinct phases:
