@@ -2,28 +2,6 @@
 
 Two-phase locking (2PL) is a concurrency control method used in databases to ensure serializability and consistency in transactions.
 
-A deadlock can occur when two transactions (T1 and T2) each hold a lock that the other transaction wants. In this situation, both transactions are waiting for the other to release their lock, leading to a deadlock because neither can proceed.
-
-```
-  T1      T2
-  |       |
-  v       v
-Lock A  Lock B
-  ^       ^
-  |       |
-  |-------|----> Requests Lock B
-  |       |
-  |<------|---- Requests Lock A
-  |       |
-```
-
-In the diagram above:
-
-- T1 holds Lock A and requests Lock B, which is held by T2.
-- T2 holds Lock B and requests Lock A, which is held by T1.
-
-Since neither transaction can proceed until the other releases its lock, a deadlock occurs.
-
 ### Concepts of Two-Phase Locking
 
 Two-phase locking is a protocol that dictates how transactions acquire and release locks on resources, with the goals to:
