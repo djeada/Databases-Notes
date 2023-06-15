@@ -3,27 +3,27 @@ Multi-Master replication is a database replication model where multiple database
 
 ## Purpose of Multi-Master Replication
 
-1. **Improved Write Performance**: In a Multi-Master replication setup, write operations are distributed across multiple masters, leading to an improved write performance.
+1. Improved Write Performance: In a Multi-Master replication setup, write operations are distributed across multiple masters, leading to an improved write performance.
 
-2. **Enhanced High Availability and Fault Tolerance**: If one master fails, operations can continue on the other masters, enhancing the system's high availability.
+2. Enhanced High Availability and Fault Tolerance: If one master fails, operations can continue on the other masters, enhancing the system's high availability.
 
-3. **Load Balancing**: Multi-Master replication facilitates load balancing of both read and write operations across multiple databases.
+3. Load Balancing: Multi-Master replication facilitates load balancing of both read and write operations across multiple databases.
 
 ## Advantages of Multi-Master Replication
 
-1. **Increased Write Scalability**: Compared to single-master setups, Multi-Master replication offers increased scalability for write operations, as these operations are distributed across multiple masters.
+1. Increased Write Scalability: Compared to single-master setups, Multi-Master replication offers increased scalability for write operations, as these operations are distributed across multiple masters.
 
-2. **Improved Fault Tolerance**: The presence of multiple writable masters leads to improved fault tolerance, as operations can continue even if one master fails.
+2. Improved Fault Tolerance: The presence of multiple writable masters leads to improved fault tolerance, as operations can continue even if one master fails.
 
-3. **Reduced Write Latency**: In geographically distributed setups, write operations can be performed on the nearest master, thereby reducing latency.
+3. Reduced Write Latency: In geographically distributed setups, write operations can be performed on the nearest master, thereby reducing latency.
 
 ## Challenges of Multi-Master Replication
 
-1. **Conflict Resolution**: In a Multi-Master setup, when multiple masters receive conflicting updates, it is essential to have a mechanism in place to resolve conflicts and ensure data consistency.
+1. Conflict Resolution: In a Multi-Master setup, when multiple masters receive conflicting updates, it is essential to have a mechanism in place to resolve conflicts and ensure data consistency.
 
-2. **Increased Complexity**: Implementing and managing Multi-Master replication is more complex compared to single-master replication, as it involves more components and requires careful configuration.
+2. Increased Complexity: Implementing and managing Multi-Master replication is more complex compared to single-master replication, as it involves more components and requires careful configuration.
 
-3. **Potential for Reduced Consistency**: Depending on the conflict resolution strategy implemented, consistency across masters might be affected.
+3. Potential for Reduced Consistency: Depending on the conflict resolution strategy implemented, consistency across masters might be affected.
 
 ## Example: Multi-Master Replication with MySQL and Galera Cluster
 
@@ -31,7 +31,7 @@ Galera Cluster is a synchronous Multi-Master replication solution designed for M
 
 ### Setup and Configuration
 
-1. **Installation**: Install MySQL and Galera Cluster on each master node. Depending on the Linux distribution, the commands may vary:
+1. Installation: Install MySQL and Galera Cluster on each master node. Depending on the Linux distribution, the commands may vary:
 
 ```bash
 # For Ubuntu/Debian:
@@ -41,7 +41,7 @@ sudo apt-get install mysql-server galera-3
 sudo yum install mysql-server galera
 ```
 
-2. **Database Configuration**: Configure MySQL on each of these master nodes. The MySQL configuration file is usually located at /etc/my.cnf or /etc/mysql/my.cnf. Update the following lines to configure Galera:
+2. Database Configuration: Configure MySQL on each of these master nodes. The MySQL configuration file is usually located at /etc/my.cnf or /etc/mysql/my.cnf. Update the following lines to configure Galera:
 
 ```bash
 [mysqld]
@@ -68,7 +68,7 @@ wsrep_node_name="this_node_name"
 
 Replace first_ip,second_ip,third_ip with the IPs of your nodes. Update this_node_ip and this_node_name with the IP and name of the current node.
 
-3. **Cluster Initialization**: Start the Galera Cluster by bootstrapping the first node:
+3. Cluster Initialization: Start the Galera Cluster by bootstrapping the first node:
 
 ```bash
 /etc/init.d/mysql bootstrap
