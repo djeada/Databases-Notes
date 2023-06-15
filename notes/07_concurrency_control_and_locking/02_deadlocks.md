@@ -2,6 +2,26 @@
 - Deadlocks are a critical issue in database systems
 - Occur when two or more transactions are waiting for each other to release locks on resources
 
+```
+  T1      T2
+  |       |
+  v       v
+Lock A  Lock B
+  ^       ^
+  |       |
+  |-------|----> Requests Lock B
+  |       |
+  |<------|---- Requests Lock A
+  |       |
+```
+
+In the diagram above:
+
+- T1 holds Lock A and requests Lock B, which is held by T2.
+- T2 holds Lock B and requests Lock A, which is held by T1.
+
+Since neither transaction can proceed until the other releases its lock, a deadlock occurs.
+
 ## Deadlock Concepts
 - A situation where two or more transactions are waiting indefinitely for each other to release locks on resources
 
