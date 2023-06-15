@@ -2,6 +2,11 @@
 - Deadlocks are a critical issue in database systems
 - Occur when two or more transactions are waiting for each other to release locks on resources
 
+## Deadlock Concepts
+- A situation where two or more transactions are waiting indefinitely for each other to release locks on resources
+- Circular waiting: each transaction is waiting for another transaction in a circular chain
+- No progress: none of the transactions in the deadlock can proceed or complete
+
 ```
   T1      T2
   |       |
@@ -22,23 +27,11 @@ In the diagram above:
 
 Since neither transaction can proceed until the other releases its lock, a deadlock occurs.
 
-## Deadlock Concepts
-- A situation where two or more transactions are waiting indefinitely for each other to release locks on resources
-
-### Characteristics
-- Circular waiting: each transaction is waiting for another transaction in a circular chain
-- No progress: none of the transactions in the deadlock can proceed or complete
-
 ## Causes of Deadlocks
 
-### Locking dependencies
-Transactions lock resources in different orders, causing circular dependencies
-
-###  Nested transactions
-Transactions with multiple levels of nesting can create complex locking scenarios
-
-### Long-held locks
-Holding locks for extended periods of time increases the chances of deadlocks
+- Transactions lock resources in different orders, causing circular dependencies
+- Transactions with multiple levels of nesting can create complex locking scenarios
+- Holding locks for extended periods of time increases the chances of deadlocks
 
 ## Deadlock Detection
 
@@ -51,24 +44,15 @@ Holding locks for extended periods of time increases the chances of deadlocks
 
 ## Deadlock Prevention
 
-### Lock ordering
-Enforce a consistent order for acquiring locks on resources
-
-### Timeout strategies
-Implement timeouts for lock requests to prevent indefinite waiting
-
-### Granularity control
-Use lock escalation or partitioning to reduce the chance of deadlocks
+- Enforce a consistent order for acquiring locks on resources
+- Implement timeouts for lock requests to prevent indefinite waiting
+- Use lock escalation or partitioning to reduce the chance of deadlocks
 
 ## Deadlock Resolution
-### Victim selection
-Choose a transaction involved in the deadlock to terminate or roll back
 
-### Wait-die and wound-wait schemes
-Use priority-based schemes to determine which transaction should wait or be terminated
-
-### Manual intervention
-Identify deadlocks through monitoring tools and manually resolve them
+- Choose a transaction involved in the deadlock to terminate or roll back
+- Use priority-based schemes to determine which transaction should wait or be terminated
+- Identify deadlocks through monitoring tools and manually resolve them
 
 ## Best Practices
 - Understand deadlock concepts and their impact on database performance and reliability
