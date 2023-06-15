@@ -26,10 +26,10 @@ Master-Standby replication is a common replication topology where a primary (mas
 
 1. Edit the `postgresql.conf` file on the master instance:
 
-```
+```shell
 wal_level = replica
 archive_mode = on
-archive_command = 'cp %p /path/to/archive/%f'
+archive_command = 'scp %p user@standby:/path/to/archive/%f'
 max_wal_senders = 3
 ```
 
@@ -65,7 +65,7 @@ hot_standby = on
 ```
 standby_mode = 'on'
 primary_conninfo = 'host=<master_ip> port=5432 user=<standby_user>'
-restore_command = 'cp /path/to/archive/%f %p'
+restore_command = 'scp user@master:/path/to/archive/%f %p'
 trigger_file = '/path/to/trigger_file'
 ```
 
