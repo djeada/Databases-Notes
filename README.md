@@ -161,3 +161,5 @@ These online SQL interpreters allow you to test SQL queries without the need for
 * https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql/194408#194408
 * http://coding-geek.com/how-databases-work/
 * https://algodaily.com/lessons/databases-and-sql-cheat-sheet-for-interviews
+* Check this link out if you have a trouble understanding JOINS: https://joins.spathon.com/
+  
