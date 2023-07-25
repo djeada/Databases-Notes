@@ -1,5 +1,5 @@
 ## Eventual consistency 
-Eventual consistency is a consistency model used in distributed databases, where updates to the data may not be immediately visible to all nodes in the system, but will eventually propagate to all nodes and become consistent. This note focuses on the concept of eventual consistency, its advantages and trade-offs, and its implications for distributed database systems.
+Eventual consistency is a consistency model used in distributed databases, where updates to the data may not be immediately visible to all nodes in the system, but will eventually propagate to all nodes and become consistent. 
 
 ## Characteristics
 
@@ -10,6 +10,32 @@ Eventual consistency is a consistency model used in distributed databases, where
 ### Update Propagation
 1. Updates to the data will eventually propagate to all nodes, ensuring that the system becomes consistent over time.
 2. The time it takes for updates to propagate depends on factors such as network latency, replication mechanisms, and system load.
+
+```
+Initial State:
+
+NA: D1 D1 D1 D1 D1
+NB: D1 D1 D1 D1 D1
+NC: D1 D1 D1 D1 D1
+
+After updates on N1:
+
+NA: D2 D2 D2 D2 D2
+NB: D1 D1 D1 D1 D1
+NC: D1 D1 D1 D1 D1
+
+After some time (Eventual Consistency):
+
+NA: D2 D2 D2 D2 D2
+NB: D1 D2 D1 D2 D1
+NC: D1 D1 D2 D1 D2
+
+After more time (Eventual Consistency):
+
+NA: D2 D2 D2 D2 D2
+NB: D2 D2 D2 D2 D2
+NC: D2 D2 D2 D2 D2
+```
 
 ## Advantages
 
