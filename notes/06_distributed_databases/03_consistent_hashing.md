@@ -41,18 +41,13 @@ Now, we would assign each data entry to the closest node in the clockwise direct
 
 ## Mechanism
 
-### Data and Node Mapping
-
-1. Determine node and data item positions on the hash ring by applying the hash function.
-
-### Data Allocation
-
-1. Each data item is assigned to the first node encountered in the clockwise direction on the hash ring.
-
-### Node Changes
-
-1. On adding a node, it takes over some data items from its neighboring nodes.
-2. On removing a node, its data items are reassigned to the remaining neighboring nodes.
+1. Data and Node Mapping
+  - Determine node and data item positions on the hash ring by applying the hash function.
+2. Data Allocation
+  - Each data item is assigned to the first node encountered in the clockwise direction on the hash ring.
+3. Node Changes
+  - On adding a node, it takes over some data items from its neighboring nodes.
+  - On removing a node, its data items are reassigned to the remaining neighboring nodes.
 
 ## Use Cases
 
