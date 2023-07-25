@@ -85,7 +85,7 @@ These online SQL interpreters allow you to test SQL queries without the need for
 
 | Topic                     | Notes                                                                                                     |
 | -------------------------- | --------------------------------------------------------------------------------------------------------- |
-| Partitioning Types         | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_partitioning_types.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a>
+| Partitioning Types         | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_types_of_partitioning.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a>
 | Working with Billion-Row Table | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_working_with_billion_row_table.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a>
 | Consistent Hashing         | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/03_consistent_hashing.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a>
 | Sharding                   | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/04_sharding.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a>
