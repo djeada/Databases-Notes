@@ -1,36 +1,42 @@
-## Distributed database systems
-Distributed database systems store and manage data across multiple nodes, often in geographically diverse locations, to provide high availability, fault tolerance, and scalability. This note focuses on the concept of distributed database systems and notable implementations, such as Google Spanner, Amazon DynamoDB, and Apache Cassandra.
+## Distributed Database Systems
 
-## Characteristics
+Distributed database systems distribute and manage data across multiple nodes, often located in geographically diverse areas. These systems prioritize high availability, fault tolerance, and scalability.
 
-### Data Distribution
-Data is distributed across multiple nodes, often in different locations or data centers, to ensure availability and fault tolerance.
+```
+                           +----------------------+
+                           |  Distributed Database |
+                           +----------------------+
+                                     |
+                  +------------------+------------------+
+                  |                  |                  |
+          +-------v------+    +------v-------+    +----v------+
+          |   Node 1     |    |   Node 2     |    |  Node 3   |
+          | (Location A) |    | (Location B) |    |(Location C)|
+          +-------^------+    +------^-------+    +----^------+
+                  |                  |                  |
+      +-----------+          +-------+         +-------+
+      |                      |                 |
++-----v-----+          +-----v-----+    +-----v-----+
+|  Data 1   |          |  Data 2   |    |  Data 3   |
++-----------+          +-----------+    +-----------+
+```
 
-### Scalability
-Distributed database systems are designed to scale horizontally, allowing for the addition of new nodes to handle increased load and data storage requirements.
+In this diagram, a distributed database is split across three nodes, each located in a different location (A, B, and C). Each node stores a different subset of the data (Data 1, Data 2, Data 3), but the entire collection of data can be accessed and managed through the distributed database system as a whole. The arrows indicate communication and data replication between nodes to ensure consistency and availability.
 
-### Consistency Models
-Distributed databases typically use various consistency models, such as eventual consistency or strong consistency, to balance the trade-offs between data consistency, availability, and performance.
+## Characteristics of Distributed Database Systems
 
-### Replication and Partitioning
-Data replication and partitioning strategies are employed to distribute and manage data across multiple nodes, ensuring fault tolerance and load balancing.
+- **Data Distribution**: The data in these systems is distributed across multiple nodes, which may be in different locations or data centers. This design provides high availability and fault tolerance.
 
-## Notable Implementations
+- **Scalability**: These systems are created to scale out horizontally. New nodes can be added to accommodate increased load and data storage needs.
 
-### Google Spanner
+- **Consistency Models**: Distributed databases typically employ a range of consistency models, such as eventual consistency or strong consistency. This variety helps balance the trade-offs between data consistency, availability, and performance.
 
-1. Google Spanner is a globally distributed, strongly consistent database service that combines the benefits of relational databases with the scalability and availability of NoSQL systems.
-2. It uses the TrueTime API, a globally synchronized clock, to ensure external consistency and provide strong consistency guarantees across distributed nodes.
-3. Spanner is well-suited for large-scale applications requiring strong consistency and high availability, such as financial systems or inventory management applications.
+- **Replication and Partitioning**: Distributed database systems use data replication and partitioning strategies to distribute and manage data across multiple nodes. These strategies ensure fault tolerance and load balancing.
 
-### Amazon DynamoDB
+## Notable Implementations of Distributed Database Systems
 
-1. Amazon DynamoDB is a managed NoSQL database service that provides fast and predictable performance with seamless scalability.
-2. It supports both key-value and document data models and offers eventual consistency or strong consistency options for read operations.
-3. DynamoDB is designed for applications with high write and read throughput requirements, such as gaming, IoT, and ad tech.
+- **Google Spanner**: This is a globally-distributed, strongly consistent database service. It combines the benefits of relational databases with the scalability and availability typical of NoSQL systems. Google Spanner utilizes the TrueTime API, a globally synchronized clock, to ensure external consistency and strong consistency guarantees across distributed nodes. This system is well-suited for large-scale applications that require strong consistency and high availability, such as financial systems or inventory management applications.
 
-### Apache Cassandra
+- **Amazon DynamoDB**: DynamoDB is a managed NoSQL database service that provides fast and predictable performance with seamless scalability. It supports both key-value and document data models and offers the option of eventual consistency or strong consistency for read operations. Amazon DynamoDB is designed for applications that need high write and read throughput requirements, like gaming, IoT, and ad tech.
 
-1. Apache Cassandra is an open-source, highly scalable, and distributed NoSQL database that provides high availability and fault tolerance.
-2. It uses a partitioned row store with tunable consistency and supports a wide range of consistency levels, from eventual consistency to linearizability.
-3. Cassandra is ideal for applications that require high write throughput and the ability to scale across multiple data centers, such as time-series data storage, messaging systems, or recommendation engines.
+- **Apache Cassandra**: Cassandra is an open-source, highly scalable, and distributed NoSQL database. It provides high availability and fault tolerance. Cassandra uses a partitioned row store with tunable consistency and supports a wide range of consistency levels, from eventual consistency to linearizability. This system is ideal for applications that require high write throughput and the ability to scale across multiple data centers, such as time-series data storage, messaging systems, or recommendation engines.
