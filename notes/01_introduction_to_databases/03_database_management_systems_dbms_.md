@@ -1,45 +1,46 @@
 ## Database Management Systems (DBMS)
 
-Database Management Systems (DBMS) as the name suggests manage the databases, additionally they store, and manipulate data. Understanding the various types of DBMS is essential for backend engineers to make informed decisions when designing and implementing data management solutions.
+Database Management Systems (DBMS) manage, store, and manipulate data in databases. Understanding the various types of DBMS helps backend engineers make informed decisions when designing and implementing data management solutions.
 
 ## Types of Database Management Systems (DBMS)
 
-### A. Relational Database Management System (RDBMS)
+### Relational Database Management System (RDBMS)
 
-- **Overview:** RDBMS is grounded in the relational model and utilizes SQL as its main query language.
-- **Examples:** MySQL, PostgreSQL, Oracle, and SQL Server.
-- **Characteristics:** Tables, columns, rows, keys, ACID properties, schema, and robust consistency.
+- **Overview:** Based on the relational model, RDBMS uses SQL as its primary query language.
+- **Examples:** MySQL, PostgreSQL, Oracle, SQL Server.
+- **Characteristics:** Structured in tables, columns, and rows with relationships defined by keys; ensures ACID (Atomicity, Consistency, Isolation, Durability) properties; uses a predefined schema; robust consistency guarantees.
 
-### B. Object-Oriented Database Management System (OODBMS)
+### Object-Oriented Database Management System (OODBMS)
 
-- **Overview:** OODBMS fuses database and object-oriented programming concepts, permitting data storage as objects.
-- **Examples:** ObjectDB, db4o, and Versant Object Database.
-- **Characteristics:** Object persistence, inheritance, encapsulation, and polymorphism.
+- **Overview:** OODBMS combines database and object-oriented programming concepts, allowing data storage as objects.
+- **Examples:** ObjectDB, db4o, Versant Object Database.
+- **Characteristics:** Supports object persistence, inheritance, encapsulation, and polymorphism.
 
-### C. Hierarchical Database Management System (HDBMS)
+### Hierarchical Database Management System (HDBMS)
 
-- **Overview:** HDBMS arranges data in a tree-like structure, where a single parent record can have multiple child records.
-- **Examples:** IBM's Information Management System (IMS) and Windows Registry.
-- **Characteristics:** Parent-child relationships, top-down organization, and tailored for hierarchical data.
+- **Overview:** HDBMS organizes data in a tree-like structure, where each parent record can have multiple child records.
+- **Examples:** IBM's Information Management System (IMS), Windows Registry.
+- **Characteristics:** Organizes data in parent-child relationships, top-down organization, well-suited for hierarchical data.
 
-### D. Network Database Management System (NDBMS)
+### Network Database Management System (NDBMS)
 
-- **Overview:** NDBMS organizes data using a flexible, network-like structure, enabling multiple relationships between records.
-- **Examples:** Integrated Data Store (IDS) and Raima Database Manager (RDM).
-- **Characteristics:** Multiple parent-child relationships, navigational query model, and intricate data relationships.
+- **Overview:** NDBMS organizes data using a flexible, network-like structure, allowing multiple relationships between records.
+- **Examples:** Integrated Data Store (IDS), Raima Database Manager (RDM).
+- **Characteristics:** Supports multiple parent-child relationships, uses a navigational query model, handles complex data relationships.
 
-### E. NoSQL Database Management System
+### NoSQL Database Management System
 
-- **Overview:** NoSQL DBMS is engineered to handle unstructured data, scale horizontally, and ensure high availability.
+- **Overview:** NoSQL DBMS is designed to handle unstructured data, scale horizontally, and maintain high availability.
 - **Subcategories:** Document-based, column-based, key-value, and graph-based DBMS.
-- **Characteristics:** Depend on the specific NoSQL type.
+- **Examples:** MongoDB (Document-based), Cassandra (Column-based), Redis (Key-value), Neo4j (Graph-based).
+- **Characteristics:** Characteristics can vary greatly depending on the specific type of NoSQL database.
 
 ## Factors to Consider when Selecting a DBMS
 
-- **Data Model:** Comprehend the data structure and relationships required by the application.
-- **Scalability:** Examine the capacity to scale horizontally or vertically based on application expansion.
-- **Performance:** Gauge the performance requirements, including read and write operations, latency, and throughput.
-- **Consistency:** Ascertain the level of data consistency needed, such as immediate consistency or eventual consistency.
-- **Availability:** Contemplate the high availability requirements and tolerance for system downtime.
-- **Security:** Investigate the security features, including access control, encryption, and auditing capabilities.
-- **Licensing and Cost:** Weigh the licensing models and expenses associated with the DBMS.
+- **Data Model:** Understand the data structure and relationships required by the application.
+- **Scalability:** Consider the system's ability to scale horizontally (across multiple nodes) or vertically (increasing resources of a single node) based on application growth.
+- **Performance:** Consider the performance requirements, including the speed of read and write operations, latency, and throughput.
+- **Consistency:** Determine the level of data consistency needed—immediate (strong) consistency or eventual consistency.
+- **Availability:** Consider the system's high availability requirements and tolerance for downtime.
+- **Security:** Evaluate the system's security features, including access control, data encryption, and auditing capabilities.
+- **Licensing and Cost:** Consider the licensing models and costs associated with the DBMS.
