@@ -1,28 +1,27 @@
-## Primary keys and secondary keys 
+## Primary keys and Secondary keys 
 
-Primary keys and secondary keys are two types of keys used in relational databases to uniquely identify records and establish relationships between tables. This note focuses on the differences, characteristics, and use cases of primary keys and secondary keys.
+Primary and secondary keys are essential components of relational databases used to establish data integrity, uniquely identify records, and set up relationships among tables. 
 
 ## Characteristics
 
-A. Primary Key
+### Primary Key
 
-1. A primary key is a column or a set of columns that uniquely identify each row in a table.
-2. Primary keys enforce uniqueness constraints and ensure that there are no duplicate records in the table.
-3. A table can have only one primary key.
-4. Primary keys cannot contain NULL values.
-5. Primary keys are often used as a reference in foreign key relationships between tables.
+1. A primary key is a column or a set of columns that serve as a unique identifier for rows within a table.
+2. Uniqueness constraints enforced by primary keys prevent the occurrence of duplicate rows in the table.
+3. Only one primary key is permitted per table, ensuring a unique point of reference.
+4. Primary keys cannot contain NULL values, guaranteeing a definite value for each row's key.
+5. Often, primary keys are utilized in defining foreign key relationships between tables, thereby preserving the relational aspect of databases.
 
-B. Secondary Key
+### Secondary Key
 
-1. A secondary key is a column or a set of columns that can uniquely identify rows in a table but is not the primary key.
-2. Secondary keys are also known as alternative keys or unique keys.
-3. A table can have multiple secondary keys.
-4. Secondary keys also enforce uniqueness constraints but can contain NULL values (unless specified as unique).
-5. Secondary keys are often used for indexing and querying purposes to improve performance.
+1. A secondary key, also referred to as an alternate key or a unique key, is a column or a set of columns that can uniquely identify records within a table but is not selected as the primary key.
+2. Like primary keys, secondary keys enforce uniqueness constraints but they can contain NULL values, given they are not explicitly specified as unique.
+3. Unlike primary keys, a table can be designed to have multiple secondary keys.
+4. Secondary keys are used primarily for querying and indexing purposes to enhance performance and data accessibility.
 
 ## Examples
 
-I. Users Table
+### Users Table
 
 | user_id | first_name | last_name | email                 | phone_number   |
 |---------|------------|-----------|-----------------------|----------------|
@@ -31,11 +30,11 @@ I. Users Table
 | 3       | Carol      | Williams  | carol.w@email.com     | (555) 555-5555 |
 
 Primary Key: user_id
-Secondary Key: email
+Secondary Key: email, phone_number
 
-In the Users table, the 'user_id' column is the primary key, uniquely identifying each user. The 'email' column is a secondary key, enforcing uniqueness for each email address.
+In the Users table, 'user_id' is a primary key and 'email' and 'phone_number' are secondary keys. While 'user_id' uniquely identifies each user, 'email' and 'phone_number' provide additional unique points of data access.
 
-II. Orders Table
+### Orders Table
 
 | order_id | user_id | product_id | order_date | order_status |
 |----------|---------|------------|------------|--------------|
@@ -46,9 +45,9 @@ II. Orders Table
 Primary Key: order_id
 Foreign Key: user_id (references Users table)
 
-In the Orders table, the 'order_id' column is the primary key, uniquely identifying each order. The 'user_id' column is a foreign key that references the primary key in the Users table, establishing a relationship between the two tables.
+The Orders table uses 'order_id' as the primary key to uniquely identify each order. The 'user_id' is a foreign key that references the 'user_id' primary key from the Users table, thereby establishing a relationship between the two tables.
 
-III. Products Table
+### Products Table
 
 | product_id | product_name  | category  | price | stock | sku          |
 |------------|---------------|-----------|-------|-------|--------------|
@@ -59,18 +58,18 @@ III. Products Table
 Primary Key: product_id
 Secondary Key: sku
 
-In the Products table, the 'product_id' column is the primary key, uniquely identifying each product. The 'sku' column is a secondary key, enforcing uniqueness for each SKU (Stock Keeping Unit).
+In the Products table, the 'product_id' column serves as the primary key. The 'sku' column, while also unique, serves as a secondary key, providing an additional axis of data identification.
 
 ## Use Cases
 
-A. Primary Key
+### Primary Key
 
-1. Primary keys are used to uniquely identify records in a table and prevent duplicate data.
-2. They are used to establish relationships between tables through foreign key constraints, ensuring referential integrity.
-3. Primary keys can be used as indexes to speed up lookups and join operations.
+1. Primary keys are the cornerstone of data integrity, uniquely identifying records within a table and precluding the possibility of duplicate data.
+2. Primary keys form the basis of foreign key relationships, maintaining referential integrity across tables.
+3. Primary keys often serve as indexes to enhance data retrieval speed, supporting faster lookup and join operations.
 
-B. Secondary Key
+### Secondary Key
 
-1. Secondary keys are used to enforce uniqueness constraints on columns other than the primary key.
-2. They can be used as indexes to improve query performance when searching for data based on unique attributes other than the primary key.
-3. Secondary keys can help to enforce business rules or requirements, such as ensuring unique email addresses for users in a table.
+1. Secondary keys provide an additional avenue for enforcing uniqueness constraints outside the primary key.
+2. By serving as indexes, secondary keys expedite queries involving attributes that, while not primary, are still unique.
+3. Secondary keys allow for more granular data rules, such as requiring unique email addresses or usernames, thereby ensuring that business rules are respected at the database level.
