@@ -2,9 +2,7 @@
 
 Working with large tables containing billions of rows can pose challenges in terms of performance, scalability, and maintenance. This guide covers general strategies and techniques for handling billion-row tables in both single-node and distributed database environments.
 
-### General Techniques
-
-#### Partitioning
+### Partitioning
 
 Divide large tables into smaller partitions based on a specified partition key, which can improve query performance and manageability.
 
@@ -104,8 +102,49 @@ def get_popular_products():
 
 Replicate data across multiple nodes to improve fault tolerance, load balancing, and read performance.
 
+### Data Archiving
+
+Over time, some data may not be frequently accessed. This data can be moved to slower, cheaper storage.
+
+```sql
+-- Example: Moving old orders data to an archive table
+INSERT INTO orders_archive SELECT * FROM orders WHERE date < '2020-01-01';
+DELETE FROM orders WHERE date < '2020-01-01';
+```
+
+### Data Denormalization
+
+Improve query performance by reducing the number of joins needed.
+
+```sql
+-- Example: Storing the customer's name in the `orders` table to avoid a join
+ALTER TABLE orders ADD COLUMN customer_name VARCHAR(255);
+UPDATE orders SET customer_name = (SELECT name FROM customers WHERE customers.id = orders.customer_id);
+```
+
+### Asynchronous Processing
+
+Offload heavy computations to asynchronous processes.
+
+```python
+# Example: Using Celery to asynchronously calculate and store order totals
+from celery import Celery
+from django.db.models import Sum
+
+app = Celery('tasks', broker='pyamqp://guest@localhost//')
+
+@app.task
+def calculate_total_revenue():
+    total_revenue = Order.objects.aggregate(total_revenue=Sum('total'))['total_revenue']
+    # Store total_revenue in a cache or a dedicated table
+```
+
+### Hardware Considerations
+
+Invest in powerful hardware. Using solid-state drives (SSDs), more powerful CPUs, and having ample RAM can all improve performance.
+
 ## Best Practices
 
-- Choose appropriate techniques based on the system requirements and workload
-- Monitor and analyze query performance to identify areas for improvement
-- Continuously review and adjust strategies to maintain optimal performance
+- Test with realistic data volumes. Performance issues often only emerge when working with production-scale data.
+- Consider NoSQL databases. They can handle large data sets efficiently depending on the use case.
+- Continuously review and adjust strategies. The needs of your system can change over time, so your strategies should adapt as well.
