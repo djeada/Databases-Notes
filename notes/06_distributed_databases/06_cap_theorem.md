@@ -2,8 +2,16 @@
 - CAP Theorem is a fundamental principle in distributed systems
 - Describes trade-offs between Consistency, Availability, and Partition Tolerance
 
-## CAP Theorem Basics
-- A theorem stating that a distributed system can only achieve two out of the three properties: Consistency, Availability, and Partition Tolerance
+```
+    CAP Theorem
+-------------------
+|     |     |     |
+|  C  |  A  |  P  |
+|     |     |     |
+-------------------
+| CA  |  CP |  AP |
+-------------------
+```
 
 ### Key Concepts
 1. Consistency (C): All nodes in the system see the same data at the same time
