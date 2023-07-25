@@ -20,7 +20,7 @@ Let's assume we have 4 data entries (1, 2, 3, and 4) which will also be mapped o
                         0/360 -- A
                          |
                    1 --  |  -- 2
-           270 -- D     +     B -- 90
+         D - 270 --------+-------- 90 - B
                          |
                  4 --    |    -- 3
                       C --180
