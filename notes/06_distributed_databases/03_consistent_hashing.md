@@ -1,51 +1,74 @@
-## Introduction
+## Consistent Hashing
 - Consistent hashing is a distributed hashing technique
 - Provides even data distribution and minimal data movement during node addition/removal
-- Covers: concept of consistent hashing, use cases, and benefits
 
-## Consistent Hashing Basics
+Consider a circle (or 'ring') representing the hash space, where data entries and nodes are mapped.
 
-### Purpose
-1. Distribute data across nodes in a distributed system
-2. Minimize data movement when nodes are added or removed
-3. Ensure balanced load on nodes
+```
+                        0/360
+                         |
+                         |
+             270 --------+-------- 90
+                         |
+                         |
+                        180
+```
 
-### Key Concepts
-1. Hash Ring: a circular hash space where nodes and data are mapped
-2. Hash Function: maps data and nodes to points on the hash ring
-3. Virtual Nodes: multiple points on the hash ring representing a single physical node
+Let's assume we have 4 data entries (1, 2, 3, and 4) which will also be mapped onto the circle:
 
-## How Consistent Hashing Works
+```
+                        0/360 -- A
+                         |
+                   1 --  |  -- 2
+           270 -- D     +     B -- 90
+                         |
+                 4 --    |    -- 3
+                      C --180
+```
 
-### Mapping Nodes and Data
-- Apply the hash function to each node to determine its position on the hash ring
-- Apply the hash function to each data item to determine its position on the hash ring
+Now, we would assign each data entry to the closest node in the clockwise direction:
 
-### Data Assignment
-- Assign each data item to the first node encountered in the clockwise direction on the hash ring
+- Data entry 1 would be stored on node A.
+- Data entry 2 would be stored on node B.
+- Data entry 3 would be stored on node C.
+- Data entry 4 would be stored on node D.
+    
+## Concepts
 
-### Node Addition or Removal
-- When a node is added, it takes over some data items from its neighbors
-- When a node is removed, its data items are redistributed to the remaining neighbors
+- **Hash Ring**: A conceptual circular space wherein nodes and data items are placed.
+- **Hash Function**: Function used to map data and nodes to their positions on the hash ring.
+- **Virtual Nodes**: Multiple points on the hash ring that stand for a single physical node. Useful for improving distribution and handling node heterogeneity.
+
+## Mechanism
+
+### Data and Node Mapping
+
+1. Determine node and data item positions on the hash ring by applying the hash function.
+
+### Data Allocation
+
+1. Each data item is assigned to the first node encountered in the clockwise direction on the hash ring.
+
+### Node Changes
+
+1. On adding a node, it takes over some data items from its neighboring nodes.
+2. On removing a node, its data items are reassigned to the remaining neighboring nodes.
 
 ## Use Cases
-- Distributed caching systems (e.g., Memcached, Redis)
-- Distributed databases (e.g., Apache Cassandra, DynamoDB)
-- Load balancing across servers
-- Distributed file systems
 
-## Benefits of Consistent Hashing
+- Applied in distributed caching systems like Memcached and Redis.
+- Used in distributed databases such as Apache Cassandra and DynamoDB.
+- Employed for load balancing across multiple servers.
+- Utilized in distributed file systems.
 
-### Even Data Distribution
-Distributes data uniformly across nodes, avoiding hotspots
+## Advantages
 
-### Minimal Data Movement
-Minimizes data movement when nodes are added or removed, reducing overhead
-
-### Load Balancing
-Ensures balanced load on nodes, improving overall system performance
+- **Even Data Distribution**: Data is uniformly allocated across nodes, preventing hotspots.
+- **Minimal Data Reassignment**: Data reassignment is kept minimal when nodes are added or removed, reducing system overhead.
+- **Load Balancing**: Nodes have balanced load, contributing to better system performance.
 
 ## Best Practices
-- Use a suitable hash function that provides good distribution and minimal collisions
-- Implement virtual nodes to better handle node heterogeneity and improve data distribution
-- Monitor and adjust the consistent hashing scheme as the system evolves to maintain performance
+
+- Select an appropriate hash function that provides optimal distribution and minimal collisions.
+- Implement virtual nodes for better data distribution and to handle heterogeneity among physical nodes.
+- Regularly monitor and adjust the consistent hashing scheme to ensure sustained system performance as it evolves.
