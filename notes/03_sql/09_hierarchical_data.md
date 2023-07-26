@@ -49,9 +49,19 @@ Other models for storing hierarchical data in SQL include:
 
 ## Storing Hierarchical Data in SQL with Recursive Queries
 
-In SQL, you often encounter situations where data is stored in a hierarchical manner, a common form of which is a parent-child relationship. This kind of data is typically represented in an "Adjacency List Model" in relational databases. In this model, each record has a foreign key that refers to its parent record.
+**WITH Clause**: The `WITH` clause in SQL is used to create a temporary result set that is known as a Common Table Expression (CTE). 
 
-Example Table ("Categories"):
+- A CTE is used within the scope of a single statement and is not stored as a persistent object.
+- CTEs can be recursive or non-recursive. The recursive ones are used to query hierarchical data.
+  
+**Recursive CTE Structure**: Recursive CTEs have two components connected by a `UNION` or `UNION ALL` operator:
+
+- **Anchor Member**: This is the base case for the recursion and usually fetches the top-level elements in the hierarchy (rows with `parent_id` as NULL in this context).
+- **Recursive Member**: This part refers back to the CTE, allowing the query to iterate over the hierarchy.
+
+**Recursive CTE in Action**:
+
+The initial table ("Categories") looks like this:
 
 | category_id | parent_id | category_name |
 |-------------|-----------|---------------|
@@ -63,21 +73,7 @@ Example Table ("Categories"):
 | 6           | 3         | Gaming Laptops|
 | 7           | 3         | Business Laptops|
 
-Here, each category has a `parent_id` that refers to the `category_id` of its parent category. 
-
-### Recursive Queries and WITH Clause
-
-SQL offers recursive queries as a way to work with hierarchical data. These queries are especially useful with the adjacency list model. 
-
-A recursive query is basically a query that refers to itself. Recursive queries are often paired with the `WITH` clause in SQL. This clause allows you to define a temporary result set (known as a Common Table Expression or CTE) that you can later refer to within your query.
-
-### Understanding Recursive CTEs
-
-The structure of a recursive CTE is generally a `UNION` (or `UNION ALL`) of two subqueries: the anchor member (which returns the initial result set that forms the base result) and the recursive member (which returns the rest of the results by referring back to the CTE).
-
-Note that UNION returns only distinct rows, while UNION ALL returns all rows, including duplicates. In recursive CTEs, UNION ALL is often preferred to maintain the full structure of the hierarchy.
-
-Here's how you could write a recursive CTE to retrieve all categories and their hierarchy:
+Here's an example of a recursive CTE to fetch a full category hierarchy:
 
 ```sql
 WITH RECURSIVE category_hierarchy AS (
@@ -96,9 +92,10 @@ WITH RECURSIVE category_hierarchy AS (
 SELECT * FROM category_hierarchy;
 ```
 
-In the above SQL statement, we first define our CTE (category_hierarchy) with the WITH clause. The CTE starts with an anchor member that selects all root-level categories (where parent_id IS NULL). We then use the UNION ALL keyword to combine these results with the results of the recursive member, which refers back to category_hierarchy itself.
+- In this SQL statement, the CTE "category_hierarchy" starts with an anchor member that selects all top-level categories (where `parent_id IS NULL`). The `UNION ALL` keyword then combines these results with the results of the recursive member, which refers back to the CTE itself.
+- This recursive member of the CTE continues executing until it returns no new rows, meaning it has traversed all levels of the hierarchy.
 
-The recursive member of the CTE continues executing until it returns no new rows, meaning it has traversed through all levels of the hierarchy. In each iteration of the recursive member, the join condition ch.category_id = c.parent_id climbs one level up the hierarchy.
+The expected result of the above query would look like this:
 
 | category_id | parent_id | category_name |
 |-------------|-----------|---------------|
@@ -110,4 +107,4 @@ The recursive member of the CTE continues executing until it returns no new rows
 | 6           | 3         | Gaming Laptops|
 | 7           | 3         | Business Laptops|
 
-This result gives us all categories in the order of the hierarchy, starting from the root level ("Electronics") down to the leaf nodes ("Gaming Laptops" and "Business Laptops").
+This lists all the categories in the order of the hierarchy, starting with the root (Electronics), followed by its children (Computers and TVs), and then the children of Computers (Laptops and Desktops), and finally the children of Laptops (Gaming Laptops and Business Laptops).
