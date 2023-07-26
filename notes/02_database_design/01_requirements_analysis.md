@@ -1,119 +1,109 @@
-## Requirements Analysis and Example
+## Database Requirements Analysis
 
-Requirements analysis is an important step in database design. It helps define the scope and functionality of the database system.
+Database requirements analysis is a crucial phase in the database design process. It defines the scope and features of the database, ensuring that it meets the needs of its users and supports the objectives of the business.
 
-## Requirements Analysis Process
+## Database Requirements Analysis Process
 
-### Identify Stakeholders
+### Stakeholder Identification
+- Recognize all individuals and groups involved in the project, including end users, developers, and management.
+- Engage these stakeholders in conversations to understand their requirements and expectations.
 
-- Identify the individuals and groups participating in the project, including users, developers, and management.
-- Engage stakeholders in discussions to collect their needs and expectations.
+### Business Domain Understanding
+- Establish an in-depth understanding of the organization's operations, goals, and constraints.
+- Identify essential data entities, their relationships, and attributes that the database needs to represent.
 
-### Understand the Business Domain
+### Scope Definition
+- Explicitly determine the range and functionality of the database system.
+- Recognize constraints such as budget, timeline, or specific technology requirements.
 
-- Develop a comprehensive understanding of the organization's processes, goals, and limitations.
-- Identify the crucial data entities, relationships, and attributes that need to be represented in the database.
+### Requirement Collection and Documentation
+- Assemble and document functional requirements like data storage, data retrieval, and data manipulation needs.
+- Gather and detail non-functional requirements such as performance, scalability, security, and maintainability.
 
-### Define the Scope
+### Requirement Prioritization
+- Organize requirements based on their importance to the project and stakeholders.
+- Recognize any contradicting requirements and work with stakeholders to reconcile them.
 
-- Clearly define the boundaries of the database system, including its intended purpose and functionality.
-- Identify any limitations, such as budget, timeline, or technology requirements.
+### Requirement Validation and Verification
+- Revisit the requirements with stakeholders to ensure they correctly capture their needs and expectations.
+- Authenticate the feasibility and consistency of the requirements within the defined project scope and constraints.
 
-### Collect and Document Requirements
+## Considerations During Database Requirements Analysis
 
-- Gather and document functional requirements, such as data storage, data retrieval, and data manipulation operations.
-- Gather and document non-functional requirements, such as performance, scalability, security, and maintainability.
+### Data Model Selection
+- Choose a fitting data model that aligns with the organization's data structure, relationships, and access patterns.
 
-### Prioritize Requirements
+### Scalability Considerations
+- Plan for the system's ability to manage increased data volumes and user loads.
+- Ascertain the need for horizontal (more machines) or vertical scaling (more power on the same machine).
 
-- Rank requirements based on their significance to the project and the stakeholders.
-- Identify any conflicting requirements and collaborate with stakeholders to resolve them.
-
-### Validate and Verify Requirements
-
-- Review the requirements with stakeholders to ensure they accurately represent their needs and expectations.
-- Verify the feasibility and consistency of the requirements with the project scope and constraints.
-
-## Key Considerations in Requirements Analysis
-
-### Data Model
-
-- Select an appropriate data model based on the organization's data structure, relationships, and access patterns.
-
-### Scalability
-
-- Consider the system's capacity to handle increasing data volumes and user loads.
-- Evaluate the necessity for horizontal or vertical scaling.
-
-### Performance
-
-- Assess the performance requirements for read and write operations, latency, and throughput.
-- Identify potential bottlenecks and optimization strategies.
+### Performance Requirements
+- Define performance metrics for read and write operations, latency, and throughput.
+- Identify possible performance issues and develop strategies for optimization.
 
 ### Data Integrity and Consistency
+- Identify the level of data integrity and consistency the application requires.
+- Implement rules and constraints to preserve data integrity, such as primary keys, foreign keys, and unique, check, and not null constraints.
 
-- Determine the level of data integrity and consistency required by the application.
-- Establish rules and constraints to maintain data integrity, such as primary keys, foreign keys, and constraints.
-
-### Security and Compliance
-
-- Evaluate the security requirements, including access control, encryption, and auditing.
-- Identify any regulatory or industry compliance requirements that may impact the database design.
+### Security and Compliance Measures
+- Evaluate the database's security needs, including user access control, data encryption, and auditing.
+- Determine any regulatory or industry compliance standards that could influence the database design.
 
 ### Integration and Interoperability
+- Consider the necessity for integration with existing systems or data sources.
+- Identify any requirements related to data migration or conversion.
 
-- Consider the need for integration with other systems or data sources.
-- Identify any data migration or conversion requirements.
+## Example: University Database System
 
-## Example: University Database
+### Stakeholder Identification
 
-### Identify Stakeholders
-
-- University administrators
-- Professors
+- University Administration
+- Faculty Members
 - Students
-- IT department
+- IT Department
 
-### Understand the Business Domain
+### Business Domain Understanding
 
-- University processes include course registration, student enrollment, and grading.
-- Key data entities: students, courses, professors, and enrollments.
+- Processes in a university context include course registration, student enrollment, and grade management.
+- Primary data entities: Students, Courses, Professors, and Course Enrollments.
 
-### Define the Scope
+### Scope Definition
 
-- The database will store and manage information about students, courses, and enrollments.
-- Constraints: limited budget, implementation within 6 months, using open-source technologies.
+- The database is tasked with storing and managing vital data about students, courses, and course enrollments.
+- Constraints: Operating within a limited budget, the system must be implemented within a 6-month timeline, and must exclusively utilize open-source technologies.
 
-### Collect and Document Requirements
+### Requirements Collection and Documentation
 
 #### Functional Requirements:
 
-- Store student information (name, student ID, contact details, program).
-- Store course information (course ID, name, description, professor, schedule).
-- Store enrollment information (student, course, semester, grade).
-- Retrieve a list of courses offered in a semester.
-- Retrieve a list of students enrolled in a specific course.
-- Update student contact details.
-- Update course details.
-- Record grades for enrolled students.
+- Maintain a record of student details (name, student ID, contact details, enrolled program).
+- Store details about courses (course ID, name, description, assigned professor, schedule).
+- Keep track of enrollment details (student, enrolled course, semester, grade).
+- Enable retrieval of a list of courses offered in a specific semester.
+- Support retrieval of a list of students enrolled in a particular course.
+- Facilitate updates to student contact details.
+- Enable modifications to course details.
+- Record grading information for students enrolled in courses.
 
 #### Non-functional Requirements:
 
-- Performance: Response time for queries should not exceed 2 seconds.
-- Scalability: The database should handle up to 10,000 students and 1,000 courses.
-- Security: Only authorized users can access and modify data.
-- Maintainability: The database should be easy to update and maintain.
+- Performance: Query response times should not exceed 2 seconds.
+- Scalability: The system should efficiently handle up to 10,000 students and 1,000 courses.
+- Security: Ensure data access and modification only by authorized personnel.
+- Maintainability: The system should be designed for easy updates and maintenance.
 
-### E. Prioritize Requirements
+### Requirements Prioritization
 
-- Essential: Storing and retrieving student, course, and enrollment information.
-- Important: Updating student and course details, recording grades.
-- Desirable: Fast response times, scalability, security, and maintainability.
+- Essential: Storing and retrieving core data related to students, courses, and enrollments.
+- Important: Facilitating updates to student and course details, and recording of grades.
+- Desirable: Achieving fast response times, scalability, strong security, and maintainability.
 
-### F. Validate and Verify Requirements
+### Requirements Validation and Verification
 
-- Review the requirements with stakeholders to ensure they meet their needs.
-- Verify that the requirements are feasible within the project scope and constraints.
+- Discuss and confirm requirements with stakeholders to ensure they meet their needs and expectations.
+- Ensure that the listed requirements can be realistically implemented within the defined project scope and constraints.
+
+#### Example Data Tables:
 
 1. Students
 
@@ -147,8 +137,8 @@ Requirements analysis is an important step in database design. It helps define t
 | 2                  | 1               | MA101         | Fall 2022  | B+    |
 | 3                  | 2               | MA101         | Fall 2022  | A-    |
 
-In this example, we have four tables: Students, Courses, Professors, and Enrollments. The primary keys (PK) and foreign keys (FK) are indicated in parentheses. The tables are related as follows:
+In this database model, four tables have been designed: 'Students', 'Courses', 'Professors', and 'Enrollments'. Primary keys (PK) and foreign keys (FK) are indicated in the brackets. The tables are related as follows:
 
-- The student_id in the Enrollments table is a foreign key that refers to the student_id primary key in the Students table.
-- The course_id in the Enrollments table is a foreign key that refers to the course_id primary key in the Courses table.
-- The professor_id in the Courses table is a foreign key that refers to the professor_id primary key in the Professors table.
+- The 'student_id' in the 'Enrollments' table refers to the 'student_id' primary key in the 'Students' table (foreign key).
+- The 'course_id' in the 'Enrollments' table links to the 'course_id' primary key in the 'Courses' table (foreign key).
+- The 'professor_id' in the 'Courses' table associates with the 'professor_id' primary key in the 'Professors' table (foreign key).
