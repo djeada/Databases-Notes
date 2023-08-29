@@ -155,7 +155,7 @@ These online SQL interpreters allow you to test SQL queries without the need for
 | AWS Services              | Overview of Amazon Web Services' database offerings, covering both relational and non-relational database services. | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/06_aws_services.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a> |
 | Choosing Database         | Guidelines and factors to consider when selecting a database engine for specific application needs and scenarios. | <a href="https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md"><img src="https://img.icons8.com/color/344/markdown.png" height="50" /> </a> |
 
-## Refrences
+## References
 
 * https://www.coursehero.com/sitemap/schools/11-Cornell-University/courses/44816-CS4320/
 * https://pgexercises.com/
