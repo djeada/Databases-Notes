@@ -158,6 +158,7 @@ These online SQL interpreters allow you to test SQL queries without the need for
 ## References
 
 * https://www.coursehero.com/sitemap/schools/11-Cornell-University/courses/44816-CS4320/
+* https://15445.courses.cs.cmu.edu/fall2023/
 * https://pgexercises.com/
 * http://www.sql-tutorial.ru/
 * https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql/194408#194408
