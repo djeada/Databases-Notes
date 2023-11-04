@@ -26,6 +26,13 @@ CREATE TABLE employees (
 );
 ```
 
+After executing this query, the following table will appear in our database:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+|             |            |           |               |               |
+
 ### ALTER TABLE
 
 The `ALTER TABLE` statement is used to modify the structure of an existing table.
@@ -37,6 +44,20 @@ ALTER TABLE employees
 ADD email VARCHAR(100);
 ```
 
+Before:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+|             |            |           |               |               |
+
+After:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id | email       |
+|-------------|------------|-----------|---------------|---------------|-------------|
+|             |            |           |               |               |             |
+
 ### DROP TABLE
 
 The `DROP TABLE` statement is used to remove an existing table from the database.
@@ -47,6 +68,17 @@ Example:
 DROP TABLE employees;
 ```
 
+Before:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+| x           |  x         | x         | x             | x             |
+
+After:
+
+    No table exists.
+
 ### TRUNCATE TABLE
 
 The `TRUNCATE TABLE` statement is used to delete all data from a table, but the table structure remains intact for future use.
@@ -56,6 +88,20 @@ Example:
 ```sql
 TRUNCATE TABLE employees;
 ```
+
+Before:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+| x           |  x         | x         | x             | x             |
+
+After:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+|             |            |           |               |               |
 
 ### RENAME TABLE
 
@@ -72,3 +118,17 @@ Example (MySQL):
 ```sql
 RENAME TABLE employees TO staff;
 ```
+
+Before:
+
+**employees**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+| x           |  x         | x         | x             | x             |
+
+Before:
+
+**staff**
+| employee_id | first_name | last_name | date_of_birth | department_id |
+|-------------|------------|-----------|---------------|---------------|
+| x           |  x         | x         | x             | x             |
