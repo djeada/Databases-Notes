@@ -2,7 +2,9 @@
 
 - Compares common CRUD operations in SQL (relational databases) and MongoDB (NoSQL document store)
 - **CRUD**: Create, Read, Update, Delete
-  
+
+### CRUD Operations
+
 | Operation | SQL Syntax                                   | SQL Example                                      | MongoDB Syntax                               | MongoDB Example                                    |
 |-----------|----------------------------------------------|--------------------------------------------------|-----------------------------------------------|----------------------------------------------------|
 | Create    | `INSERT INTO table_name (column1, column2, ...)` | `INSERT INTO users (first_name, last_name, age) VALUES ('John', 'Doe', 25)` | `db.collection.insertOne(document)`          | `db.users.insertOne({first_name: 'John', last_name: 'Doe', age: 25})` |
