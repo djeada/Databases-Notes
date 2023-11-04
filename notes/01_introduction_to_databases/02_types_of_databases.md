@@ -1,114 +1,123 @@
-## Relational Databases (RDBMS)
-Relational databases, also known as Relational Database Management Systems (RDBMS), are structured databases that leverage a set of tables for data storage. Each table contains data in rows and columns, with unique keys used for identifying each row. These databases rigidly adhere to a predefined schema that determines the structure and types of data stored.
+# Overview of Database Types
 
-## Representative Systems
+Various types of databases cater to different needs and applications.
+
+## Relational Databases (RDBMS)
+
+### Description
+Relational databases, or Relational Database Management Systems (RDBMS), store data in structured tables with rows and columns. Unique keys identify each row, and a predefined schema dictates the data's structure and types.
+
+### Representative Systems
 - MySQL
 - PostgreSQL
 - Oracle Database
 - Microsoft SQL Server
 
-## Use Cases
+### Use Cases
 - Transaction processing systems
 - Enterprise applications
-- Any system where data consistency and integrity are of high importance
+- Systems prioritizing data consistency and integrity
 
-## Strengths
-- ACID (Atomicity, Consistency, Isolation, Durability) properties ensuring data reliability
-- Strong support for structured data and complex queries
-- Enforced data consistency due to adherence to schema
+### Strengths
+- ACID compliance ensures data reliability.
+- Strong support for structured data and complex queries.
+- Schema adherence enforces data consistency.
 
-## Weaknesses
-- Limited scalability, especially horizontal scaling
-- Rigidity in data structure, leading to difficulties in handling unstructured data
-- Performance can be an issue with large and complex databases
-
-## NoSQL Databases
-
-NoSQL databases are non-relational databases that allow for the storage and retrieval of data in ways that don't follow the tabular relations used in relational databases.
+### Weaknesses
+- Limited horizontal scalability.
+- Rigidity can hinder handling unstructured data.
+- Performance may degrade with large databases.
 
 ## NoSQL Document-Based Databases
 
-Document-based databases store and manage data as documents, often using human-readable formats like JSON (JavaScript Object Notation) or BSON (Binary JSON).
+### Description
+Document-based databases manage data as documents, typically in formats like JSON or BSON.
 
-## Representative Systems
+### Representative Systems
 - MongoDB
 - Couchbase
 
-## Use Cases
-- Content management systems
-- Catalog management
-- Real-time analytics and high-speed logging, caching, and high scalability applications
+### Use Cases
+- Content and catalog management
+- Real-time analytics
+- High-speed logging and caching
 
-## Strengths
-- High flexibility due to lack of schema
-- High performance and easy to scale
-- Excellent fit for hierarchical data storage
+### Strengths
+- Schema-less design offers flexibility.
+- High performance and easy scalability.
+- Suitable for hierarchical data storage.
 
-## Weaknesses
-- Limited support for complex transactions involving multiple operations
-- Inefficient for complex queries and joins
+### Weaknesses
+- Limited support for complex, multi-operation transactions.
+- Inefficient for complex queries and joins.
 
 ## NoSQL Column-Based Databases
-Column-based databases, also known as wide-column stores, organize data by columns instead of rows. They are designed for scaling and for reading and writing large datasets.
 
-## Representative Systems
+### Description
+Column-based databases, or wide-column stores, organize data by columns instead of rows, optimizing for scaling and handling large datasets.
+
+### Representative Systems
 - Apache Cassandra
 - Google Cloud Bigtable
 - Apache HBase
 
-## Use Cases
+### Use Cases
 - Time series data
 - Big Data processing
-- Real-time processing of large-scale data
+- Large-scale real-time data processing
 
-## Strengths
-- High performance for reads and writes, especially with large amounts of data
-- Efficient storage and retrieval of columnar data
-- Scalability and fault-tolerance
+### Strengths
+- High performance for large data reads and writes.
+- Efficient columnar data storage and retrieval.
+- Scalable and fault-tolerant.
 
-## Weaknesses
-- Not designed for complex queries involving multiple tables
-- Learning curve for those accustomed to SQL-based systems
+### Weaknesses
+- Not suitable for complex multi-table queries.
+- Learning curve for SQL users.
 
 ## NoSQL Key-Value Databases
-Key-value databases are simple, efficient, and highly scalable NoSQL databases that store data as key-value pairs.
 
-## Representative Systems
+### Description
+Key-value databases are simple NoSQL databases storing data as key-value pairs.
+
+### Representative Systems
 - Redis
 - Amazon DynamoDB
 
-## Use Cases
+### Use Cases
 - Caching
 - Session management
 - User preference storage
 
-## Strengths
-- Simple and efficient data storage and retrieval
-- High performance and easy to scale
-- Can handle large amounts of data and high traffic loads
+### Strengths
+- Efficient data storage and retrieval.
+- High performance and scalability.
+- Suitable for high traffic and large datasets.
 
-## Weaknesses
-- Limited support for complex queries
-- Lack of structure can lead to challenges in data management
+### Weaknesses
+- Limited support for complex queries.
+- Lack of structure can complicate data management.
 
 ## NoSQL Graph-Based Databases
-Graph databases store and manage data as nodes and edges, representing entities and their relationships, respectively.
 
-## Representative Systems
+### Description
+Graph databases manage data as nodes (entities) and edges (relationships).
+
+### Representative Systems
 - Neo4j
 - Amazon Neptune
 
-## Use Cases
+### Use Cases
 - Social networks
 - Recommendation engines
-- Fraud detection systems
+- Fraud detection
 
-## Strengths
-- Efficient handling of relationship-heavy data
-- Powerful graph traversal queries
-- More intuitive modeling for certain types of data
+### Strengths
+- Efficient handling of relationship-centric data.
+- Powerful graph traversal queries.
+- Intuitive data modeling for certain use cases.
 
-## Weaknesses
-- Requires different mindset than traditional SQL databases
-- Limited support for operations that aren't related to graph traversal
-- May be less efficient for handling non-graph related operations
+### Weaknesses
+- Requires a shift from traditional SQL mindset.
+- Limited support for non-graph related operations.
+- May be less efficient for handling non-graph related operations.
