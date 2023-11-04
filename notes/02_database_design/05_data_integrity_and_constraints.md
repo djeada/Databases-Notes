@@ -26,7 +26,7 @@ After identifying data integrity requirements, we decide to enforce the followin
 - Apply validation rules at the application level or the database level to ensure that only valid data is stored in the database.
 - Use data types, constraints, triggers, and stored procedures to enforce data validation rules.
 
-Suppose we have an **Orders** table:
+Suppose we have an `Orders` table:
 
 | OrderID | ProductName | Quantity |
 |---------|-------------|----------|
