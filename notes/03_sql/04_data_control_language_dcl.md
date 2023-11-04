@@ -83,15 +83,15 @@ FROM user1;
 
 In this example, the `REVOKE` statement removes the `INSERT` and `UPDATE` privileges from the user user1 for the employees table.
 
-Additinaly you can:
+### Additional Operations
 
-- Altering Roles: You can alter roles to modify their attributes using the ALTER ROLE statement.
+- **Altering Roles**: You can alter roles to modify their attributes using the ALTER ROLE statement.
 
 ```sql
 ALTER ROLE role_name ATTRIBUTE_CHANGE;
 ```
 
-- Dropping Roles: You can remove roles using the DROP ROLE statement.
+- **Dropping Roles**: You can remove roles using the DROP ROLE statement.
 
 ```sql
 DROP ROLE role_name;
