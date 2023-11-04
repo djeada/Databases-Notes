@@ -92,8 +92,29 @@ WITH RECURSIVE category_hierarchy AS (
 SELECT * FROM category_hierarchy;
 ```
 
-- In this SQL statement, the CTE "category_hierarchy" starts with an anchor member that selects all top-level categories (where `parent_id IS NULL`). The `UNION ALL` keyword then combines these results with the results of the recursive member, which refers back to the CTE itself.
-- This recursive member of the CTE continues executing until it returns no new rows, meaning it has traversed all levels of the hierarchy.
+Let me break down the components of the query:
+
+1. **Common Table Expression (CTE) - category_hierarchy**: The query defines a CTE named category_hierarchy, which will contain the hierarchy of categories. CTEs are temporary result sets that can be referred to within a SELECT, INSERT, UPDATE, or DELETE statement.
+
+2. **Anchor Member**: The first part of the CTE (before UNION ALL) is called the anchor member. It selects the base rows that form the starting point of the recursion. Here, it selects rows from Categories where `parent_id` is NULL, indicating that these are top-level categories with no parent.
+
+```sql
+SELECT category_id, parent_id, category_name
+FROM Categories
+WHERE parent_id IS NULL
+```
+
+3. **Recursive Member**: The second part of the CTE (after UNION ALL) is the recursive member, which refers to the CTE itself to build the hierarchy. This part of the query joins Categories with `category_hierarchy` on `category_id` and `parent_id`, effectively selecting child categories for each parent category found in the previous step of the recursion.
+
+```sql
+SELECT c.category_id, c.parent_id, c.category_name
+FROM Categories c
+INNER JOIN category_hierarchy ch ON ch.category_id = c.parent_id
+```
+
+4. **UNION ALL**: UNION ALL is used to combine the results of the anchor member and the recursive member. It includes all rows from both queries, even if they are duplicates.
+
+5. **Final Selection**: Finally, the query selects all records from the `category_hierarchy` CTE to display the full hierarchy of categories.
 
 The expected result of the above query would look like this:
 
