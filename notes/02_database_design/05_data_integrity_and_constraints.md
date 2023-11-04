@@ -18,8 +18,8 @@ Consider a simple `Customers` table:
 
 After identifying data integrity requirements, we decide to enforce the following rules:
 
-- CustomerID must be unique and not null (UNIQUE, NOT NULL).
-- Email must be unique and in a valid email format (UNIQUE, VALID FORMAT).
+- CustomerID must be unique and not null (`UNIQUE, NOT NULL`).
+- Email must be unique and in a valid email format (`UNIQUE, VALID FORMAT`).
 
 ### Implement Data Validation Rules
 
@@ -34,7 +34,7 @@ Suppose we have an `Orders` table:
 
 We implement the following validation rules:
 
-- Quantity must be a positive integer (Quantity: > 0, INT).
+- Quantity must be a positive integer (`Quantity: > 0, INT`).
 
 ### Define Referential Integrity Constraints
 
@@ -56,8 +56,8 @@ Consider two tables `Orders` and `Customers`:
 To maintain referential integrity, we define a foreign key constraint:
 
 - CustomerID in Orders table references CustomerID in Customers table.
-- For Orders table CustomerID: FK -> Customers
-- For Customers tbale CustomerID: PK
+- For Orders table `CustomerID: FK -> Customers`.
+- For Customers tbale `CustomerID: PK`.
 
 ### Implement Domain and Business Rule Constraints
 
@@ -72,8 +72,8 @@ Consider a `Salaries` table:
 
 We implement the following constraints:
 
-- Salary must be NOT NULL and greater than zero (Salary: NOT NULL, > 0).
-- A business rule ensures that salary does not exceed a certain limit (Salary: < LIMIT).
+- Salary must be NOT NULL and greater than zero (`Salary: NOT NULL, > 0`).
+- A business rule ensures that salary does not exceed a certain limit (`Salary: < LIMIT`).
 
 ## Key Considerations in Data Integrity and Constraints
 
