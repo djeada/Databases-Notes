@@ -146,6 +146,8 @@ III. Department Employees table
 
 Example 1: Non-correlated subquery (used in WHERE clause)
 
+Here, the subquery calculates the average salary from the Employees table and returns a single value. The outer query then retrieves employees who have a salary greater than this average.
+
 ```sql
 SELECT e.ID, e.lastname, e.salary
 FROM Employees AS e
@@ -168,6 +170,8 @@ INNER JOIN Department_Employees AS de ON e.ID = de.Employee_ID
 INNER JOIN Departments AS d ON de.Department_ID = d.ID
 WHERE e.salary > (SELECT AVG(salary) FROM Employees AS e2 WHERE e2.ID = de.Employee_ID);
 ```
+
+In this case, the subquery calculates the average salary for each employee by referencing data from the outer query (e2.ID = de.Employee_ID). The outer query then retrieves employees whose salary is above this calculated average and displays the department name as well.
 
 Result: 
 
@@ -218,6 +222,15 @@ INNER JOIN Department_Employees AS de ON e.ID = de.Employee_ID
 INNER JOIN Departments AS d ON de.Department_ID = d.ID;
 ```
 
+Result (View):
+
+| ID | lastname | salary | department_name |
+| -- | -------- | ------ | --------------- |
+| 1  | Smith    | 3000   | HR              |
+| 2  | Johnson  | 3500   | HR              |
+| 3  | Brown    | 2700   | IT              |
+| 4  | Taylor   | 4200   | Finance         |
+
 This view shows the employee ID, lastname, salary, and department name for each employee.
 
 ### Querying a view
@@ -249,6 +262,15 @@ INNER JOIN Department_Employees AS de ON e.ID = de.Employee_ID
 INNER JOIN Departments AS d ON de.Department_ID = d.ID;
 ```
 
+Result:
+
+| ID | lastname | salary | department_name | Department_ID |
+| -- | -------- | ------ | --------------- | ------------- |
+| 1  | Smith    | 3000   | HR              | 1             |
+| 2  | Johnson  | 3500   | HR              | 1             |
+| 3  | Brown    | 2700   | IT              | 2             |
+| 4  | Taylor   | 4200   | Finance         | 3             |
+
 This updated view now includes the `Department_ID` in addition to the previous columns.
 
 ### Deleting a view
@@ -260,4 +282,3 @@ DROP VIEW EmployeeDepartmentView;
 ```
 
 Dropping a view does not affect the underlying tables or data. It only removes the view definition.
-
