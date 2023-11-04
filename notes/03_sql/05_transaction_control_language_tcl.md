@@ -38,6 +38,24 @@ COMMIT;
 
 In this example, the `COMMIT` statement saves the salary update for employees in department 1.
 
+Before:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1000    |
+| 2           | 1             | 1200    |
+| 3           | 2             | 1500    |
+
+After:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1100    |
+| 2           | 1             | 1320    |
+| 3           | 2             | 1500    |
+
 ### ROLLBACK
 
 The `ROLLBACK` statement is used to undo all changes made within the transaction and revert the database to the state it was in before the transaction started.
@@ -55,6 +73,24 @@ ROLLBACK;
 ```
 
 In this example, the `ROLLBACK` statement undoes the salary update for employees in department 1.
+
+Before:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1000    |
+| 2           | 1             | 1200    |
+| 3           | 2             | 1500    |
+
+After:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1000    |
+| 2           | 1             | 1200    |
+| 3           | 2             | 1500    |
 
 ### SAVEPOINT
 
@@ -77,6 +113,24 @@ WHERE department_id = 2;
 ```
 
 In this example, a savepoint named `salary_update` is created after updating the salaries for employees in department 1.
+
+Before:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1000    |
+| 2           | 1             | 1200    |
+| 3           | 2             | 1500    |
+
+After:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1100    |
+| 2           | 1             | 1320    |
+| 3           | 2             | 1575    |
 
 ### ROLLBACK TO savepoint
 
@@ -101,3 +155,21 @@ ROLLBACK TO salary_update;
 ```
 
 In this example, the `ROLLBACK TO salary_update` statement undoes the salary update for employees in department 2 while preserving the salary update for employees in department 1.
+
+Before:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1000    |
+| 2           | 1             | 1200    |
+| 3           | 2             | 1500    |
+
+After:
+
+**employees**
+| employee_id | department_id | salary  |
+|-------------|---------------|---------|
+| 1           | 1             | 1100    |
+| 2           | 1             | 1320    |
+| 3           | 2             | 1500    |
