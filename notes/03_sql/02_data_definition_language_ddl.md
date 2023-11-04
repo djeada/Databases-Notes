@@ -126,7 +126,7 @@ Before:
 |-------------|------------|-----------|---------------|---------------|
 | x           |  x         | x         | x             | x             |
 
-Before:
+After:
 
 **staff**
 | employee_id | first_name | last_name | date_of_birth | department_id |
