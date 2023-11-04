@@ -116,6 +116,7 @@ SQL provides built-in functions to transform, calculate, or create new data base
 
 * `Row functions`: operate on values of a single record
 * `Group functions`: operate on values of multiple records
+* `Conversion functions`: change the data type of a value
 
 ### Row Functions
 
@@ -129,6 +130,21 @@ SELECT
 FROM employees;
 ```
 
+Before:
+
+**employees**
+| employee_id | last_name  |
+|-------------|------------|
+| 1           | Doe        |
+| 2           | Smith      |
+
+After:
+
+| lower_last_name |
+|-----------------|
+| doe             |
+| smith           |
+
 ### Group Functions
 
 Group functions can be used in conjunction with the `GROUP BY` clause.
@@ -141,6 +157,22 @@ FROM employees
 GROUP BY department_id;
 ```
 
+Before:
+
+**employees**
+| employee_id | department_id |
+|-------------|---------------|
+| 1           | 101           |
+| 2           | 102           |
+| 3           | 101           |
+
+After:
+
+| department_id | num_employees |
+|---------------|---------------|
+| 101           | 2             |
+| 102           | 1             |
+
 ### Conversion Functions
 
 Conversion functions, such as `CAST` and `CONVERT`, are used to change data types of values.
@@ -151,6 +183,19 @@ Example:
 SELECT last_name + ' has been with us since: ' + CAST(hire_date AS varchar(100)) AS info
 FROM employees;
 ```
+
+Before:
+
+**employees**
+| employee_id | last_name | hire_date   |
+|-------------|-----------|-------------|
+| 1           | Doe       | 2022-01-01  |
+
+After:
+
+| info                          |
+|-------------------------------|
+| Doe has been with us since: 2022-01-01 |
 
 ### Conditional Expressions
 
