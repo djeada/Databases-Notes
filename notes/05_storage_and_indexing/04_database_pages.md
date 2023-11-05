@@ -2,6 +2,22 @@
 
 Database pages are fundamental units of storage in a database management system (DBMS), used to store and organize data on disk. This guide focuses on the concept of database pages, their characteristics, and their role in database storage and performance.
 
+```
++-------------------------+
+|    Page Header          |
+|-------------------------|
+|    Record 1             |
+|-------------------------|
+|    Record 2             |
+|-------------------------|
+|    ...                  |
+|-------------------------|
+|    Record N             |
+|-------------------------|
+|    Free Space           |
++-------------------------+
+```
+
 ### Characteristics
 
 #### Size
