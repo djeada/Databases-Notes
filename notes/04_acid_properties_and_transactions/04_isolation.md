@@ -12,35 +12,42 @@ By ensuring isolation, the database can maintain data integrity and consistency 
 
 ## Examples
 
-### Dirty Read Example
+### Preventing Dirty Reads
 
-1. Consider a banking application where a transaction T1 transfers $100 from account A to account B. The transaction involves two steps: (a) withdraw $100 from account A, and (b) deposit $100 into account B.
+- **Scenario**: A transaction T1 in a banking application transfers $100 from account A to B, involving two steps: (a) withdraw $100 from A, and (b) deposit $100 into B.
+- **Without Isolation**: A concurrent transaction T2 may read A's balance after step (a) but before (b), leading to an inaccurate balance reading.
+- **With Isolation**: T2 only accesses the final results of T1, ensuring accuracy in the balance reading.
 
-2. Meanwhile, a second transaction T2 checks the balance of account A. Without proper isolation, T2 might read the balance of account A after step (a) but before step (b) is completed, resulting in an incorrect balance reading.
+### Avoiding Non-Repeatable Reads
 
-3. By enforcing isolation, T2 can only see the final results of T1, ensuring that the balance read by T2 is accurate.
-
-### Non-Repeatable Read Example
-
-1. In an inventory management system, a transaction T1 reads the stock level of a product, calculates the new stock level based on a sales order, and updates the stock level in the database.
-
-2. Simultaneously, another transaction T2 modifies the stock level of the same product. Without proper isolation, T1 might read the stock level again after T2's update, resulting in an incorrect final stock level calculation.
-
-3. By maintaining isolation, T1's subsequent reads of the stock level will return the same value as the initial read, ensuring a correct final stock level calculation.
+- **Scenario**: In an inventory system, transaction T1 reads a product's stock level, computes the new level based on a sales order, and updates it.
+- **Without Isolation**: A concurrent transaction T2 may modify the stock level, causing T1 to read different stock levels in the same transaction.
+- **With Isolation**: T1 sees a consistent stock level, ensuring accurate calculations.
 
 ## Transaction Isolation Levels
 
-Different isolation levels can be set for transactions to balance the trade-off between isolation and performance. Higher isolation levels provide greater consistency but may lead to reduced concurrency and increased contention.
+Transaction isolation levels balance the trade-off between isolation and performance. Higher isolation levels provide greater consistency but may result in decreased concurrency and increased contention.
 
-1. Read Uncommitted
-2. Read Committed
-3. Repeatable Read
-4. Serializable
+| Isolation Level   | Definition                                                   | Pros                                   | Cons                                         | Example                                                                                   |
+|-------------------|--------------------------------------------------------------|----------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------------|
+| Read Uncommitted  | Can read data modified by uncommitted transactions.          | High concurrency.                      | May lead to dirty reads.                     | Reading an intermediate state during a money transfer can lead to incorrect balances.     |
+| Read Committed    | Can only read data committed before the start of transaction.| Avoids dirty reads, Good concurrency.  | May lead to non-repeatable reads.            | Reading a bank account's balance may show different values within the same transaction.  |
+| Repeatable Read   | Same value is returned for multiple reads within a transaction.| Avoids non-repeatable reads.          | May lead to phantom reads, Lower concurrency.| Reading a list of bank accounts may miss new accounts added by another transaction.      |
+| Serializable      | Complete isolation from other transactions.                  | Avoids phantom reads, Strong consistency. | Lowest concurrency, can lead to contention. | Calculating total balance across all accounts ensures no modifications until complete.   |
 
 ## Concurrency Control Mechanisms
 
-### Locking
-Locking is a technique used to enforce isolation by preventing multiple transactions from accessing the same data simultaneously. Locks can be applied at various levels, such as row-level or table-level.
-    
+### Locking Mechanisms
+
+- **Description**: Locking prevents concurrent access to data by restricting data access to one transaction at a time.
+- **Types**:
+  - **Row-level Locking**: Locks are applied to specific rows.
+  - **Table-level Locking**: Locks are applied to entire tables.
+- **Role in Isolation**: Locking mechanisms prevent data inconsistencies by serializing access to data.
+
 ### Optimistic Concurrency Control
-Optimistic concurrency control allows transactions to proceed without acquiring locks but validates the data at the time of commit to ensure no conflicts occurred during the transaction.
+
+- **Description**: This approach permits transactions to execute without locks, validating data at commit time to ensure no conflicts.
+- **How it Works**: Transactions read data, perform operations, and then check for conflicts at commit time. If conflicts are found, the transaction may be rolled back.
+- **Role in Isolation**: By detecting and resolving conflicts at commit time, optimistic concurrency control ensures isolation without the overhead of locking.
+
