@@ -5,17 +5,17 @@ A database transaction consists of a series of operations, such as inserting, up
 ```
 1. Initial State:
 +------------------+          +------------------+
-| Account A: $100 |          | Account B: $50  |
+| Account A: $100  |          | Account B: $50   |
 +------------------+          +------------------+
 
 2. Transaction Start:
-+------------------+          +------------------+
-| Account A: $100 |          | Account B: $50  |
-+------------------+   --$20->  +------------------+
++------------------+            +------------------+
+| Account A: $100 |    --$20->  | Account B: $50   |
++------------------+            +------------------+
 
 3. Transaction End:
 +------------------+          +------------------+
-| Account A: $80  |          | Account B: $70  |
+| Account A: $80   |          | Account B: $70   |
 +------------------+          +------------------+
 ```
 
@@ -70,14 +70,3 @@ If an operation within the transaction fails, or the user decides to cancel the 
 
 ### Concurrency Control
 Concurrency control mechanisms, such as locking and optimistic concurrency, manage simultaneous access to the database and prevent conflicts between transactions.
-
-## Transaction Isolation Levels
-
-Transaction isolation levels balance the trade-off between isolation and performance. Higher isolation levels provide greater consistency but may result in decreased concurrency and increased contention.
-
-| Isolation Level   | Definition                                                   | Pros                                   | Cons                                         | Example                                                                                   |
-|-------------------|--------------------------------------------------------------|----------------------------------------|----------------------------------------------|-------------------------------------------------------------------------------------------|
-| Read Uncommitted  | Can read data modified by uncommitted transactions.          | High concurrency.                      | May lead to dirty reads.                     | Reading an intermediate state during a money transfer can lead to incorrect balances.     |
-| Read Committed    | Can only read data committed before the start of transaction.| Avoids dirty reads, Good concurrency.  | May lead to non-repeatable reads.            | Reading a bank account's balance may show different values within the same transaction.  |
-| Repeatable Read   | Same value is returned for multiple reads within a transaction.| Avoids non-repeatable reads.          | May lead to phantom reads, Lower concurrency.| Reading a list of bank accounts may miss new accounts added by another transaction.      |
-| Serializable      | Complete isolation from other transactions.                  | Avoids phantom reads, Strong consistency. | Lowest concurrency, can lead to contention. | Calculating total balance across all accounts ensures no modifications until complete.   |
