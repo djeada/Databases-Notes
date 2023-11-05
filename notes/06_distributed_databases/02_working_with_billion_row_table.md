@@ -1,6 +1,6 @@
 ## Working with Billion Row Tables
 
-Working with large tables containing billions of rows can pose challenges in terms of performance, scalability, and maintenance. This guide covers general strategies and techniques for handling billion-row tables in both single-node and distributed database environments.
+Working with large tables containing millions of rows can pose challenges in terms of performance, scalability, and maintenance. This guide covers general strategies and techniques for handling billion-row tables in both single-node and distributed database environments.
 
 ### Partitioning
 
