@@ -6,6 +6,46 @@ Transaction isolation levels help maintain data integrity and manage concurrency
 
 In concurrent database environments, multiple transactions are executed at the same time. Without proper management, concurrent transactions can lead to inconsistencies and anomalies, such as dirty reads, non-repeatable reads, and phantom reads. To address these issues and ensure data integrity, different transaction isolation levels, including serializable and repeatable read, are used. These isolation levels define the degree of visibility that one transaction has over the data being manipulated by another concurrent transaction.
 
+### Serializable Read
+
+```
++------------------+    +------------------+
+| Transaction T1   |    | Transaction T2   |
++------------------+    +------------------+
+| Read X           |    |                  |
+|                  |    |                  |
+| (Wait for lock)  |    | Read X           |
+|                  |    |                  |
+| Write X          |    | (Blocked)        |
+|                  |    |                  |
+| Commit           |    |                  |
+|                  |    |                  |
+|                  |    | Write X          |
+|                  |    |                  |
+|                  |    | Commit           |
++------------------+    +------------------+
+```
+
+In this "Serializable" example, Transaction T1 reads data item X and then waits for a lock to write X. Transaction T2 is blocked until T1 is committed. Once T1 is committed, T2 can proceed to read and write X. This ensures the strictest level of isolation.
+
+### Repeatable Read
+
+```
++------------------+    +------------------+
+| Transaction T1   |    | Transaction T2   |
++------------------+    +------------------+
+| Read X           |    |                  |
+|                  |    | Read Y           |
+| Write X          |    | Write Y          |
+|                  |    |                  |
+| Read X (Same)    |    |                  |
+|                  |    |                  |
+| Commit           |    | Commit           |
++------------------+    +------------------+
+```
+
+In this "Repeatable Read" example, Transaction T1 reads data item X, writes to X, and then reads X again, ensuring the same value is returned. Concurrently, Transaction T2 reads and writes to a different data item Y. Both transactions can proceed without waiting for each other because they're operating on different data items, but repeatable read ensures that multiple reads of X within T1 return the same result.
+
 ## Serializable Isolation Level
 
 A strict isolation level that ensures transactions appear to execute sequentially for consistency.
@@ -32,7 +72,7 @@ A less strict isolation level that ensures data read by a transaction won't chan
 - Maintains a high level of consistency while allowing for greater concurrency
 - Ideal for balancing data integrity and performance
 
-## Comparison: Serializable vs Repeatable Read
+## Comparison
 
 |                   | Serializable | Repeatable Read |
 |-------------------|--------------|-----------------|
