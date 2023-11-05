@@ -1,38 +1,53 @@
-## How tables and indexes are stored on disk?
+## Understanding the Storage of Tables and Indexes on Disk
 
-Tables and indexes are essential components of relational databases, and their storage on disk plays a crucial role in the performance and efficiency of database operations. This note focuses on how tables and indexes are stored on disk and the implications for database performance.
+Tables and indexes, as crucial components of relational databases, significantly influence the performance and efficiency of database operations. This note delves into how tables and indexes are stored on disk and explores the implications this has on database performance.
 
-II. Storage Structure
+### Storage Structure
 
-A. Pages and Blocks
+#### Pages and Blocks
 
-1. Data in tables and indexes are stored in fixed-size units called pages or blocks (typically 4KB, 8KB, or 16KB).
-2. Pages are grouped into extents, which are contiguous allocations of a specific number of pages.
-3. The database management system (DBMS) manages the allocation and deallocation of pages and extents for efficient storage and retrieval.
+1. **Units of Storage**: Data in tables and indexes are stored in fixed-size units, referred to as pages or blocks, with common sizes being 4KB, 8KB, or 16KB.
+2. **Extents**: Pages are grouped into extents, contiguous allocations that consist of a specific number of pages.
+3. **Management**: The Database Management System (DBMS) is responsible for the allocation and deallocation of pages and extents, ensuring efficient storage and retrieval.
 
-B. Tables
+```
++---------------------+       +---------------------+
+|      Extent 1       |       |      Extent 2       |
+| +-------+-------+   |       | +-------+-------+   |
+| | Page 1| Page 2|   |       | | Page 3| Page 4|   |
+| |+-----+|+-----+|   |       | |+-----+|+-----+|   |
+| ||Block||Block||...||       | ||Block||Block||...||
+| |+-----+|+-----+|   |       | |+-----+|+-----+|   |
+| +-------+-------+   |       | +-------+-------+   |
++---------------------+       +---------------------+
+```
 
-1. Tables are stored as a collection of pages on disk, with each page containing multiple rows or records.
-2. Row-based storage (also called N-ary storage model, or NSM) stores entire rows together in a page, while columnar storage (also called Decomposition Storage Model, or DSM) stores each column separately in different pages.
-3. Row-based storage is typically used in OLTP systems, where transactions access complete rows, while columnar storage is more suitable for OLAP systems, where analytical queries access specific columns.
+#### Tables
 
-C. Indexes
+1. **Collection of Pages**: Tables are stored on disk as a collection of pages, with each page containing multiple rows or records.
+2. **Storage Models**:
+   - **Row-based Storage** (N-ary Storage Model, NSM): This model stores entire rows contiguously in a page.
+   - **Columnar Storage** (Decomposition Storage Model, DSM): This model stores each column's data separately across different pages.
+3. **Use Cases**: Row-based storage is favored in Online Transaction Processing (OLTP) systems for transactions accessing complete rows, while columnar storage is advantageous in Online Analytical Processing (OLAP) systems where queries access specific columns.
 
-1. Indexes are auxiliary data structures that provide fast access to rows in a table based on specific column values.
-2. Common index structures include B-trees, bitmap indexes, and hash indexes.
-3. B-trees are balanced tree structures that allow for efficient searching, insertion, and deletion of data.
-4. Bitmap indexes are bitmaps representing the presence or absence of a value in a column, suitable for low-cardinality columns and efficient for set-based operations.
-5. Hash indexes use hash functions to map column values to corresponding row locations, providing fast access for exact-match queries.
+#### Indexes
 
-III. Implications for Performance
+1. **Purpose**: Indexes are data structures designed to provide fast access to rows in a table based on the values of one or more columns.
+2. **Types of Indexes**:
+   - **B-trees**: Balanced tree structures that ensure efficient searching, insertion, and deletion of data.
+   - **Bitmap Indexes**: Bitmaps that indicate the presence or absence of a value in a column, suitable for columns with low cardinality.
+   - **Hash Indexes**: These use hash functions to map column values to row locations, ideal for exact-match queries.
+3. **Implementation**: Indexes can be created and managed using SQL commands or database-specific tools.
 
-A. Data Locality
+### Implications for Performance
 
-1. Storing related data in close proximity on disk can improve performance by reducing disk I/O and cache misses.
-2. For row-based storage, clustering rows with similar values can improve performance for range queries, while for columnar storage, compression techniques can be applied to improve storage efficiency and query performance.
+#### Data Locality
 
-B. Indexing Strategies
+1. **Proximity**: Storing related data close to each other on the disk can boost performance by minimizing disk I/O and cache misses.
+2. **Clustering and Compression**: Clustering similar rows in row-based storage can enhance performance for range queries. In columnar storage, compression techniques can be employed to improve both storage efficiency and query performance.
 
-1. The choice of index structure depends on the access patterns and query requirements of the application.
-2. B-trees are well-suited for a broad range of queries and access patterns, while bitmap indexes and hash indexes are more specialized for specific use cases.
-3. Over-indexing can lead to increased storage and maintenance overhead, so it is essential to choose appropriate indexes for the application's requirements.
+#### Indexing Strategies
+
+1. **Choice of Index**: The selection of an index structure should align with the application's access patterns and query needs.
+2. **Versatility vs. Specialization**: B-trees are versatile, catering to various queries, while bitmap and hash indexes are specialized for specific scenarios.
+3. **Over-Indexing**: Excessive indexing can lead to increased storage requirements and maintenance overhead. Thus, it is crucial to strategically choose indexes that align with the application's needs.
