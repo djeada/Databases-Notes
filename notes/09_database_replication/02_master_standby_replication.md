@@ -1,7 +1,23 @@
 ## Master-Standby replication
 Master-Standby replication is a common replication topology where a primary (master) database is replicated to one or more secondary (standby) databases. This note focuses on the concept of Master-Standby replication and provides an example using PostgreSQL as the database management system.
 
-## Master-Standby Replication Overview
+```
+ +--------+     Replication     +-----------+
+ | Master | ------------------> | Standby 1 |
+ | (Active)|                    | (Passive) |
+ +--------+     Replication     +-----------+
+     ^                              |
+     |                              |
+     |                          Replication
+     |                              |
+     |                              v
+     |                         +-----------+
+     |                         | Standby 2 |
+     +-----------------------> | (Passive) |
+                               +-----------+
+```
+
+## Master-Standby Replication 
 
 ### Purpose
 
