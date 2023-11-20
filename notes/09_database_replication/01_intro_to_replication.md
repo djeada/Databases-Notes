@@ -2,6 +2,25 @@
 
 Database replication is a technique for maintaining multiple copies of data across different database nodes. It ensures data reliability, fault-tolerance, and improves data accessibility. 
 
+```
+ +-------------+    Replication    +-------------+
+ |             | ----------------> |             |
+ |  Database   |                   |  Replica    |
+ |   (Master)  | <---------------- |   (Copy)    |
+ |             |    Replication    |             |
+ +-------------+                   +-------------+
+       ^                                  ^
+       |                                  |
+       |                                  |
+       v                                  v
+ +-------------+                   +-------------+
+ |             |                   |             |
+ |  Replica    |                   |  Replica    |
+ |   (Copy)    |                   |   (Copy)    |
+ |             |                   |             |
+ +-------------+                   +-------------+
+```
+
 ## In-depth Understanding of Database Replication
 
 ### High Availability
