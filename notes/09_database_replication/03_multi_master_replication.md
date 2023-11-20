@@ -1,5 +1,21 @@
 ## Multi-Master Replication
-Multi-Master replication is a database replication model where multiple databases can perform write operations simultaneously. 
+Multi-Master replication is a database replication model where multiple databases can perform write operations simultaneously. each master node replicates its data to every other node.
+
+```
+ +--------+     Replication     +--------+
+ | Master | <-----------------> | Master |
+ | Node 1 |                     | Node 2 |
+ +--------+     Replication     +--------+
+     ^                              ^
+     |                              |
+Replication                 Replication
+     |                              |
+     v                              v
+ +--------+                     +--------+
+ | Master |                     | Master |
+ | Node 3 |                     | Node 4 |
+ +--------+                     +--------+
+```
 
 ## Purpose of Multi-Master Replication
 
