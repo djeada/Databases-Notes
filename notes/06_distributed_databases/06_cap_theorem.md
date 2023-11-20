@@ -14,9 +14,10 @@
 ```
 
 ### Key Concepts
-1. Consistency (C): All nodes in the system see the same data at the same time
-2. Availability (A): The system continues to function and respond to requests, even in the presence of failures
-3. Partition Tolerance (P): The system continues to function despite network partitions or communication failures between nodes
+
+1. **Consistency (C)**: This principle ensures that all nodes (or machines) in a distributed system show the same data at the same time. In a consistent system, any read operation on the data will return the most recent write operation's result, regardless of which node in the system is accessed. This is crucial for maintaining data accuracy across the system. However, achieving this can be challenging in a distributed environment, especially when there are updates happening frequently.
+2. **Availability (A)**: Availability refers to the system's ability to remain operational and responsive to user requests, even when there are failures in some parts of the system. In an available system, every request receives a response, whether it is a success or a failure notice. This does not guarantee that every transaction will be completed successfully, but it ensures that the system remains accessible and does not go offline or become unresponsive.
+3. **Partition Tolerance (P)**: Partition tolerance means that the system continues to function, to some degree, despite network partitions or communication breakdowns between nodes. A partition refers to any scenario where some nodes cannot communicate with the rest of the system. A partition-tolerant system can still process requests and operate in some capacity, even when there is a communication failure or network issue causing some parts of the system to be isolated.
 
 ## Implications of CAP Theorem
 - In a distributed system, it's impossible to guarantee all three properties simultaneously
