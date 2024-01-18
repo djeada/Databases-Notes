@@ -7,6 +7,20 @@ Various types of databases cater to different needs and applications.
 ### Description
 Relational databases, or Relational Database Management Systems (RDBMS), store data in structured tables with rows and columns. Unique keys identify each row, and a predefined schema dictates the data's structure and types.
 
+```
++----------------+      +------------------+
+|   Customers    |      |    Orders        |
++----------------+      +------------------+
+| ID   | Name    |      | OrderID | CustID |
+|------+-------- |      |--------+---------|
+| 1    | Alice   |      | 123    | 1       |
+| 2    | Bob     |      | 124    | 2       |
+| 3    | Charlie |      | 125    | 1       |
++----------------+      +------------------+
+        |                        |
+        |-------Foreign Key------|
+```
+
 ### Representative Systems
 - MySQL
 - PostgreSQL
@@ -33,6 +47,33 @@ Relational databases, or Relational Database Management Systems (RDBMS), store d
 ### Description
 Document-based databases manage data as documents, typically in formats like JSON or BSON.
 
+```
++-----------------------------------------+
+|        Document-Based DB                |
++-----------------------------------------+
+| Document 1                              |
+| {                                       |
+|   "id": "001",                          |
+|   "type": "customer",                   |
+|   "name": "Alice",                      |
+|   "orders": [                           |
+|     {"order_id": "1001", "total": 300}, |
+|     {"order_id": "1002", "total": 450}  |
+|   ]                                     |
+| }                                       |
++-----------------------------------------+
+| Document 2                              |
+| {                                       |
+|   "id": "002",                          |
+|   "type": "customer",                   |
+|   "name": "Bob",                        |
+|   "orders": [                           |
+|     {"order_id": "1003", "total": 200}  |
+|   ]                                     |
+| }                                       |
++-----------------------------------------+
+```
+
 ### Representative Systems
 - MongoDB
 - Couchbase
@@ -55,6 +96,28 @@ Document-based databases manage data as documents, typically in formats like JSO
 
 ### Description
 Column-based databases, or wide-column stores, organize data by columns instead of rows, optimizing for scaling and handling large datasets.
+
+```
++---------------------------------------+
+|       Column-Based Database           |
++---------------------------------------+
+| Column Family: Customers              |
+|---------------------------------------|
+| ID | Name     | Age | Email           |
+|----|----------|-----|-----------------|
+| 1  | Alice    | 30  | alice@email.com |
+| 2  | Bob      |     | bob@email.com   |
+| 3  | Charlie  | 40  |                 |
++---------------------------------------+
+| Column Family: Orders                 |
+|---------------------------------------|
+| OrderID | CustID | Amount | Status    |
+|---------|--------|--------|-----------|
+| 1001    | 1      | 300    | Shipped   |
+| 1002    | 2      | 450    | Delivered |
+| 1003    | 1      |        | Pending   |
++---------------------------------------+
+```
 
 ### Representative Systems
 - Apache Cassandra
@@ -80,6 +143,23 @@ Column-based databases, or wide-column stores, organize data by columns instead 
 ### Description
 Key-value databases are simple NoSQL databases storing data as key-value pairs.
 
+```
++-----------------------------------------------+
+|      Key-Value Database                       |
++-----------------------------------------------+
+| Key        | Value                            |
+|------------|----------------------------------|
+| user:1001  | { "name": "Alice",               |
+|            |   "age": 30,                     |
+|            |   "email": "alice@example.com"}  |
+| user:1002  | { "name": "Bob",                 |
+|            |   "age": 25,                     |
+|            |   "email": "bob@example.com"}    |
+| settings:1 | { "theme": "dark",               |
+|            |   "language": "en"}              |
++-----------------------------------------------+
+```
+
 ### Representative Systems
 - Redis
 - Amazon DynamoDB
@@ -102,6 +182,25 @@ Key-value databases are simple NoSQL databases storing data as key-value pairs.
 
 ### Description
 Graph databases manage data as nodes (entities) and edges (relationships).
+
+```
++--------------------------------------------------+
+|                Graph-Based DB                    |
++--------------------------------------------------+
+| Nodes                                            |
+|--------------------------------------------------|
+| (User1:User {name: "Alice", age: 30})            |
+| (User2:User {name: "Bob", age: 25})              |
+| (Product1:Product {name: "Laptop", price: 1200}) |
+| (Product2:Product {name: "Phone", price: 800})   |
++--------------------------------------------------+
+| Relationships                                    |
+|--------------------------------------------------|
+| (User1)-[:PURCHASED]->(Product1)                 |
+| (User1)-[:FRIEND_OF]->(User2)                    |
+| (User2)-[:PURCHASED]->(Product2)                 |
++--------------------------------------------------+
+```
 
 ### Representative Systems
 - Neo4j
