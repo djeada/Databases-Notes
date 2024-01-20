@@ -2,6 +2,15 @@
 
 Isolation is one of the ACID properties of database transactions, ensuring that the intermediate results of a transaction are not visible to other concurrently executing transactions.
 
+```
++----------------+      +----------------+
+| Transaction 1  |      | Transaction 2  |
+| - Step 1       |      | - Step 1       |
+| - Step 2       |  --  | - Step 2       |
++----------------+      +----------------+
+   Independent             Independent
+```
+
 ## Importance of Isolation
 
 ### Concurrency Control
