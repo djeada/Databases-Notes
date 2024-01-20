@@ -80,17 +80,13 @@ Once upon a time in a quaint little village, there was a diligent postman named 
 
 One day, Tom received a special request. A villager, Alice, wanted to send two letters: one to her friend Bob and another to her cousin Charlie. Tom knew that both letters were part of a surprise birthday plan and thus, both had to be delivered together or not at all.
 
-Tom carefully prepared both letters, ensuring that if one letter couldn't be delivered (perhaps due to an incorrect address), neither would be sent out. This way, Alice's surprise would remain a secret until both friends could be told at the same time (ATOMICITY).
+Tom carefully prepared both letters, ensuring that if one letter couldn't be delivered (perhaps due to an incorrect address), neither would be sent out. This way, Alice's surprise would remain a secret until both friends could be told at the same time, perfectly demonstrating the principle of **ATOMICITY**.
 
-The post office had strict guidelines for sending letters. Each letter had to be stamped, sealed, and the address had to be correctly formatted. Tom meticulously checked Alice's letters to ensure they met all the criteria. If a letter was not properly stamped or sealed, it would not be sent.
+The post office had strict guidelines for sending letters. Each letter had to be stamped, sealed, and the address had to be correctly formatted. Tom meticulously checked Alice's letters to ensure they met all the criteria. When he found that one of the letters didn't have a stamp, he knew he couldn't send them until they were both properly prepared. This careful adherence to standards ensured the integrity and reliability of the postal service, much like how **CONSISTENCY** in databases ensures data integrity.
 
-Tom found that one of the letters didn't have a stamp. He knew he couldn't send them until they were both properly prepared, ensuring consistency in the process (CONSISTENCY).
+Meanwhile, other villagers were also sending and receiving letters. Tom was juggling multiple deliveries and pickups, but he was careful to treat each task independently. For instance, while preparing Alice's letters, he was also packaging a parcel for another villager, Dave. Despite switching between tasks, Dave's parcel and Alice's letters were handled as if they were the only tasks in the world, unaffected by each other. This highlighted the principle of **ISOLATION**, ensuring that simultaneous transactions don’t negatively impact each other.
 
-Meanwhile, other villagers were also sending and receiving letters. Tom was juggling multiple deliveries and pickups, but he was careful to treat each task independently. Even if he was in the middle of preparing Alice's letters, when he switched to handle another villager's letters, he ensured that the tasks did not interfere with each other.
-
-For instance, while preparing Alice's letters, he was also packaging a parcel for another villager, Dave. Even though Tom switched between tasks, Dave's parcel and Alice's letters were handled as if they were the only tasks in the world, unaffected by each other (ISOLATION).
-
-Finally, after ensuring that both of Alice's letters were stamped, sealed, and addressed correctly, Tom sent them out for delivery. Once the letters were on their way, Tom knew that the task was irreversible and permanent. Even if a storm came or his bicycle broke down, the post office guaranteed that the letters would reach Bob and Charlie. The commitment was durable and reliable (DURABILITY).
+Finally, after ensuring that both of Alice's letters were stamped, sealed, and addressed correctly, Tom sent them out for delivery. Once the letters were on their way, Tom knew that the task was irreversible and permanent. He recorded the dispatch in the post office's logbook, providing a tangible record of the transaction. Even if a storm came or his bicycle broke down, the post office guaranteed that the letters would reach Bob and Charlie. This commitment to delivering the letters despite potential obstacles demonstrated the principle of **DURABILITY**, akin to how once a transaction is committed in a database, it is permanently recorded and unaffected by subsequent failures.
     
 ## Transaction Management
 
