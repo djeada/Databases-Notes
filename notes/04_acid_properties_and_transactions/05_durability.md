@@ -1,6 +1,15 @@
 ## Durability
 Durability is one of the ACID properties of database transactions, ensuring that once a transaction is committed, its effects are permanent and can survive system failures.
 
+```
++----------------+      +----------------+
+| Committed      |      | System         |
+| Transaction    |  ->  | Restart        |
+| - Preserved    |      | - Preserved    |
++----------------+      +----------------+
+   Permanent Change       Change Survives
+```
+
 ## Importance of Durability
 
 ### Data Persistence
