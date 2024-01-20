@@ -2,6 +2,15 @@
 
 Consistency is one of the ACID properties of database transactions, ensuring that the database remains in a consistent state before and after the transaction. This note delves into the concept of consistency, its significance in preserving data integrity, and examples that illustrate its importance.
 
+```
++----------------+      +----------------+
+| Before         |      | After          |
+| - State A      |      | - State B      |
+| - Valid        |  ->  | - Valid        |
++----------------+      +----------------+
+   Consistent State        Consistent State
+```
+
 ## Importance of Consistency
 
 ### Data Integrity
