@@ -27,15 +27,52 @@ Transactions are defined by their ACID properties, ensuring database consistency
 
 ### Atomicity
 A transaction is atomic, meaning it either fully completes or does not occur at all. If any part of the transaction fails, the entire transaction is rolled back, and the database reverts to its state before the transaction began.
+
+```
++----------------+      +----------------+
+| Transaction 1  |      | Transaction 1  |
+| - Step 1       |      | - Step 1       |
+| - Step 2       |  ->  | - Step 2       |
+| - Step 3       |      | - Step 3       |
++----------------+      +----------------+
+   All or Nothing           Fully Applied
+```
     
 ### Consistency
 A transaction guarantees that the database transitions from one consistent state to another. Consistency rules, such as primary key and foreign key constraints, must be upheld throughout the transaction.
-    
+  
+```
++----------------+      +----------------+
+| Before         |      | After          |
+| - State A      |      | - State B      |
+| - Valid        |  ->  | - Valid        |
++----------------+      +----------------+
+   Consistent State        Consistent State
+```
+  
 ### Isolation
 Transactions are isolated from each other, ensuring that the intermediate results of one transaction remain invisible to other transactions. This prevents conflicts and creates the illusion that each transaction is executed sequentially, despite potential concurrency.
     
+```
++----------------+      +----------------+
+| Transaction 1  |      | Transaction 2  |
+| - Step 1       |      | - Step 1       |
+| - Step 2       |  --  | - Step 2       |
++----------------+      +----------------+
+   Independent             Independent
+```
+
 ### Durability
 Once a transaction is committed, its changes to the database become permanent. The system must safeguard committed data against loss due to crashes or system failures.
+
+```
++----------------+      +----------------+
+| Committed      |      | System         |
+| Transaction    |  ->  | Restart        |
+| - Preserved    |      | - Preserved    |
++----------------+      +----------------+
+   Permanent Change       Change Survives
+```
 
 ## Analogy of a post office
 
