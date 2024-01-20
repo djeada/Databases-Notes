@@ -1,6 +1,16 @@
 ## Atomicity
 Atomicity is one of the ACID properties of database transactions, ensuring that a transaction is either entirely completed or not executed at all. This note highlights the concept of atomicity, its significance in preserving data integrity, and examples that illustrate its importance.
 
+```
++----------------+      +----------------+
+| Transaction 1  |      | Transaction 1  |
+| - Step 1       |      | - Step 1       |
+| - Step 2       |  ->  | - Step 2       |
+| - Step 3       |      | - Step 3       |
++----------------+      +----------------+
+   All or Nothing           Fully Applied
+```
+
 ## Importance of Atomicity
 
 ### Data Integrity
