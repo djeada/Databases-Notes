@@ -58,6 +58,31 @@ Improvements Made:
 
 - **Index Utilization:** Ensuring that `CustomerID` in both Orders and Customers tables and potentially the `Country` column in the Customers table are indexed will greatly enhance the query speed.
 
+### Query itself is not enough
+
+Gaining a comprehensive understanding of SQL query performance requires more than just analyzing the query code itself. It involves a deeper dive into various aspects, including execution plans, indexing strategies, and the dynamics of the data involved. Here's an expanded view:
+
+1. **SQL Code and Performance Analysis**: 
+   - A basic SQL query, like `SELECT salary FROM emp WHERE id = 97`, on its own doesn't tell us how fast it will execute. The query structure is important, but it's not the sole determinant of performance.
+   - This step is about assessing the query's structure, such as selected columns, conditions, and joins, to identify potential inefficiencies or areas for optimization.
+
+2. **Importance of Execution Plans**: 
+   - Execution plans are critical tools for understanding how a SQL server intends to execute a query. They provide insights into the operations the database engine will perform.
+   - These plans show whether the engine will perform a full table scan, which is time-consuming, or a more efficient index scan. This knowledge is key to optimizing queries.
+
+3. **Case Study: Indexing Impact**:
+   - **Without Index**: When there's no index on the `id` column, the database engine performs a full table scan. This process is slow, often taking several seconds, as it requires scanning each row in the table.
+   - **With Basic Index**: Adding a basic index on the `id` column transforms the execution plan. Now, the engine performs an index scan, significantly reducing the query time to just milliseconds.
+   - **With Covering Index**: Enhancing the index by including the `salary` column allows for an index-only scan. This method is even faster as it avoids accessing the table data directly, further speeding up the query execution.
+
+4. **Table Size and Data Freshness**:
+   - Inserting a massive amount of data (e.g., 3 million rows) into a table can significantly impact query performance. This is particularly evident in databases employing Multiversion Concurrency Control (MVCC).
+   - In such cases, the database must verify the new rows' visibility, which can be a slow process, especially if garbage collection related to MVCC is pending.
+
+5. **Same Code, Variable Performance**:
+   - This point underscores that even with consistent backend application code, SQL query performance can vary considerably. 
+   - Key influencing factors include database-level aspects like indexing, the volume of data, and the physical storage of data. Understanding and optimizing these factors can lead to substantial improvements in query execution speed.
+
 ### Best Practices
 
 - Understand the importance of query optimization and its impact on database performance
