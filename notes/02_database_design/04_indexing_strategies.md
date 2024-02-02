@@ -89,7 +89,7 @@ Just as a well-maintained vehicle ensures smooth operation, consistent upkeep of
 
 While indexes enhance data retrieval performance, they come at the cost of consuming disk space and memory:
 
-- **Balancing Act:** The benefits gained from improved query performance should be carefully weighed against the resources consumed by the indexes.
+- **Balancing Act:** Excessive indexing can lead to significant resource consumption, particularly in terms of memory usage. When the system's memory capacity is exceeded, it may resort to swapping, where data is temporarily moved from RAM to disk storage. This process can significantly degrade system performance due to the slower access speeds of disk storage compared to RAM.
 - **Proactive Monitoring:** Regular monitoring and potential adjustment of your indexing strategy are essential to ensure optimal resource utilization.
 
 ###  Harnessing Efficiency: Query Optimization
