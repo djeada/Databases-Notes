@@ -7,7 +7,7 @@ Views, joins, and subqueries are techniques used in SQL to manipulate and retrie
 
 ## Joins
 
-Joins in SQL are essential for combining rows from two or more tables based on a common field between them. Think of joins as a way to connect tables "horizontally," similar to placing bricks side by side, each brick representing a table.
+Joins are essential for combining rows from two or more tables based on a common field between them. Think of joins as a way to connect tables "horizontally," similar to placing bricks side by side, each brick representing a table.
 
 Here's a simplified way to understand different types of joins:
 
@@ -116,9 +116,9 @@ Result:
 | 3 | Finance | NULL |
 | NULL | NULL | Taylor |
 
-## Subqueries in SQL
+## Subqueries 
 
-Subqueries are a powerful feature in SQL, allowing you to use one query inside another. They are particularly useful in `SELECT`, `WHERE`, or `HAVING` clauses and can return various types of results: a single value, a list of values, or an entire table.
+Subqueries are a powerful feature , allowing you to use one query inside another. They are particularly useful in `SELECT`, `WHERE`, or `HAVING` clauses and can return various types of results: a single value, a list of values, or an entire table.
 
 Here's a more intuitive way to understand subqueries:
 
