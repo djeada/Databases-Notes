@@ -4,6 +4,16 @@ Data is stored in memory as binary information in the form of bits (0s and 1s). 
 </details>
 
 <details>
+<summary>Are all columns keys?</summary><br>
+No, not all columns are keys. In a database table, a key column uniquely identifies each row in the table. While some columns may serve as keys, many others contain non-unique data that are not used for identification purposes.
+</details>
+
+<details>
+<summary>Are all keys indexes?</summary><br>
+Not necessarily. While keys are often indexed for faster retrieval of data, not all keys are required to be indexes. Indexes are data structures that improve the speed of data retrieval operations in a database by providing quick access to specific rows based on the indexed columns. However, depending on the database design and requirements, some keys may not need to be indexed.
+</details>
+
+<details>
 <summary>Why can there be only one primary key in a table?</summary><br>
 There can be only one primary key in a table because its purpose is to uniquely identify each record in the table. A primary key consists of one or more columns, and its values must be unique and not null. Having more than one primary key would be redundant and could lead to data inconsistency.
 </details>
