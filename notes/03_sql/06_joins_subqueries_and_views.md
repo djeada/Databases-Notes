@@ -7,7 +7,16 @@ Views, joins, and subqueries are techniques used in SQL to manipulate and retrie
 
 ## Joins
 
-Joins are used to combine rows from multiple tables based on a related column.
+Joins in SQL are essential for combining rows from two or more tables based on a common field between them. Think of joins as a way to connect tables "horizontally," similar to placing bricks side by side, each brick representing a table.
+
+Here's a simplified way to understand different types of joins:
+
+- **INNER JOIN**: Retrieves rows with an exact match in both tables. It's like finding a common area where both tables overlap.
+
+- **OUTER JOIN**: Includes rows with an exact match and also those rows from one or both tables that do not have a matching counterpart in the other table. There are three types:
+  - **LEFT OUTER JOIN (or LEFT JOIN)**: Includes all rows from the left table and matched rows from the right table. If there is no match, NULL values are used to fill in columns from the right table.
+  - **RIGHT OUTER JOIN (or RIGHT JOIN)**: Includes all rows from the right table and matched rows from the left table. If there is no match, NULL values are used to fill in columns from the left table.
+  - **FULL OUTER JOIN (or FULL JOIN)**: Combines the results of both LEFT JOIN and RIGHT JOIN. It includes all rows from both tables, with NULLs in place where there is no match.
 
 Example Tables:
 
@@ -107,14 +116,22 @@ Result:
 | 3 | Finance | NULL |
 | NULL | NULL | Taylor |
 
-## Subqueries
+## Subqueries in SQL
 
-Subqueries are SQL queries nested inside another query. They can be used in `SELECT`, `WHERE`, or `HAVING` clauses and can return a single value, a list of values, or a table.
+Subqueries are a powerful feature in SQL, allowing you to use one query inside another. They are particularly useful in `SELECT`, `WHERE`, or `HAVING` clauses and can return various types of results: a single value, a list of values, or an entire table.
 
-There are two types of subqueries:
+Here's a more intuitive way to understand subqueries:
 
-- Non-correlated subquery: a subquery that can be run independently and doesn't depend on the outer query
-- Correlated subquery: a subquery that depends on the outer query and is executed once for each row of the outer query
+1. Think of SQL as a language that operates on sets of data. A table is a set of data, and so is the result of a query.
+2. Subqueries essentially say, "Take the result of this query, treat it as a temporary table (often giving it a name), and then use it as if it were a regular table."
+3. This approach aligns with how Common Table Expressions (CTEs) work, providing a named temporary result set that you can reference within a SQL statement.
+
+There are two main types of subqueries:
+
+- **Non-correlated subqueries**: These are standalone queries that can be executed independently of the outer query. They are evaluated once and their result is used by the outer query.
+   
+- **Correlated subqueries**: These depend on data from the outer query. Unlike non-correlated subqueries, a correlated subquery is executed repeatedly, once for each row processed by the outer query. This is because its result can vary depending on the row from the outer query.
+
 
 Example Tables:
 
