@@ -1,66 +1,65 @@
 ## Consistent Hashing
-- Consistent hashing is a distributed hashing technique
-- Provides even data distribution and minimal data movement during node addition/removal
+- Consistent hashing is a distributed hashing technique.
+- It provides even data distribution and minimal data movement during node addition/removal.
 
 Consider a circle (or 'ring') representing the hash space, where data entries and nodes are mapped.
 
 ```
-                        0/360
-                         |
-                         |
-             270 --------+-------- 90
-                         |
-                         |
-                        180
+                    0/360
+                     |
+                     |
+         270 --------+-------- 90
+                     |
+                     |
+                    180
 ```
 
 Let's assume we have 4 data entries (1, 2, 3, and 4) which will also be mapped onto the circle:
 
 ```
-                        0/360 -- A
-                         |
-                   1 --  |  -- 2
-         D - 270 --------+-------- 90 - B
-                         |
-                 4 --    |    -- 3
-                      C --180
+                    0/360 -- A
+                     |
+               1 --  |  -- 2
+     D - 270 --------+-------- 90 - B
+                     |
+             4 --    |    -- 3
+                  C --180
 ```
 
-Now, we would assign each data entry to the closest node in the clockwise direction:
+Each data entry is assigned to the closest node in the clockwise direction:
 
-- Data entry 1 would be stored on node A.
-- Data entry 2 would be stored on node B.
-- Data entry 3 would be stored on node C.
-- Data entry 4 would be stored on node D.
+- **Data entry 1** is stored on **node A**.
+- **Data entry 2** is stored on **node B**.
+- **Data entry 3** is stored on **node C**.
+- **Data entry 4** is stored on **node D**.
+
+This way, consistent hashing distributes the data evenly and ensures that only a small number of data entries need to be remapped when a node is added or removed.
     
 ## Concepts
 
-- **Hash Ring**: A conceptual circular space wherein nodes and data items are placed.
-- **Hash Function**: Function used to map data and nodes to their positions on the hash ring.
-- **Virtual Nodes**: Multiple points on the hash ring that stand for a single physical node. Useful for improving distribution and handling node heterogeneity.
+- **Hash Ring**: A conceptual circular space where both nodes and data items are placed. This ring structure allows for efficient distribution and lookup of data.
+- **Hash Function**: A function that maps data items and nodes to specific positions on the hash ring. The hash function ensures that the placement is both deterministic and uniform.
+- **Virtual Nodes**: Multiple positions on the hash ring that represent a single physical node. Virtual nodes help improve data distribution and handle the heterogeneity of node capacities by allowing nodes to take on multiple roles.
 
 ## Mechanism
 
-1. Data and Node Mapping
-  - Determine node and data item positions on the hash ring by applying the hash function.
-2. Data Allocation
-  - Each data item is assigned to the first node encountered in the clockwise direction on the hash ring.
-3. Node Changes
-  - On adding a node, it takes over some data items from its neighboring nodes.
-  - On removing a node, its data items are reassigned to the remaining neighboring nodes.
+1. Nodes and data items are assigned positions on the hash ring using the hash function. This ensures that both are distributed uniformly across the ring.
+2. Each data item is allocated to the first node it encounters in the clockwise direction on the hash ring. This method ensures even distribution and efficient lookup.
+3. When a new node is added, it takes over some of the data items from its neighboring nodes, ensuring a balanced load.
+4. When a node is removed, its data items are redistributed to the remaining neighboring nodes, maintaining data availability and balance.
 
 ## Use Cases
 
-- Applied in distributed caching systems like Memcached and Redis.
-- Used in distributed databases such as Apache Cassandra and DynamoDB.
-- Employed for load balancing across multiple servers.
-- Utilized in distributed file systems.
+- Used in systems like Memcached and Redis to ensure that cache data is evenly distributed and quickly retrievable.
+- Employed to distribute requests evenly across multiple servers, preventing any single server from becoming a bottleneck.
+- Applied in databases such as Apache Cassandra and DynamoDB to manage data distribution and replication efficiently.
+- Used to spread file storage across multiple nodes, ensuring redundancy and quick access.
 
 ## Advantages
 
-- **Even Data Distribution**: Data is uniformly allocated across nodes, preventing hotspots.
-- **Minimal Data Reassignment**: Data reassignment is kept minimal when nodes are added or removed, reducing system overhead.
-- **Load Balancing**: Nodes have balanced load, contributing to better system performance.
+- Ensures that data is evenly distributed across all nodes, preventing any single node from becoming a hotspot.
+- When nodes are added or removed, only a small portion of data needs to be moved, reducing the overhead on the system.
+- Each node carries a fair share of the load, leading to improved overall system performance and reliability.
 
 ## Best Practices
 
