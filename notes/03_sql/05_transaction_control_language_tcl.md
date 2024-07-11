@@ -38,18 +38,16 @@ COMMIT;
 
 In this example, the `COMMIT` statement saves the salary update for employees in department 1.
 
-Before:
+**employees** before:
 
-**employees**
 | employee_id | department_id | salary  |
 |-------------|---------------|---------|
 | 1           | 1             | 1000    |
 | 2           | 1             | 1200    |
 | 3           | 2             | 1500    |
 
-After:
+**employees** after:
 
-**employees**
 | employee_id | department_id | salary  |
 |-------------|---------------|---------|
 | 1           | 1             | 1100    |
@@ -173,3 +171,25 @@ After:
 | 1           | 1             | 1100    |
 | 2           | 1             | 1320    |
 | 3           | 2             | 1500    |
+
+
+## Rollback Capabilities Across Different SQL Databases 
+
+Here's a table summarizing the rollback capabilities and safety features across different SQL databases like PostgreSQL, SQLite, MySQL, Oracle, and SQL Server:
+
+| Feature                  | PostgreSQL                      | SQLite                            | MySQL                             | Oracle                            | SQL Server                        |
+|--------------------------|---------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|-----------------------------------|
+| **Transactions**         | Yes                             | Yes                               | Yes                               | Yes                               | Yes                               |
+| **Atomicity**            | Yes                             | Yes                               | Yes                               | Yes                               | Yes                               |
+| **Rollback Support**     | Yes                             | Yes                               | Yes                               | Yes                               | Yes                               |
+| **Nested Transactions**  | Yes (savepoints)                | Yes (savepoints)                  | Yes (savepoints)                  | Yes (savepoints)                  | Yes (savepoints)                  |
+| **DML Rollback**         | Yes (INSERT, UPDATE, DELETE)    | Yes (INSERT, UPDATE, DELETE)      | Yes (INSERT, UPDATE, DELETE)      | Yes (INSERT, UPDATE, DELETE)      | Yes (INSERT, UPDATE, DELETE)      |
+| **DDL Rollback**         | Limited (via transactional DDL in PostgreSQL 13+) | No                                | Limited (mostly no)               | No                                | Limited (mostly no)               |
+| **Safe Operations**      | All DML within transactions     | All DML within transactions       | All DML within transactions       | All DML within transactions       | All DML within transactions       |
+| **Unsafe Operations**    | Most DDL, certain system commands | Most DDL, certain system commands | Most DDL, certain system commands | Most DDL, certain system commands | Most DDL, certain system commands |
+| **Autocommit**           | No                              | Yes                               | Yes                               | No                                | Yes                               |
+| **Isolation Levels**     | Read Committed, Repeatable Read, Serializable | Serializable                     | Read Uncommitted, Read Committed, Repeatable Read, Serializable | Read Committed, Serializable       | Read Uncommitted, Read Committed, Repeatable Read, Serializable |
+| **Savepoints**           | Yes                             | Yes                               | Yes                               | Yes                               | Yes                               |
+| **Implicit Transactions**| No                              | No                                | Yes                               | No                                | Yes                               |
+| **Partial Rollback**     | Yes (via savepoints)            | Yes (via savepoints)              | Yes (via savepoints)              | Yes (via savepoints)              | Yes (via savepoints)              |
+
