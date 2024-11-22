@@ -1,53 +1,132 @@
 ## Understanding the Storage of Tables and Indexes on Disk
 
-Tables and indexes, as crucial components of relational databases, significantly influence the performance and efficiency of database operations. This note delves into how tables and indexes are stored on disk and explores the implications this has on database performance.
+Exploring how databases store tables and indexes on disk can provide valuable insights into optimizing performance and managing data efficiently. Let's delve into the fundamental concepts of disk storage in relational databases, focusing on the structures and mechanisms that underlie data organization.
 
-### Storage Structure
+### Storage Structures
 
-#### Pages and Blocks
+Databases organize data on disk using structured approaches to ensure efficient access and manipulation.
 
-1. **Units of Storage**: Data in tables and indexes are stored in fixed-size units, referred to as pages or blocks, with common sizes being 4KB, 8KB, or 16KB.
-2. **Extents**: Pages are grouped into extents, contiguous allocations that consist of a specific number of pages.
-3. **Management**: The Database Management System (DBMS) is responsible for the allocation and deallocation of pages and extents, ensuring efficient storage and retrieval.
+#### Pages and Extents
+
+At the core of data storage are pages, sometimes called blocks. These are fixed-size chunks of data, commonly 4KB, 8KB, or 16KB in size, depending on the database system. Pages serve as the basic units for reading from and writing to the disk.
+
+To manage storage more effectively, pages are grouped into extents. An extent is a collection of contiguous pages, which helps reduce fragmentation and improves read/write performance by allowing larger chunks of data to be processed in a single operation.
+
+Here's a simple illustration of pages grouped into extents:
 
 ```
-+---------------------+       +---------------------+
-|      Extent 1       |       |      Extent 2       |
-| +-------+-------+   |       | +-------+-------+   |
-| | Page 1| Page 2|   |       | | Page 3| Page 4|   |
-| |+-----+|+-----+|   |       | |+-----+|+-----+|   |
-| ||Block||Block||...||       | ||Block||Block||...||
-| |+-----+|+-----+|   |       | |+-----+|+-----+|   |
-| +-------+-------+   |       | +-------+-------+   |
-+---------------------+       +---------------------+
++-------------------+
+|      Extent       |
+| +-----+  +-----+  |
+| |Page1|  |Page2|  |
+| +-----+  +-----+  |
+| +-----+  +-----+  |
+| |Page3|  |Page4|  |
+| +-----+  +-----+  |
++-------------------+
 ```
 
-#### Tables
+In this diagram, we see an extent containing four pages, each holding part of the table's data.
 
-1. **Collection of Pages**: Tables are stored on disk as a collection of pages, with each page containing multiple rows or records.
-2. **Storage Models**:
-   - **Row-based Storage** (N-ary Storage Model, NSM): This model stores entire rows contiguously in a page.
-   - **Columnar Storage** (Decomposition Storage Model, DSM): This model stores each column's data separately across different pages.
-3. **Use Cases**: Row-based storage is favored in Online Transaction Processing (OLTP) systems for transactions accessing complete rows, while columnar storage is advantageous in Online Analytical Processing (OLAP) systems where queries access specific columns.
+#### Table Storage Models
+
+Tables are stored on disk as collections of pages, but the way data is organized within these pages can vary.
+
+- **Row-Oriented Storage**: This traditional model stores entire rows together within a page. It's efficient for transactional databases where queries often need all columns of a row. For example, customer records in a sales database would be stored with all their associated fields in the same row.
+
+- **Column-Oriented Storage**: In this model, data is stored by columns, with each page containing data from a single column across multiple rows. This approach is beneficial for analytical databases where queries may focus on specific columns across many rows. For instance, calculating the average sales amount would only require reading the sales amount column.
+
+Here's how a page might look in a row-oriented storage:
+
+```
++-----------------------------------+
+| Row1: [Col1, Col2, Col3, Col4]    |
+| Row2: [Col1, Col2, Col3, Col4]    |
+| Row3: [Col1, Col2, Col3, Col4]    |
++-----------------------------------+
+```
+
+And in a column-oriented storage:
+
+```
++--------------------+
+| Column1 Data       |
+| [Value1, Value2,   |
+|  Value3, ...]      |
++--------------------+
+```
 
 #### Indexes
 
-1. **Purpose**: Indexes are data structures designed to provide fast access to rows in a table based on the values of one or more columns.
-2. **Types of Indexes**:
-   - **B-trees**: Balanced tree structures that ensure efficient searching, insertion, and deletion of data.
-   - **Bitmap Indexes**: Bitmaps that indicate the presence or absence of a value in a column, suitable for columns with low cardinality.
-   - **Hash Indexes**: These use hash functions to map column values to row locations, ideal for exact-match queries.
-3. **Implementation**: Indexes can be created and managed using SQL commands or database-specific tools.
+Indexes are data structures that improve the speed of data retrieval operations on a database table. They are essential for efficient querying, especially in large databases.
+
+Different types of indexes include:
+
+- **B-Tree Indexes**: The most common type, suitable for a wide range of queries. They maintain a balanced tree structure that allows fast searches, insertions, and deletions.
+
+- **Hash Indexes**: Use a hash function to map keys to locations. They are efficient for equality searches but not suitable for range queries.
+
+- **Bitmap Indexes**: Represent data using bitmaps and are effective for columns with a limited number of distinct values. They are often used in data warehousing applications.
+
+A simplified illustration of a B-tree index might look like this:
+
+```
+        [50]
+       /    \
+    [25]    [75]
+   /   \    /   \
+[10] [30][60] [90]
+```
+
+Each node in the tree represents a page, and the structure allows for quick navigation to the desired data.
 
 ### Implications for Performance
 
+Understanding how tables and indexes are stored can have significant implications for database performance and optimization strategies.
+
 #### Data Locality
 
-1. **Proximity**: Storing related data close to each other on the disk can boost performance by minimizing disk I/O and cache misses.
-2. **Clustering and Compression**: Clustering similar rows in row-based storage can enhance performance for range queries. In columnar storage, compression techniques can be employed to improve both storage efficiency and query performance.
+Storing related data close together on disk improves data locality, which enhances performance by reducing the number of disk I/O operations required to retrieve data.
 
-#### Indexing Strategies
+For example, when a query requests several rows that are stored sequentially on the same page or extent, the database can read them all in a single disk operation, speeding up the retrieval process.
 
-1. **Choice of Index**: The selection of an index structure should align with the application's access patterns and query needs.
-2. **Versatility vs. Specialization**: B-trees are versatile, catering to various queries, while bitmap and hash indexes are specialized for specific scenarios.
-3. **Over-Indexing**: Excessive indexing can lead to increased storage requirements and maintenance overhead. Thus, it is crucial to strategically choose indexes that align with the application's needs.
+#### Choosing the Right Storage Model
+
+Selecting between row-oriented and column-oriented storage depends on the workload and query patterns.
+
+- **Row-Oriented Storage**: Best for transactional workloads where operations involve reading and writing entire rows, such as inserting a new customer order.
+
+- **Column-Oriented Storage**: Ideal for analytical workloads that perform aggregate functions over large datasets but only need a few columns, like generating reports on sales trends.
+
+#### Effective Indexing Strategies
+
+Indexes improve query performance by allowing the database to locate data without scanning every row in a table. However, they also consume disk space and can slow down write operations because the index must be updated whenever data is modified.
+
+Balancing the number and types of indexes is crucial. Over-indexing can lead to unnecessary overhead, while under-indexing can result in slow query performance.
+
+### Practical Examples and Commands
+
+In systems like PostgreSQL, you can inspect and manage storage aspects using specific commands.
+
+To check the size of a table and its indexes:
+
+```sql
+SELECT
+  pg_size_pretty(pg_relation_size('your_table')) AS table_size,
+  pg_size_pretty(pg_indexes_size('your_table')) AS indexes_size,
+  pg_size_pretty(pg_total_relation_size('your_table')) AS total_size;
+```
+
+This command returns the sizes in a human-readable format.
+
+Example output:
+
+| table_size | indexes_size | total_size |
+|------------|--------------|------------|
+| 120 MB     | 30 MB        | 150 MB     |
+
+Interpreting the results:
+
+- **table_size**: The amount of disk space used by the table data.
+- **indexes_size**: The total space consumed by all indexes on the table.
+- **total_size**: The combined size of the table data and its indexes.
