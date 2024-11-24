@@ -108,8 +108,7 @@ These resources provide a hands-on approach to learning, allowing you to experim
 | Deadlocks                  | Understanding and resolving situations where locks block each other.                        | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/02_deadlocks.md) |
 | Two-Phase Locking          | The protocol for acquiring and releasing locks to ensure consistency.                       | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/03_two_phase_locking.md) |
 | Double Booking Problem     | Issues arising from concurrent transactions booking the same resource.                      | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/04_double_booking_problem.md) |
-| Phantom Reads              | A concurrency issue where a transaction reads different rows after a subsequent read due to inserts or deletes by another transaction. | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/05_phantom_reads.md) |
-| Serializable vs. Repeatable Read  | Discusses the differences between isolation levels and their impact on concurrency and consistency. | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/06_serializable_vs_repeatable_read.md) |
+| Serializable vs. Repeatable Read  | Discusses the differences between isolation levels and their impact on concurrency and consistency. | [Link](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/05_serializable_vs_repeatable_read.md) |
 
 ### Database Performance and Optimization
 
