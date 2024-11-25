@@ -28,12 +28,12 @@ Consider the following real-world analogy: two drivers meet on a narrow bridge, 
 
 ### Causes of Deadlocks
 
-Several factors contribute to the occurrence of deadlocks in database systems:
+Several factors contribute to the occurrence of deadlocks in database systems, highlighting the importance of effective transaction and lock management:
 
-- **Resource Contention:** High competition for the same resources increases the likelihood of deadlocks.
-- **Unordered Lock Acquisition:** Transactions acquire locks in different orders, creating circular wait conditions.
-- **Long Transactions:** Transactions that hold locks for extended periods raise the chance of interfering with other transactions.
-- **Lock Granularity:** Locking larger resources (like entire tables) instead of smaller ones (like rows) can escalate deadlock potential.
+- High levels of **resource contention** increase the likelihood of deadlocks, as multiple transactions compete for the same resources simultaneously.  
+- **Unordered lock acquisition** occurs when transactions acquire locks in different sequences, leading to circular wait conditions that result in deadlocks.  
+- Transactions with **long durations** exacerbate the risk by holding locks for extended periods, increasing the chance of interfering with other ongoing transactions.  
+- Using coarse **lock granularity**, such as locking entire tables instead of specific rows, amplifies the potential for deadlocks by unnecessarily restricting access to resources.  
 
 ### Deadlock Detection
 
