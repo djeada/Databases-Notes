@@ -83,18 +83,24 @@ COMMIT;
 
 ### Balancing Concurrency and Integrity
 
-Efficient database systems strive to balance the need for high concurrency with the necessity of maintaining data integrity. Locks play a pivotal role in achieving this balance.
+Efficient database systems strive to balance the need for high concurrency with the necessity of maintaining data integrity. Locks play a pivotal role in achieving this balance. Here are the key concepts:
 
-- **High Concurrency:** Shared locks allow multiple transactions to read data simultaneously, increasing system throughput.
-- **Data Integrity:** Exclusive locks ensure that data modifications are isolated, preventing conflicts and potential data corruption.
+- Shared locks enable multiple transactions to **read the same data simultaneously**, enhancing concurrency and system throughput.  
+- Exclusive locks restrict access to a resource for modifications, ensuring **data integrity** by preventing conflicts and data corruption during concurrent updates.  
+- Locking mechanisms must be carefully managed to avoid **deadlocks**, where two or more transactions wait indefinitely for each other to release locks.  
+- Transaction isolation levels, such as **serializable** and **read committed**, provide a framework for managing concurrency while maintaining data consistency.
 
 ### Best Practices for Using Locks
 
-To optimize database performance while ensuring data integrity, consider the following practices:
+To optimize database performance while ensuring data integrity, the following practices are recommended:
 
-- **Minimize Lock Duration:** Keep transactions as short as possible to reduce the time locks are held, decreasing the chance of blocking other transactions.
-- **Use Appropriate Lock Granularity:** Apply locks at the most granular level necessary (e.g., row-level instead of table-level) to allow greater concurrency.
-- **Avoid Unnecessary Locks:** Only lock data when necessary. For instance, use read-uncommitted isolation level if dirty reads are acceptable, reducing the locking overhead.
+- Transactions should be designed to **minimize the duration of locks** by keeping operations concise, reducing contention and blocking of other processes.  
+- Lock granularity should be chosen carefully, with **row-level locks** preferred over table-level locks for fine-grained control, promoting greater concurrency.  
+- Avoiding unnecessary locks helps reduce overhead; for instance, adopting a **read-uncommitted isolation level** can be beneficial in scenarios where occasional dirty reads are acceptable.  
+- Deadlock detection and resolution mechanisms should be implemented to **automatically identify and address circular locking scenarios**, ensuring system stability.  
+- Prioritize using **optimistic concurrency control** techniques, such as timestamp-based validation, in read-heavy systems to reduce locking frequency.  
+- Regularly monitor and analyze transaction logs to **identify bottlenecks and locking conflicts**, enabling proactive adjustments to database configuration or schema.  
+- Employ **indexing strategies** to limit the range of locks required, as properly indexed queries reduce the amount of data scanned and locked.  
 
 ### Deadlocks and How to Handle Them
 
@@ -116,7 +122,11 @@ In this situation, Transaction 1 holds a lock on Resource A and waits for Resour
 
 **Strategies to Prevent Deadlocks:**
 
-- **Resource Ordering:** Acquire locks in a predefined order to prevent circular wait conditions.
-- **Lock Timeout:** Set a maximum wait time for a lock request, allowing transactions to fail gracefully rather than hang indefinitely.
-- **Deadlock Detection:** Implement systems that detect deadlocks and resolve them by aborting one of the involved transactions.
-
+- Establishing **resource ordering** ensures that locks are acquired in a consistent sequence, which prevents circular wait conditions from arising.  
+- Setting a **lock timeout** allows transactions to fail gracefully by limiting the maximum time a lock request can wait, avoiding indefinite blocking.  
+- Implementing **deadlock detection** systems enables the identification of deadlock situations, allowing resolution by aborting one of the conflicting transactions.  
+- Using a **wait-die or wound-wait algorithm** enforces a structured priority-based approach to manage transactions and prevent deadlocks.  
+- Designing transactions to **lock resources in bulk** at the beginning reduces the chances of mid-transaction lock conflicts, which can trigger deadlocks.  
+- Minimizing **long-running transactions** reduces the risk of lock contention, as shorter transactions are less likely to encounter deadlock situations.  
+- Optimizing **index usage** and query design decreases the number of locks required, reducing the probability of lock-related conflicts.  
+- Regularly reviewing and analyzing **deadlock logs** aids in understanding the root causes and refining locking strategies accordingly.  
