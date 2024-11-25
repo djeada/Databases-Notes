@@ -26,11 +26,10 @@ In this diagram, during the growing phase, the transaction locks Resource A and 
 
 ### The Two Phases of 2PL
 
-Understanding the two phases is crucial for grasping how 2PL ensures safe and consistent transaction execution:
+Two-phase locking operates through two distinct phases, ensuring consistency and isolation in transactions:
 
-- **Growing Phase**: The transaction acquires locks on all the resources it needs. It can continue to obtain new locks during this phase but cannot release any.
-
-- **Shrinking Phase**: After acquiring all necessary locks, the transaction begins releasing them. No new locks can be obtained in this phase.
+- During the **growing phase**, the transaction acquires locks on the resources it needs to proceed. It is allowed to obtain new locks in this phase but is restricted from releasing any locks until all required resources are secured.  
+- In the **shrinking phase**, the transaction starts releasing locks after it has acquired all the necessary ones. Once this phase begins, the transaction is no longer permitted to obtain additional locks.  
 
 By adhering to this protocol, 2PL prevents scenarios where a transaction might release a lock and later need it again, which could lead to inconsistencies or conflicts with other transactions.
 
@@ -72,47 +71,38 @@ In this example, T1 acquires the necessary locks during the growing phase to pre
 
 By controlling the acquisition and release of locks, 2PL ensures that the concurrent execution of transactions is serializable. This means the outcome is the same as if the transactions were executed one after the other in some order, eliminating issues like dirty reads, non-repeatable reads, and lost updates.
 
-### Potential Challenges with Two-Phase Locking
+### Potential Challenges with Two-Phase Locking (2PL)
 
-While 2PL is effective in maintaining consistency, it can introduce some challenges:
+While two-phase locking (2PL) is an effective protocol for ensuring consistency in transactions, it comes with its own set of challenges:
 
-- **Deadlocks**: Transactions might end up waiting indefinitely for each other to release locks, leading to a deadlock situation.
-
-- **Reduced Concurrency**: Holding locks for extended periods, especially in strict or rigorous 2PL, can limit the number of transactions that can proceed concurrently.
-
-- **Performance Overhead**: Managing locks adds overhead to the system, which can impact performance, especially in high-throughput environments.
+- The risk of **deadlocks** arises when transactions wait indefinitely for each other to release locks, creating circular dependencies.  
+- **Reduced concurrency** is a concern, as locks held during strict or rigorous 2PL can prevent other transactions from progressing simultaneously.  
+- The **performance overhead** of managing locks can be significant, especially in high-throughput systems where many transactions are executed concurrently.  
 
 ### Mitigating Deadlocks in 2PL
 
-Deadlocks are a common concern with locking protocols. Here are some strategies to mitigate them:
+Deadlocks are a frequent issue in 2PL implementations, but the following strategies can help reduce their impact:
 
-- **Lock Ordering**: Designing transactions to acquire locks in a predefined order reduces the chances of circular waits.
-
-- **Timeouts**: Implementing timeouts for lock acquisition attempts can help detect deadlocks early and allow the system to take corrective action.
-
-- **Deadlock Detection Algorithms**: The database system can periodically check for cycles in the wait-for graph and resolve deadlocks by aborting one of the involved transactions.
+- Employing **lock ordering** ensures that transactions acquire locks in a predefined sequence, which minimizes the possibility of circular waits.  
+- Introducing **timeouts** for lock acquisition attempts allows the system to detect and handle potential deadlocks early by aborting and retrying stalled transactions.  
+- Using **deadlock detection algorithms**, the database periodically examines the wait-for graph for cycles and resolves detected deadlocks by terminating one of the conflicting transactions.  
 
 ### Best Practices for Using 2PL
 
-To effectively implement two-phase locking while minimizing its drawbacks, consider the following practices:
+Effective use of 2PL requires adherence to best practices to balance consistency and performance while mitigating its drawbacks:
 
-- **Design Short Transactions**: Keeping transactions brief reduces the time locks are held, which lowers the chance of conflicts and deadlocks.
-
-- **Acquire Locks as Late as Possible**: Delay locking resources until just before they are needed within the transaction.
-
-- **Release Locks Promptly**: Once a resource is no longer needed, ensure it's released as soon as possible if the protocol allows.
-
-- **Consistent Lock Ordering**: Establish a global order for acquiring locks and ensure all transactions follow it.
-
-- **Monitor Lock Contention**: Use database monitoring tools to identify hotspots where lock contention is high and optimize accordingly.
+- **Short transactions** should be prioritized to limit the duration of lock holding, reducing the chances of conflicts and improving overall system efficiency.  
+- Transactions should **acquire locks as late as possible**, only when resources are immediately needed, to minimize lock contention.  
+- Ensuring that locks are **released promptly** once resources are no longer required helps improve concurrency and throughput.  
+- Following a **consistent lock ordering** across all transactions avoids circular waits, a common source of deadlocks.  
+- Regularly **monitoring lock contention** with database tools enables identification of bottlenecks, allowing for targeted optimizations.  
 
 ### Real-World Analogy
 
-Think of 2PL like checking out books in a library where only one person can check out a particular book at a time:
+Two-phase locking can be likened to borrowing books from a library with strict rules:
 
-- **Growing Phase**: You gather all the books you need (acquire locks). You can't return any books yet because you might still need them.
-
-- **Shrinking Phase**: Once you've finished your research, you return all the books (release locks). You can't check out any new books after you start returning them.
+- In the **growing phase**, you gather all the books (locks) you need for your research, ensuring no one else can access them while you're using them.  
+- During the **shrinking phase**, you return all the books (release locks) once you're done, but you cannot check out additional books after you begin returning.  
 
 This ensures that while you have the books, no one else can modify them (e.g., annotate them), and once you're done, others can access them.
 
