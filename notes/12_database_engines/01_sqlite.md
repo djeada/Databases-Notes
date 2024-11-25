@@ -101,3 +101,57 @@ WHERE condition;
 ```
 DROP TABLE table_name;
 ```
+
+## ENGINE:
+
+SQLite is a lightweight, serverless, self-contained database engine. Unlike  for example MySQL, which offers a variety of storage engines tailored to different use cases, SQLite has a single storage engine that is designed to handle most typical use cases efficiently. However, SQLite provides flexibility in how data is stored and managed. Below are some aspects of SQLite's storage system:
+
+---
+
+### **Key Features of SQLite's Storage Engine**
+
+1. **Single Storage Engine:**
+   - SQLite uses a B-Tree-based storage engine for its tables and indexes. This design is optimized for speed and efficiency in handling most database operations.
+   - The database is stored as a single file, making it portable and easy to integrate with applications.
+
+---
+
+2. **Journaling Modes:**
+   - SQLite provides multiple journaling modes to handle transactions and data consistency:
+     - **DELETE:** Default mode where the journal file is deleted after the transaction is committed.
+     - **WAL (Write-Ahead Logging):** Offers better performance for concurrent read/write operations by keeping a separate log file.
+     - **TRUNCATE:** Truncates the journal file instead of deleting it.
+     - **PERSIST:** Keeps the journal file but marks it as empty after a transaction.
+     - **MEMORY:** Keeps the journal in memory for faster performance but sacrifices persistence.
+
+---
+
+3. **In-Memory Mode:**
+   - SQLite supports creating a database entirely in memory (`:memory:`), which is extremely fast but volatile (data is lost when the connection is closed).
+
+---
+
+4. **File Storage Options:**
+   - SQLite supports different modes for how data is synced to disk:
+     - **FULL:** Ensures maximum durability by syncing data to disk after every write.
+     - **NORMAL:** Balances durability and performance.
+     - **OFF:** Improves performance by not syncing data immediately to disk (not recommended for critical data).
+
+---
+
+5. **Temporary Databases:**
+   - SQLite allows creating temporary databases that exist only during the session. These are often used for intermediate or scratch data.
+
+---
+
+6. **Virtual Table Mechanism:**
+   - SQLite supports virtual tables, which allow the use of custom storage backends. Examples include:
+     - **FTS (Full-Text Search):** A module for performing full-text searches.
+     - **R-Tree:** Optimized for spatial data and geometric indexing.
+     - **JSON1:** Provides JSON storage and query capabilities.
+
+---
+
+7. **Atomic Commit and Rollback:**
+   - SQLite ensures ACID compliance (Atomicity, Consistency, Isolation, Durability) for transactions using its internal mechanisms like journaling or WAL.
+
