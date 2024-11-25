@@ -1,4 +1,3 @@
-aggregate functions are shrinking rows
 # Aggregate Functions in SQL
 
 Aggregate functions in SQL are powerful tools that allow you to perform calculations on a set of values to return a single scalar value. They are commonly used with the `GROUP BY` clause to group rows that share a common attribute and then perform calculations on each group. Aggregate functions are essential for data analysis, reporting, and generating insights from your data.
