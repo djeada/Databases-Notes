@@ -101,8 +101,10 @@ When prevention fails, and a deadlock occurs, the system must resolve it to main
 
 The DBMS can terminate one of the deadlocked transactions, rolling back its operations to free up resources.
 
-- **Victim Selection Criteria:** The system chooses which transaction to abort based on factors like transaction age, priority, or resource usage.
-- **Rollback and Restart:** The aborted transaction can be retried, hoping it will complete without encountering another deadlock.
+- The system applies **victim selection criteria** to decide which transaction to terminate, considering factors such as transaction age, priority level, or the amount of resources it holds.  
+- After rollback, the **aborted transaction can be restarted**, with the expectation that it will complete successfully without encountering another deadlock in subsequent attempts.  
+- Rollback strategies are designed to **minimize disruption**, ensuring that only the transaction with the least impact on the overall system is terminated.  
+- Implementing **retry mechanisms with back-off strategies** prevents immediate reoccurrence of the same conflict, allowing smoother resolution of resource contention.  
 
 #### User Intervention
 
