@@ -36,17 +36,17 @@ Relational databases are ideal for applications requiring structured data and co
 
 Strengths include:
 
-- **Structured Data Management**: Strict schemas ensure data consistency.
-- **Complex Query Support**: Powerful SQL capabilities for intricate queries and joins.
-- **Data Integrity and Reliability**: ACID compliance maintains data accuracy.
+- The **structured data management capabilities** of relational databases ensure data consistency through strict schemas and organized frameworks.  
+- **Complex query support** is a major advantage, with powerful SQL features allowing intricate queries, joins, and data manipulations.  
+- **Data integrity and reliability** are maintained through ACID compliance, ensuring accurate, consistent, and dependable data handling.  
 
-### Limitations
+### Limitations  
 
 While robust, relational databases may face challenges with scalability and flexibility:
 
-- **Scalability Constraints**: Vertical scaling can be costly and has limits.
-- **Rigid Schemas**: Adapting to changes in data models can be cumbersome.
-- **Performance Degradation**: Handling large volumes of unstructured data may affect performance.
+- **Scalability constraints can arise** in relational databases, as vertical scaling often becomes costly and has practical limits.  
+- **Rigid schemas pose challenges** when adapting to changes, making modifications to data models cumbersome and time-consuming.  
+- The **performance of relational databases** may degrade when managing large volumes of unstructured data, impacting efficiency.  
 
 ## NoSQL Databases
 
@@ -93,14 +93,14 @@ Document databases are well-suited for content management systems, catalogs, and
 
 Strengths include:
 
-- **Flexible Schemas**: Easily accommodate changes in data structure.
-- **High Performance**: Optimized for read and write operations.
-- **Scalability**: Designed for horizontal scaling across multiple servers.
+- The **flexible schemas of non-relational databases** allow them to easily adapt to changes in data structure, making them highly versatile.  
+- **High performance is achieved** as these databases are optimized for fast read and write operations, even with large data volumes.  
+- **Scalability is a key advantage**, with their design supporting horizontal scaling across multiple servers to handle growth efficiently.  
 
 #### Limitations
 
-- **Complex Transactions**: Limited support for multi-document ACID transactions.
-- **Query Limitations**: Less efficient for complex joins and relational queries.
+- **Complex transactions can be challenging**, as non-relational databases often have limited support for multi-document ACID transactions.  
+- **Querying capabilities may be limited**, making them less efficient for handling complex joins and relational queries.  
 
 ### Key-Value Databases
 
@@ -127,14 +127,14 @@ Key-value stores are ideal for caching, session management, and real-time data f
 
 Strengths include:
 
-- **High Throughput**: Extremely fast read and write operations.
-- **Simplicity**: Easy to use with straightforward APIs.
-- **Scalability**: Seamless horizontal scaling.
+- The **high throughput offered by key-value databases** ensures extremely fast read and write operations, making them ideal for high-performance use cases.  
+- **Simplicity is a defining feature**, with straightforward APIs that make these databases easy to use and integrate.  
+- **Scalability is seamless**, allowing for horizontal scaling to distribute data across multiple servers efficiently.  
 
 #### Limitations
 
-- **Limited Query Capabilities**: Not suitable for complex queries or relationships.
-- **Data Modeling Challenges**: Simplicity can make handling complex data structures difficult.
+- **Query capabilities are limited**, making these databases unsuitable for handling complex queries or relationships between data.  
+- **Data modeling can present challenges**, as their simplicity may complicate the handling of more complex data structures.  
 
 ### Column-Based Databases
 
@@ -174,14 +174,14 @@ Column-based databases excel in handling large datasets for applications like an
 
 Strengths include:
 
-- **High Write and Read Performance**: Optimized for large-scale data operations.
-- **Scalability**: Designed to scale across distributed systems.
-- **Flexible Schemas**: Adaptable to changing data models.
+- The **high write and read performance of column-based databases** makes them optimized for handling large-scale data operations efficiently.  
+- **Scalability is a strong suit**, as these databases are designed to scale seamlessly across distributed systems.  
+- **Flexible schemas provide adaptability**, allowing them to adjust to changing data models with ease.  
 
 #### Limitations
 
-- **Complex Querying**: Not ideal for ad-hoc queries or complex joins.
-- **Steeper Learning Curve**: May require a shift in thinking from traditional relational models.
+- **Complex querying can be challenging**, as these databases are not well-suited for ad-hoc queries or intricate joins.  
+- **A steeper learning curve may be encountered**, requiring a shift in mindset from traditional relational database models.  
 
 ### Graph Databases
 
@@ -215,14 +215,14 @@ Graph databases are perfect for social networks, recommendation engines, and fra
 
 Strengths include:
 
-- **Relationship-Centric Queries**: Efficient traversal of connected data.
-- **Flexible Data Modeling**: Easily represent complex networks.
-- **Performance**: Optimized for queries over relationships.
+- The **relationship-centric query capabilities of graph databases** enable efficient traversal and analysis of connected data.  
+- **Flexible data modeling is a key advantage**, allowing for the seamless representation of complex networks and relationships.  
+- **Performance is highly optimized**, particularly for queries that involve navigating relationships between data points.
 
 #### Limitations
 
-- **Niche Applications**: Best suited for specific use cases involving relationships.
-- **Complexity**: May require learning new query languages like Cypher.
+- **Applications can be niche**, as graph databases are most effective for specific use cases centered around relationships and connections.  
+- **Complexity may arise**, often requiring users to learn specialized query languages such as Cypher for effective use.  
 
 ## Choosing the Right Database
 
@@ -230,7 +230,7 @@ Selecting the appropriate database depends on your application's requirements, i
 
 Considerations:
 
-- **Data Structure**: Relational databases for structured data; NoSQL databases for unstructured or rapidly changing schemas.
-- **Scalability**: NoSQL databases often offer better horizontal scalability.
-- **Consistency and Transactions**: Relational databases provide strong consistency; some NoSQL databases offer eventual consistency.
-- **Query Requirements**: Need for complex joins and transactions may favor relational databases.
+- Relational databases are suitable for **structured data**, while NoSQL databases are often better for handling unstructured data or schemas that change rapidly.  
+- **Horizontal scalability** is typically more effectively supported by NoSQL databases, making them advantageous for distributed systems.  
+- Relational databases provide **strong consistency and robust transaction support**, whereas many NoSQL databases operate on eventual consistency for performance gains.  
+- The **requirements for complex queries and joins** are usually better handled by relational databases, making them ideal for intricate transactional applications.  
