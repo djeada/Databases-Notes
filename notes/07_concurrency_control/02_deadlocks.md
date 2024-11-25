@@ -149,13 +149,13 @@ COMMIT;
 
 ### Best Practices to Avoid Deadlocks
 
-To minimize the risk of deadlocks, consider the following guidelines:
+To minimize the risk of deadlocks, it is essential to follow best practices that promote efficient resource utilization and transaction management:
 
-- **Consistent Lock Ordering:** Ensure all transactions acquire locks in the same sequence.
-- **Short Transactions:** Keep transactions brief to reduce lock holding time.
-- **Reduced Lock Scope:** Lock only the necessary resources at the most granular level possible.
-- **Avoid User Interaction Within Transactions:** Prompting users during transactions prolongs lock duration and increases deadlock risk.
-- **Monitor and Analyze Deadlocks:** Regularly review system logs to identify and address recurring deadlock patterns.
+- Enforcing **consistent lock ordering** ensures that all transactions acquire locks in a predefined sequence, effectively preventing circular wait conditions.  
+- Designing **short transactions** reduces the time locks are held, minimizing contention and the likelihood of deadlocks.  
+- Applying **reduced lock scope** by locking only the necessary resources at the most granular level enhances concurrency and limits unnecessary locking conflicts.  
+- Avoiding **user interaction within transactions** prevents prolonged lock durations, as waiting for user input can significantly increase the chances of deadlocks.  
+- Regularly **monitoring and analyzing deadlocks** through system logs helps identify recurring patterns and refine strategies to prevent similar issues in the future.  
 
 ### Deadlocks in Multithreaded Applications
 
@@ -177,18 +177,21 @@ Applying similar strategies of lock ordering and timeouts can help prevent deadl
 
 ### Deadlock vs. Livelock
 
-It's important to distinguish deadlocks from livelocks.
+Understanding the difference between deadlocks and livelocks is crucial for effectively managing transaction conflicts:
 
-- **Deadlock:** Transactions wait indefinitely, making no progress.
-- **Livelock:** Transactions continue to change state in response to each other but still make no progress.
-
-Livelocks require different handling, often involving adding delays or back-off strategies to allow transactions to proceed.
+- A **deadlock** occurs when transactions wait indefinitely for each other to release locks, resulting in no progress and requiring external intervention to resolve.  
+- In contrast, a **livelock** happens when transactions continuously change state in reaction to each other but fail to make any progress, often due to overly aggressive retry mechanisms or conflict resolution strategies.  
+- Addressing livelocks typically involves introducing **delays or back-off strategies**, allowing transactions to proceed by reducing contention.  
 
 ### Additional Considerations
 
-- **Isolation Levels:** Choosing the appropriate transaction isolation level can impact locking behavior and deadlock likelihood.
-- **Deadlock Detection Frequency:** Configuring how often the DBMS checks for deadlocks can balance performance with timely resolution.
-- **Application Design:** Writing applications that are mindful of resource access patterns helps reduce deadlock chances.
+Beyond direct locking mechanisms, other factors play a role in preventing deadlocks and improving system efficiency:
+
+- Selecting the appropriate **transaction isolation level** directly impacts locking behavior, with higher isolation levels increasing the risk of deadlocks but ensuring better data consistency.  
+- Configuring the **deadlock detection frequency** in the database management system can strike a balance between performance overhead and the timely resolution of deadlock conditions.
+- Thoughtful **application design**, such as adhering to consistent resource access patterns and minimizing resource contention, significantly reduces the likelihood of deadlocks occurring.  
+- Implementing **transaction retries with exponential back-off** ensures that transient conflicts do not escalate into persistent livelocks or deadlocks.  
+- Monitoring and analyzing **database performance metrics** provides insights into contention hotspots and informs adjustments to locking strategies and system configurations.  
 
 ### Further Reading
 
