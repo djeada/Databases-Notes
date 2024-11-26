@@ -13,17 +13,17 @@ Imagine a phone book without any order; finding a person's number would require 
 An index is typically implemented using a data structure like a B-tree or a hash table, which allows for rapid searching, insertion, and deletion of data. Here's a simple ASCII diagram to illustrate the concept:
 
 ```
-+----------------------------------------+
-|                Table                   |
-+----------------------------------------+
-| ID | Name     | Age | Email            |
-|----|----------|-----|------------------|
-| 1  | Alice    | 30  | alice@example.com|
-| 2  | Bob      | 25  | bob@example.com  |
-| 3  | Charlie  | 35  | charlie@example.com|
-| 4  | Diana    | 28  | diana@example.com|
-|... | ...      | ... | ...              |
-+----------------------------------------+
++-------------------------------------------+
+|                Table                      |
++-------------------------------------------+
+| ID | Name     | Age | Email               |
+|----|----------|-----|---------------------|
+| 1  | Alice    | 30  | alice@example.com   |
+| 2  | Bob      | 25  | bob@example.com     |
+| 3  | Charlie  | 35  | charlie@example.com |
+| 4  | Diana    | 28  | diana@example.com   |
+|... | ...      | ... | ...                 |
++-------------------------------------------+
 
 +-----------------------+
 |         Index         |
@@ -48,10 +48,10 @@ Choosing the right columns to index is crucial. Indexing every column is neither
 
 Start by examining the queries your application runs most frequently. Look for columns used in:
 
-- **WHERE clauses**: Columns frequently used to filter data.
-- **JOIN conditions**: Columns used to join tables together.
-- **ORDER BY clauses**: Columns that determine the sort order of query results.
-- **GROUP BY clauses**: Columns used to group data.
+- **WHERE clauses** are applied to columns often used for filtering data.  
+- **JOIN conditions** involve columns that connect tables in queries.  
+- **ORDER BY clauses** sort query results based on specific columns.  
+- **GROUP BY clauses** organize data into groups using particular columns.  
 
 For instance, if you often query for users based on their email addresses, indexing the "Email" column would be beneficial.
 
@@ -214,18 +214,16 @@ An effective indexing strategy considers the specific needs of your application 
 
 Data patterns and query frequencies change over time. Regularly review your indexes to ensure they still align with your application's needs.
 
-- **Identify Unused Indexes**: Remove indexes that are no longer beneficial.
-- **Adjust Existing Indexes**: Modify indexes to better suit current query patterns.
+- Remove indexes that are no longer beneficial.
+- Modify indexes to better suit current query patterns.
 
 ### Balancing Costs and Benefits
 
 Remember that indexes consume resources:
 
-- **Storage Space**: Indexes require additional disk space.
-- **Memory Usage**: Frequently accessed indexes may reside in memory.
-- **Write Performance**: Maintaining indexes adds overhead to write operations.
-
-Ensure that the performance gains in read operations justify these costs.
+- They require additional **disk space** for storage.  
+- Frequently accessed indexes may reside in **memory**.  
+- Maintaining indexes adds extra overhead, which can reduce **write performance**.
 
 ## Best Practices for Indexing
 
