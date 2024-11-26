@@ -360,27 +360,3 @@ DROP VIEW employee_overview;
 ```
 
 The view is deleted, but the underlying tables remain unaffected.
-
-## Practical Tips and Best Practices
-
-As you work with DDL, keep these considerations in mind to maintain a healthy and efficient database.
-
-### Plan Before You Build
-
-- **Design Carefully**: Think through your database schema thoroughly before creating tables. Consider the data types, constraints, and relationships needed.
-- **Naming Conventions**: Establish and follow consistent naming conventions for tables, columns, and other objects to enhance readability and maintenance.
-
-### Be Cautious with Destructive Commands
-
-- **Backup Data**: Before using commands like `DROP TABLE` or `TRUNCATE TABLE`, ensure you have backups if the data is important.
-- **Use Transactions**: When making significant changes, encapsulate them in transactions (if supported) to allow rollback in case of errors.
-
-### Optimize for Performance
-
-- **Indexes**: Create indexes on columns that are frequently searched or used in joins, but avoid over-indexing, which can slow down write operations.
-- **Constraints**: Use constraints to enforce data integrity, reducing the likelihood of invalid data entering your database.
-
-### Keep Learning and Adapting
-
-- **Stay Updated**: Different database systems may have unique features and syntax. Familiarize yourself with the specifics of the system you're using.
-- **Monitor and Adjust**: Regularly review your database schema and performance. As requirements change, be prepared to modify your structures accordingly.
