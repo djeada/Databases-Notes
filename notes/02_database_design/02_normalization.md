@@ -42,21 +42,14 @@ Higher normal forms reduce redundancy but may increase complexity and affect per
 
 #### When to Use Each Normal Form
 
-1. **First Normal Form (1NF):** This is the starting point for normalization. A table is in 1NF if it has a primary key and each column contains atomic, indivisible values. It eliminates duplicate columns and creates separate tables for each group of related data.
-
-2. **Second Normal Form (2NF):** Building on 1NF, a table is in 2NF if it has no partial dependencies; that is, no column depends on only part of a composite primary key. It removes subsets of data that apply to multiple rows and places them in separate tables.
-
-3. **Third Normal Form (3NF):** A table reaches 3NF when it is in 2NF and all its columns are dependent only on the primary key. This eliminates fields that do not directly relate to the primary key, removing transitive dependencies.
-
-4. **Boyce-Codd Normal Form (BCNF):** An extension of 3NF, BCNF addresses anomalies not handled by 3NF. A table is in BCNF if, for every functional dependency X → Y, X is a superkey.
-
-5. **Fourth Normal Form (4NF):** 4NF deals with multi-valued dependencies. It's necessary when a table needs to store multiple independent one-to-many relationships.
-
-6. **Fifth Normal Form (5NF):** Also known as Project-Join Normal Form, 5NF eliminates redundancy caused by join dependencies that are not implied by candidate keys.
-
-7. **Sixth Normal Form (6NF):** Used mainly in temporal databases that manage historical data, 6NF further decomposes tables to handle time-variant data.
-
-8. **Domain/Key Normal Form (DKNF):** The ultimate level of normalization, DKNF ensures that every constraint on the table is a logical consequence of the definition of keys and domains. Due to its complexity, it's rarely used in practice.
+1. **First Normal Form (1NF)** ensures that a table has a primary key and all columns contain atomic, indivisible values. It removes duplicate columns and organizes related data into separate tables.
+2. **Second Normal Form (2NF)** builds on 1NF by eliminating partial dependencies, ensuring no column depends on just part of a composite primary key. It separates subsets of data that apply to multiple rows into distinct tables.
+3. **Third Normal Form (3NF)** is achieved when a table in 2NF has all columns dependent only on the primary key. This removes transitive dependencies and ensures every field directly relates to the primary key.
+4. **Boyce-Codd Normal Form (BCNF)** extends 3NF by addressing anomalies involving functional dependencies. A table meets BCNF if, for every functional dependency X → Y, X is a superkey.
+5. **Fourth Normal Form (4NF)** deals with multi-valued dependencies, ensuring that tables are free of independent one-to-many relationships that could lead to data duplication.
+6. **Fifth Normal Form (5NF)**, or Project-Join Normal Form, removes redundancy arising from join dependencies that are not implied by candidate keys, focusing on complex relationships among data.
+7. **Sixth Normal Form (6NF)** is used in temporal databases to manage time-variant data by further decomposing tables for historical tracking and consistency.
+8. **Domain/Key Normal Form (DKNF)** represents the highest level of normalization, ensuring all constraints are logical consequences of keys and domains. Despite its theoretical importance, it is rarely applied due to its complexity.
 
 Choosing the appropriate normal form involves balancing the need to minimize redundancy against the practical considerations of database performance and complexity.
 
