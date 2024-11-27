@@ -9,16 +9,16 @@ Relational databases store data in structured tables consisting of rows and colu
 Imagine a simple online store database:
 
 ```
-+------------------+          +--------------------+
-|     Customers    |          |       Orders       |
-+------------------+          +--------------------+
-| CustomerID       |          | OrderID            |
-| Name             |          | CustomerID         |
-| Email            |          | OrderDate          |
-+------------------+          +--------------------+
-| 1 | Alice Smith  |          | 101 | 1 | 2023-01-15|
-| 2 | Bob Johnson  |          | 102 | 2 | 2023-01-16|
-+------------------+          +--------------------+
++------------------+          +----------------------+
+|     Customers    |          |       Orders         |
++------------------+          +----------------------+
+| CustomerID       |          | OrderID              |
+| Name             |          | CustomerID           |
+| Email            |          | OrderDate            |
++------------------+          +----------------------+
+| 1 | Alice Smith  |          | 101 | 1 | 2023-01-15 |
+| 2 | Bob Johnson  |          | 102 | 2 | 2023-01-16 |
++------------------+          +----------------------+
 ```
 
 In this example, the `Customers` table holds customer information, while the `Orders` table records customer orders. The `CustomerID` in the `Orders` table links each order to a customer, establishing a relationship.
