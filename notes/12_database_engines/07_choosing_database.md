@@ -83,4 +83,4 @@ This output indicates that the table structure has been successfully established
 INSERT 0 1
 ```
 
-This response signifies that one row has been successfully inserted into the `products` table. These straightforward messages help you verify that your commands are executed correctly, ensuring that your database operations are proceeding as expected.
+This response means that one row has been successfully inserted into the `products` table. These straightforward messages help you verify that your commands are executed correctly, ensuring that your database operations are proceeding as expected.
