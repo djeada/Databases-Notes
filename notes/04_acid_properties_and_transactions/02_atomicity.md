@@ -35,8 +35,8 @@ To better understand atomicity, let's explore some real-world scenarios where th
 
 Consider the process of transferring money between two bank accounts. This transaction involves debiting one account and crediting another. Both actions must occur together; otherwise, funds could be lost or erroneously created.
 
-- **Complete Transaction**: $500 is debited from Account A and credited to Account B.
-- **Failure Scenario**: If the debit succeeds but the credit fails, $500 would be missing from the system.
+- A **Complete Transaction** ensures that $500 is properly debited from Account A and credited to Account B, maintaining balance and data integrity.
+- In a **Failure Scenario**, if the debit operation succeeds but the credit operation fails, the system could lose $500, creating a discrepancy in the accounts.
 
 Atomicity ensures that either both accounts are updated or neither is, preserving the integrity of the bank's records.
 
@@ -44,8 +44,8 @@ Atomicity ensures that either both accounts are updated or neither is, preservin
 
 When placing an order online, several operations happen behind the scenes: payment processing, inventory reduction, and order confirmation. If payment processing fails, the system should not reduce inventory or generate an order confirmation.
 
-- **Successful Transaction**: Payment is processed, inventory is updated, and confirmation is sent.
-- **Failure Scenario**: If payment fails but inventory is reduced, stock levels become inaccurate.
+- In a **Successful Transaction**, the system processes the payment, updates the inventory to reflect the sold item, and sends a confirmation to the customer, completing the workflow.
+- A **Failure Scenario** arises when one operation, such as payment processing, fails while another, like inventory reduction, is executed, leading to inconsistencies such as inaccurate stock levels.
 
 Atomicity ensures that all steps are completed together, maintaining consistency in the system.
 
@@ -57,8 +57,8 @@ To achieve atomicity, database systems employ various techniques and protocols t
 
 In distributed database systems, the Two-Phase Commit Protocol ensures that all participating databases agree on committing or rolling back a transaction.
 
-1. **Prepare Phase**: The coordinator sends a prepare request to all participants, asking if they can commit the transaction.
-2. **Commit Phase**: If all participants agree, the coordinator sends a commit command. If any participant cannot commit, the coordinator sends a rollback command.
+- In the **Prepare Phase**, the transaction coordinator requests all participants to confirm whether they are ready to commit the transaction, ensuring all conditions for a successful commit are met.
+- During the **Commit Phase**, the coordinator instructs participants to finalize the transaction if all have agreed to commit; otherwise, a rollback command is issued to undo changes if any participant cannot commit.
 
 This protocol ensures that either all databases commit the transaction or all roll it back, maintaining atomicity across the system.
 
@@ -76,9 +76,9 @@ Coordinator
 
 Savepoints provide a way to partition a transaction into smaller segments. They allow partial rollbacks within a transaction without aborting the entire sequence.
 
-- **Setting a Savepoint**: Use `SAVEPOINT savepoint_name;` to mark a point within a transaction.
-- **Rolling Back to a Savepoint**: Use `ROLLBACK TO savepoint_name;` to undo operations back to the savepoint.
-- **Releasing a Savepoint**: Use `RELEASE SAVEPOINT savepoint_name;` to remove the savepoint.
+- Use `SAVEPOINT savepoint_name;` to mark a point within a transaction.
+- Use `ROLLBACK TO savepoint_name;` to undo operations back to the savepoint.
+- Use `RELEASE SAVEPOINT savepoint_name;` to remove the savepoint.
 
 Savepoints are useful in complex transactions where certain operations may fail, but earlier successful operations should be retained.
 
@@ -86,8 +86,8 @@ Savepoints are useful in complex transactions where certain operations may fail,
 
 Databases use logs to record all changes made during transactions. This approach allows the system to undo or redo transactions in case of failures.
 
-- **Write-Ahead Logging**: Before any changes are applied, they are recorded in a log file.
-- **Recovery Process**: If a failure occurs, the database uses the log to roll back incomplete transactions, ensuring atomicity.
+- In **Write-Ahead Logging**, all changes are first recorded in a log file before being applied to the database, ensuring a reliable mechanism for recovery.
+- During the **Recovery Process**, the database utilizes the log file to identify incomplete transactions after a failure and rolls them back to maintain atomicity and consistency.
 
 This mechanism is essential for maintaining data integrity, especially in systems where transactions are frequently interrupted.
 
@@ -97,9 +97,9 @@ In SQL, transactions are managed using commands that explicitly define the start
 
 ### Basic Transaction Commands
 
-- **Begin Transaction**: `BEGIN TRANSACTION;` marks the start.
-- **Commit Transaction**: `COMMIT;` saves all changes.
-- **Rollback Transaction**: `ROLLBACK;` undoes all changes since the transaction began.
+- `BEGIN TRANSACTION;` marks the start.
+- `COMMIT;` saves all changes.
+- `ROLLBACK;` undoes all changes since the transaction began.
 
 ### Example: Transferring Funds Between Accounts
 
