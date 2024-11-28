@@ -62,11 +62,9 @@ Indexes are data structures that improve the speed of data retrieval operations 
 
 Different types of indexes include:
 
-- **B-Tree Indexes**: The most common type, suitable for a wide range of queries. They maintain a balanced tree structure that allows fast searches, insertions, and deletions.
-
-- **Hash Indexes**: Use a hash function to map keys to locations. They are efficient for equality searches but not suitable for range queries.
-
-- **Bitmap Indexes**: Represent data using bitmaps and are effective for columns with a limited number of distinct values. They are often used in data warehousing applications.
+- **B-Tree Indexes** are widely used due to their balanced tree structure, which supports efficient searches, insertions, and deletions, making them suitable for a variety of query types, including range queries.
+- **Hash Indexes** rely on a hash function to map keys to specific locations, offering high efficiency for equality searches but lacking support for range queries.
+- **Bitmap Indexes** use bitmaps to represent data, making them effective for columns with low cardinality (few distinct values), and they are commonly employed in data warehousing for complex analytical queries.
 
 A simplified illustration of a B-tree index might look like this:
 
@@ -94,9 +92,8 @@ For example, when a query requests several rows that are stored sequentially on 
 
 Selecting between row-oriented and column-oriented storage depends on the workload and query patterns.
 
-- **Row-Oriented Storage**: Best for transactional workloads where operations involve reading and writing entire rows, such as inserting a new customer order.
-
-- **Column-Oriented Storage**: Ideal for analytical workloads that perform aggregate functions over large datasets but only need a few columns, like generating reports on sales trends.
+- **Row-Oriented Storage** organizes data by rows, making it optimal for transactional workloads where operations require accessing entire rows, such as inserting or updating customer orders.
+- **Column-Oriented Storage** organizes data by columns, making it suitable for analytical workloads that perform operations like aggregations on specific columns over large datasets, such as generating sales trend reports.
 
 #### Effective Indexing Strategies
 
@@ -127,6 +124,6 @@ Example output:
 
 Interpreting the results:
 
-- **table_size**: The amount of disk space used by the table data.
-- **indexes_size**: The total space consumed by all indexes on the table.
-- **total_size**: The combined size of the table data and its indexes.
+- **table_size** refers to the amount of disk space allocated specifically for storing the table's raw data.
+- **indexes_size** represents the total disk space used by all indexes associated with the table, which facilitate faster query operations.
+- **total_size** is the sum of the table's data size and the space consumed by its indexes, indicating the overall storage footprint of the table.
