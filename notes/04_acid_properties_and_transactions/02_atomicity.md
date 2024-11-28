@@ -162,15 +162,15 @@ Understanding the flow of a transaction can help illustrate the concept of atomi
 If an error is detected at any point, the transaction flow changes:
 
 ```
-[Start Transaction]
-       |
-   [Operation 1]
-       |
-   [Operation 2]
-       |
-[Error Detected]
-       |
-    [Rollback]
+[Start Transaction] <---
+       |               |
+   [Operation 1]       |
+       |               |
+   [Operation 2]       |
+       |               |
+[Error Detected]       |
+       |               |
+    [Rollback] ---------
 ```
 
 This visualization shows that the transaction only commits if all operations succeed, embodying the principle of atomicity.
