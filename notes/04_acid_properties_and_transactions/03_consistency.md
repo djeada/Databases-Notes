@@ -55,10 +55,10 @@ Databases employ various mechanisms to maintain consistency, especially when han
 
 Transaction isolation defines how and when the changes made by one transaction become visible to others. Different isolation levels offer a balance between consistency and performance.
 
-- **Read Uncommitted**: Transactions can see uncommitted changes from others, which may lead to dirty reads.
-- **Read Committed**: A transaction only sees data that has been committed, preventing dirty reads but allowing non-repeatable reads.
-- **Repeatable Read**: Ensures that if a transaction reads a data item multiple times, it will read the same value each time, preventing non-repeatable reads.
-- **Serializable**: The highest isolation level, where transactions are completely isolated, preventing dirty reads, non-repeatable reads, and phantom reads.
+- The **Read Uncommitted** isolation level allows transactions to access data modified by other transactions before they are committed, increasing the risk of dirty reads.
+- At the **Read Committed** level, a transaction can only access data that has been committed, avoiding dirty reads but still permitting non-repeatable reads.
+- The **Repeatable Read** level ensures that once a transaction reads a data item, subsequent reads of the same item will yield the same value, eliminating non-repeatable reads but not phantom reads.
+- The **Serializable** isolation level provides complete transaction isolation, preventing dirty reads, non-repeatable reads, and phantom reads, ensuring maximum data consistency.
 
 By choosing the appropriate isolation level, applications can ensure the necessary degree of consistency based on their specific requirements.
 
@@ -70,8 +70,8 @@ To manage concurrent transactions, databases implement concurrency control metho
 
 Locking restricts access to data items during a transaction.
 
-- **Shared Locks**: Allow multiple transactions to read a data item but prevent any from writing to it.
-- **Exclusive Locks**: Permit a transaction to both read and write a data item, while blocking other transactions from accessing it.
+- **Shared Locks** enable multiple transactions to read the same data item simultaneously while restricting any transaction from modifying it.
+- **Exclusive Locks** grant a single transaction the ability to read and modify a data item, preventing all other transactions from accessing it until the lock is released.
 
 For example, if a transaction is updating a customer's address, an exclusive lock ensures that no other transaction can read or modify that customer's data until the update is complete.
 
@@ -123,11 +123,11 @@ SQL databases enforce consistency through various constraints and transaction co
 
 Constraints are rules applied to table columns to enforce data integrity.
 
-- **Primary Key**: Ensures that each row has a unique identifier.
-- **Unique Constraint**: Guarantees that all values in a column are distinct.
-- **Foreign Key**: Enforces referential integrity between tables.
-- **Check Constraint**: Specifies a condition that each row must satisfy.
-- **Not Null**: Ensures that a column cannot have a null value.
+- A **Primary Key** ensures that each row in a table has a unique identifier, preventing duplicate entries and serving as the main reference point.
+- A **Unique Constraint** guarantees that all values in a specified column or set of columns are distinct across the table.
+- A **Foreign Key** enforces referential integrity by linking a column in one table to a primary key in another table.
+- A **Check Constraint** imposes a specific condition that each row in the table must meet, adding an additional layer of validation.
+- The **Not Null** constraint ensures that a column cannot contain null values, requiring a valid entry for every row.
 
 ### Example: Enforcing Unique and Foreign Key Constraints
 
@@ -150,8 +150,8 @@ CREATE TABLE orders (
 
 When inserting data, the database checks these constraints:
 
-- **Unique Usernames and Emails**: Prevents duplicate entries in the `users` table.
-- **Valid User IDs in Orders**: Ensures that every order references an existing user.
+- Enforcing **Unique Usernames and Emails** in the `users` table helps prevent duplicate records, maintaining data integrity and consistency.
+- Ensuring **Valid User IDs in Orders** guarantees that each order is linked to an existing user, maintaining referential integrity within the database.
 
 ### Example Transaction Maintaining Consistency
 
@@ -188,7 +188,7 @@ CREATE TABLE employees (
 
 These constraints ensure:
 
-- **Positive Salary Values**: Salaries must be greater than zero.
-- **Valid Department Names**: Departments must be one of the specified options.
+- Requiring **Positive Salary Values** ensures that all salary entries in the database are greater than zero, maintaining logical data constraints.
+- Enforcing **Valid Department Names** restricts department entries to a predefined list of acceptable options, ensuring consistency and accuracy in the data.
 
 Any transaction attempting to insert or update data that violates these constraints will be rejected, preserving the database's consistency.
