@@ -6,10 +6,10 @@ Data Manipulation Language, or DML for short, is like the practical toolkit for 
 
 There are four fundamental DML commands that you'll use to manipulate data:
 
-- **SELECT**: Retrieve data from one or more tables.
-- **INSERT**: Add new records to a table.
-- **UPDATE**: Modify existing data within a table.
-- **DELETE**: Remove records from a table.
+- The **SELECT** statement is used to retrieve data from one or more tables based on specified criteria.  
+- The **INSERT** statement allows the addition of new records into a table by specifying values for the columns.  
+- The **UPDATE** statement modifies existing data in a table by changing values in specified columns.  
+- The **DELETE** statement removes records from a table based on specified conditions.
 
 Let's explore each of these commands in detail, with examples that illustrate how they work and how you might use them in real-world scenarios.
 
@@ -273,10 +273,10 @@ FROM employees;
 
 When working with DML, it's important to use best practices to ensure data integrity and optimal performance.
 
-- **Always Use WHERE Clauses**: For `UPDATE` and `DELETE` statements, include a `WHERE` clause to specify which records to affect. Omitting it could alter or delete all records in the table.
-- **Test Queries Safely**: Before running queries on production data, test them in a development environment or use transactions to prevent unintended changes.
-- **Backup Your Data**: Regular backups protect against data loss from mistakes or system failures.
-- **Understand Transactions**: Use transactions to group multiple operations that should succeed or fail together.
+- It is important to always include a `WHERE` clause in `UPDATE` and `DELETE` statements to target specific records; omitting it can unintentionally alter or delete all records in the table.  
+- Queries should be tested in a development environment or with transactions to safely evaluate their effects before executing them on production data.  
+- Regular backups of your database are essential to safeguard against data loss due to errors or system failures.  
+- Understanding and using transactions allows you to group multiple operations into a single unit, ensuring that all operations either succeed together or fail together.
 
 ### Transactions in DML
 
