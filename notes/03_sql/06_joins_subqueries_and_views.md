@@ -1,25 +1,25 @@
-# Joins, Subqueries, and Views in SQL
+## Joins, Subqueries, and Views in SQL
 
 Welcome to the fascinating world of SQL, where we can manipulate and retrieve data from relational databases using powerful tools like joins, subqueries, and views. These concepts are essential for anyone looking to master SQL and database management. Let's dive in and explore each of these techniques in detail, with examples to solidify your understanding.
 
-## Joins: Combining Data from Multiple Tables
+### Joins: Combining Data from Multiple Tables
 
 In relational databases, data is often spread across multiple tables to reduce redundancy and improve organization. However, there are times when we need to combine this data to get a complete picture. This is where **joins** come into play.
 
-### Understanding Joins
+#### Understanding Joins
 
 A **join** is an SQL operation that allows you to combine rows from two or more tables based on a related column between them. Think of joins as a way to connect tables "horizontally," bringing together related data to answer complex queries.
 
 There are several types of joins:
 
-- **INNER JOIN**: Returns rows when there is a match in both tables.
-- **LEFT JOIN** (or **LEFT OUTER JOIN**): Returns all rows from the left table and matched rows from the right table.
-- **RIGHT JOIN** (or **RIGHT OUTER JOIN**): Returns all rows from the right table and matched rows from the left table.
-- **FULL JOIN** (or **FULL OUTER JOIN**): Returns all rows when there is a match in one of the tables.
+- An **INNER JOIN** returns rows only when there is a matching value in both joined tables, excluding unmatched rows.  
+- A **LEFT JOIN** (or **LEFT OUTER JOIN**) includes all rows from the left table and the matched rows from the right table, with NULLs for non-matching right-side rows.  
+- A **RIGHT JOIN** (or **RIGHT OUTER JOIN**) includes all rows from the right table and the matched rows from the left table, with NULLs for non-matching left-side rows.  
+- A **FULL JOIN** (or **FULL OUTER JOIN**) combines rows from both tables, including all matched and unmatched rows, filling in NULLs where no match exists.  
 
 Let's explore each type with examples.
 
-### Setting Up Example Tables
+#### Setting Up Example Tables
 
 We'll use two tables for our examples: `Employees` and `Departments`.
 
@@ -40,7 +40,7 @@ We'll use two tables for our examples: `Employees` and `Departments`.
 | 2            | Information Technology   |
 | 3            | Finance                  |
 
-### INNER JOIN
+#### INNER JOIN
 
 An **INNER JOIN** returns rows when there is a match in both tables. It's like finding the intersection of the two tables.
 
@@ -66,7 +66,7 @@ ON e.DepartmentID = d.DepartmentID;
 - Only employees with a `DepartmentID` that matches an entry in the `Departments` table are returned.
 - Employee Taylor is excluded because their `DepartmentID` is `NULL`.
 
-### LEFT JOIN (LEFT OUTER JOIN)
+#### LEFT JOIN (LEFT OUTER JOIN)
 
 A **LEFT JOIN** returns all rows from the left table and matched rows from the right table. If there is no match, `NULL` values are returned for columns from the right table.
 
@@ -93,7 +93,7 @@ ON e.DepartmentID = d.DepartmentID;
 - All employees are returned.
 - For Taylor, who doesn't have a `DepartmentID`, the `DepartmentName` is `NULL`.
 
-### RIGHT JOIN (RIGHT OUTER JOIN)
+#### RIGHT JOIN (RIGHT OUTER JOIN)
 
 A **RIGHT JOIN** returns all rows from the right table and matched rows from the left table. If there is no match, `NULL` values are returned for columns from the left table.
 
@@ -120,7 +120,7 @@ ON e.DepartmentID = d.DepartmentID;
 - All departments are returned.
 - For the Finance department, there is no matching employee, so `LastName` is `NULL`.
 
-### FULL JOIN (FULL OUTER JOIN)
+#### FULL JOIN (FULL OUTER JOIN)
 
 A **FULL JOIN** returns all rows when there is a match in one of the tables. If there is no match, `NULL` values are returned for the missing columns.
 
@@ -151,7 +151,7 @@ ON e.DepartmentID = d.DepartmentID;
 - `Taylor` has no department (`DepartmentName` is `NULL`).
 - The Finance department has no employees (`LastName` is `NULL`).
 
-### Cross Join
+#### Cross Join
 
 A **CROSS JOIN** returns the Cartesian product of the two tables, combining each row from the first table with every row from the second table.
 
@@ -167,11 +167,13 @@ CROSS JOIN Departments AS d;
 
 This query would return 12 rows (4 employees × 3 departments), combining every employee with every department.
 
-### Visualizing Joins
+#### Visualizing Joins
 
-To better understand joins, consider the following illustrations:
+SQL joins are powerful tools for combining data from two or more tables based on a related column. To better understand joins, let’s explore them visually and explain how they work.
 
-#### Inner Join
+##### Inner Join
+
+An **Inner Join** retrieves only the rows that have matching values in both tables. For instance, if you have an `Employees` table with a `DepartmentID` column and a `Departments` table with the same column, an inner join will return only those employees who are associated with an existing department. Any rows in the `Employees` table without a matching `DepartmentID` in the `Departments` table (and vice versa) are excluded.
 
 ```
 +-----------+         +--------------+
@@ -188,7 +190,11 @@ To better understand joins, consider the following illustrations:
 +-------------------------------+
 ```
 
-#### Left Join
+This join is useful when you’re interested solely in records with complete data from both sides. For example, to find employees who belong to a known department, you would use an inner join.
+
+##### Left Join
+
+A **Left Join** (or Left Outer Join) retrieves all rows from the left table (e.g., `Employees`) and the matching rows from the right table (e.g., `Departments`). If there’s no matching row in the right table, the result still includes the left table’s row, but with `NULL` values for the right table’s columns.
 
 ```
 +-----------+         +--------------+
@@ -206,7 +212,11 @@ To better understand joins, consider the following illustrations:
 +-------------------------------+
 ```
 
-#### Right Join
+For example, suppose you want a list of all employees, even those who are not currently assigned to a department. A left join ensures that even employees without a `DepartmentID` in the `Departments` table are included, with `NULL` filling in the missing department details.
+
+##### Right Join
+
+A **Right Join** (or Right Outer Join) retrieves all rows from the right table (e.g., `Departments`) and the matching rows from the left table (e.g., `Employees`). If there’s no matching row in the left table, the result includes the right table’s row with `NULL` values for the left table’s columns.
 
 ```
 +-----------+         +--------------+
@@ -224,7 +234,16 @@ To better understand joins, consider the following illustrations:
 +-------------------------------+
 ```
 
-#### Full Outer Join
+This join is helpful when you want a list of all departments, regardless of whether they currently have any employees assigned to them. For instance, a right join can reveal departments with no staff.
+
+##### Full Outer Join
+
+A **Full Outer Join** retrieves all rows from both tables, combining matching rows where they exist. If a row in one table doesn’t have a match in the other, the result still includes it, with `NULL` values filling in the missing data from the unmatched table.
+
+For example, a full outer join would provide a comprehensive view of all employees and all departments, including:
+
+- Employees without departments (`NULL` in the department-related columns).
+- Departments without employees (`NULL` in the employee-related columns).
 
 ```
 +-----------+         +--------------+
@@ -242,13 +261,13 @@ To better understand joins, consider the following illustrations:
 +-------------------------------+
 ```
 
-*(These are simplified representations to aid understanding.)*
+This join is ideal for scenarios where you want a complete overview of both datasets, even when some relationships are missing.
 
-## Subqueries: Queries within Queries
+### Subqueries: Queries within Queries
 
 Subqueries allow you to nest one query inside another, enabling you to perform complex data retrieval in a structured and organized way.
 
-### Understanding Subqueries
+#### Understanding Subqueries
 
 Subqueries can be used in various parts of an SQL statement:
 
@@ -258,10 +277,10 @@ Subqueries can be used in various parts of an SQL statement:
 
 There are two main types:
 
-- **Non-correlated Subqueries**: Independent of the outer query and can be executed separately.
-- **Correlated Subqueries**: Depend on the outer query and are evaluated row by row.
+- **Non-correlated subqueries** are independent of the outer query and can be executed separately, as they do not reference columns from the outer query.   
+- **Correlated subqueries** depend on the outer query, referencing its columns and evaluating row by row, which can impact performance due to multiple executions.    
 
-### Example Tables
+##### Example Tables
 
 We'll use the following tables:
 
@@ -291,7 +310,7 @@ We'll use the following tables:
 | 2            | 3          |
 | 3            | 4          |
 
-### Non-correlated Subquery Example
+#### Non-correlated Subquery Example
 
 **Goal**: Find employees who earn more than the average salary.
 
@@ -315,7 +334,7 @@ WHERE Salary > (SELECT AVG(Salary) FROM Employees);
 | 2          | Johnson  | 3500   |
 | 4          | Taylor   | 4200   |
 
-### Correlated Subquery Example
+#### Correlated Subquery Example
 
 **Goal**: Find employees who earn more than the average salary in their department.
 
@@ -347,7 +366,7 @@ WHERE e.Salary > (
 | 2          | Johnson  | 3500   | Human Resources    |
 | 4          | Taylor   | 4200   | Finance            |
 
-### Subquery in SELECT Clause
+#### Subquery in SELECT Clause
 
 **Goal**: Display each employee's salary and the average salary across all employees.
 
@@ -371,7 +390,7 @@ FROM Employees;
 | 3          | Brown    | 2700   | 3350          |
 | 4          | Taylor   | 4200   | 3350          |
 
-### Using EXISTS with Subqueries
+#### Using EXISTS with Subqueries
 
 **Goal**: Find departments that have employees.
 
@@ -400,7 +419,7 @@ WHERE EXISTS (
 | Information Technology|
 | Finance               |
 
-### Common Table Expressions (CTEs)
+#### Common Table Expressions (CTEs)
 
 CTEs are similar to subqueries but are defined before the main query using the `WITH` keyword, providing better readability.
 
@@ -426,11 +445,11 @@ JOIN DepartmentSalaries AS ds ON d.DepartmentID = ds.DepartmentID;
 | Information Technology| 2700      |
 | Finance               | 4200      |
 
-## Views: Creating Virtual Tables
+### Views: Creating Virtual Tables
 
 A **view** is a virtual table that is based on the result set of an SQL query. Views simplify complex queries, enhance security by limiting data access, and can improve performance in certain situations.
 
-### Creating a View
+#### Creating a View
 
 **Goal**: Create a view that shows employee details along with their department names.
 
@@ -465,13 +484,13 @@ WHERE Salary > 3000;
 | 2          | Johnson  | 3500   | Human Resources    |
 | 4          | Taylor   | 4200   | Finance            |
 
-### Advantages of Using Views
+#### Advantages of Using Views
 
-- **Simplicity**: Complex queries can be simplified for end-users.
-- **Security**: Restrict access to specific data by exposing only certain columns or rows.
-- **Maintenance**: Centralize query logic; changes in the underlying tables require updates only in the view.
+- Complex queries can be simplified for end-users.
+- Restrict access to specific data by exposing only certain columns or rows.
+- Centralize query logic; changes in the underlying tables require updates only in the view.
 
-### Updating a View
+#### Updating a View
 
 If you need to modify a view, you can use `CREATE OR REPLACE VIEW`.
 
@@ -485,11 +504,9 @@ JOIN DepartmentEmployees AS de ON e.EmployeeID = de.EmployeeID
 JOIN Departments AS d ON de.DepartmentID = d.DepartmentID;
 ```
 
-**Explanation**
+The view now includes the `DepartmentID` column.
 
-- The view now includes the `DepartmentID` column.
-
-### Deleting a View
+#### Deleting a View
 
 To remove a view from the database:
 
@@ -499,7 +516,7 @@ DROP VIEW EmployeeDetails;
 
 **Note**: Deleting a view does not affect the underlying data.
 
-### Updatable Views
+#### Updatable Views
 
 Some databases allow views to be updatable, meaning you can perform `INSERT`, `UPDATE`, or `DELETE` operations on the view, which then affect the underlying tables. Certain conditions must be met:
 
