@@ -1,8 +1,8 @@
-# Data Definition Language (DDL)
+## Data Definition Language (DDL)
 
 Welcome to the world of Data Definition Language, or DDL for short. If you've ever wondered how databases are structured and how those structures are created and modified, you're in the right place. DDL is a subset of SQL (Structured Query Language) that focuses on defining and managing the schema of a database. Think of it as the blueprint for your database, where you lay out the design of tables, indexes, views, and other elements that store and organize your data.
 
-## Understanding DDL and Its Purpose
+### Understanding DDL and Its Purpose
 
 Imagine building a house—you need a plan that outlines where the rooms will be, how big they are, and how they're connected. Similarly, DDL provides the commands to create the "rooms" (tables) in your database, specify their "furniture" (columns and data types), and decide how everything is connected. It allows you to:
 
@@ -14,11 +14,11 @@ Imagine building a house—you need a plan that outlines where the rooms will be
 
 By mastering DDL, you gain control over the foundational aspects of your database, ensuring that your data is organized efficiently and effectively.
 
-## Key DDL Statements
+### Key DDL Statements
 
 Let's dive into the main commands that make up DDL and see how they help you shape your database.
 
-### Creating Tables with `CREATE TABLE`
+#### Creating Tables with `CREATE TABLE`
 
 The `CREATE TABLE` statement is your starting point for adding new tables to your database. It defines the table's name, the columns it contains, their data types, and any constraints that enforce data integrity.
 
@@ -38,10 +38,10 @@ CREATE TABLE employees (
 
 In this command, we're creating a table named `employees` with the following columns:
 
-- `employee_id`: An integer that uniquely identifies each employee. It's set as the primary key, ensuring no two employees share the same ID.
-- `first_name` and `last_name`: Text fields that store the employee's name, each allowing up to 50 characters.
-- `date_of_birth`: A date field that records when the employee was born.
-- `department_id`: An integer that associates the employee with a department.
+- The `employee_id` is an integer field that uniquely identifies each employee and is set as the primary key to ensure uniqueness.  
+- The `first_name` and `last_name` are text fields designed to store the employee's names, each with a character limit of 50.  
+- The `date_of_birth` is a date field used to record the birth date of the employee for reference.  
+- The `department_id` is an integer field that links the employee to a specific department, creating an association.  
 
 **Visualizing the Table Structure:**
 
@@ -55,7 +55,7 @@ In this command, we're creating a table named `employees` with the following col
 
 At this point, the table is empty, but it's ready to hold employee data.
 
-### Modifying Tables with `ALTER TABLE`
+#### Modifying Tables with `ALTER TABLE`
 
 As your database evolves, you might need to change the structure of your tables. The `ALTER TABLE` statement allows you to add, modify, or remove columns and constraints.
 
@@ -80,7 +80,7 @@ Now, the `employees` table includes the `email` column:
 
 This new column can store up to 100 characters, accommodating most email addresses.
 
-### Removing Tables with `DROP TABLE`
+#### Removing Tables with `DROP TABLE`
 
 When a table is no longer needed, you can remove it entirely using the `DROP TABLE` statement. This action deletes the table and all of its data permanently.
 
@@ -94,7 +94,7 @@ DROP TABLE employees;
 
 After executing this command, the `employees` table no longer exists in your database. Be cautious with `DROP TABLE`, as this action cannot be undone.
 
-### Deleting Data with `TRUNCATE TABLE`
+#### Deleting Data with `TRUNCATE TABLE`
 
 If you want to remove all data from a table but keep its structure for future use, `TRUNCATE TABLE` comes in handy. It's a quick way to delete all rows without dropping the table itself.
 
@@ -129,7 +129,7 @@ After truncation, all the data is gone, but the table remains:
 
 This is useful when you need to reset a table's data without affecting its structure or relationships.
 
-### Renaming Tables with `RENAME TABLE` or `ALTER TABLE`
+#### Renaming Tables with `RENAME TABLE` or `ALTER TABLE`
 
 Changing the name of a table can be necessary when its purpose evolves or to adhere to new naming conventions. Depending on your database system, you can use `RENAME TABLE` or `ALTER TABLE` to accomplish this.
 
@@ -157,11 +157,11 @@ After renaming, the table previously known as `employees` is now called `staff`:
 
 This change updates the table's name in the database schema, but the structure and data remain the same.
 
-## Practical Examples and Interpretations
+### Practical Examples and Interpretations
 
 To deepen our understanding, let's explore some practical scenarios involving DDL statements and interpret the outcomes.
 
-### Creating a Departments Table
+#### Creating a Departments Table
 
 Suppose we want to create a new table to store information about departments within a company:
 
@@ -175,9 +175,9 @@ CREATE TABLE departments (
 
 This command sets up a `departments` table with:
 
-- `department_id`: A unique identifier for each department.
-- `department_name`: The name of the department.
-- `manager_id`: The ID of the manager overseeing the department.
+- The `department_id` serves as a unique identifier for each department, ensuring distinct identification in the database.  
+- The `department_name` represents the name assigned to each department for identification and reference.  
+- The `manager_id` corresponds to the ID of the manager responsible for overseeing the department's operations.  
 
 **Table Structure:**
 
@@ -189,7 +189,7 @@ This command sets up a `departments` table with:
 +---------------+------------------+------------+
 ```
 
-### Altering the Departments Table
+#### Altering the Departments Table
 
 Later, we decide to add the location of each department:
 
@@ -208,7 +208,7 @@ The `departments` table now includes a `location` column:
 +---------------+------------------+------------+----------+
 ```
 
-### Renaming a Column
+#### Renaming a Column
 
 Perhaps the `manager_id` column needs a clearer name. We can rename it to `head_id`:
 
@@ -236,7 +236,7 @@ Now, the column reflects its new name:
 +---------------+------------------+----------+----------+
 ```
 
-### Dropping a Column
+#### Dropping a Column
 
 If the `location` information is no longer needed, we can remove that column:
 
@@ -255,7 +255,7 @@ The `departments` table reverts to:
 +---------------+------------------+----------+
 ```
 
-### Deleting the Departments Table
+#### Deleting the Departments Table
 
 If we decide to remove the `departments` table entirely:
 
@@ -265,20 +265,20 @@ DROP TABLE departments;
 
 The table and all its data are permanently deleted from the database.
 
-## Understanding Constraints and Data Integrity
+### Understanding Constraints and Data Integrity
 
 DDL not only defines the structure of tables but also allows you to enforce rules to maintain data integrity. Constraints are conditions that the data must satisfy, ensuring accuracy and consistency.
 
-### Common Types of Constraints
+#### Common Types of Constraints
 
-- **PRIMARY KEY**: Uniquely identifies each row in a table.
-- **FOREIGN KEY**: Ensures referential integrity by linking to a primary key in another table.
-- **UNIQUE**: Guarantees that all values in a column are distinct.
-- **NOT NULL**: Specifies that a column cannot contain NULL (empty) values.
-- **CHECK**: Enforces a condition that each row must satisfy.
-- **DEFAULT**: Sets a default value for a column when none is provided.
+- A **primary key** uniquely identifies each row in a database table and ensures no duplicate entries exist for the specified column(s).  
+- A **foreign key** establishes a relationship between two tables by referencing a primary key in another table, maintaining referential integrity.  
+- A **unique constraint** ensures that all values in a column or group of columns are distinct, preventing duplicate entries.  
+- A **not null constraint** ensures that a column cannot have NULL values, meaning every row must contain a valid entry for that column.  
+- A **check constraint** enforces a specified condition for values in a column, ensuring that data entered meets defined criteria.  
+- A **default constraint** provides a pre-defined value for a column when no explicit value is supplied during data insertion.  
 
-### Adding Constraints During Table Creation
+#### Adding Constraints During Table Creation
 
 When creating a table, you can define constraints directly:
 
@@ -301,7 +301,7 @@ This `projects` table includes:
 - A `CHECK` constraint on `budget` to ensure it's a positive number.
 - A `FOREIGN KEY` linking `manager_id` to the `employees` table.
 
-### Altering Tables to Add Constraints
+#### Altering Tables to Add Constraints
 
 You can also add constraints to an existing table:
 
@@ -318,7 +318,7 @@ This adds a foreign key constraint to the `employees` table, linking `department
 
 Beyond tables, DDL commands also help you create and manage indexes and views, enhancing database performance and usability.
 
-### Creating Indexes
+#### Creating Indexes
 
 Indexes improve query performance by allowing the database to find data faster.
 
@@ -328,7 +328,7 @@ CREATE INDEX idx_last_name ON employees(last_name);
 
 This command creates an index on the `last_name` column of the `employees` table, speeding up searches based on last names.
 
-### Dropping Indexes
+#### Dropping Indexes
 
 If an index is no longer necessary, you can remove it:
 
@@ -338,7 +338,7 @@ DROP INDEX idx_last_name;
 
 This deletes the index, potentially slowing down queries that relied on it but freeing up system resources.
 
-### Creating Views
+#### Creating Views
 
 A view is a virtual table based on a SELECT query. It simplifies complex queries and enhances security by restricting access to specific data.
 
@@ -351,7 +351,7 @@ JOIN departments ON employees.department_id = departments.department_id;
 
 This view provides a simplified way to see employee information alongside their department names.
 
-### Dropping Views
+#### Dropping Views
 
 To remove a view:
 
