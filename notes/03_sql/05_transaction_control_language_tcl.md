@@ -1,21 +1,21 @@
-# Transaction Control Language (TCL)
+## Transaction Control Language (TCL)
 
 In the world of databases, maintaining data integrity and consistency is crucial, especially when multiple operations are involved. Imagine you're at a bank's ATM, transferring money from your savings to your checking account. You wouldn't want the system to deduct the amount from your savings without adding it to your checking due to some error, right? This is where Transaction Control Language (TCL) comes into play, ensuring that all related operations either complete successfully together or fail without affecting the database's consistency.
 
-## Understanding Transactions
+### Understanding Transactions
 
 A transaction is a sequence of one or more SQL statements that are executed as a single unit of work. The primary goal is to ensure that either all operations within the transaction are completed successfully or none are, preserving the database's integrity.
 
-### The ACID Properties
+#### The ACID Properties
 
 Transactions adhere to the ACID properties:
 
-- **Atomicity**: Ensures that all operations within a transaction are completed; if not, the transaction is aborted.
-- **Consistency**: Guarantees that a transaction brings the database from one valid state to another, maintaining all predefined rules.
-- **Isolation**: Ensures that concurrent transactions occur independently without interference.
-- **Durability**: Once a transaction is committed, the changes are permanent, even in the case of a system failure.
+- **Atomicity** ensures that all operations within a transaction are completed as a single unit; if any operation fails, the entire transaction is aborted and no changes are applied.  
+- **Consistency** guarantees that a transaction transitions the database from one valid state to another while adhering to all defined integrity constraints and rules.  
+- **Isolation** ensures that transactions executing concurrently do not interfere with each other, preserving the correctness of operations.  
+- **Durability** ensures that once a transaction is committed, its changes are permanently recorded and persist even in the event of a system failure.
 
-## Key TCL Commands
+### Key TCL Commands
 
 TCL provides several commands to manage transactions effectively:
 
@@ -27,7 +27,7 @@ TCL provides several commands to manage transactions effectively:
 
 Let's delve into each of these commands with examples to understand how they work.
 
-### BEGIN TRANSACTION
+#### BEGIN TRANSACTION
 
 Starting a transaction is like saying to the database, "I'm about to perform several operations that should be treated as a single, indivisible unit."
 
@@ -37,7 +37,7 @@ BEGIN TRANSACTION;
 
 After this command, all subsequent operations are part of the transaction until it's either committed or rolled back.
 
-### COMMIT
+#### COMMIT
 
 The `COMMIT` command saves all changes made during the transaction to the database permanently.
 
@@ -79,7 +79,7 @@ COMMIT;
 - Salaries for department 1 employees are updated.
 - `COMMIT` saves these changes permanently.
 
-### ROLLBACK
+#### ROLLBACK
 
 If something goes wrong during a transaction, you can undo all changes made within it using `ROLLBACK`.
 
@@ -112,7 +112,7 @@ ROLLBACK;
 - Salaries are updated incorrectly.
 - `ROLLBACK` undoes the changes, restoring the original salaries.
 
-### SAVEPOINT
+#### SAVEPOINT
 
 A savepoint allows you to set a point within a transaction to which you can later roll back, without affecting the entire transaction.
 
@@ -148,7 +148,7 @@ WHERE department_id = 2;
 - A savepoint named `dept1_updated` is created.
 - Salaries in department 2 are increased by 5%.
 
-### ROLLBACK TO SAVEPOINT
+#### ROLLBACK TO SAVEPOINT
 
 If we decide to undo the changes made after a savepoint, we can roll back to it.
 
@@ -172,7 +172,7 @@ COMMIT;
 - The salary increase for department 2 is rolled back.
 - `COMMIT` saves the salary increase for department 1.
 
-### Full Transaction Flow
+#### Full Transaction Flow
 
 Here's the entire process in one go:
 
@@ -195,11 +195,11 @@ ROLLBACK TO dept1_updated;
 COMMIT;
 ```
 
-## Transactions in Real Life
+### Transactions in Real Life
 
 Transactions are essential in scenarios where multiple operations need to be treated atomically.
 
-### Banking Example
+#### Banking Example
 
 Imagine transferring $500 from Account A to Account B.
 
@@ -219,7 +219,7 @@ COMMIT;
 
 If any part of this transaction fails (e.g., insufficient funds in Account A), a `ROLLBACK` ensures neither account balance is changed, maintaining financial integrity.
 
-## Rollback Capabilities Across Databases
+### Rollback Capabilities Across Databases
 
 Different databases handle transactions in slightly different ways. Here's a comparison:
 
@@ -235,14 +235,14 @@ Different databases handle transactions in slightly different ways. Here's a com
 
 **Key Points:**
 
-- **DML Statements** (`INSERT`, `UPDATE`, `DELETE`) can be rolled back in all databases.
-- **DDL Statements** (`CREATE`, `ALTER`, `DROP`) rollback support varies; some databases don't allow rolling back DDL operations.
-- **Autocommit Behavior**: In MySQL and SQL Server, changes are committed automatically unless a transaction is explicitly started.
+- Data Manipulation Language (DML) statements such as `INSERT`, `UPDATE`, and `DELETE` can be rolled back in all databases, ensuring changes are not finalized unless explicitly committed.  
+- Support for rolling back Data Definition Language (DDL) statements like `CREATE`, `ALTER`, and `DROP` varies between databases, as some do not permit rolling back these operations.  
+- Autocommit behavior in databases such as MySQL and SQL Server automatically commits changes unless a transaction is explicitly initiated, requiring careful handling to avoid unintended permanent changes.
+ 
+### Best Practices for Using Transactions
 
-## Best Practices for Using Transactions
-
-- **Group Related Operations**: Use transactions to ensure that all related changes are committed together.
-- **Keep Transactions Short**: Long transactions can lock resources and affect performance.
-- **Handle Exceptions**: Always include error handling to `ROLLBACK` in case of failures.
-- **Use Savepoints Wisely**: They are helpful for complex transactions but can add overhead.
-- **Understand Isolation Levels**: Choose the appropriate isolation level to balance performance and data integrity.
+- Transactions group related operations to ensure all changes are either committed together or rolled back as a unit.  
+- Keeping transactions short minimizes resource locks and helps maintain system performance.  
+- Error handling should include a `ROLLBACK` mechanism to revert changes in case of failures during the transaction.  
+- Savepoints can be used effectively in complex transactions to allow partial rollbacks, but they may introduce additional overhead.  
+- Understanding and selecting the appropriate isolation level helps balance the trade-off between performance and data integrity.
