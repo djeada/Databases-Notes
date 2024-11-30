@@ -34,8 +34,6 @@ In this example, the `Customers` table holds customer information, while the `Or
 
 Relational databases are ideal for applications requiring structured data and complex transactions, such as financial systems, inventory management, and enterprise resource planning (ERP). They enforce data integrity through ACID (Atomicity, Consistency, Isolation, Durability) properties.
 
-Strengths include:
-
 - The **structured data management capabilities** of relational databases ensure data consistency through strict schemas and organized frameworks.  
 - **Complex query support** is a major advantage, with powerful SQL features allowing intricate queries, joins, and data manipulations.  
 - **Data integrity and reliability** are maintained through ACID compliance, ensuring accurate, consistent, and dependable data handling.  
@@ -91,8 +89,6 @@ Here, each user document includes an array of orders, showcasing the flexibility
 
 Document databases are well-suited for content management systems, catalogs, and applications requiring rapid development with evolving data models.
 
-Strengths include:
-
 - The **flexible schemas of non-relational databases** allow them to easily adapt to changes in data structure, making them highly versatile.  
 - **High performance is achieved** as these databases are optimized for fast read and write operations, even with large data volumes.  
 - **Scalability is a key advantage**, with their design supporting horizontal scaling across multiple servers to handle growth efficiently.  
@@ -124,8 +120,6 @@ Each session ID maps directly to the session data.
 ##### Use Cases and Strengths
 
 Key-value stores are ideal for caching, session management, and real-time data feeds.
-
-Strengths include:
 
 - The **high throughput offered by key-value databases** ensures extremely fast read and write operations, making them ideal for high-performance use cases.  
 - **Simplicity is a defining feature**, with straightforward APIs that make these databases easy to use and integrate.  
@@ -172,8 +166,6 @@ Each row represents a sensor, and columns store readings over time.
 
 Column-based databases excel in handling large datasets for applications like analytics, logging, and time-series data.
 
-Strengths include:
-
 - The **high write and read performance of column-based databases** makes them optimized for handling large-scale data operations efficiently.  
 - **Scalability is a strong suit**, as these databases are designed to scale seamlessly across distributed systems.  
 - **Flexible schemas provide adaptability**, allowing them to adjust to changing data models with ease.  
@@ -212,8 +204,6 @@ This structure efficiently models complex relationships.
 ##### Use Cases and Strengths
 
 Graph databases are perfect for social networks, recommendation engines, and fraud detection systems.
-
-Strengths include:
 
 - The **relationship-centric query capabilities of graph databases** enable efficient traversal and analysis of connected data.  
 - **Flexible data modeling is a key advantage**, allowing for the seamless representation of complex networks and relationships.  
