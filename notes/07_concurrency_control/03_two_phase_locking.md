@@ -110,6 +110,6 @@ This ensures that while you have the books, no one else can modify them (e.g., a
 
 To delve deeper into 2PL and related concepts, you might explore topics such as:
 
-- **Transaction Isolation Levels**: How different levels affect concurrency and consistency.
-- **Optimistic vs. Pessimistic Concurrency Control**: Alternative strategies for managing concurrent transactions.
-- **Multiversion Concurrency Control (MVCC)**: A method that allows readers to access data without waiting for writers.
+- **Transaction Isolation Levels**
+- **Optimistic vs. Pessimistic Concurrency Control**
+- **Multiversion Concurrency Control (MVCC)**
