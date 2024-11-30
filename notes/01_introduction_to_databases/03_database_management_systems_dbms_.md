@@ -1,4 +1,4 @@
-# Database Management Systems (DBMS)
+## Database Management Systems (DBMS)
 
 Database Management Systems, often abbreviated as DBMS, are software tools that facilitate the creation, management, and manipulation of databases. They serve as an intermediary between users or applications and the database itself, ensuring that data is consistently organized and remains easily accessible. For anyone involved in backend development, a solid grasp of various DBMS types is crucial for designing effective and efficient data management solutions.
 
@@ -12,11 +12,11 @@ Database Management Systems, often abbreviated as DBMS, are software tools that 
 
 In the diagram above, clients interact with the DBMS to perform operations like querying or updating data, while the DBMS communicates directly with the database to execute these operations.
 
-## Types of Database Management Systems
+### Types of Database Management Systems
 
 There are several types of DBMS, each tailored to specific data storage needs and use cases. Understanding these types helps in selecting the most appropriate system for a given application.
 
-### Relational Database Management Systems (RDBMS)
+#### Relational Database Management Systems (RDBMS)
 
 Relational DBMS store data in structured formats using tables, which consist of rows and columns. Each table represents an entity, and relationships between tables are established through keys. This model relies on a predefined schema to maintain data integrity and uses Structured Query Language (SQL) for data manipulation.
 
@@ -44,7 +44,7 @@ In this example, the `Orders` table references the `Customers` table through the
 
 Popular RDBMS include MySQL, PostgreSQL, Oracle Database, and Microsoft SQL Server. They are ideal for applications requiring complex queries and transactions, such as financial systems, inventory management, and enterprise resource planning. These systems ensure data reliability through ACID (Atomicity, Consistency, Isolation, Durability) properties.
 
-### Object-Oriented Database Management Systems (OODBMS)
+#### Object-Oriented Database Management Systems (OODBMS)
 
 Object-Oriented DBMS integrate database capabilities with object-oriented programming languages, allowing data to be stored as objects. This approach enables the database to store complex data structures directly, preserving relationships and behaviors defined in the application code.
 
@@ -68,7 +68,7 @@ An OODBMS can store instances of these classes, maintaining their properties and
 
 Examples of OODBMS are ObjectDB, db4o, and Versant Object Database. They are well-suited for applications in fields like computer-aided design (CAD), multimedia systems, and scientific research, where data relationships are intricate and performance is critical.
 
-### Hierarchical Database Management Systems (HDBMS)
+#### Hierarchical Database Management Systems (HDBMS)
 
 Hierarchical DBMS organize data in a tree-like structure, using parent-child relationships to represent data hierarchy. Each child record has only one parent, but a parent can have multiple children.
 
@@ -90,7 +90,7 @@ In this structure, navigating from the company to employees follows a clear hier
 
 IBM's Information Management System (IMS) is a classic example of an HDBMS. These systems are efficient for applications where data relationships are consistently hierarchical, such as file systems and reservation systems.
 
-### Network Database Management Systems (NDBMS)
+#### Network Database Management Systems (NDBMS)
 
 Network DBMS extend the hierarchical model by allowing multiple relationships between records, forming a network structure. In this model, a child record can have more than one parent, enabling more complex data relationships.
 
@@ -112,11 +112,11 @@ Here, courses have multiple students, and students enroll in multiple courses, c
 
 Examples of NDBMS include Integrated Data Store (IDS) and Raima Database Manager (RDM). They are useful in applications like supply chain management and network modeling, where data relationships are complex and interconnected.
 
-### NoSQL Database Management Systems
+#### NoSQL Database Management Systems
 
 NoSQL DBMS are designed to handle unstructured or semi-structured data with flexibility and scalability. They often sacrifice some ACID properties in favor of performance and distributed computing capabilities.
 
-#### Document-Based Databases
+##### Document-Based Databases
 
 These databases store data as documents, typically in formats like JSON or BSON. Each document contains all the information for an entity, which can include nested data structures.
 
@@ -136,7 +136,7 @@ Example document for a user profile:
 
 MongoDB and Couchbase are popular document-based databases. They are ideal for content management systems, blogging platforms, and applications where data models evolve frequently.
 
-#### Column-Based Databases
+##### Column-Based Databases
 
 Also known as wide-column stores, these databases store data in columns rather than rows, optimizing for large-scale data queries and aggregation.
 
@@ -158,7 +158,7 @@ Columns:
 
 Apache Cassandra and Google Cloud Bigtable are examples of column-based databases. They are suited for applications like analytics platforms, time-series data storage, and big data processing.
 
-#### Key-Value Databases
+##### Key-Value Databases
 
 Key-Value stores are the simplest type of NoSQL databases, where data is stored as a collection of key-value pairs.
 
@@ -171,7 +171,7 @@ Value: "{ 'userID': 'u123', 'loginTime': '2021-08-01T12:00:00Z' }"
 
 Redis and Amazon DynamoDB (in key-value mode) are commonly used key-value databases. They excel in scenarios requiring fast data retrieval, like session management, caching, and real-time messaging.
 
-#### Graph-Based Databases
+##### Graph-Based Databases
 
 Graph databases focus on the relationships between data points, representing data as nodes (entities) and edges (relationships).
 
@@ -184,7 +184,7 @@ Example of social network connections:
 
 Neo4j and Amazon Neptune are examples of graph databases. They are particularly effective for social networking platforms, recommendation engines, and fraud detection systems.
 
-## Factors to Consider When Selecting a DBMS
+### Factors to Consider When Selecting a DBMS
 
 Choosing the right DBMS involves evaluating several key factors to ensure it aligns with your application's requirements.
 
@@ -198,7 +198,7 @@ Choosing the right DBMS involves evaluating several key factors to ensure it ali
 8. A strong **community and support network** can significantly ease troubleshooting and development, making systems with active user bases and professional support desirable.  
 9. Factor in **operational complexity**, considering how easy it is to set up, administer, back up, and recover the system, with some databases offering comprehensive tools and others requiring manual effort.  
 
-## Comparison of Different Database Management Systems
+### Comparison of Different Database Management Systems
 
 Here's a comparison highlighting key aspects of SQL, NoSQL, and NewSQL databases:
 
