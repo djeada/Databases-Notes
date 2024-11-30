@@ -55,11 +55,11 @@ Updates in an eventually consistent system propagate to other nodes asynchronous
 
 #### Example of Update Propagation:
 
-- **Step 1:** A user updates their profile picture on a social media platform.
-- **Step 2:** The update is saved on one server (Node A).
-- **Step 3:** Node A asynchronously replicates the change to other servers (Nodes B and C).
-- **Step 4:** Friends accessing the user's profile through different nodes might see the old picture until the update reaches those nodes.
-- **Step 5:** Eventually, all nodes reflect the new profile picture.
+1. A user updates their profile picture on a social media platform.
+2. The update is saved on one server (Node A).
+3. Node A asynchronously replicates the change to other servers (Nodes B and C).
+4. Friends accessing the user's profile through different nodes might see the old picture until the update reaches those nodes.
+5. Eventually, all nodes reflect the new profile picture.
 
 ### Trade-offs of Eventual Consistency
 
@@ -79,10 +79,10 @@ When multiple nodes update the same data simultaneously, conflicts can arise. Th
 
 ##### Common Conflict Resolution Strategies:
 
-- **Last Write Wins:** The most recent update overwrites previous ones based on timestamps.
-- **Version Vectors:** Track versions of data to detect and resolve conflicts.
-- **Merge Functions:** Apply application-specific logic to merge conflicting updates.
-- **CRDTs (Conflict-Free Replicated Data Types):** Use data structures designed to support concurrent updates without conflicts.
+- **Last Write Wins** resolves conflicts by using timestamps to ensure the most recent update overwrites previous ones.  
+- **Version vectors** track data versions across replicas to detect and resolve conflicts intelligently.  
+- **Merge functions** employ application-specific logic to combine or reconcile conflicting updates.  
+- **CRDTs (Conflict-Free Replicated Data Types)** leverage specialized data structures to handle concurrent updates without introducing conflicts.
 
 ### Practical Examples of Eventual Consistency
 
@@ -104,9 +104,9 @@ CDNs cache content at various nodes around the world to serve users with low lat
 
 Embracing eventual consistency allows distributed systems to achieve:
 
-- **High Throughput:** Eliminating the need for immediate synchronization enables systems to handle a higher volume of operations.
-- **Fault Tolerance:** The system can continue operating even if some nodes are unreachable, as updates will propagate when connectivity is restored.
-- **User Experience:** Providing continuous availability enhances user satisfaction, especially in applications where minor delays in data consistency are acceptable.
+- **High throughput** is achieved as the system avoids immediate synchronization, allowing for a greater volume of operations.  
+- **Fault tolerance** enables the system to remain operational even when some nodes are unreachable, with updates propagating once connectivity is restored.  
+- **User experience** improves through continuous availability, particularly in scenarios where slight delays in achieving data consistency are acceptable.  
 
 ### Considerations When Using Eventual Consistency
 
@@ -132,9 +132,9 @@ Implementing eventual consistency involves designing systems that can handle del
 
 Updates can be propagated using various methods:
 
-- **Gossip Protocols:** Nodes share information with randomly selected peers, gradually spreading updates throughout the network.
-- **Asynchronous Replication:** Updates are sent to other nodes without waiting for acknowledgments, allowing the originating node to continue processing requests.
-- **Publish-Subscribe Systems:** Nodes subscribe to updates, and changes are published to all subscribers.
+- **Gossip protocols** enable nodes to randomly share information with peers, gradually disseminating updates across the network.  
+- **Asynchronous replication** allows updates to be sent to other nodes without waiting for acknowledgments, ensuring the originating node can continue handling requests.  
+- **Publish-subscribe systems** ensure nodes receive updates by subscribing to changes, with updates broadcast to all subscribers.
 
 #### Handling Conflicts with Version Vectors
 
@@ -142,7 +142,6 @@ Version vectors help track the history of data updates to resolve conflicts.
 
 ##### Example of Version Vectors:
 
-- **Node A:** Updates data with version [A:1, B:0, C:0].
-- **Node B:** Updates the same data with version [A:0, B:1, C:0].
-- When nodes synchronize, they compare versions and merge changes based on predefined rules.
-
+- **Node A** updates the data, creating a version vector [A:1, B:0, C:0], indicating its update.  
+- **Node B** simultaneously updates the same data, resulting in a version vector [A:0, B:1, C:0].  
+- During synchronization, the nodes compare version vectors to identify conflicting updates and merge changes according to predefined rules.  
