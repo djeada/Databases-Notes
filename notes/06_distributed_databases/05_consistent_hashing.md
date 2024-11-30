@@ -191,9 +191,9 @@ To enhance data distribution and fault tolerance, consistent hashing often uses 
 
 #### Benefits of Virtual Nodes
 
-- **Improved Load Balancing:** More points on the ring lead to a more even distribution of data.
-- **Easier Scaling:** When adding or removing a physical node, its virtual nodes can be redistributed without significant impact.
-- **Heterogeneous Nodes:** Nodes with more capacity can have more virtual nodes, allowing them to handle more data.
+- **Improved load balancing** is achieved as increasing the number of points on the hash ring leads to a more even distribution of data among nodes.  
+- **Easier scaling** is possible because adding or removing a physical node only requires redistributing its associated virtual nodes, minimizing disruption.  
+- Supporting **heterogeneous nodes** allows nodes with greater capacity to have more virtual nodes, enabling them to handle a proportionally larger share of data and requests.  
 
 ### Implementing Consistent Hashing
 
@@ -280,20 +280,20 @@ print(f"Key '{key}' is assigned to {assigned_node}")
 
 ### Advantages of Consistent Hashing
 
-- **Scalability:** Easily add or remove nodes with minimal data redistribution.
-- **Efficiency:** Reduces cache misses and database load in distributed caching.
-- **Fault Tolerance:** System continues to function smoothly even when nodes fail.
-- **Balanced Load:** Evenly distributes data and requests across nodes.
+- The **scalability** of consistent hashing allows nodes to be added or removed with minimal impact on existing data placement.  
+- **Efficiency** is enhanced by reducing cache misses and lowering database load in distributed caching systems.  
+- Built-in **fault tolerance** ensures the system remains operational even if some nodes fail.  
+- A **balanced load** is achieved by distributing data and requests evenly across available nodes.  
 
 ### Challenges and Considerations
 
-- **Hotspots:** If hash functions or data keys are not uniform, some nodes may become overloaded.
-- **Hash Function Choice:** Must ensure a good distribution of hash values.
-- **Complexity:** Implementing virtual nodes and managing the hash ring can add complexity.
+- **Hotspots** can arise if the hash function or data keys do not distribute data uniformly, leading to overloaded nodes.  
+- Choosing the right **hash function** is critical to ensure a good spread of hash values across nodes.  
+- The **complexity** of implementing virtual nodes and managing the hash ring can increase system overhead.  
 
 ### Best Practices
 
-- **Use Virtual Nodes:** They help in achieving better load balancing.
-- **Monitor System Performance:** Regularly check for uneven load distribution.
-- **Consistent Hash Function:** Use a proven hash function to prevent clustering of hash values.
-- **Plan for Scaling:** Anticipate growth and design the system to handle additional nodes smoothly.
+- Incorporating **virtual nodes** improves load distribution and minimizes hotspots.  
+- Regularly **monitor system performance** to identify and address uneven load or emerging bottlenecks.  
+- Selecting a **consistent hash function** that avoids clustering of values ensures better distribution of data.  
+- Designing for **scaling** from the outset helps the system accommodate growth and handle additional nodes smoothly.  
