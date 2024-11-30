@@ -147,7 +147,7 @@ DROP TRIGGER IF EXISTS SetCreatedAt;
 - The `IF EXISTS` clause can be used when dropping a trigger to avoid errors if the specified trigger does not exist in the database. This provides a safeguard for scripts that may run multiple times or in environments where the trigger's existence is uncertain.
 - The `SetCreatedAt` refers to the name of the specific trigger that is being dropped. This name must match the trigger as defined in the database schema for the `DROP TRIGGER` statement to execute correctly.
 
-## Understanding Trigger Execution Context
+### Understanding Trigger Execution Context
 
 When working with triggers, it's important to understand the context in which they execute:
 
