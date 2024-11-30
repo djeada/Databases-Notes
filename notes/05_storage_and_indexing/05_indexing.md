@@ -189,9 +189,9 @@ A common index type is the B-tree, which organizes data in a balanced tree struc
 ```
           [M]
          /   \
-      [G]    [T]
-     /  \    /  \
-   [A-F][H-L][N-S][U-Z]
+     [G]       [T]
+    /  \       /  \
+ [A-F][H-L] [N-S][U-Z]
 ```
 
 - **Nodes** within the index represent pages, which organize data hierarchically to facilitate efficient searching.  
