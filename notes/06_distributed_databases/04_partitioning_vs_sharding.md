@@ -34,16 +34,19 @@ Each partition contains a subset of the data based on specific criteria, such as
 
 #### Goals of Partitioning
 
-1. **Improved Query Performance**: Queries targeting a specific subset of data are faster, as they only access relevant partitions.
-2. **Streamlined Maintenance**: Tasks such as backups, archiving, or indexing can be performed on individual partitions, reducing operational overhead.
+- Improved **query performance** is achieved because queries targeting specific subsets of data access only relevant partitions, reducing processing time.  
+- Maintenance **tasks** such as backups, archiving, or indexing can be performed on individual partitions, which simplifies operations and reduces downtime.  
+- Resource **optimization** becomes easier as partitions can be distributed across different storage or processing units, balancing the workload.  
+- Data **management** flexibility increases since partitions can be added, removed, or modified independently without affecting the entire dataset.  
+- Failure **isolation** is possible because issues in one partition do not affect others, enhancing system reliability.  
 
 #### Types of Partitioning
 
-1. **Range Partitioning**: Data is divided based on a value range (e.g., dates or numeric ranges).
-2. **List Partitioning**: Data is grouped based on discrete values (e.g., region codes or categories).
-3. **Hash Partitioning**: A hash function determines the partition for each record.
-4. **Key Partitioning**: Similar to hash partitioning but based on primary key values.
-5. **Composite Partitioning**: Combines multiple partitioning methods, such as range and hash, for complex datasets.
+- **Range partitioning** divides data based on a continuous range of values, such as dates or numeric ranges.  
+- **List partitioning** groups data using discrete values like categories, regions, or predefined labels.  
+- **Hash partitioning** determines the partition for each record using a hash function applied to a specific column.  
+- **Key partitioning** operates similarly to hash partitioning but is specifically based on primary key values.  
+- **Composite partitioning** combines two or more partitioning methods, such as range and hash, for handling complex datasets.  
 
 ### Sharding
 
@@ -78,15 +81,15 @@ Each shard operates independently, which distributes the load and improves scala
 
 #### Objectives of Sharding
 
-1. **Scalability**: Distribute data across multiple servers to handle large-scale datasets.
-2. **Performance**: Parallelize queries across shards to reduce latency and increase throughput.
-3. **Fault Tolerance**: Spread data so the failure of one shard doesn’t affect the entire dataset.
+- **Scalability** is achieved by distributing data across multiple servers, enabling systems to handle large-scale datasets effectively.  
+- **Performance** improves by parallelizing queries across shards, reducing latency and increasing query throughput.  
+- **Fault tolerance** ensures that the failure of one shard does not disrupt the availability or integrity of the entire dataset.  
 
 #### Common Sharding Strategies
 
-1. **Range-based Sharding**: Data is distributed by ranges of a key (e.g., user IDs).
-2. **Hash-based Sharding**: A hash function determines the shard for each piece of data.
-3. **List-based Sharding**: Similar to list partitioning, data is assigned based on specific values (e.g., geographic regions).
+- **Range-based sharding** involves distributing data by ranges of a key, such as user IDs or timestamps, to group logically related data together.  
+- **Hash-based sharding** uses a hash function to determine which shard a piece of data belongs to, ensuring even distribution across shards.  
+- **List-based sharding** assigns data to shards based on specific values, such as geographic regions or predefined categories.  
 
 ### Key Differences Between Partitioning and Sharding
 
