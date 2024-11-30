@@ -79,18 +79,19 @@ The old and new systems run concurrently, with data synchronized between them. U
 **Illustrative Diagram:**
 
 ```
+#
       +------------------+
       |   Old Database   |<---+
       +------------------+    |
              ^                |
-  Data Synchronization         |
+  Data Synchronization        |
              |                |
       +------------------+    |
       |   New Database   |----+
       +------------------+
+```
 
 Users can access both databases during migration.
-```
 
 ### Phased Migration
 
