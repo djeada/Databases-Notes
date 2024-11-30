@@ -119,28 +119,28 @@ Hash partitioning uses a hash function on a column to distribute rows evenly acr
 
 Suppose we apply a hash function to the "ID" column using modulus 3 (hash(ID) mod 3). This will assign each row to one of three partitions.
 
-- **Partition 1: hash(ID) mod 3 = 1**
+**Partition 1: hash(ID) mod 3 = 1**
 
-  | ID  | Name  | Department | Hire Date  |
-  |-----|-------|------------|------------|
-  | 1   | Alice | HR         | 2020-01-15 |
-  | 4   | David | IT         | 2020-11-01 |
-  | 7   | Grace | IT         | 2021-05-05 |
-  | 10  | Judy  | IT         | 2020-02-28 |
+| ID  | Name  | Department | Hire Date  |
+|-----|-------|------------|------------|
+| 1   | Alice | HR         | 2020-01-15 |
+| 4   | David | IT         | 2020-11-01 |
+| 7   | Grace | IT         | 2021-05-05 |
+| 10  | Judy  | IT         | 2020-02-28 |
 
-- **Partition 2: hash(ID) mod 3 = 2**
+**Partition 2: hash(ID) mod 3 = 2**
 
-  | ID | Name  | Department | Hire Date  |
-  |----|-------|------------|------------|
-  | 2  | Bob   | IT         | 2021-03-22 |
-  | 5  | Eve   | Finance    | 2021-07-14 |
-  | 8  | Heidi | Finance    | 2020-08-23 |
+| ID | Name  | Department | Hire Date  |
+|----|-------|------------|------------|
+| 2  | Bob   | IT         | 2021-03-22 |
+| 5  | Eve   | Finance    | 2021-07-14 |
+| 8  | Heidi | Finance    | 2020-08-23 |
 
-- **Partition 3: hash(ID) mod 3 = 0**
+**Partition 3: hash(ID) mod 3 = 0**
 
-  | ID | Name  | Department | Hire Date  |
-  |----|-------|------------|------------|
-  | 3  | Carol | HR         | 2019-06-30 |
+| ID | Name  | Department | Hire Date  |
+|----|-------|------------|------------|
+| 3  | Carol | HR         | 2019-06-30 |
 | 6  | Frank | HR         | 2018-12-12 |
 | 9  | Ivan  | HR         | 2019-10-10 |
 
@@ -152,30 +152,30 @@ Key partitioning is similar to hash partitioning but specifically uses the prima
 
 Using the employee table, we can partition it based on ranges of the "ID" primary key.
 
-- **Partition 1: IDs 1-3**
+**Partition 1: IDs 1-3**
 
-  | ID  | Name  | Department | Hire Date  |
-  |-----|-------|------------|------------|
-  | 1   | Alice | HR         | 2020-01-15 |
-  | 2   | Bob   | IT         | 2021-03-22 |
-  | 3   | Carol | HR         | 2019-06-30 |
+| ID  | Name  | Department | Hire Date  |
+|-----|-------|------------|------------|
+| 1   | Alice | HR         | 2020-01-15 |
+| 2   | Bob   | IT         | 2021-03-22 |
+| 3   | Carol | HR         | 2019-06-30 |
 
-- **Partition 2: IDs 4-6**
+**Partition 2: IDs 4-6**
 
-  | ID  | Name  | Department | Hire Date  |
-  |-----|-------|------------|------------|
-  | 4   | David | IT         | 2020-11-01 |
-  | 5   | Eve   | Finance    | 2021-07-14 |
-  | 6   | Frank | HR         | 2018-12-12 |
+| ID  | Name  | Department | Hire Date  |
+|-----|-------|------------|------------|
+| 4   | David | IT         | 2020-11-01 |
+| 5   | Eve   | Finance    | 2021-07-14 |
+| 6   | Frank | HR         | 2018-12-12 |
 
-- **Partition 3: IDs 7-10**
+**Partition 3: IDs 7-10**
 
-  | ID  | Name  | Department | Hire Date  |
-  |-----|-------|------------|------------|
-  | 7   | Grace | IT         | 2021-05-05 |
-  | 8   | Heidi | Finance    | 2020-08-23 |
-  | 9   | Ivan  | HR         | 2019-10-10 |
-  | 10  | Judy  | IT         | 2020-02-28 |
+| ID  | Name  | Department | Hire Date  |
+|-----|-------|------------|------------|
+| 7   | Grace | IT         | 2021-05-05 |
+| 8   | Heidi | Finance    | 2020-08-23 |
+| 9   | Ivan  | HR         | 2019-10-10 |
+| 10  | Judy  | IT         | 2020-02-28 |
 
 Key partitioning can improve performance for queries that target specific ranges of primary keys.
 
@@ -189,10 +189,7 @@ For example, a table might first be range-partitioned by date and then hash-part
 
 To make the most of partitioning, it's important to consider your data characteristics and query patterns.
 
-- **Select the Appropriate Partitioning Strategy:** Choose a partitioning method that aligns with your data and how it's accessed. For time-series data, range partitioning by date might be most effective. For data without a natural partitioning key, hash partitioning could be more suitable.
-
-- **Monitor and Adjust Partitions:** Regularly review your partitioning scheme to ensure it continues to meet performance goals. As data grows and access patterns change, you may need to adjust partitions or redistribute data.
-
-- **Optimize Queries with Partition Pruning:** Design queries to take advantage of partition pruning, where the database engine skips irrelevant partitions. This can significantly improve query performance by reducing the amount of data scanned.
-
-- **Maintain Partitions:** Periodically reorganize or rebuild partitions as part of routine maintenance. This helps optimize storage and can improve performance, especially if partitions become unbalanced over time.
+- Choose a partitioning method that aligns with your data and how it's accessed. For time-series data, range partitioning by date might be most effective. For data without a natural partitioning key, hash partitioning could be more suitable.
+- Regularly review your partitioning scheme to ensure it continues to meet performance goals. As data grows and access patterns change, you may need to adjust partitions or redistribute data.
+- Design queries to take advantage of partition pruning, where the database engine skips irrelevant partitions. This can significantly improve query performance by reducing the amount of data scanned.
+- Periodically reorganize or rebuild partitions as part of routine maintenance. This helps optimize storage and can improve performance, especially if partitions become unbalanced over time.
