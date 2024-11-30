@@ -71,9 +71,9 @@ Here's an ASCII representation of the possible combinations:
 +-------+-----+-----+
 ```
 
-- **CA (Consistency and Availability):** Achievable only when there are no network partitions.
-- **CP (Consistency and Partition Tolerance):** The system remains consistent and tolerates partitions but may sacrifice availability.
-- **AP (Availability and Partition Tolerance):** The system remains available and tolerates partitions but may sacrifice consistency.
+- **Consistency and Availability (CA):** Achieving both is possible only in environments without network partitions, where all nodes see the same data and are responsive.  
+- **Consistency and Partition Tolerance (CP):** Ensures that the system remains consistent and can tolerate network partitions but may compromise availability during partition events.  
+- **Availability and Partition Tolerance (AP):** Maintains system availability and handles network partitions but may result in inconsistent data across nodes.  
 
 ### Real-World Examples
 
@@ -199,9 +199,9 @@ Modern distributed systems employ various strategies to balance the CAP properti
 
 #### Conflict Resolution Strategies
 
-- **Last Write Wins (LWW):** The most recent write overwrites previous ones.
-- **Version Vectors:** Keep track of data versions to resolve conflicts intelligently.
-- **Application-Level Resolution:** The application decides how to merge conflicting updates.
+- Using **Last Write Wins (LWW)** ensures that the most recent write takes precedence, overwriting earlier updates to resolve conflicts.  
+- **Version vectors** track data versions across nodes, enabling intelligent resolution of conflicts based on version history.  
+- **Application-level resolution** delegates conflict resolution to the application, allowing it to merge or prioritize updates based on domain-specific logic.  
 
 #### Multi-Version Concurrency Control (MVCC)
 
@@ -210,14 +210,14 @@ Modern distributed systems employ various strategies to balance the CAP properti
 
 #### Read Repair and Hinted Handoff
 
-- **Read Repair:** During a read operation, if inconsistencies are detected, the system updates outdated replicas.
-- **Hinted Handoff:** Temporarily stores updates intended for unreachable nodes and forwards them when they become available.
+- **Read repair** occurs during read operations, where the system detects and updates outdated replicas to ensure consistency.  
+- **Hinted handoff** temporarily stores updates meant for unavailable nodes and delivers them once those nodes are back online, maintaining eventual consistency.  
 
 ### The PACELC Theorem: An Extension of CAP
 
 The PACELC theorem extends CAP by addressing trade-offs even when the system is running normally (no partitions).
 
-- **PACELC:** "In case of Partition (P), trade-off between Availability (A) and Consistency (C); Else (E), when the system is running normally, trade-off between Latency (L) and Consistency (C)."
+**PACELC:** "In case of Partition (P), trade-off between Availability (A) and Consistency (C); Else (E), when the system is running normally, trade-off between Latency (L) and Consistency (C)."
 
 This theorem acknowledges that even without partitions, there's a trade-off between consistency and latency.
 
@@ -230,19 +230,19 @@ This theorem acknowledges that even without partitions, there's a trade-off betw
 
 #### Understand Your Requirements
 
-- **Critical Data Integrity:** If data correctness is paramount, lean towards consistency.
-- **User Experience:** If availability and responsiveness are critical, lean towards availability.
+- Prioritize **critical data integrity** by focusing on consistency when data correctness and reliability are essential, such as in financial transactions.  
+- Emphasize **user experience** by favoring availability when system responsiveness and uptime are more important, such as in social media platforms.  
 
 #### Use Appropriate Technologies
 
-- **Distributed Databases:** Choose a database system that aligns with your CAP priorities.
-  - **CP-Oriented Databases:** HBase, Spanner.
-  - **AP-Oriented Databases:** Cassandra, DynamoDB.
+- Choose a **distributed database** that aligns with the specific consistency, availability, and partition tolerance requirements of your application.  
+- **CP-oriented databases** prioritize consistency and partition tolerance; examples include HBase and Spanner.  
+- **AP-oriented databases** focus on availability and partition tolerance; examples include Cassandra and DynamoDB.  
 
 #### Implement Monitoring and Resilience
 
-- **Monitoring Tools:** Keep an eye on network health to anticipate partitions.
-- **Resilience Patterns:** Implement retry mechanisms, circuit breakers, and failover strategies.
+- Use **monitoring tools** to track network health and detect potential partitions or failures proactively.  
+- Implement **resilience patterns** such as retry mechanisms, circuit breakers, and failover strategies to maintain system stability during disruptions.  
 
 ### Real-World Case Study: Amazon's DynamoDB
 
