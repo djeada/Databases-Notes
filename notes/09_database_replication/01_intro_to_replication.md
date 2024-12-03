@@ -7,29 +7,29 @@ Database replication is the process of copying and maintaining database objects,
 To grasp how database replication works, it's helpful to visualize the architecture that synchronizes data across servers. Below is an ASCII diagram illustrating a basic replication setup:
 
 ```
-                      +------------------+
-                      |                  |
-                      |   Primary Server |
-                      |     (Master)     |
-                      +---------+--------+
-                                |
-                      Replication Channel
-                                |
-                                v
-                    +-----------+-----------+
-                    |                       |
-                    |   Secondary Server 1  |
-                    |      (Replica)        |
-                    +-----------+-----------+
-                                |
-                      Replication Channel
-                                |
-                                v
-                    +-----------+-----------+
-                    |                       |
-                    |   Secondary Server 2  |
-                    |      (Replica)        |
-                    +-----------------------+
++------------------+
+|                  |
+|   Primary Server |
+|     (Master)     |
++---------+--------+
+          |
+Replication Channel
+          |
+          v
++-----------+-----------+
+|                       |
+|   Secondary Server 1  |
+|      (Replica)        |
++-----------+-----------+
+          |
+Replication Channel
+          |
+          v
++-----------+-----------+
+|                       |
+|   Secondary Server 2  |
+|      (Replica)        |
++-----------------------+
 ```
 
 In this architecture, the primary server handles all write operations and data modifications. Secondary servers, or replicas, receive updates from the primary server and can handle read-only queries. The replication channel represents the communication pathway through which data changes are transmitted from the primary server to the replicas.
@@ -95,9 +95,9 @@ Asynchronous replication allows the primary server to complete transactions with
 
 The process involves the following steps:
 
-1. **Initiation of Write Operation**: The client sends a data modification request to the primary server.
-2. **Immediate Transaction Commit**: The primary server writes the data to its storage and commits the transaction without waiting for replicas.
-3. **Data Propagation to Replicas**: The changes are queued and sent to the replicas asynchronously, allowing the primary server to handle other operations without delay.
+1. The client sends a data modification request to the primary server.
+2. The primary server writes the data to its storage and commits the transaction without waiting for replicas.
+3. The changes are queued and sent to the replicas asynchronously, allowing the primary server to handle other operations without delay.
 
 ##### Illustrative Diagram
 
@@ -134,9 +134,9 @@ Snapshot replication involves copying data at specific intervals from the primar
 
 The snapshot replication process includes:
 
-1. **Creating a Data Snapshot**: The primary server captures a snapshot of the entire database at a particular point in time.
-2. **Distributing the Snapshot**: The snapshot is sent to the replicas.
-3. **Applying the Snapshot on Replicas**: Each replica applies the snapshot, updating its data by overwriting previous information.
+1. The primary server captures a snapshot of the entire database at a particular point in time.
+2. The snapshot is sent to the replicas.
+3. Each replica applies the snapshot, updating its data by overwriting previous information.
 
 ##### Illustrative Diagram
 
@@ -165,9 +165,9 @@ Multi-master replication allows multiple servers to act as primary servers, enab
 
 The process unfolds as follows:
 
-1. **Write Operations on Any Server**: Clients can perform write operations on any of the primary servers.
-2. **Data Exchange Between Servers**: Each server replicates its changes to the other primary servers.
-3. **Conflict Resolution**: Mechanisms are in place to handle conflicts that arise from concurrent modifications to the same data on different servers.
+1. Clients can perform write operations on any of the primary servers.
+2. Each server replicates its changes to the other primary servers.
+3. Mechanisms are in place to handle conflicts that arise from concurrent modifications to the same data on different servers.
 
 ##### Illustrative Diagram
 
@@ -203,10 +203,10 @@ When setting up database replication, several factors need careful consideration
 
 Selecting an appropriate replication topology depends on the application's requirements and the desired balance between consistency, availability, and performance. Options include:
 
-- **Primary-Replica (Master-Slave)**: A single primary server handles all write operations, while replicas handle read operations. This common setup provides read scalability and high availability.
-- **Multi-Master**: Multiple primary servers handle both read and write operations. This is suitable for systems requiring write scalability and equipped with conflict resolution mechanisms.
-- **Hierarchical (Tree)**: The primary server replicates data to intermediate nodes, which then replicate to other nodes. This reduces the replication load on the primary server and enhances scalability.
-- **Mesh Network**: Every node replicates to every other node. While offering high redundancy and availability, it can be complex to manage and may not scale well with many nodes.
+- **Primary-Replica (Master-Slave)** architecture involves a single **primary server** managing all write operations, while **replicas** handle read operations. This setup enhances **read scalability** and provides **high availability**.  
+- **Multi-Master** configurations enable multiple **primary servers** to handle both **read and write operations**, making them suitable for systems needing **write scalability** and equipped with **conflict resolution mechanisms**.  
+- **Hierarchical (Tree)** structures have the **primary server** replicating data to **intermediate nodes**, which then replicate to other nodes. This setup reduces the **replication load** on the primary server and improves **scalability**.  
+- **Mesh Network** setups involve every **node** replicating to every other node. While this provides **high redundancy** and **availability**, it is **complex to manage** and may not **scale well** with a large number of nodes.
 
 Factors influencing topology selection include consistency requirements, network infrastructure, and scalability needs.
 
@@ -214,27 +214,27 @@ Factors influencing topology selection include consistency requirements, network
 
 In environments where conflicts can occur, especially in multi-master or asynchronous replication, effective conflict resolution strategies are essential. Options include:
 
-- **Timestamp-Based Resolution**: Using timestamps to determine which data modification is the most recent.
-- **Versioning Systems**: Employing version numbers or vectors to track changes and resolve conflicts intelligently.
-- **Application-Level Rules**: Defining business logic to automatically resolve conflicts based on specific criteria.
-- **User Intervention**: Logging conflicts and requiring manual resolution when data integrity is critical.
+- **Timestamp-Based Resolution** relies on **timestamps** to determine which **data modification** is the most recent, ensuring the latest changes take precedence.  
+- **Versioning Systems** use **version numbers** or **vectors** to track changes and resolve **conflicts** intelligently by comparing versions.  
+- **Application-Level Rules** employ **business logic** to automatically resolve conflicts based on predefined **criteria** tailored to specific use cases.  
+- **User Intervention** involves **logging conflicts** and requiring **manual resolution** to maintain **data integrity** when automated solutions are insufficient.
 
 #### Monitoring and Maintenance Practices
 
 Effective monitoring and maintenance ensure the replication system remains reliable and performs optimally. Practices include:
 
-- **Replication Lag Monitoring**: Regularly checking the time difference between the primary server and replicas to detect delays.
-- **Health Checks of Nodes**: Continuously verifying that all servers are operational and properly synchronized.
-- **Alert Systems**: Setting up notifications for replication failures, significant lag, or other critical issues.
-- **Regular Backups**: Despite replication, maintaining regular backups is crucial to protect against data corruption or widespread failures.
+- **Replication Lag Monitoring** involves regularly checking the **time difference** between the primary server and replicas to identify potential **delays** in data synchronization.  
+- **Health Checks of Nodes** ensure that all **servers** are **operational** and properly **synchronized** within the replication setup.  
+- **Alert Systems** are configured to send **notifications** for issues such as replication **failures**, significant **lag**, or other **critical problems**.  
+- **Regular Backups** are maintained as an additional safeguard to protect against **data corruption** or **widespread failures**, despite having replication in place.
 
 #### Implementing Failover Mechanisms
 
 Failover mechanisms are vital for maintaining system availability when a server fails. Options include:
 
-- **Automatic Failover**: The system detects server failures and automatically switches operations to a replica without human intervention.
-- **Manual Failover**: Administrators initiate the failover process, allowing controlled switchover and assessment before action.
-- **Failback Procedures**: After restoring the original primary server, procedures are needed to reintegrate it, either as a replica or by restoring it to its primary role.
+- **Automatic Failover** allows the system to detect **server failures** and switch operations to a **replica** automatically, eliminating the need for human intervention.  
+- **Manual Failover** involves **administrators** initiating the failover process, providing a controlled **switchover** and allowing for assessment before action is taken.  
+- **Failback Procedures** are required to **reintegrate** the restored original **primary server**, either by configuring it as a **replica** or restoring it to its **primary role**.
 
 ### Best Practices for Database Replication
 
