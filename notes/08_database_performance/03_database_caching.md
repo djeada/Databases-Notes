@@ -11,6 +11,7 @@ At its core, caching works by storing copies of data in a location that can be a
 To visualize how caching fits into an application architecture, consider the following diagram:
 
 ```
+#
        +-------------------+
        |    Client App     |
        +---------+---------+
