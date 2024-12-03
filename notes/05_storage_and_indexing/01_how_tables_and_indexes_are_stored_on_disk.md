@@ -32,9 +32,8 @@ In this diagram, we see an extent containing four pages, each holding part of th
 
 Tables are stored on disk as collections of pages, but the way data is organized within these pages can vary.
 
-- **Row-Oriented Storage**: This traditional model stores entire rows together within a page. It's efficient for transactional databases where queries often need all columns of a row. For example, customer records in a sales database would be stored with all their associated fields in the same row.
-
-- **Column-Oriented Storage**: In this model, data is stored by columns, with each page containing data from a single column across multiple rows. This approach is beneficial for analytical databases where queries may focus on specific columns across many rows. For instance, calculating the average sales amount would only require reading the sales amount column.
+- **Row-Oriented Storage** organizes data by storing entire **rows** together within a single **page**, making it efficient for **transactional databases** where queries often require access to all columns of a **row**. For example, customer records in a **sales database** would store all associated fields in the same row for fast retrieval.  
+- **Column-Oriented Storage** arranges data by storing each **column** separately across multiple **rows**, making it advantageous for **analytical databases** where queries target specific **columns** across many rows. For instance, calculating the **average sales amount** would only involve reading data from the **sales amount column**, reducing unnecessary reads.
 
 Here's how a page might look in a row-oriented storage:
 
@@ -69,11 +68,12 @@ Different types of indexes include:
 A simplified illustration of a B-tree index might look like this:
 
 ```
+Tree:
         [50]
        /    \
     [25]    [75]
    /   \    /   \
-[10] [30][60] [90]
+[10] [30] [60] [90]
 ```
 
 Each node in the tree represents a page, and the structure allows for quick navigation to the desired data.
