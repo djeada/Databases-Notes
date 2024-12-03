@@ -157,14 +157,14 @@ Understanding how isolation works can be aided by visual diagrams.
     |                                  |
 [Begin Transaction]              [Begin Transaction]
     |                                  |
-[Update Data Item X]              |
-    |                              [Read Data Item X]
+[Update Data Item X]                   |
+    |                            [Read Data Item X]
     |                                  |
-[Commit Transaction]                |
-                                     |
-                               [Read Data Item X]
-                                     |
-                               [Commit Transaction]
+[Commit Transaction]                   |
+                                       |
+                                 [Read Data Item X]
+                                       |
+                                 [Commit Transaction]
 ```
 
 In this scenario:
