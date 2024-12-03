@@ -13,11 +13,11 @@ Imagine a library where books are organized alphabetically by title. Finding a b
 Here's a simplified ASCII representation of a B-tree:
 
 ```
-          [M]
-         /   \
-      [G]     [T]
-     / \     /   \
-   [A-F] [H-L] [N-S] [U-Z]
+           [M]
+         /    \
+      [G]      [T]
+     /   \     /   \
+  [A-F] [H-L] [N-S] [U-Z]
 ```
 
 In this diagram:
