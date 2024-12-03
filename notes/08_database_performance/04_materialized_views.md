@@ -11,23 +11,23 @@ Imagine you have a complex query that aggregates sales data across multiple regi
 Here's a simple representation of how materialized views fit into a database system:
 
 ```
-             +-----------------------+
-             |     Base Tables       |
-             +----------+------------+
-                        |
-             Complex Query Execution
-                        |
-                        v
-             +-----------------------+
-             |   Materialized View   |
-             +----------+------------+
-                        |
-               Query on Materialized View
-                        |
-                        v
-             +-----------------------+
-             |      Query Result     |
-             +-----------------------+
++-----------------------+
+|     Base Tables       |
++----------+------------+
+          |
+Complex Query Execution
+          |
+          v
++-----------------------+
+|   Materialized View   |
++----------+------------+
+          |
+ Query on Materialized View
+          |
+          v
++-----------------------+
+|      Query Result     |
++-----------------------+
 ```
 
 In this diagram:
