@@ -13,6 +13,7 @@ Imagine a library where books are organized alphabetically by title. Finding a b
 Here's a simplified ASCII representation of a B-tree:
 
 ```
+Tree:
            [M]
          /    \
       [G]      [T]
