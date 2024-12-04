@@ -74,6 +74,8 @@ In an online booking system, two users attempt to reserve the last available sea
 2. Attempt to reserve the seat.
 3. Commit the transaction.
 
+What happens?
+
 - **Without isolation**, both T1 and T2 might simultaneously perceive the same seat as available and attempt to reserve it, leading to overbooking.
 - **With isolation**, once T1 reserves the seat, T2 is blocked from reserving it until T1 either commits or rolls back, ensuring no conflicts or duplicate reservations occur.
 
