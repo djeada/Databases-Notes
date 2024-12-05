@@ -9,6 +9,7 @@ Consistent hashing uses a logical ring to represent the entire range of possible
 **Visualizing the Hash Ring:**
 
 ```
+#
                       +---------+
                       |         |
                 +-----+   0°    +-----+
@@ -45,6 +46,7 @@ Suppose we have three nodes—**Node A**, **Node B**, and **Node C**—and sever
 **Visual Representation with Nodes:**
 
 ```
+#
                       +---------+
                       |  Node A |
                 +-----+   0°    +-----+
@@ -75,6 +77,7 @@ Let's say we have data items with keys **K1**, **K2**, and **K3**.
 **Visual Representation with Data:**
 
 ```
+#
                       +---------+
                       |  Node A |
                 +-----+   0°    +-----+
@@ -105,6 +108,7 @@ In consistent hashing, each data item is assigned to the next node encountered w
 **Complete Ring with Nodes and Data:**
 
 ```
+#
                       +---------+
                       |  Node A |
                 +-----+   0°    +-----+
@@ -138,6 +142,7 @@ Suppose we add **Node D** that hashes to 80°.
 **Ring After Adding Node D:**
 
 ```
+#
                       +---------+
                       |  Node A |
                 +-----+   0°    +-----+
