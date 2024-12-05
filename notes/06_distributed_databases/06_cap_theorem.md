@@ -11,6 +11,7 @@ This means that when designing a distributed system, you have to make trade-offs
 Here's a simple ASCII diagram to illustrate the CAP Theorem:
 
 ```
+#
         +----------------------+
         |      CAP Theorem     |
         +----------------------+
