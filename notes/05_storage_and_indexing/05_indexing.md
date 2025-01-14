@@ -187,11 +187,12 @@ A covering index includes all the columns required to satisfy a query, allowing 
 A common index type is the B-tree, which organizes data in a balanced tree structure:
 
 ```
-      [M]
-     /   \
- [G]       [T]
-/  \       /  \
-[A-F][H-L] [N-S][U-Z]
+# Tree:
+          [M]
+         /   \
+     [G]       [T]
+    /  \       /  \
+ [A-F][H-L] [N-S][U-Z]
 ```
 
 - **Nodes** within the index represent pages, which organize data hierarchically to help efficient searching.  
