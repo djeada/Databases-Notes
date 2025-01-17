@@ -10,7 +10,7 @@ After reading the material, you should be able to answer the following questions
 - What are the essential steps in the capacity planning process, from workload characterization to implementation?
 - How do performance monitoring tools and cloud services support effective capacity planning and resource management?
     
-### Key Objectives of Capacity Planning
+### Objectives of Capacity Planning
 
 Capacity planning aims to align IT resources with business needs, balancing performance, cost, and scalability.
 
