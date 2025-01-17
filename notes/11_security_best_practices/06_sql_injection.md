@@ -2,6 +2,14 @@
 
 Welcome! Let's delve into the world of SQL Injection Attacks, a critical security concern in web applications. We'll explore how these attacks occur, examine concrete examples, and discuss effective prevention strategies. By the end of this journey, you'll have a solid understanding of SQL Injection and how to protect your applications from such vulnerabilities.
 
+After reading the material, you should be able to answer the following questions:
+
+- What is SQL Injection, and why is it a significant security threat in web applications?
+- How do SQL Injection attacks occur, and what makes an application vulnerable to them?
+- Can you describe common examples of SQL Injection attacks and their potential impacts?
+- What are the most effective strategies for preventing SQL Injection attacks in applications?
+- How do parameterized queries and input validation contribute to securing applications against SQL Injection?
+
 ### What is SQL Injection?
 
 SQL Injection is a technique where attackers exploit vulnerabilities in an application's interaction with its database. By inserting malicious SQL code into input fields, they can manipulate queries to access unauthorized data, modify or delete records, and even take control of the entire database. Think of it as someone sneaking harmful instructions into a conversation between your application and its database.
