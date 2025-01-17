@@ -2,6 +2,14 @@
 
 Performance monitoring and tuning involve the continuous process of measuring, analyzing, and optimizing the performance of a database system. In today's data-driven world, ensuring that databases operate efficiently is crucial for maintaining user satisfaction, maximizing resource utilization, and supporting organizational growth.
 
+After reading the material, you should be able to answer the following questions:
+
+- What are the key objectives of performance monitoring and tuning in database systems?
+- How do system monitoring and database monitoring techniques help identify and resolve performance bottlenecks?
+- What tools are commonly used for performance monitoring, and what functionalities do they offer?
+- What are the primary performance tuning strategies, such as query optimization and indexing, and how do they enhance database performance?
+- How does effective performance monitoring and tuning support resource utilization, user experience, and future growth of database systems?
+
 ### Ensure Optimal Performance
 
 Identifying bottlenecks and optimizing system resources are crucial for achieving better response times and higher throughput. Performance monitoring allows administrators to detect issues before they impact the system significantly.
