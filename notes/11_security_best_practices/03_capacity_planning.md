@@ -2,6 +2,14 @@
 
 Capacity planning is the strategic process of determining the necessary resources required to meet current and future demands of an application or system. It involves analyzing workloads, forecasting growth, and ensuring that the infrastructure can handle anticipated loads while maintaining optimal performance and cost efficiency. Effective capacity planning helps organizations avoid performance bottlenecks, prevent downtime, and optimize resource utilization, thereby supporting business continuity and scalability.
 
+After reading the material, you should be able to answer the following questions:
+
+- What are the key objectives and goals of capacity planning in database systems?
+- How do factors like user demand, application architecture, and infrastructure influence capacity planning?
+- What methods and tools are used for capacity forecasting, including historical data analysis and benchmarking?
+- What are the essential steps in the capacity planning process, from workload characterization to implementation?
+- How do performance monitoring tools and cloud services support effective capacity planning and resource management?
+    
 ### Key Objectives of Capacity Planning
 
 Capacity planning aims to align IT resources with business needs, balancing performance, cost, and scalability.
