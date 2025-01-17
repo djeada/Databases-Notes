@@ -1,6 +1,14 @@
 ## Understanding Crash Recovery in Databases
 
-Crash recovery is a important component of database systems that ensures data consistency and durability despite unexpected events like power outages, hardware failures, or software crashes. By design, databases must be capable of returning to a reliable state after a failure occurs. This is largely accomplished through mechanisms like the Write-Ahead Log (WAL), which records changes before they are committed to the actual data files on disk.  
+Crash recovery is a important component of database systems that ensures data consistency and durability despite unexpected events like power outages, hardware failures, or software crashes. By design, databases must be capable of returning to a reliable state after a failure occurs. This is largely accomplished through mechanisms like the Write-Ahead Log (WAL), which records changes before they are committed to the actual data files on disk.
+
+After reading the material, you should be able to answer the following questions:
+
+- What is crash recovery in database systems, and why is it important?
+- How does the Write-Ahead Log (WAL) facilitate crash recovery?
+- What is the role of checkpointing in the crash recovery process?
+- What are the main steps a database follows during crash recovery after a system restart?
+- What are the benefits and trade-offs associated with WAL-based recovery mechanisms?
 
 ### The Basics of Crash Recovery
 
@@ -102,7 +110,9 @@ the database   | (Buffer Pool)   |
                +--------+--------+
                         |
   Checkpoint ---------->+  
-     (Flush data pages)         ...
+     (Flush data pages) .
+                        .
+                        .
                         v
                +------------------+
                |  Data Files on   |
