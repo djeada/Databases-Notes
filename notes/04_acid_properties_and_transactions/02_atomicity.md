@@ -1,4 +1,4 @@
-# Atomicity in Database Transactions
+## Atomicity in Database Transactions
 
 Atomicity is a fundamental principle in database systems that ensures each transaction is processed as an indivisible unit. This means that all operations within a transaction must be completed successfully for the transaction to be committed to the database. If any operation fails, the entire transaction is rolled back, leaving the database unchanged. This "all-or-nothing" approach is crucial for maintaining data integrity and consistency.
 
@@ -15,23 +15,23 @@ Imagine a transaction as a series of steps that are tightly bound together. If o
 +---------------------------------+
 ```
 
-## The Importance of Atomicity
+### The Importance of Atomicity
 
 Atomicity plays a vital role in database transactions by ensuring that partial transactions do not leave the database in an inconsistent state. This is especially important in systems where multiple transactions are occurring simultaneously.
 
-### Preserving Data Integrity
+#### Preserving Data Integrity
 
 By treating transactions as indivisible units, atomicity prevents scenarios where only some parts of a transaction are applied. This means the database remains accurate and reliable, reflecting only complete sets of operations.
 
-### Simplifying Error Handling
+#### Simplifying Error Handling
 
 Atomicity simplifies the process of dealing with errors during transaction execution. Developers and database administrators can rely on the database system to automatically roll back incomplete transactions, reducing the need for complex error recovery logic.
 
-## Real-World Examples
+### Real-World Examples
 
 To better understand atomicity, let's explore some real-world scenarios where this concept is essential.
 
-### Bank Account Transfers
+#### Bank Account Transfers
 
 Consider the process of transferring money between two bank accounts. This transaction involves debiting one account and crediting another. Both actions must occur together; otherwise, funds could be lost or erroneously created.
 
@@ -40,7 +40,7 @@ Consider the process of transferring money between two bank accounts. This trans
 
 Atomicity ensures that either both accounts are updated or neither is, preserving the integrity of the bank's records.
 
-### Online Shopping Orders
+#### Online Shopping Orders
 
 When placing an order online, several operations happen behind the scenes: payment processing, inventory reduction, and order confirmation. If payment processing fails, the system should not reduce inventory or generate an order confirmation.
 
@@ -49,11 +49,11 @@ When placing an order online, several operations happen behind the scenes: payme
 
 Atomicity ensures that all steps are completed together, maintaining consistency in the system.
 
-## Implementing Atomicity
+### Implementing Atomicity
 
 To achieve atomicity, database systems employ various techniques and protocols that manage transactions effectively.
 
-### Two-Phase Commit Protocol (2PC)
+#### Two-Phase Commit Protocol (2PC)
 
 In distributed database systems, the Two-Phase Commit Protocol ensures that all participating databases agree on committing or rolling back a transaction.
 
@@ -72,7 +72,7 @@ Coordinator
    +-- Commit --> All Participants
 ```
 
-### Savepoints in Transactions
+#### Savepoints in Transactions
 
 Savepoints provide a way to partition a transaction into smaller segments. They allow partial rollbacks within a transaction without aborting the entire sequence.
 
@@ -82,7 +82,7 @@ Savepoints provide a way to partition a transaction into smaller segments. They 
 
 Savepoints are useful in complex transactions where certain operations may fail, but earlier successful operations should be retained.
 
-### Log-Based Recovery
+#### Log-Based Recovery
 
 Databases use logs to record all changes made during transactions. This approach allows the system to undo or redo transactions in case of failures.
 
@@ -91,17 +91,17 @@ Databases use logs to record all changes made during transactions. This approach
 
 This mechanism is essential for maintaining data integrity, especially in systems where transactions are frequently interrupted.
 
-## Atomicity in SQL Transactions
+### Atomicity in SQL Transactions
 
 In SQL, transactions are managed using commands that explicitly define the start and end of a transaction.
 
-### Basic Transaction Commands
+#### Basic Transaction Commands
 
 - `BEGIN TRANSACTION;` marks the start.
 - `COMMIT;` saves all changes.
 - `ROLLBACK;` undoes all changes since the transaction began.
 
-### Example: Transferring Funds Between Accounts
+#### Example: Transferring Funds Between Accounts
 
 ```sql
 BEGIN TRANSACTION;
@@ -119,7 +119,7 @@ COMMIT;
 
 In this example, if either `UPDATE` statement fails, a `ROLLBACK;` command would undo any changes, thanks to the atomicity of the transaction.
 
-### Using Savepoints
+#### Using Savepoints
 
 ```sql
 BEGIN TRANSACTION;
@@ -141,7 +141,7 @@ COMMIT;
 
 By rolling back to the savepoint, the transaction undoes changes made after the savepoint without affecting earlier operations.
 
-## Visualizing Transaction Flow
+### Visualizing Transaction Flow
 
 Understanding the flow of a transaction can help illustrate the concept of atomicity.
 
