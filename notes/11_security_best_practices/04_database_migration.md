@@ -127,7 +127,7 @@ Phase 3: Migrate Module C
 [Old Database] --(Module C Data)--> [New Database]
 ```
 
-#### Database Migration Process
+### Database Migration Process
 
 A structured approach is essential to manage the complexities and risks associated with database migration.
 
