@@ -1068,7 +1068,6 @@ Understanding how indexes are utilized during query execution can help optimize 
 - Designing effective index-only scans requires careful consideration of query patterns and column selection.  
 - Over-indexing to achieve index-only scans may introduce performance issues during data modification processes.
 
-
 ### Practical Example
 
 Consider an `employees` table:
@@ -1081,13 +1080,13 @@ Consider an `employees` table:
 | 4          | Emily     | White    | IT         |
 | 5          | Robert    | Green    | HR         |
 
-To improve query performance when filtering by the `Department`, a non-clustered index can be created:
+Imagine you need to filter employees by their `Department`. Without optimization, every query would require scanning the entire table, which becomes inefficient as the number of rows increases. To address this, we can create a **non-clustered index** on the `Department` column:
 
 ```sql
 CREATE NONCLUSTERED INDEX idx_department ON employees(Department);
 ```
 
-After creating the index, the database constructs an index structure that maps each department to the corresponding rows:
+This index works by creating an additional data structure that maps each department to its corresponding rows. Here's an example representation of how the index organizes the data:
 
 ```
 Department Index:
@@ -1102,8 +1101,23 @@ Department Index:
 +------------+------------------+
 ```
 
-- The index allows the database to quickly locate all employees within a specific department.
-- Queries filtering by `Department` no longer need to scan the entire table, improving performance.
+Before creating the index:
+
+- Queries filtering by `Department` had to scan the entire table.
+- This resulted in high Disk IO and CPU utilization due to the number of rows processed.
+
+After creating the index:
+
+- The database quickly locates relevant rows by leveraging the index.
+- Disk IO and CPU utilization dropped significantly, as shown in the plot below.
+
+The graph below illustrates the resource consumption before and after applying the fix:
+
+![Resource Usage Impact](https://github.com/user-attachments/assets/b56c37ef-6654-4cf5-801c-0d8617a2f471)
+
+1. **High Disk IO and CPU utilization** are seen in the first part of the graph, representing inefficient queries before the index was applied.
+2. **The green vertical line** marks the point where the index was introduced.
+3. **Low Disk IO and CPU utilization** follow, demonstrating the effectiveness of the index in reducing resource usage.
 
 ### Benefits of Indexing
 
