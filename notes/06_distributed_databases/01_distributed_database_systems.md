@@ -22,7 +22,7 @@ Imagine a scenario where data isn't confined to a single machine but is spread a
 
 In this diagram, the Distributed System oversees multiple nodes—Node 1, Node 2, and Node 3. Each node is responsible for a portion of the data: Data A, Data B, and Data C respectively. They work together to provide seamless access to the entire dataset, so users can retrieve and manipulate data without worrying about where it's physically stored.
 
-### Key Characteristics
+### Characteristics
 
 Distributed Database Systems stand out due to several essential features that make them advantageous over traditional, centralized databases.
 
@@ -89,7 +89,7 @@ Several distributed databases have been developed to address various needs, each
 
 Google Spanner is a globally distributed database that provides strong consistency and supports distributed transactions across data centers worldwide.
 
-One of its key innovations is the **TrueTime API**, which uses a combination of GPS and atomic clocks to provide a globally synchronized clock. This allows Spanner to order transactions consistently, ensuring that all nodes agree on the sequence of events.
+One of its innovations is the **TrueTime API**, which uses a combination of GPS and atomic clocks to provide a globally synchronized clock. This allows Spanner to order transactions consistently, ensuring that all nodes agree on the sequence of events.
 
 For instance, in a global financial system where accurate transaction ordering is critical, Spanner ensures that if someone transfers money from one account to another, the database reflects the change consistently across all locations.
 
