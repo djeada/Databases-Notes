@@ -1,8 +1,8 @@
 # Backup and Recovery Strategies
 
-Backup and recovery strategies are essential components of any robust database management plan, ensuring that data remains durable, available, and that business operations can continue uninterrupted. One of the significant challenges in designing these strategies is performing backups without disrupting or slowing down production read and write operations. In this discussion, we'll delve into various backup types, explore methods to minimize production impact, examine recovery strategies, and highlight best practices and tools. We'll also include illustrative ASCII diagrams to help visualize the concepts.
+Backup and recovery strategies are essential components of any robust database management plan, ensuring that data remains durable, available, and that business operations can continue uninterrupted. One of the significant challenges in designing these strategies is performing backups without disrupting or slowing down production read and write operations. In this discussion, we'll delve into various backup types, explore methods to minimize production impact, examine recovery strategies, and highlight best practices and tools.
 
-## Key Objectives
+## Objectives
 
 The primary goals of effective backup and recovery strategies revolve around three main objectives:
 
