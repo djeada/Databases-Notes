@@ -63,8 +63,6 @@ Securing the connections between clients and the database server is vital to pre
 - Use Secure Sockets Layer (SSL) or Transport Layer Security (TLS) protocols to **encrypt** data transmitted over the network.
 - Ensure that SSL/TLS **certificates** are properly signed by a trusted Certificate Authority (CA) and are validated during the connection to prevent man-in-the-middle attacks.
 
-**Illustrative Diagram:**
-
 ```
 +---------------------+        Encrypted Connection        +-------------------+
 |  Client Application | <------------------------------->  |  Database Server  |
@@ -156,7 +154,7 @@ Encryption is a critical component of database security, protecting sensitive da
 - File system encryption employs tools such as BitLocker (Windows), LUKS (Linux), or FileVault (macOS) to encrypt entire disks or partitions for comprehensive protection.
 - Hardware Security Modules (HSMs) offer secure management of encryption keys and perform cryptographic operations within a dedicated hardware environment.
 
-**Key Management Practices:**
+**Management Practices:**
 
 - Securely storing encryption keys separate from encrypted data, ideally in key management systems or HSMs, reduces exposure to unauthorized access.
 - Regular key rotation mitigates risks by periodically changing encryption keys, minimizing the impact of potential compromises.
