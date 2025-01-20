@@ -102,40 +102,40 @@ By denormalizing, we can combine the data into a single table:
 
 With all relevant data in one table, queries become simpler and faster because they no longer require joins across multiple tables.
 
-#### Benefits and Drawbacks
+### Benefits and Drawbacks
 
-##### Benefits
+#### Benefits
 
 - Improved read performance is achieved as data retrieval becomes faster due to the elimination of complex joins.
 - Queries are simpler, making them easier to write and maintain compared to normalized structures.
 - Denormalized structures are better suited for reporting and analytics, allowing efficient data aggregation.
 
-##### Drawbacks
+#### Drawbacks
 
 - Data redundancy increases, leading to higher storage requirements and a potential for inconsistency.
 - Updates become more complex as modifications must be reflected across multiple redundant copies of data.
 - Maintenance overhead rises, requiring additional effort to ensure the integrity of the denormalized data.
 
-#### Best Practices for Denormalization
+### Best Practices for Denormalization
 
 When implementing denormalization, it is essential to adhere to these best practices to balance performance improvements and potential risks effectively:
 
-##### Careful Planning
+#### Careful Planning
 
 - It is important to identify performance bottlenecks by using profiling tools to pinpoint slow queries caused by complex joins.
 - Denormalization efforts should target specific areas of the database that will gain the most performance improvements.
 
-##### Ensuring Data Integrity
+#### Ensuring Data Integrity
 
 - Automating the synchronization of redundant data through triggers or stored procedures helps reduce the risk of inconsistencies.
 - Enforcing data integrity rules is achievable by implementing database constraints wherever applicable.
 
-##### Monitoring and Adjusting
+#### Monitoring and Adjusting
 
 - Regular reviews of performance are crucial to understand the impact of denormalization on both read and write operations.
 - Adjustments should be made as needed, including further denormalization or reverting changes based on observed performance metrics.
 
-##### Documenting Changes
+#### Documenting Changes
 
 - Keeping detailed records of all denormalization changes and their justifications is essential for maintaining transparency.
 - Ensuring the entire team is informed about denormalized structures prevents misunderstandings during development and maintenance.
