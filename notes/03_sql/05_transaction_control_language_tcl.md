@@ -15,7 +15,7 @@ Transactions adhere to the ACID properties:
 - **Isolation** ensures that transactions executing concurrently do not interfere with each other, preserving the correctness of operations.  
 - **Durability** ensures that once a transaction is committed, its changes are permanently recorded and persist even in the event of a system failure.
 
-### Key TCL Commands
+### TCL Commands
 
 TCL provides several commands to manage transactions effectively:
 
@@ -232,8 +232,6 @@ Different databases handle transactions in slightly different ways. Here's a com
 | DDL Rollback             | Limited    | Limited       | No            | Limited       |
 | Autocommit Default       | Off        | On            | Off           | On            |
 | Isolation Levels         | Multiple   | Multiple      | Multiple      | Multiple      |
-
-**Key Points:**
 
 - Data Manipulation Language (DML) statements such as `INSERT`, `UPDATE`, and `DELETE` can be rolled back in all databases, ensuring changes are not finalized unless explicitly committed.  
 - Support for rolling back Data Definition Language (DDL) statements like `CREATE`, `ALTER`, and `DROP` varies between databases, as some do not permit rolling back these operations.  
