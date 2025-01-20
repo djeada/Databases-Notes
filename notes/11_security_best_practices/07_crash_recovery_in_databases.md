@@ -22,6 +22,37 @@ The WAL, sometimes called the redo log, keeps track of all modifications. Every 
 - Because each modification is recorded in the log, the WAL acts as the authoritative record of what changed in the database.
 - If the system crashes, the database can use the WAL to redo committed changes that may not have made it to the data files, or ignore changes for uncommitted transactions.
 
+```
++----------------+          +----------------+          +----------------+
+|                |          |                |          |                |
+|  Application   |  --->    |   Write-Ahead  |  --->    |   Data Store   |
+|    Transaction |          |      Log (WAL) |          |   (Main DB)    |
+|                |          |                |          |                |
++----------------+          +----------------+          +----------------+
+        |                           |                           |
+        |                           |                           |
+        |                           v                           |
+        |                   +---------------+                   |
+        |                   | Append Log    |                   |
+        |                   | Records to    |                   |
+        |                   | WAL on Disk   |                   |
+        |                   +---------------+                   |
+        |                           |                           |
+        |                           v                           |
+        |                   +---------------+                   |
+        |                   | Sync WAL to   |                   |
+        |                   | Disk          |                   |
+        |                   +---------------+                   |
+        |                           |                           |
+        |                           v                           |
+        |                   +---------------+                   |
+        |                   | Apply Changes |                   |
+        |                   | to Data Store |                   |
+        |                   +---------------+                   |
+        |                                                       |
+        +-------------------------------------------------------+
+```
+
 ### WAL and Transaction States
 
 Databases manage transactions to make sure atomicity (all or nothing). The WAL is directly tied to these transaction guarantees:
@@ -41,13 +72,10 @@ A checkpoint operation flushes all in-memory data pages to disk and writes a spe
 
 When a database restarts after a crash, it goes through a sequence of steps to make sure a consistent state:
 
-I. **Identify the Last Checkpoint**: The database checks the latest checkpoint in the WAL.  
-
-II. **Redo Phase**: Committed transactions after the checkpoint are applied to the data files to bring them up to date.  
-
-III. **Undo or Rollback**: Any uncommitted transactions in the WAL are discarded or rolled back so they do not appear as valid changes.  
-
-IV. **Resume Normal Operations**: The database finishes replaying WAL records and transitions back to handling regular queries.
+1. The database checks the latest **checkpoint** in the WAL to identify the last checkpoint.
+2. Committed transactions after the checkpoint are applied to the data files to bring them up to date.
+3. Any uncommitted transactions in the WAL are discarded or rolled back so they do not appear as valid changes.
+4. The database finishes replaying WAL records and transitions back to handling regular queries.
 
 ### Flushing the WAL
 
@@ -56,6 +84,53 @@ Some databases offer configuration options for controlling how often the WAL is 
 - Ensures the operating system flushes the WAL to stable storage, guaranteeing durability.
 - Allows multiple transactions to commit before flushing, reducing the total number of disk writes at the cost of slightly delayed durability.
 - Stricter flushing maintains stronger guarantees but can lower throughput for write-heavy workloads.
+
+```
++===========================+
+|       Database System     |
++===========================+
+             |
+             | Initiate Transaction
+             v
++---------------------------+
+|        Client/System      |
++---------------------------+
+             |
+             | Generate Log Record
+             v
++---------------------------+
+|      WAL Buffer (RAM)     |
+|  -----------------------  |
+|  | Log Record 1        |  |
+|  | Log Record 2        |  |
+|  | Log Record 3        |  |
+|  | ...                 |  |
+|  -----------------------  |
++---------------------------+
+             |
+             | Sequential Write (Flush)
+             v
++---------------------------+
+|     Stable Storage (Disk) |
+|  -----------------------  |
+|  | Log Record 1        |  |
+|  | Log Record 2        |  |
+|  | Log Record 3        |  |
+|  | ...                 |  |
+|  -----------------------  |
++---------------------------+
+             |
+             | Apply Changes to Database
+             v
++---------------------------+
+|       Database Files      |
+|  -----------------------  |
+|  | Data Page A         |  |
+|  | Data Page B         |  |
+|  | ...                 |  |
+|  -----------------------  |
++---------------------------+ 
+```
 
 ### Benefits of WAL-Based Recovery
 
@@ -93,10 +168,11 @@ IV. If the database crashes at this point, the WAL can be replayed to recover th
 
 V. After restart, the database replays the WAL entries for all committed transactions, ensuring `OrderID = 1` is set to `Shipped` in the data file.
 
-### Visualizing Crash Recovery with an ASCII Diagram
+### Visualizing Crash Recovery
 
 ```
-               +------------------+
+#
+               +-----------------+
 Changes in --> |    Memory       |
 the database   | (Buffer Pool)   |
                +--------+--------+
@@ -104,7 +180,7 @@ the database   | (Buffer Pool)   |
                 WAL Record Written
                         |
                         v
-               +------------------+
+               +-----------------+
                | Write-Ahead Log |
                |   (Redo Log)    |
                +--------+--------+
