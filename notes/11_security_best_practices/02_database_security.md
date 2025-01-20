@@ -1,8 +1,8 @@
 ## Database Security
 
-Database security encompasses a comprehensive set of measures designed to protect database management systems against threats that could compromise their confidentiality, integrity, and availability. As databases often store sensitive and critical information, safeguarding them is essential for protecting data privacy, ensuring compliance with regulatory requirements, and maintaining trust with customers and stakeholders.
+Database security encompasses a comprehensive set of measures designed to protect database management systems against threats that could compromise their confidentiality, integrity, and availability. As databases often store sensitive and critical information, safeguarding them is important for protecting data privacy, ensuring compliance with regulatory requirements, and maintaining trust with customers and stakeholders.
 
-**Key Objectives of Database Security:**
+**Objectives of Database Security:**
 
 - Confidentiality ensures that **sensitive data remains accessible** only to authorized users, preventing any unauthorized disclosure.
 - Integrity involves maintaining the **accuracy, consistency, and trustworthiness** of data throughout its lifecycle to prevent corruption or unauthorized modifications.
@@ -66,9 +66,9 @@ Securing the connections between clients and the database server is vital to pre
 **Illustrative Diagram:**
 
 ```
-+-------------------+        Encrypted Connection        +-------------------+
-|  Client Application| <-------------------------------> |  Database Server  |
-+-------------------+         (SSL/TLS Encryption)       +-------------------+
++---------------------+        Encrypted Connection        +-------------------+
+|  Client Application | <------------------------------->  |  Database Server  |
++---------------------+         (SSL/TLS Encryption)       +-------------------+
 ```
 
 **Example Configuration in MySQL:**
@@ -122,8 +122,6 @@ This command grants the user `username` permission to select and insert data in 
 - Simplified management allows for easier updates when users change roles or new users are added to the system.
 - Consistency in permission assignments ensures that users with similar responsibilities receive the same level of access.
 - Enforcing strict access controls through RBAC aids in meeting **regulatory compliance** requirements and enhances overall security.
-
-**Illustrative Diagram:**
 
 ```
           [ Data Analyst Role ]
@@ -302,8 +300,6 @@ This creates a table where sensitive fields are masked when accessed by unauthor
 - Isolating critical systems like database servers from less secure areas prevents unauthorized access and improves protection.
 - Firewalls, routers, and switches enable **access control** by directing traffic based on predefined security policies.
 - Malware or attackers are contained within a single segment, limiting their impact and making detection easier.
-
-**Illustrative Diagram:**
 
 ```
 [ Internet ]
