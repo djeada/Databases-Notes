@@ -20,6 +20,14 @@ Result: Both transactions are waiting indefinitely.
 
 In this illustration, Transaction T1 has locked Resource A and is waiting for Resource B, while Transaction T2 has locked Resource B and is waiting for Resource A. Since neither transaction can release its lock until it obtains the other resource, they are stuck in a deadlock.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is a deadlock in database systems, and how does it occur between transactions?
+2. What are the common causes of deadlocks, such as resource contention and unordered lock acquisition?
+3. How does the wait-for graph technique help in detecting deadlocks within a database system?
+4. What strategies can be implemented to prevent deadlocks, including lock ordering and lock timeouts?
+5. How does the database management system resolve deadlocks once they are detected, and what role does transaction rollback play in this process?
+
 ### Understanding Deadlocks
 
 Deadlocks arise from the way transactions acquire and hold locks on resources. They are particularly problematic in environments with high concurrency, where multiple transactions frequently access shared resources.
