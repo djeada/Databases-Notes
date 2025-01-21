@@ -17,8 +17,6 @@ In synchronous replication, every write operation on the primary database is imm
 3. Each replica writes the data and sends an acknowledgment back to the primary server.
 4. Once all acknowledgments are received, the primary server confirms the transaction to the client.
 
-**Illustrative Diagram:**
-
 ```
 Client Write Request
           |
@@ -67,8 +65,6 @@ Asynchronous replication allows the primary server to confirm transactions witho
 2. The primary server writes the data and immediately confirms the transaction to the client.
 3. The primary server queues the data changes for replication.
 4. Replicas receive the data changes asynchronously and update their data.
-
-**Illustrative Diagram:**
 
 ```
 Client Write Request
