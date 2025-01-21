@@ -12,6 +12,14 @@ Think of isolation as separate workspaces for each transaction. Imagine several 
 +----------------------+      +----------------------+
 ```
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is isolation in database transactions, and how does it ensure that concurrent transactions do not interfere with each other?
+2. Why is isolation important for managing concurrency and preserving data integrity in a multi-user environment?
+3. What are the different transaction isolation levels, and how do they balance data consistency and system performance?
+4. How do concurrency control mechanisms like locking, optimistic concurrency control, and multi-version concurrency control (MVCC) maintain isolation in database transactions?
+5. How can isolation be implemented and managed in SQL transactions to prevent issues such as dirty reads, non-repeatable reads, and lost updates?
+
 ### The Importance of Isolation
 
 Isolation plays a critical role in ensuring that concurrent transactions do not lead to data anomalies or inconsistencies. By isolating transactions, the database system prevents issues like dirty reads, non-repeatable reads, and phantom reads, which can compromise data integrity.
