@@ -4,7 +4,15 @@ Embarking on the creation of a database is much like planning a new city: you ne
 
 Imagine you're building an app for a bookstore. Before diving into coding, you'd need to know what books you'll sell, how customers will find them, and how transactions will be processed. Similarly, analyzing database requirements involves understanding the data's nature, how it interrelates, and how users will interact with it.
 
-### Key Considerations in Requirements Analysis
+After reading the material, you should be able to answer the following questions:
+
+1. What is database requirements analysis, and why is it essential in the database design process?
+2. What factors should be considered during requirements analysis, such as data modeling, scalability, performance, data integrity, security, and integration?
+3. How do you identify and address the needs of different stakeholders when designing a database system, for example, in the context of a university database?
+4. How can data entities and their relationships be mapped out effectively using tools like Entity-Relationship diagrams?
+5. What methods and strategies are used to ensure data integrity, optimize performance, implement security measures, and plan for scalability and integration in a database system?
+
+### Considerations in Requirements Analysis
 
 Several important factors come into play when analyzing database requirements to ensure the final system is robust and meets all user needs.
 
@@ -46,7 +54,7 @@ Understanding each group's needs ensures the database supports all necessary fun
 
 #### Understanding the Business Domain
 
-Grasping the university's processes helps in modeling the data accurately. Key processes include:
+Grasping the university's processes helps in modeling the data accurately. Processes include:
 
 - **Course Registration** allows students to enroll in classes according to their academic requirements and schedules.  
 - **Faculty Assignment** ensures professors are appropriately assigned to courses based on their expertise and availability.  
