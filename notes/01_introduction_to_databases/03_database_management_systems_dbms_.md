@@ -12,6 +12,14 @@ Database Management Systems, often abbreviated as DBMS, are software tools that 
 
 In the diagram above, clients interact with the DBMS to perform operations like querying or updating data, while the DBMS communicates directly with the database to execute these operations.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are Database Management Systems (DBMS), and how do they function as intermediaries between clients and databases to facilitate data operations?
+2. What are the different types of DBMS, including Relational, Object-Oriented, Hierarchical, Network, and NoSQL systems, and what are their unique characteristics and use cases?
+3. How do various NoSQL database models—such as document-based, column-based, key-value, and graph-based databases—differ in structure and application, and what are their respective strengths and limitations?
+4. What key factors should be considered when selecting a DBMS for an application, including data structure, scalability, performance, consistency, availability, security, cost, community support, and operational complexity?
+5. How do SQL, NoSQL, and NewSQL databases compare in terms of data models, scalability, performance, consistency, availability, security, cost, community support, and operational complexity, and how can this comparison guide the choice of the most suitable DBMS for specific application needs?
+
 ### Types of Database Management Systems
 
 There are several types of DBMS, each tailored to specific data storage needs and use cases. Understanding these types helps in selecting the most appropriate system for a given application.
