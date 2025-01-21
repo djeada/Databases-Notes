@@ -2,6 +2,14 @@
 
 Denormalization might seem counterintuitive, especially if you're familiar with the principles of normalization that aim to reduce redundancy and dependency in databases. However, denormalization is a strategic process where we intentionally introduce redundancy into a database design. This approach can enhance read performance and simplify complex queries, making it a valuable technique in certain scenarios.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is denormalization in databases, and how does it differ from normalization?
+2. Why might denormalization be necessary, and in what scenarios is it most beneficial?
+3. What are the common denormalization techniques, such as adding redundant columns, precomputing aggregate values, duplicating tables, and creating denormalized data structures?
+4. What are the primary benefits and drawbacks of implementing denormalization in a database design?
+5. What best practices should be followed to ensure data integrity and maintain performance when denormalizing a database?
+
 ### Understanding Denormalization
 
 At its core, denormalization involves combining data from multiple tables into a single table. This reduces the need for costly join operations during data retrieval, which can significantly speed up query performance. Imagine a library where all the information about a book—its title, author, genre, and availability—is stored in one card rather than scattered across multiple indexes. This makes it quicker to find all the information you need without flipping through several files.
