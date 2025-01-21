@@ -18,8 +18,6 @@ In environments where multiple transactions execute at the same time, issues lik
 
 The Serializable isolation level is the strictest level, ensuring that transactions are completely isolated from each other. It guarantees that the outcome of executing transactions concurrently is the same as if they were executed sequentially in some order.
 
-**Illustration of Serializable Isolation:**
-
 ```
 Time | Transaction T1                | Transaction T2
 --------------------------------------------------------------
@@ -47,8 +45,6 @@ In this scenario:
 ### Repeatable Read Isolation Level
 
 The Repeatable Read isolation level ensures that if a transaction reads a row, it will see the same data throughout the transaction, even if other transactions modify it. However, it doesn't prevent new rows (phantoms) from being inserted by other transactions.
-
-**Illustration of Repeatable Read Isolation:**
 
 ```
 Time | Transaction T1                  | Transaction T2
@@ -90,8 +86,6 @@ Both isolation levels aim to maintain data consistency but differ in their handl
 
 ### Practical Examples and Commands
 
-**Setting Isolation Levels in SQL:**
-
 To set the isolation level to Serializable:
 
 ```sql
@@ -110,8 +104,6 @@ BEGIN TRANSACTION;
 COMMIT;
 ```
 
-**Interpretation:**
-
 - **Serializable** ensures that the transaction operates as if it's the only one interacting with the database, providing the highest level of isolation.
 - **Repeatable Read** maintains consistency for the data read during the transaction but allows for other transactions to insert new rows that could affect subsequent queries.
 
@@ -120,20 +112,15 @@ COMMIT;
 Choosing between Serializable and Repeatable Read depends on the specific needs of your application.
 
 - **Use Serializable** when it's critical that transactions are completely isolated to prevent all types of anomalies. This is suitable for financial systems where accurate and consistent data is paramount.
-
 - **Use Repeatable Read** when you need to prevent dirty reads and non-repeatable reads but can tolerate phantom reads. This level offers a balance between data consistency and system performance, making it appropriate for many general-purpose applications.
 
 ### Balancing Performance and Consistency
 
 Higher isolation levels like Serializable provide greater data integrity but can impact performance due to increased locking and decreased concurrency. Lower isolation levels improve performance but may expose the application to data anomalies.
 
-**Tips for Balancing:**
-
-- **Assess Application Requirements:** Determine the acceptable level of data anomalies based on the application's functionality and user expectations.
-
-- **Test Under Load:** Evaluate how different isolation levels affect performance in a simulated production environment.
-
-- **Consider Optimistic Concurrency Control:** In some cases, using techniques that detect conflicts at commit time can improve concurrency without sacrificing data integrity.
+- It is important to assess application requirements by determining the acceptable level of data **anomalies** based on the application's functionality and user expectations.
+- Testing under load involves evaluating how different isolation levels affect **performance** in a simulated production environment.
+- Considering optimistic concurrency control can improve concurrency without sacrificing data **integrity** by using techniques that detect conflicts at commit time.
 
 ### Understanding Phantom Reads
 
@@ -172,10 +159,3 @@ COMMIT;
 ```
 
 Under Serializable, T1 would not see the new product inserted by T2 during its transaction.
-
-### Key Takeaways
-
-- **Serializable** offers the highest level of isolation, preventing all concurrency anomalies but may reduce system throughput due to increased locking.
-- **Repeatable Read** prevents dirty and non-repeatable reads but allows phantom reads, offering a compromise between consistency and performance.
-- **Phantom Reads** can be problematic in certain applications; use Serializable isolation or additional locking to prevent them.
-- **Performance Considerations** are essential when choosing an isolation level; higher isolation can impact concurrency and system responsiveness.
