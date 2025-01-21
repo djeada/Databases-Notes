@@ -2,6 +2,15 @@
 
 Materialized views are a powerful database feature that allows you to store the result of a query physically on disk, much like a regular table. Unlike standard views, which are virtual and execute the underlying query each time they are accessed, materialized views cache the query result and can be refreshed periodically. This approach significantly improves performance for complex queries, especially when dealing with large datasets or computationally intensive operations.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are materialized views, and how do they differ from standard (virtual) views in a database system?
+2. What are the primary benefits of using materialized views, and in what scenarios are they most advantageous?
+3. How do different refresh methods (complete refresh vs. incremental refresh) impact the performance and accuracy of materialized views?
+4. What are the key considerations and best practices when implementing materialized views, such as choosing the right refresh strategy and indexing the materialized view?
+5. How do materialized views enhance performance in data warehousing and reporting environments, and what trade-offs must be managed?
+6. Can you explain how materialized views are created and maintained in PostgreSQL, Oracle Database, and Microsoft SQL Server, highlighting any system-specific features or commands?
+
 ### Understanding Materialized Views
 
 Imagine you have a complex query that aggregates sales data across multiple regions and products. Running this query every time can be time-consuming and resource-intensive. A materialized view lets you store the result of this query, so subsequent accesses are faster because the database doesn't have to re-execute the computation each time.
