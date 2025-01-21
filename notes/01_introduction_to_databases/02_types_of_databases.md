@@ -2,6 +2,14 @@
 
 Databases are essential tools that store, organize, and manage data for various applications. They come in different types, each designed to handle specific data models and use cases. Understanding the various database types helps in selecting the right one for your application's needs. Let's delve into the major types of databases and explore their characteristics, strengths, and suitable applications.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are the components of a database, and how do tables, fields, records, and relationships work together to organize data?
+2. What are the advantages of using databases over simpler data storage methods like text files or spreadsheets?
+3. How can you perform basic SQL operations such as creating tables, inserting data, querying records, updating entries, and deleting records?
+4. What are the different types of relationships between tables, and how do SQL JOIN operations facilitate the retrieval of related data across multiple tables?
+5. What are the various types of databases available (e.g., relational, NoSQL, in-memory), and what are their specific use cases and benefits?
+
 ### Relational Databases (RDBMS)
 
 Relational databases store data in structured tables consisting of rows and columns, similar to a spreadsheet. Each table represents an entity, and relationships between tables are established through keys. This structured approach enforces data integrity and allows for complex queries using Structured Query Language (SQL).
@@ -91,7 +99,7 @@ Document databases are well-suited for content management systems, catalogs, and
 
 - The **flexible schemas of non-relational databases** allow them to easily adapt to changes in data structure, making them highly versatile.  
 - **High performance is achieved** as these databases are optimized for fast read and write operations, even with large data volumes.  
-- **Scalability is a key advantage**, with their design supporting horizontal scaling across multiple servers to handle growth efficiently.  
+- **Scalability is an advantage**, with their design supporting horizontal scaling across multiple servers to handle growth efficiently.  
 
 ##### Limitations
 
