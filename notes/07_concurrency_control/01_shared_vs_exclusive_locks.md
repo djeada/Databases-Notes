@@ -21,6 +21,14 @@ Illustration of Lock Types:
 
 In the diagram above, Transactions A and B both acquire shared locks on Data Item X, allowing them to read the data at the same time without interference. Transaction C, however, obtains an exclusive lock on Data Item Y to perform a write operation, preventing other transactions from accessing it until the operation is complete.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are shared and exclusive locks in database systems, and how do they differ in terms of access permissions for transactions?
+2. How do shared and exclusive locks interact with each other, and what does the lock compatibility matrix illustrate about their behavior?
+3. Can you provide examples of scenarios where shared locks are appropriate and where exclusive locks are necessary to maintain data integrity?
+4. What best practices can be followed to balance concurrency and data integrity when using shared and exclusive locks in transactions?
+5. How do deadlocks occur in the context of shared and exclusive locks, and what strategies can be implemented to prevent and resolve them?
+
 ### Understanding Shared Locks
 
 Shared locks allow multiple transactions to read the same data concurrently. They are vital for operations where data needs to be read without being modified, ensuring that the data remains consistent for all reading transactions.
