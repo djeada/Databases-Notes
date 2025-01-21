@@ -2,6 +2,14 @@
 
 Query optimization is a fundamental aspect of database management that focuses on improving the efficiency of SQL queries. By selecting the most effective execution strategies, query optimization reduces resource consumption and accelerates response times. This enhances the overall performance of database systems and provides a better experience for users and applications relying on the data.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is query optimization, and why is it essential for improving the efficiency and performance of SQL queries in a database system?
+2. What are the various query optimization techniques, such as indexing, query rewriting, join optimization, partitioning, materialized views, caching, and maintaining statistics, and how does each technique contribute to enhancing query performance?
+3. How do indexes improve query performance, and what are the best practices for selecting which columns to index and creating effective indexes in SQL?
+4. How can tools like the EXPLAIN command be used to analyze and optimize SQL queries, and what insights can they provide into query execution plans?
+5. What are the best practices for query optimization, including balancing read and write operations, avoiding excessive indexing, rewriting complex queries, and regularly reviewing and maintaining query performance?
+
 ### Understanding Query Optimization
 
 At its core, query optimization involves analyzing SQL queries to determine the most efficient way to execute them. Databases use query optimizers to evaluate multiple execution plans and choose the one with the lowest estimated cost in terms of resources like CPU, memory, and I/O operations. This process is crucial because even slight improvements in query performance can lead to significant gains in system efficiency, especially in environments with large datasets or high query volumes.
@@ -10,7 +18,7 @@ At its core, query optimization involves analyzing SQL queries to determine the 
 
 Efficient queries are essential for maintaining responsive applications and ensuring that hardware resources are utilized effectively. Poorly optimized queries can lead to slow response times, increased load on database servers, and a negative impact on user satisfaction. By optimizing queries, organizations can reduce operational costs, defer hardware upgrades, and scale their systems more gracefully.
 
-### Key Query Optimization Techniques
+### Query Optimization Techniques
 
 There are several techniques that can be employed to optimize SQL queries. Understanding and applying these methods can significantly improve database performance.
 
