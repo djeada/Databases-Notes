@@ -2,6 +2,14 @@
 
 Querying NoSQL databases requires a different approach compared to relational databases due to their diverse data models and storage mechanisms. This guide focuses on MongoDB, a popular NoSQL database, and explores how to query data effectively using its powerful query language.
 
+After reading the material, you should be able to answer the following questions:
+
+1. How does MongoDB's document model differ from traditional relational databases, and what advantages does it offer for schema design?
+2. What are the key differences between basic queries (like `find`, `countDocuments`, and `distinct`) and advanced queries (such as aggregation, text search, and geospatial queries) in MongoDB?
+3. How do indexing strategies in MongoDB, including single field, compound, multikey, text, and geospatial indexes, enhance query performance?
+4. What is the purpose of the `explain()` method in MongoDB, and how can it be used to analyze and optimize query execution plans?
+5. In what scenarios would you choose to use specific types of indexes (e.g., text indexes for search functionality or geospatial indexes for location-based queries) in MongoDB?
+
 ### Introduction to MongoDB
 
 #### Data Model
