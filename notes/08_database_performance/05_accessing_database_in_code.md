@@ -2,6 +2,14 @@
 
 Accessing databases through code is a fundamental skill for developers building applications that rely on data storage and retrieval. Whether you're developing a web application, mobile app, or any software that requires data persistence, understanding how to interact with databases programmatically is essential.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is database caching, and how does it enhance the performance and scalability of applications?
+2. What are the different caching strategies, such as in-memory caching, client-side caching, and server-side caching, and when is each type most effectively utilized?
+3. How do caching techniques like query result caching, object caching, database buffer caching, and prepared statement caching improve database performance? Provide examples of each.
+4. What are the primary cache invalidation strategies, including Time-to-Live (TTL), event-based invalidation, and manual invalidation, and how do they help maintain data consistency between the cache and the underlying database?
+5. What are the best practices for implementing database caching, such as selecting which data to cache, setting appropriate TTL values, monitoring cache performance, and ensuring the security of cached data?
+
 ### Database Connection
 
 Establishing a connection to the database is the first step in interacting with it programmatically.
