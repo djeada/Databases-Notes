@@ -19,6 +19,14 @@ A database transaction is a sequence of operations performed as a single, indivi
 
 In the example above, the transaction involves transferring $20 from Account A to Account B. If any part of this transaction fails—say, if the system crashes after debiting Account A but before crediting Account B—the transaction management system ensures that all changes are rolled back, returning the database to its initial state.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is a database transaction, and why is it important for maintaining data integrity and consistency in a database system?
+2. What are the ACID properties of transactions, and how does each property (Atomicity, Consistency, Isolation, Durability) contribute to reliable transaction processing?
+3. How does the post office analogy illustrate the principles of Atomicity, Consistency, Isolation, and Durability in database transactions?
+4. What are the key components and operations involved in transaction management, including statements like Begin Transaction, Commit, and Rollback?
+5. How do different concurrency control mechanisms, such as optimistic and pessimistic concurrency control, help manage simultaneous transactions and prevent conflicts in a database?
+
 ### ACID Properties
 
 Transactions are defined by their **ACID** properties: Atomicity, Consistency, Isolation, and Durability. These principles guarantee that database transactions are processed reliably, maintaining data integrity even in the face of errors, power failures, or other unexpected issues.
