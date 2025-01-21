@@ -15,6 +15,14 @@ Imagine a transaction as a series of steps that are tightly bound together. If o
 +---------------------------------+
 ```
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is atomicity in database transactions, and how does it ensure that transactions are processed as indivisible units of work?
+2. Why is atomicity important for preserving data integrity and simplifying error handling in database systems?
+3. How does the Two-Phase Commit Protocol (2PC) facilitate atomicity in distributed database environments?
+4. What are savepoints in transactions, and how do they help manage partial rollbacks while maintaining atomicity?
+5. How can atomicity be implemented and managed in SQL transactions, particularly in scenarios like transferring funds between accounts?
+
 ### The Importance of Atomicity
 
 Atomicity plays a vital role in database transactions by ensuring that partial transactions do not leave the database in an inconsistent state. This is especially important in systems where multiple transactions are occurring simultaneously.
