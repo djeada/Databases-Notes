@@ -2,6 +2,14 @@
 
 Database indexing is like adding bookmarks to a large textbook; it helps you quickly find the information you need without flipping through every page. In the world of databases, indexes significantly speed up data retrieval operations, making your applications faster and more efficient. However, indexing also requires careful planning to balance performance gains with potential costs in storage and maintenance.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is database indexing, and how does it differ from a full table scan in terms of data retrieval efficiency?
+2. What factors should be considered when selecting columns to index, such as query patterns, column selectivity, and balancing read and write operations?
+3. What are the different types of indexes (e.g., B-Tree, Hash, Bitmap, Full-Text, Spatial), and what are their specific use cases and strengths?
+4. How can creating simple and composite indexes impact query performance, and what are the best practices for implementing them in SQL?
+5. What are the best practices for maintaining indexes, including rebuilding, reorganizing, and regularly reviewing index performance to ensure optimal database efficiency?
+
 ### What Is Database Indexing?
 
 At its core, database indexing involves creating a data structure that improves the speed of data retrieval. Without indexes, a database might have to scan every row in a table to find the relevant data—a process known as a full table scan. Indexes act as guides, pointing the database engine directly to the locations of the desired data.
