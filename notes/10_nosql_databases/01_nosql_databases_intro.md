@@ -2,6 +2,14 @@
 
 NoSQL (Not Only SQL) databases are non-relational data storage systems that offer flexible schemas and scalable performance for handling large volumes of unstructured or semi-structured data. Unlike traditional relational databases that use tables and fixed schemas, NoSQL databases accommodate a wide variety of data models, making them suitable for modern applications that require rapid development, horizontal scalability, and real-time processing.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are the main types of NoSQL databases, and what are their primary use cases?
+2. How do NoSQL databases achieve scalability and flexibility compared to traditional relational databases?
+3. What are the advantages of using document stores and key-value stores in NoSQL databases?
+4. What are some of the common disadvantages associated with NoSQL databases, particularly regarding ACID compliance and data consistency?
+5. How do graph databases differ from other NoSQL database types, and in what scenarios are they most effectively utilized?
+
 ### Types of NoSQL Databases
 
 NoSQL databases are classified based on their data models, each optimized for specific use cases and offering unique advantages.
