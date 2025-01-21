@@ -2,6 +2,14 @@
 
 Transaction isolation levels are essential for maintaining data integrity and managing concurrency in database systems. Two of the highest isolation levels are **Serializable** and **Repeatable Read**, each offering different guarantees to prevent anomalies that can occur when multiple transactions interact with the same data concurrently.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is the Serializable isolation level, and how does it ensure complete isolation of transactions in a database system?
+2. How does the Repeatable Read isolation level differ from Serializable, and what types of data anomalies does it prevent?
+3. In what scenarios would you choose to use Serializable isolation over Repeatable Read, and why?
+4. What are phantom reads, and how does the Serializable isolation level prevent them compared to Repeatable Read?
+5. What are the performance implications of using higher isolation levels like Serializable, and how can applications balance consistency with system performance?
+
 ### The Need for Isolation Levels
 
 In environments where multiple transactions execute at the same time, issues like dirty reads, non-repeatable reads, and phantom reads can arise. Without proper isolation, one transaction might read data that another transaction is modifying, leading to inconsistent or incorrect results. Isolation levels define how transactions are isolated from one another to prevent these problems.
