@@ -2,6 +2,14 @@
 
 Welcome to the world of SQL, where you can communicate with databases using simple, yet powerful commands. SQL, which stands for Structured Query Language, is a standardized language designed specifically for managing and querying relational databases.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are the fundamental components and data types in SQL, and how are they used to structure and manage data within relational databases?
+2. How can you construct and execute basic SQL queries to retrieve, filter, sort, and limit data?
+3. What are primary and foreign keys, and how do they enforce relationships and data integrity within a database?
+4. How do joins, subqueries, and common table expressions (CTEs) function to retrieve and manipulate data across multiple tables?
+5. What are the techniques for optimizing SQL queries, including the use of indexes, understanding query plans, and managing transactions and concurrency control?
+
 ### Understanding the Basics
 
 At its core, SQL allows you to perform a variety of operations on data stored in relational databases. These databases organize data into tables, which consist of rows and columns, much like a spreadsheet. Each table represents a specific entity, such as customers or orders, and each column represents an attribute of that entity.
