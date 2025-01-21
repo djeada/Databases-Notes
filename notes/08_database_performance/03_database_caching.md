@@ -2,6 +2,14 @@
 
 Database caching is a powerful performance optimization technique that involves temporarily storing frequently accessed data in a cache for quick retrieval. By keeping commonly requested information readily available, caching reduces the time it takes to access data and lessens the load on the database server. This can significantly enhance the responsiveness and scalability of applications, leading to a better user experience.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is database caching, and how does it improve the performance and scalability of applications?
+2. What are the different types of caching strategies, such as in-memory caching, client-side caching, and server-side caching, and when is each type most effectively used?
+3. How do techniques like query result caching, object caching, database buffer caching, and prepared statement caching enhance database performance? Provide examples for each.
+4. What are the primary cache invalidation strategies, including Time-to-Live (TTL), event-based invalidation, and manual invalidation, and how do they help maintain data consistency between the cache and the underlying database?
+5. What are the best practices for implementing database caching, such as selecting which data to cache, setting appropriate TTL values, monitoring cache performance, and ensuring the security of cached data?
+
 ### Understanding Database Caching
 
 At its core, caching works by storing copies of data in a location that can be accessed more quickly than the original source. In the context of databases, this often means keeping data in memory rather than retrieving it from disk storage each time it is needed. By doing so, applications can serve data faster and handle more concurrent users without overloading the database server.
