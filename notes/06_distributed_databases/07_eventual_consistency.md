@@ -2,8 +2,6 @@
 
 Imagine a distributed system with multiple nodes—servers or databases—that share data. When an update occurs on one node, it doesn't instantly reflect on the others due to factors like network latency or processing delays. However, the system is designed so that all nodes will eventually synchronize their data.
 
-Here's an ASCII diagram to illustrate this concept:
-
 ```
 [Initial State]
 
@@ -36,6 +34,14 @@ Node C: Data Version 2
 ```
 
 In this scenario, Node A receives an update changing the data from Version 1 to Version 2. Initially, only Node A has the latest version. Over time, the update propagates to Node B and eventually to Node C. By Time T3, all nodes have synchronized to Data Version 2, achieving eventual consistency.
+
+After reading the material, you should be able to answer the following questions:
+
+1. What is eventual consistency in distributed database systems, and how does it differ from strong consistency models?
+2. How does update propagation work in an eventually consistent system, and what factors influence the time it takes for all nodes to synchronize?
+3. What are the main trade-offs of using eventual consistency, particularly regarding temporary inconsistencies and conflict resolution?
+4. What are some common conflict resolution strategies used in eventually consistent systems, such as Last Write Wins, version vectors, and CRDTs?
+5. In what real-world scenarios is eventual consistency particularly beneficial, and how do applications like social media platforms and content delivery networks leverage this consistency model?
 
 ### Characteristics of Eventual Consistency
 
@@ -142,6 +148,6 @@ Version vectors help track the history of data updates to resolve conflicts.
 
 ##### Example of Version Vectors:
 
-- **Node A** updates the data, creating a version vector [A:1, B:0, C:0], indicating its update.  
-- **Node B** simultaneously updates the same data, resulting in a version vector [A:0, B:1, C:0].  
+- **Node A** updates the data, creating a version vector `[A:1, B:0, C:0]`, indicating its update.  
+- **Node B** simultaneously updates the same data, resulting in a version vector `[A:0, B:1, C:0]`.  
 - During synchronization, the nodes compare version vectors to identify conflicting updates and merge changes according to predefined rules.  
