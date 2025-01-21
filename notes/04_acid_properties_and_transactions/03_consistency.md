@@ -13,6 +13,14 @@ Imagine the database as a meticulously organized library. Every book (data entry
 +--------------------+      +--------------------+
 ```
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is consistency in database transactions, and how does it ensure that data remains accurate and reliable throughout all transactions?
+2. Why is consistency important for preserving data integrity and preventing errors and conflicts within a database system?
+3. How do unique constraints, foreign key relationships, and domain constraints contribute to maintaining consistency in a database?
+4. What are transaction isolation levels, and how do they impact the consistency of data when multiple transactions occur concurrently?
+5. How do concurrency control techniques like locking mechanisms, optimistic concurrency control, and multi-version concurrency control (MVCC) help uphold consistency in database transactions?
+
 ### The Importance of Consistency
 
 Maintaining consistency in a database is crucial for several reasons. It preserves the integrity of the data, ensures that all transactions lead to valid states, and prevents errors that could arise from invalid or conflicting data entries.
