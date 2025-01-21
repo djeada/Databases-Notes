@@ -17,8 +17,6 @@ Identifying bottlenecks and optimizing system resources are crucial for achievin
 - Evaluate **response time** as the duration required for the database to respond to a query, which directly impacts user experience and application efficiency.
 - Monitor **throughput**, defined as the number of transactions successfully processed within a specific time frame, to assess the system's capacity and performance under load.
 
-**Illustrative Diagram:**
-
 ```
 +------------+       +------------+       +------------+
 |  Users     | <-->  |  Database  | <-->  |  Resources |
@@ -71,8 +69,6 @@ Tracking system-level metrics to understand the health and performance of the un
 
 - **Operating system utilities** such as `top`, `htop`, `vmstat`, `iostat`, and `netstat` provide real-time and detailed statistics on CPU, memory, disk, and network usage, enabling quick diagnosis of resource issues.
 - **Comprehensive monitoring tools** like Nagios, Zabbix, Prometheus, and Datadog offer advanced capabilities for tracking system metrics, generating alerts, and visualizing performance trends over time.
-
-**Illustrative Diagram:**
 
 ```
 +-------------------+
@@ -233,8 +229,6 @@ Distributing data across multiple storage devices or servers to improve performa
 - **Vertical partitioning** refers to splitting a table by its columns, where frequently accessed columns are separated into their own tables to optimize access patterns and reduce query overhead.
 - **Load distribution** is a significant benefit of partitioning, as it enables the workload to be spread across multiple servers, reducing the risk of bottlenecks and enhancing system reliability.
 - **Improved performance** is another key advantage, as partitioning minimizes the volume of data that needs to be scanned during query execution, leading to faster and more efficient data retrieval.
-
-**Illustrative Diagram of Sharding:**
 
 ```
 +----------------+
