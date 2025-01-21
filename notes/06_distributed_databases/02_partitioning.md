@@ -4,8 +4,6 @@ Partitioning involves dividing a large database table into smaller, more managea
 
 Imagine a colossal table that stores millions of rows. Searching through this massive table every time can be time-consuming and inefficient. Partitioning slices the table into smaller sections based on specific criteria, allowing the database engine to quickly locate and retrieve the data it needs.
 
-Here's an ASCII illustration of how a large table might be partitioned:
-
 ```
 +----------------------------------------------+
 |                 Large Table                  |
