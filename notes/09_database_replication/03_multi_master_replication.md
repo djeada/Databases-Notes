@@ -29,7 +29,7 @@ To visualize how multi-master replication works, consider the following ASCII di
 
 In this setup, each master node is connected to every other master node through replication links. Data changes made on any node are replicated to all other nodes, and clients can connect to any master node for both read and write operations. This interconnected architecture allows for a highly available and scalable system.
 
-#### Key Characteristics
+#### Characteristics
 
 Multi-master replication has several defining features:
 
