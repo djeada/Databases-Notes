@@ -23,6 +23,14 @@ Databases are the backbone of modern applications, serving as organized reposito
 +-------------------------------------------------------------+
 ```
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are the fundamental components of a database, and how do tables, fields, records, and relationships work together to organize data?
+2. What are the key advantages of using databases over simpler data storage methods like text files or spreadsheets?
+3. How can you perform basic SQL operations such as creating tables, inserting data, querying records, updating entries, and deleting records?
+4. What are the different types of relationships between tables, and how do SQL JOIN operations facilitate the retrieval of related data across multiple tables?
+5. What are the various types of databases available (e.g., relational, NoSQL, in-memory), and what are their specific use cases and benefits?
+
 ### Understanding Databases
 
 At its simplest, a database is a collection of information organized in a way that allows for easy access and management. Databases enable applications to store data persistently, ensuring that information remains available even after the application is closed or the system is restarted.
