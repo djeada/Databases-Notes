@@ -2,6 +2,14 @@
 
 Database normalization is a systematic approach to organizing data in a relational database. By minimizing redundancy and ensuring data integrity, normalization helps in efficiently structuring databases. The process addresses issues that arise when the same data is stored in multiple places, which can lead to complications during updates, deletions, or insertions. To resolve these problems, data is decomposed into multiple related tables.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is database normalization, and why is it important in organizing and managing relational databases?
+2. What are the different normal forms (1NF through 6NF), and what specific rules must a table meet to achieve each normal form?
+3. How does normalization help in eliminating data redundancy and ensuring data integrity within a database?
+4. Can you provide examples of how to apply the first three normal forms (1NF, 2NF, and 3NF) to transform denormalized tables into normalized ones?
+5. What are the benefits and potential challenges associated with implementing higher normal forms like BCNF, 4NF, and 5NF in database design?
+
 ### The Importance of Normalization
 
 Understanding why normalization is necessary involves recognizing its key benefits. First and foremost, normalization eliminates redundancy by minimizing duplicate data within tables. This not only conserves storage space but also enhances database performance. Each piece of information should be stored only once to maintain consistency.
