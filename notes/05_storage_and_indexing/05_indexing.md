@@ -159,21 +159,21 @@ Key 'C' → h(C) → Bucket 3
 - A hash function converts the key into a **hash value** that determines the bucket where the data is stored.
 - Buckets are containers that store **data pointers** corresponding to hash values.
 
-**Operational Mechanics:**
+**Operational Mechanics**
 
-- **Search** applies the hash function to the search key to locate the appropriate bucket.
-- **Insertion** hashes the key and places the data pointer in the corresponding bucket.
-- **Deletion** hashes the key to find the bucket and removes the data pointer.
+- The search operation applies the hash function to the search key to **locate** the appropriate bucket.
+- Insertion hashes the key and places the data pointer in the corresponding **bucket**.
+- Deletion hashes the key to find the bucket and removes the data **pointer**.
 
-**Advantages:**
+**Advantages**
 
-- **Fast Exact-Match Lookups:** O(1) average time complexity for search operations.
-- **Simple Structure:** Easier to implement and manage compared to tree-based indexes.
+- Search operations have an O(1) average time complexity, enabling **fast** exact-match lookups.
+- The structure is **simple**, making it easier to implement and manage compared to tree-based indexes.
 
-**Disadvantages:**
+**Disadvantages**
 
-- **Limited to Exact Matches:** Ineffective for range queries or pattern matching.
-- **Potential for Collisions:** Multiple keys may hash to the same bucket, requiring collision resolution strategies.
+- The method is limited to exact matches and is **ineffective** for range queries or pattern matching.
+- There is a potential for collisions, as multiple keys may hash to the same bucket, requiring **collision** resolution strategies.
  
 **Bitmap Indexes** use bitmaps (arrays of bits) to represent the presence or absence of a value in a dataset. They are highly efficient for columns with low cardinality.
 
@@ -186,21 +186,21 @@ Value 'F': 010101
 - Each distinct value in the indexed column has a corresponding **bitmap**.
 - Each **bit** represents a row in the table, indicating whether the row contains the specific value.
 
-**Operational Mechanics:**
+**Operational Mechanics**
 
-- **Search** combines bitmaps using logical operations to fulfill query conditions.
-- **Insertion** updates the relevant bitmaps to reflect the new data.
-- **Deletion** clears the bits corresponding to the deleted data.
+- The search operation combines bitmaps using **logical** operations to fulfill query conditions.
+- Insertion updates the relevant **bitmaps** to reflect the new data.
+- Deletion clears the bits corresponding to the **deleted** data.
 
-**Advantages:**
+**Advantages**
 
-- **Space Efficiency:** Compact storage for columns with a limited number of distinct values.
-- **Fast Query Performance:** Logical operations on bitmaps are highly efficient for complex queries involving multiple conditions.
+- Bitmap indexes provide **compact** storage for columns with a limited number of distinct values.
+- Logical operations on bitmaps enable **highly** efficient performance for complex queries involving multiple conditions.
 
-**Disadvantages:**
+**Disadvantages**
 
-- **High Cardinality Issues:** Not suitable for columns with many unique values as bitmap size grows proportionally.
-- **Maintenance Overhead:** Frequent updates can be costly due to the need to modify multiple bitmaps.
+- They are not suitable for columns with **many** unique values as bitmap size grows proportionally.
+- Frequent updates can incur **costly** maintenance overhead due to the need to modify multiple bitmaps.
 
 #### GiST (Generalized Search Tree) Index Structure
 
@@ -218,21 +218,21 @@ Value 'F': 010101
 - **Bounding Boxes (BBox)** represent the spatial extent of the data within each node.
 - **Flexible Operators** support a wide range of operations beyond simple comparisons, such as spatial containment.
 
-**Operational Mechanics:**
+**Operational Mechanics**
 
-- **Search** utilizes bounding boxes to quickly eliminate non-relevant branches.
-- **Insertion** adjusts bounding boxes to accommodate new entries while maintaining balance.
-- **Deletion** updates bounding boxes and reorganizes the tree as necessary.
+- The search operation utilizes bounding boxes to quickly **eliminate** non-relevant branches.
+- During insertion, the algorithm adjusts bounding boxes to accommodate new entries while maintaining **balance**.
+- Deletion operations update bounding boxes and reorganize the **tree** as necessary.
 
-**Advantages:**
+**Advantages**
 
-- **Versatility:** Supports various data types, including geometric, textual, and multimedia data.
-- **Efficient for Complex Queries:** Optimized for range searches, nearest-neighbor searches, and spatial queries.
+- The structure offers **versatility**, supporting various data types including geometric, textual, and multimedia data.
+- It is **optimized** for range searches, nearest-neighbor searches, and spatial queries, enabling efficient performance for complex queries.
 
-**Disadvantages:**
+**Disadvantages**
 
-- **Complexity:** More complex to implement and maintain compared to standard B-Trees.
-- **Performance Overhead:** May incur additional processing for maintaining bounding boxes.
+- The implementation is more **complex** to implement and maintain compared to standard B-Trees.
+- There may be a **performance** overhead due to the additional processing required for maintaining bounding boxes.
 
 **Use Cases:**
 
@@ -253,21 +253,21 @@ Tags: ['SQL', 'Optimization']
 - **Inverted Index** maps each key to the list of rows containing that key.
 - **Multi-Key Support** handles multiple values within a single row, such as array elements or tokens from text.
 
-**Operational Mechanics:**
+**Operational Mechanics**
 
-- **Search** retrieves rows containing the specified keys by accessing the inverted lists.
-- **Insertion** adds new keys to the inverted index and updates the corresponding lists.
-- **Deletion** removes keys from the inverted index and updates the lists accordingly.
+- The search operation retrieves rows containing the specified keys by accessing the inverted **lists**.
+- Insertion adds new keys to the inverted index and updates the corresponding **lists**.
+- Deletion removes keys from the inverted index and updates the **lists** accordingly.
 
-**Advantages:**
+**Advantages**
 
-- **Efficient for Multi-Value Columns:** Ideal for columns that store multiple values per row, such as tags or arrays.
-- **Fast Full-Text Search:** Enhances performance for text search operations by indexing individual tokens.
+- The method is **efficient** for multi-value columns, making it ideal for columns that store multiple values per row, such as tags or arrays.
+- It enables **fast** full-text search by indexing individual tokens, enhancing performance for text search operations.
 
-**Disadvantages:**
+**Disadvantages**
 
-- **Storage Overhead:** Can consume significant storage space due to maintaining extensive inverted lists.
-- **Update Complexity:** Managing multiple keys per row can complicate insertions and deletions.
+- There is a **storage** overhead as maintaining extensive inverted lists can consume significant space.
+- The process introduces **update** complexity since managing multiple keys per row can complicate insertions and deletions.
 
 **Use Cases:**
 
@@ -287,24 +287,24 @@ Tags: ['SQL', 'Optimization']
 [ShapeA] [ShapeB] [ShapeC] [ShapeD]
 ```
 
-1. **Bounding Rectangles:** Each node encompasses a spatial area that bounds all its child nodes.
-2. **Hierarchical Organization:** Similar to B-Trees but extended to handle multi-dimensional spaces.
+- Bounding rectangles are used in each node to **encompass** a spatial area that bounds all its child nodes.
+- The hierarchical organization is similar to B-Trees but **extended** to handle multi-dimensional spaces.
+ 
+**Operational Mechanics**
 
-**Operational Mechanics:**
+- The search operation traverses nodes whose bounding rectangles **intersect** with the query area.
+- Insertion involves finding the appropriate leaf node by minimizing the **area** enlargement required.
+- Deletion removes entries and adjusts bounding rectangles to **maintain** balance.
 
-- **Search:** Traverses nodes whose bounding rectangles intersect with the query area.
-- **Insertion:** Finds the appropriate leaf node by minimizing the area enlargement required.
-- **Deletion:** Removes entries and adjusts bounding rectangles to maintain balance.
+**Advantages**
 
-**Advantages:**
+- The structure is optimized for **spatial** queries, efficiently handling range searches, nearest-neighbor searches, and spatial joins.
+- It handles multi-dimensional **data**, making it suited for applications involving geographical information systems (GIS).
 
-- **Optimized for Spatial Queries:** Efficiently handles range searches, nearest-neighbor searches, and spatial joins.
-- **Handles Multi-Dimensional Data:** Suited for applications involving geographical information systems (GIS).
+**Disadvantages**
 
-**Disadvantages:**
-
-- **Complex Implementation:** More intricate compared to linear index structures like B-Trees.
-- **Potential Overlap:** Bounding rectangles can overlap, leading to increased search paths.
+- The implementation is more **complex** compared to linear index structures like B-Trees.
+- Bounding rectangles can **overlap**, leading to increased search paths.
 
 **Use Cases:**
 
@@ -323,28 +323,26 @@ Term 'Optimization' → [Article3]
 ...
 ```
 
-**Key Components and Concepts:**
+- Tokenization breaks down text into individual **tokens**.
+- The inverted index maps each term to the list of **documents** containing that term.
+- Relevance scoring assigns scores to documents based on term frequency and other **factors**.
 
-1. **Tokenization:** Breaks down text into individual terms or tokens.
-2. **Inverted Index:** Maps each term to the list of documents (rows) containing that term.
-3. **Relevance Scoring:** Assigns scores to documents based on term frequency and other factors.
+**Operational Mechanics**
 
-**Operational Mechanics:**
+- The search operation retrieves documents containing specific **terms** and ranks them based on relevance.
+- Insertion involves tokenizing new text and updating the inverted **index** with new terms.
+- Deletion removes terms from the inverted index when documents are **deleted** or updated.
 
-- **Search:** Retrieves documents containing specific terms and ranks them based on relevance.
-- **Insertion:** Tokenizes new text and updates the inverted index with new terms.
-- **Deletion:** Removes terms from the inverted index when documents are deleted or updated.
+**Advantages**
 
-**Advantages:**
+- The system supports **advanced** text searching, including phrase searches, boolean operators, and proximity queries.
+- It provides **ranked** results based on how well they match the search criteria.
+- It is optimized for handling extensive and **complex** textual data, making it efficient for large text data.
 
-- **Advanced Text Searching:** Supports phrase searches, boolean operators, and proximity queries.
-- **Relevance Ranking:** Provides ranked results based on how well they match the search criteria.
-- **Efficient for Large Text Data:** Optimized for handling extensive and complex textual data.
+**Disadvantages**
 
-**Disadvantages:**
-
-- **Storage Overhead:** Requires additional storage for maintaining the inverted index and relevance scores.
-- **Update Complexity:** Maintaining the index can be resource-intensive, especially with frequent text updates.
+- The system requires additional **storage** for maintaining the inverted index and relevance scores.
+- Maintaining the index can be **resource-intensive**, especially with frequent text updates.
 
 **Use Cases:**
 
@@ -385,9 +383,12 @@ Bitmap for Category 'Electronics' in Table A:
 [LocA] [LocB]    [LocC] [LocD]
 ```
 
-- **Minimum Bounding Rectangle (MBR):** The smallest rectangle that completely contains a spatial object.
-- **Hierarchical Organization:** Similar to R-Trees, using MBRs to organize spatial data.
-
+- Minimum Bounding Rectangle (MBR) is the smallest rectangle that completely **contains** a spatial object.
+- Hierarchical organization is similar to R-Trees, using MBRs to **organize** spatial data.
+- Each node in the tree structure contains one or more MBRs that cover its child nodes.
+- Leaf nodes store the actual spatial objects along with their corresponding MBRs.
+- Non-leaf nodes store MBRs that represent the spatial extent of their child nodes, facilitating efficient **navigation**.
+ 
 **Use Cases:**
 
 - Geographical Information Systems (GIS) for mapping and spatial analysis.
