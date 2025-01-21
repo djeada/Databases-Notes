@@ -2,6 +2,14 @@
 
 The double-booking problem is a common issue in database systems, particularly in applications like booking platforms, reservation systems, and inventory management. It occurs when multiple transactions simultaneously attempt to reserve or modify the same resource, leading to conflicts and inconsistencies. This can result in overbooked flights, double-sold tickets, or oversold inventory, causing significant problems for both businesses and customers.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is the double-booking problem in database systems, and in which types of applications is it commonly encountered?
+2. What are the primary causes of the double-booking problem, such as race conditions and inadequate locking mechanisms?
+3. How do shared and exclusive locks help prevent the double-booking problem, and what is the difference between them?
+4. What concurrency control strategies can be implemented to avoid double-booking, including proper locking, setting appropriate isolation levels, and using optimistic concurrency control?
+5. What are some best practices for designing transactions and managing locks to minimize the risk of double-booking in high-concurrency environments?
+
 ### Understanding the Double-Booking Problem
 
 At its core, the double-booking problem arises due to concurrent transactions accessing and modifying shared resources without proper synchronization. When two or more transactions read the same data and proceed to update it based on the initial value, they can inadvertently overwrite each other's changes.
