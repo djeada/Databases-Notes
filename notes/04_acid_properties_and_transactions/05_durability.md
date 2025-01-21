@@ -12,6 +12,14 @@ Imagine that every time you save a file on your computer, you expect it to be th
      Changes Persist             Data Remains Intact
 ```
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is durability in database transactions, and how does it ensure that committed transactions remain permanent even in the event of system failures?
+2. Why is durability important for maintaining data integrity and reliability in database systems?
+3. What are the key techniques used to ensure durability, such as Write-Ahead Logging (WAL), checkpointing, and data replication, and how do they work?
+4. How does the Two-Phase Commit Protocol (2PC) contribute to durability in distributed database environments?
+5. Can you provide real-world examples of scenarios where durability is essential, and explain how durability mechanisms protect data in those cases?
+
 ### The Importance of Durability
 
 Durability plays a crucial role in maintaining the integrity and reliability of a database. By ensuring that committed transactions are not lost, it provides confidence that the data remains consistent and accurate over time.
