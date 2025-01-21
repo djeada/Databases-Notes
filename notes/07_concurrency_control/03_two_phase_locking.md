@@ -24,6 +24,14 @@ Transaction Lifecycle:
 
 In this diagram, during the growing phase, the transaction locks Resource A and Resource B as needed. Once it has all the necessary locks (reaching the lock point), it moves into the shrinking phase, where it starts releasing the locks. After the lock point, no new locks can be acquired.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is Two-Phase Locking (2PL) in database systems, and what are its two distinct phases?
+2. How does 2PL ensure serializability and maintain data consistency during concurrent transactions?
+3. What are the different variations of Two-Phase Locking, such as Strict 2PL and Rigorous 2PL, and how do they differ from the basic 2PL protocol?
+4. What challenges can arise when implementing 2PL, and what strategies can be used to mitigate issues like deadlocks?
+5. Can you provide a practical example of how Two-Phase Locking is applied in a transaction, such as transferring funds between accounts?
+
 ### The Two Phases of 2PL
 
 Two-phase locking operates through two distinct phases, ensuring consistency and isolation in transactions:
