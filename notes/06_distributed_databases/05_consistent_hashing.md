@@ -2,6 +2,14 @@
 
 Imagine you're organizing books in a vast library with shelves arranged in a circle. Each book is placed on a shelf based on its title's position in the alphabet, looping back to the beginning after 'Z'. If you add a new shelf or remove one, you wouldn't want to reshuffle all the books—just a few should need to move. Consistent hashing works similarly in computer systems, allowing data to be distributed across multiple servers efficiently, even as servers are added or removed.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is consistent hashing and how does it differ from traditional hashing methods in data distribution?
+2. How does the hash ring concept work in consistent hashing, and how are nodes and data items mapped onto the ring?
+3. What are the benefits of adding or removing nodes in a consistent hashing system, and how does it minimize data movement?
+4. How do virtual nodes (VNodes) enhance load balancing and scalability in consistent hashing implementations?
+5. What are some real-world applications of consistent hashing, and what challenges might arise when implementing it?
+
 ### The Hash Ring Concept
 
 Consistent hashing uses a logical ring to represent the entire range of possible hash values. Both data items and nodes (servers) are mapped onto this ring using a hash function.
@@ -259,8 +267,6 @@ key = 'my_data_key'
 assigned_node = get_node(key)
 print(f"Key '{key}' is assigned to {assigned_node}")
 ```
-
-#### Interpreting the Output
 
 - The key `'my_data_key'` is assigned to a node based on its hash value.
 - If you add or remove nodes, only the keys that map to the affected virtual nodes need to change assignments.
