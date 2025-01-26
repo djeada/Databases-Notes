@@ -2,9 +2,17 @@
 
 Sharding is a method of horizontally partitioning data in a database, so that each shard contains a unique subset of the data. This approach allows a database to scale by distributing data across multiple servers or clusters, effectively handling large datasets and high traffic loads.
 
-Imagine you have a vast library of books that no longer fits on a single bookshelf. To manage this, you distribute the books across multiple bookshelves based on genres or authors. Similarly, sharding splits your database into smaller, more manageable pieces.
+After reading the material, you should be able to answer the following questions:
+
+1. What is sharding and how does it enhance database scalability?
+2. What are the different sharding strategies and what are their respective advantages and disadvantages?
+3. What factors should be considered when selecting a sharding key?
+4. What are the common challenges associated with implementing sharding and what best practices can mitigate them?
+5. How are cross-shard queries managed and what implications do they have on system performance and complexity?
 
 ### How Sharding Works
+
+Imagine you have a vast library of books that no longer fits on a single bookshelf. To manage this, you distribute the books across multiple bookshelves based on genres or authors. Similarly, sharding splits your database into smaller, more manageable pieces.
 
 At its core, sharding involves breaking up a large database table into smaller chunks called shards. Each shard operates as an independent database, containing its portion of the data.
 
