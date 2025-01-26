@@ -102,8 +102,6 @@ SELECT lt.*, st.info FROM small_table st JOIN large_table lt ON st.id = lt.st_id
 
 Most databases provide an `EXPLAIN` command that shows how a query will be executed. This tool is invaluable for understanding and optimizing query performance.
 
-##### EXPLAIN Example
-
 ```sql
 EXPLAIN SELECT * FROM customers WHERE last_name = 'Smith';
 ```
