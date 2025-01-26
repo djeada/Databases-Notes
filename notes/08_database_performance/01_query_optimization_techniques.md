@@ -38,7 +38,7 @@ CREATE INDEX idx_customers_lastname ON customers(last_name);
 
 This command creates an index on the `last_name` column of the `customers` table. Queries that filter or sort by `last_name` will now perform more efficiently.
 
-##### Example Output and Interpretation
+**Example Output**
 
 After creating the index, running `EXPLAIN` on a query that uses `last_name` shows that the database uses the index:
 
@@ -51,8 +51,6 @@ Example output:
 ```
 Index Scan using idx_customers_lastname on customers  (cost=0.29..8.31 rows=1 width=83)
 ```
-
-Interpretation:
 
 - **Index Scan** indicates that the index is being used.
 - **cost=0.29..8.31** shows the estimated cost range for the operation.
@@ -116,8 +114,6 @@ Example output:
 Seq Scan on customers  (cost=0.00..12.00 rows=1 width=83)
   Filter: (last_name = 'Smith')
 ```
-
-Interpretation:
 
 - **Seq Scan** indicates a sequential scan, meaning the database is reading the entire table.
 - Adding an index on `last_name` would change this to an **Index Scan**, improving performance.
