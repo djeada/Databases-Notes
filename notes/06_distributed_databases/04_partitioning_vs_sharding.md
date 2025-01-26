@@ -2,6 +2,14 @@
 
 Partitioning and sharding are techniques used to handle large datasets efficiently. While they share similarities in concept, they differ significantly in implementation, purpose, and use cases. Understanding their nuances is essential for designing scalable and performant database systems.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are the primary differences between partitioning and sharding in database management?
+2. What are the various types of partitioning methods, and in what scenarios are they most effectively applied?
+3. What objectives does sharding aim to achieve, and what are the common strategies used to implement it?
+4. How do partitioning and sharding compare in terms of scalability, complexity, and transaction management?
+5. What best practices should be followed when deciding to use partitioning, sharding, or a combination of both in a database system?
+
 ### Partitioning
 
 Partitioning involves dividing a large database table into smaller, manageable pieces, known as partitions. These partitions are stored within the same database but are organized in a way that allows independent management and access.
