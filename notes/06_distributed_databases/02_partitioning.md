@@ -2,6 +2,16 @@
 
 Partitioning involves dividing a large database table into smaller, more manageable pieces called partitions. This method helps improve query performance because the database can access only the relevant partitions when executing queries, rather than scanning the entire table. It also simplifies data management tasks like backups, archiving, and purging old data.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is partitioning and how does it enhance database performance and manageability?
+2. What are the different types of partitioning methods and in what scenarios are they most effectively used?
+3. How does range partitioning work, and what are its advantages and potential drawbacks?
+4. What best practices should be followed to optimize the use of partitioning in a database environment?
+5. How do composite partitioning strategies combine multiple partitioning methods, and what benefits do they offer?
+
+### What do we mean by Partitioning?
+
 Imagine a colossal table that stores millions of rows. Searching through this massive table every time can be time-consuming and inefficient. Partitioning slices the table into smaller sections based on specific criteria, allowing the database engine to quickly locate and retrieve the data it needs.
 
 ```
