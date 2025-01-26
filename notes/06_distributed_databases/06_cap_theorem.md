@@ -8,25 +8,39 @@ The CAP Theorem states that a distributed system cannot simultaneously guarantee
 
 This means that when designing a distributed system, you have to make trade-offs between these properties because achieving all three at the same time is impossible in the presence of a network partition.
 
-Here's a simple ASCII diagram to illustrate the CAP Theorem:
+After reading the material, you should be able to answer the following questions:
 
-```
-#
-        +----------------------+
-        |      CAP Theorem     |
-        +----------------------+
-               /     |     \
-              /      |      \
-             /       |       \
-            /        |        \
-           /         |         \
-          /          |          \
-    Consistency  Availability  Partition
-       (C)           (A)       Tolerance
-                                 (P)
-```
+1. What are the three core properties of the CAP Theorem, and what does each property entail in a distributed system?
+2. How does the CAP Theorem influence the trade-offs between consistency and availability during network partitions?
+3. What are the differences between strong consistency and eventual consistency, and how do they relate to the CAP Theorem?
+4. Can you provide real-world examples of CP, AP, and CA systems and explain how they prioritize the CAP properties?
+5. What is the PACELC Theorem, and how does it extend the CAP Theorem to address trade-offs when the system is running normally?
 
-In this diagram, each side represents one of the properties, and you can only fully achieve two at any given time, especially during network partitions.
+### Visualizing CAP Theorem
+
+                 +----------+
+                 |    C     |
+                 +----------+
+                     /  \
+                    /    \
+                   /  CAP  \
+                  / Theorem \
+                 / (Pick 2)  \
+                /             \
+       +-------+---------------+-------+
+       |   A   |               |   P   |
+       +-------+---------------+-------+
+
+When you design or use a distributed system—like a global social network or an e-commerce platform with multiple data centers—you usually want three things:
+
+1. **Consistency (C)** means that everyone sees the same data at the same time. If you update an item’s price in one data center, you want that update to show up everywhere else as quickly as possible, ensuring nobody sees an outdated price.
+2. **Availability (A)** means that the system responds to your requests without delay. Even if there’s a surge of traffic or one part of the network is slow, you still want each data center or server to accept and handle requests instead of turning people away.
+3. **Partition Tolerance (P)** means that the system continues working even if some machines or entire data centers lose network connectivity. In large-scale setups, partitions can happen at any time due to network failures, so the system must keep going despite these issues.
+
+The **CAP Theorem** says that if a real partition occurs—meaning there’s a genuine break in communication between parts of your system—you can’t have perfect consistency and perfect availability simultaneously. You have to pick which one to sacrifice until the partition is resolved. In simpler terms, if your network is split, you can either:
+
+- Refuse or delay some requests so that data stays consistent (sacrificing availability), or  
+- Let all requests go through so the system remains up, even though some responses may be outdated or inconsistent in certain parts of the system (sacrificing strict consistency).
 
 ### The Three Properties Explained
 
@@ -246,8 +260,6 @@ This theorem acknowledges that even without partitions, there's a trade-off betw
 - Implement **resilience patterns** such as retry mechanisms, circuit breakers, and failover strategies to maintain system stability during disruptions.  
 
 ### Real-World Case Study: Amazon's DynamoDB
-
-**Background:**
 
 - Amazon needed a highly available and scalable system to handle shopping cart data.
 - Prioritized availability and partition tolerance due to the importance of keeping the shopping experience smooth.
