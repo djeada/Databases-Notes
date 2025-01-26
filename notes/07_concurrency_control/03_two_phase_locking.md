@@ -39,7 +39,7 @@ Two-phase locking operates through two distinct phases, ensuring consistency and
 - During the **growing phase**, the transaction acquires locks on the resources it needs to proceed. It is allowed to obtain new locks in this phase but is restricted from releasing any locks until all required resources are secured.  
 - In the **shrinking phase**, the transaction starts releasing locks after it has acquired all the necessary ones. Once this phase begins, the transaction is no longer permitted to obtain additional locks.  
 
-By adhering to this protocol, 2PL prevents scenarios where a transaction might release a lock and later need it again, which could lead to inconsistencies or conflicts with other transactions.
+2PL prevents scenarios where a transaction might release a lock and later need it again, which could lead to inconsistencies or conflicts with other transactions.
 
 ### Variations of Two-Phase Locking
 
