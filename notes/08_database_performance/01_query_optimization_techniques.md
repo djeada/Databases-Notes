@@ -204,11 +204,11 @@ SELECT attname, n_distinct, most_common_vals FROM pg_stats WHERE tablename = 'cu
 
 This query shows statistics like the number of distinct values and most common values for each column, which the optimizer uses.
 
-### Practical Examples and Diagrams
+### Practical Examples
 
 Let's explore a practical scenario to see how these techniques come together.
 
-#### Scenario: Optimizing a Slow Query
+**Optimizing a Slow Query**
 
 Suppose we have a query that retrieves orders placed by customers in a specific city:
 
@@ -216,7 +216,7 @@ Suppose we have a query that retrieves orders placed by customers in a specific 
 SELECT orders.* FROM orders JOIN customers ON orders.customer_id = customers.customer_id WHERE customers.city = 'New York';
 ```
 
-##### Initial Execution Plan
+**Initial Execution Plan**
 
 ```sql
 EXPLAIN SELECT orders.* FROM orders JOIN customers ON orders.customer_id = customers.customer_id WHERE customers.city = 'New York';
@@ -232,8 +232,6 @@ Nested Loop  (cost=0.00..5000.00 rows=100 width=...)
         Filter: (customer_id = customers.customer_id)
 ```
 
-Interpretation:
-
 - **Seq Scan on customers** indicates a full table scan.
 - **Nested Loop** shows that for each customer in New York, the database scans the `orders` table.
 
@@ -246,7 +244,7 @@ CREATE INDEX idx_customers_city ON customers(city);
 CREATE INDEX idx_orders_customer_id ON orders(customer_id);
 ```
 
-##### Optimized Execution Plan
+**Optimized Execution Plan**
 
 After creating the indexes, running `EXPLAIN` again:
 
@@ -264,15 +262,11 @@ Hash Join  (cost=... rows=100 width=...)
         Index Cond: (customer_id = customers.customer_id)
 ```
 
-Interpretation:
-
 - **Index Scan** on `customers` uses the `idx_customers_city` index.
 - **Index Scan** on `orders` uses the `idx_orders_customer_id` index.
 - **Hash Join** is more efficient for joining large datasets.
 
-##### Visual Representation
-
-An ASCII diagram illustrating the optimized query execution:
+We can illustrate the optimized query execution in the following way:
 
 ```
 [Customers Index Scan] --> [Hash Table of Customer IDs]
