@@ -2,6 +2,14 @@
 
 Welcome back to our exploration of SQL! Today, we're delving into the world of **triggers**, a powerful feature that allows you to automate actions in response to specific events in your database. Triggers can help maintain data integrity, enforce business rules, and keep an audit trail of changes—all without manual intervention.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are triggers in SQL, and what are their primary purposes within a relational database?
+2. How are triggers categorized based on their timing and the events that activate them, and what are the differences between BEFORE, AFTER, and INSTEAD OF triggers?
+3. What is the general syntax for creating a trigger, and what are the key components involved in defining one?
+4. What are the advantages and disadvantages of using triggers for tasks like maintaining data integrity and auditing changes?
+5. What best practices should be followed to ensure optimal performance and maintainability when implementing triggers in SQL databases?
+
 ### What Are Triggers?
 
 A **trigger** is a special kind of stored procedure that automatically executes, or "fires," in response to certain events on a table or view in a database. These events can be actions like inserting, updating, or deleting records. By defining triggers, you can specify custom behavior that occurs immediately before or after these events, ensuring your data remains consistent and adheres to your business logic.
