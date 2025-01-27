@@ -2,6 +2,14 @@
 
 Aggregate functions in SQL are powerful tools that allow you to perform calculations on a set of values to return a single scalar value. They are commonly used with the `GROUP BY` clause to group rows that share a common attribute and then perform calculations on each group. Aggregate functions are essential for data analysis, reporting, and generating insights from your data.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are aggregate functions in SQL, and how are they typically used with the `GROUP BY` clause?
+2. How does the `COUNT` function work, and what is the difference between `COUNT(*)` and `COUNT(column)`?
+3. In what scenarios would you use the `SUM`, `AVG`, `MIN`, and `MAX` functions, and how do they operate on data?
+4. What is the purpose of the `HAVING` clause, and how does it differ from the `WHERE` clause when filtering aggregated data?
+5. How do window functions differ from aggregate functions, and what are some practical applications of window functions in SQL?
+
 ### Common Aggregate Functions
 
 Here are the most commonly used aggregate functions in SQL:
