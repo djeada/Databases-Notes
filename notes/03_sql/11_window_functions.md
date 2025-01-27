@@ -2,6 +2,14 @@
 
 Window functions in SQL are powerful tools that allow you to perform calculations across a set of table rows that are related to the current row. Unlike aggregate functions, window functions do not collapse rows into a single output row; instead, they retain the individual row identities while providing additional analytical capabilities. Window functions are essential for advanced data analysis, reporting, and generating insights that require comparisons or calculations across related rows.
 
+After reading the material, you should be able to answer the following questions:
+
+1. What are window functions in SQL, and how do they differ from aggregate functions?
+2. What are some common window functions, and what are their typical use cases?
+3. How does the `OVER` clause define the window for window functions, and what components can it include?
+4. What are the advantages and limitations of using window functions compared to traditional methods like self-joins?
+5. What best practices should be followed when implementing window functions in SQL to ensure optimal performance and maintainability?
+
 ### Common Window Functions
 
 Here are some of the most commonly used window functions in SQL:
@@ -13,8 +21,6 @@ Here are some of the most commonly used window functions in SQL:
 - **`LEAD()`**: Provides access to a subsequent row’s data without the need for a self-join.
 - **`LAG()`**: Provides access to a preceding row’s data without the need for a self-join.
 - **Aggregate Window Functions**: Such as `SUM()`, `AVG()`, `COUNT()`, which perform aggregate calculations over a window.
-
-Let's explore each of these functions in detail with practical examples.
 
 ### Setting Up Example Tables
 
