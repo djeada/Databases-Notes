@@ -7,6 +7,14 @@ In many applications, data is naturally organized in a hierarchical structure, s
 - **Other Models** (Materialized Path, Nested Set, Closure Table)
 - **Recursive Queries with Common Table Expressions (CTEs)**
 
+After reading the material, you should be able to answer the following questions:
+
+1. What is the Adjacency List Model, and what are its primary advantages and disadvantages when storing hierarchical data in a relational database?
+2. How does the Path Enumeration Model enhance the Adjacency List Model, and in what scenarios is it most effectively used?
+3. What are the key differences between the Nested Set Model and the Closure Table Model for representing hierarchical data, and what are the respective use cases for each?
+4. How do recursive queries with Common Table Expressions (CTEs) facilitate the retrieval of hierarchical data in SQL, and what are the advantages and limitations of using this approach?
+5. What best practices should be followed when choosing a model for storing hierarchical data in a relational database, and how do factors like query performance and maintenance complexity influence this decision?
+
 ### Adjacency List Model
 
 The **Adjacency List Model** is the most straightforward way to represent hierarchical data in a relational database. In this model, each record (node) contains a reference (foreign key) to its immediate parent.
