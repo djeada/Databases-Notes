@@ -20,8 +20,6 @@ Here are the most commonly used aggregate functions in SQL:
 - The `MIN` function identifies the smallest value in a dataset, including numeric, string, and date types.
 - The `MAX` function returns the largest value in a dataset, similar to `MIN`, and supports numeric, string, and date types.
 
-Let's explore each of these functions in detail with practical examples.
-
 ### Setting Up Example Tables
 
 Suppose we have two tables: `Employees` and `Departments`.
