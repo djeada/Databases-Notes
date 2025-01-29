@@ -159,6 +159,33 @@ Defining the tables and their structures provides a practical framework for the 
 | 1002              | 2              | MA201         | Fall 2023  | B+    |
 | 1003              | 3              | PH301         | Fall 2023  | A-    |
 
+### Visualizing the Overall Database Structure
+
+```
++----------------+        +----------------+
+|    Students    |        |   Professors   |
++----------------+        +----------------+
+| StudentID (PK) |        | ProfessorID(PK)|
+| Name           |        | Name           |
+| ContactDetails |        | Department     |
+| Program        |        +----------------+
++----------------+
+         |
+         | Enrollments
+         V
++----------------+        +----------------+
+|  Enrollments   |------->|    Courses     |
++----------------+        +----------------+
+| EnrollmentID(PK)|       | CourseID (PK)  |
+| StudentID (FK) |        | Name           |
+| CourseID  (FK) |        | Description    |
+| Semester       |        | ProfessorID(FK)|
+| Grade          |        | Schedule       |
++----------------+        +----------------+
+```
+
+Arrows indicate foreign key relationships, showing how data in one table relates to data in another.
+
 ### Ensuring Data Integrity
 
 - Implementing **constraints** and keys ensures that data remains consistent and accurate throughout the database system.  
@@ -194,35 +221,6 @@ Defining the tables and their structures provides a practical framework for the 
 - Connecting with **financial systems** simplifies billing, payment processing, and reconciliation tasks.  
 - Developing **APIs** facilitates external access and integration, allowing other systems to interact with the database efficiently.  
 - Ensuring **interoperability** with standard protocols and data formats promotes smooth data exchange between systems.  
-
-### Visualizing the Overall Database Structure
-
-An ASCII diagram helps illustrate the relationships:
-
-```
-+----------------+        +----------------+
-|    Students    |        |   Professors   |
-+----------------+        +----------------+
-| StudentID (PK) |        | ProfessorID(PK)|
-| Name           |        | Name           |
-| ContactDetails |        | Department     |
-| Program        |        +----------------+
-+----------------+
-         |
-         | Enrollments
-         V
-+----------------+        +----------------+
-|  Enrollments   |------->|    Courses     |
-+----------------+        +----------------+
-| EnrollmentID(PK)|       | CourseID (PK)  |
-| StudentID (FK) |        | Name           |
-| CourseID  (FK) |        | Description    |
-| Semester       |        | ProfessorID(FK)|
-| Grade          |        | Schedule       |
-+----------------+        +----------------+
-```
-
-Arrows indicate foreign key relationships, showing how data in one table relates to data in another.
 
 ### Summing Up the Analysis
 
