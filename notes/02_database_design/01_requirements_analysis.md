@@ -4,6 +4,60 @@ Embarking on the creation of a database is much like planning a new city: you ne
 
 Imagine you're building an app for a bookstore. Before diving into coding, you'd need to know what books you'll sell, how customers will find them, and how transactions will be processed. Similarly, analyzing database requirements involves understanding the data's nature, how it interrelates, and how users will interact with it.
 
+```
++---------------------------+
+|   Database Requirement    |
+|        Analysis           |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|  1. Requirements Gathering |
+| - Stakeholder Meetings     |
+| - Document Review          |
+| - Surveys/Questionnaires   |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|   2. Requirements Analysis |
+| - Identify Entities        |
+| - Define Relationships     |
+| - Determine Constraints    |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|   3. Conceptual Design     |
+| - Create ER Diagrams       |
+| - Define Data Models       |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|    4. Logical Design       |
+| - Normalize Data           |
+| - Define Tables & Keys     |
+| - Specify Attributes       |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|    5. Physical Design      |
+| - Optimize Storage         |
+| - Define Indexes           |
+| - Configure DBMS Settings  |
++------------+--------------+
+             |
+             v
++------------+--------------+
+|      6. Validation         |
+| - Review with Stakeholders |
+| - Prototype Testing        |
+| - Requirement Verification |
++----------------------------+
+```
+
 After reading the material, you should be able to answer the following questions:
 
 1. What is database requirements analysis, and why is it essential in the database design process?
