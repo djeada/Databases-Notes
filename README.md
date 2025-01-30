@@ -195,6 +195,10 @@ To further enhance your understanding of databases, consider exploring the follo
 - **[DataLemur SQL Interview Questions](https://datalemur.com/sql-interview-questions):** Practice SQL questions for interviews.
 - **[Understanding Joins](https://joins.spathon.com/):** Visual guide to SQL joins.
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=djeada/Databases-Notes&type=Date)](https://star-history.com/#djeada/Databases-Notes&Date)
+
 ---
 
 This repository is a living document and will be continually updated with new topics and resources. Contributions are welcome!
