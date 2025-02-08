@@ -34,7 +34,7 @@ While SQLite is powerful and convenient, it's important to be aware of its limit
 
 #### Not Ideal for Large Applications
 
-For applications that require handling large volumes of data or need to scale extensively, SQLite might not be sufficient. Databases like MySQL or PostgreSQL are better suited for large-scale applications with high concurrency requirements.
+For applications that require handling large volumes of data (in 100s of TB) or need to scale extensively, SQLite might not be sufficient. Databases like MySQL or PostgreSQL are better suited for large-scale applications with high concurrency requirements.
 
 #### Limited Concurrency
 
@@ -48,7 +48,28 @@ Unlike larger database systems, SQLite doesn't have built-in support for user au
 
 SQLite supports most of the SQL standard but lacks some advanced features. For example, it doesn't support RIGHT OUTER JOIN or full ALTER TABLE capabilities, which might be necessary for certain complex database operations.
 
-### SQLite File Structure Overview
+### Serverless Architecture
+
+SQLite supports a serverless architecture by embedding the database engine directly within the application, eliminating the need for a separate server process. In this design, each client application accesses a shared, file-based database directly, relying on internal mechanisms such as file locking to handle concurrent access and maintain data integrity. This approach simplifies deployment and configuration because there is no centralized database server to install or manage, making SQLite an attractive solution for lightweight applications and environments where ease of use, portability, and minimal overhead are key considerations.
+
+```
++-----------------------+        
+|   Client 1            | -----------------------
+| (App + SQLite)        |                       |
++-----------------------+                       |
+         |                                      |
+         V                                      V
++-----------------------+        +-------------------------------+
+|   Client 2            | ---->  |    SQLite Database File       |
+| (App + SQLite)        |        |  (Serverless, File-Based DB)  |
++-----------------------+        +-------------------------------+
+         |                                      Ʌ
+         V                                      |
++-----------------------+                       |
+|   Client 3            | -----------------------
+| (App + SQLite)        |
++-----------------------+
+```
 
 The SQLite database file is organized into several key sections that together ensure efficient data storage and retrieval. At the beginning of the file, the **File Header** stores essential metadata such as page size and version information. Following this, the **Page Directory** maps out the locations of various pages within the file. The **Data Pages** contain the actual records for database tables, while the **Index Pages** hold index entries that accelerate query processing. Lastly, the **Free Pages** represent unallocated space available for future data storage.
 
