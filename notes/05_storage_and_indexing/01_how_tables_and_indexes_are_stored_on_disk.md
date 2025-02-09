@@ -58,12 +58,12 @@ In this diagram, we see an extent containing four pages, each holding part of th
 
 ```
 +----------------------------------------------------+
-|                       Heap File                   |
+|                       Heap File                    |
 +----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3       |
+|  Page 1         |  Page 2         |  Page 3        |
 +------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Row3] [Row4]   | [Row5] [Row6] |
-| [Free Space]    | [Row7]          | [Free Space]  |
+| [Row1] [Row2]   | [Row3] [Row4]   | [Row5] [Row6]  |
+| [Free Space]    | [Row7]          | [Free Space]   |
 +------------------+-----------------+---------------+
 ```
 
@@ -74,12 +74,12 @@ In this diagram, we see an extent containing four pages, each holding part of th
 
 ```
 +----------------------------------------------------+
-|                       Heap File                   |
+|                       Heap File                    |
 +----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3       |
+|  Page 1         |  Page 2         |  Page 3        |
 +------------------+-----------------+---------------+
-| [Row1] [Deleted]| [Row4] [Deleted]| [Row6] [Row7] |
-| [Free Space]    | [Free Space]    | [Free Space]  |
+| [Row1] [Deleted]| [Row4] [Deleted]| [Row6] [Row7]  |
+| [Free Space]    | [Free Space]    | [Free Space]   |
 +------------------+-----------------+---------------+
 ```
 
@@ -89,12 +89,12 @@ Deletions leave gaps in pages, creating free space that can be reused.
 
 ```
 +----------------------------------------------------+
-|                       Heap File                   |
+|                       Heap File                    |
 +----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3       |
+|  Page 1         |  Page 2         |  Page 3        |
 +------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Part of Row8]  | [Part of Row8]|
-| [Free Space]    | [Free Space]    | [Free Space]  |
+| [Row1] [Row2]   | [Part of Row8]  | [Part of Row8] |
+| [Free Space]    | [Free Space]    | [Free Space]   |
 +------------------+-----------------+---------------+
 ```
 
@@ -104,12 +104,12 @@ A large row (Row8) is split across multiple pages, linked by pointers.
 
 ```
 +----------------------------------------------------+
-|                       Heap File                   |
+|                       Heap File                    |
 +----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3       |
+|  Page 1         |  Page 2         |  Page 3        |
 +------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Row4] [Row6]   | [Row7]        |
-| [Free Space]    | [Free Space]    | [Free Space]  |
+| [Row1] [Row2]   | [Row4] [Row6]   | [Row7]         |
+| [Free Space]    | [Free Space]    | [Free Space]   |
 +------------------+-----------------+---------------+
 ```
 
@@ -496,11 +496,11 @@ SHOW GLOBAL STATUS LIKE 'Innodb_buffer_pool_reads';
 **Expected Output:**
 
 ```
-+---------------------------------+-------+
-| Variable_name                   | Value |
-+---------------------------------+-------+
++---------------------------------+---------+
+| Variable_name                   | Value   |
++---------------------------------+---------+
 | Innodb_buffer_pool_read_requests | 100000 |
-+---------------------------------+-------+
++---------------------------------+---------+
 
 +--------------------------+-------+
 | Variable_name            | Value |
