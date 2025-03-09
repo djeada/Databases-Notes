@@ -59,8 +59,6 @@ Higher normal forms reduce redundancy but may increase complexity and affect per
 7. *Sixth Normal Form (6NF)* is used mainly for databases that track changes over time (temporal databases). It involves breaking tables into even smaller parts so that each record represents a single point in time. This structure makes it easier to manage historical data and understand how information has changed over time without mixing data from different time periods in one record.
 8. *Domain/Key Normal Form (DKNF)* represents the highest level of normalization. It ensures that every rule (or constraint) in the database comes directly from the definitions of keys and the allowed values (domains) for each column. Although it is an ideal approach, it is often very difficult to achieve in practice because it requires all business rules to be captured through keys and domains. As a result, DKNF is more of a theoretical goal than something most practical systems fully implement.
 
-Choosing the appropriate normal form involves balancing the need to minimize redundancy against the practical considerations of database performance and complexity.
-
 ### First Normal Form (1NF)
 
 The first normal form sets the foundation for normalization. A table is in 1NF if it meets the following criteria:
