@@ -2,6 +2,28 @@
 
 A **distributed database system (DDS)** is a collection of logically interrelated databases distributed across multiple physical locations, connected by a network. The data in these systems might be replicated and/or partitioned among different sites, but the system should ideally appear to the user as a single integrated database.
 
+```
+      Internet/Clients
+             |
+             v
+      +---------------+
+      | Load Balancer |
+      +-------^-------+
+              |
+       +-------+---------+-----------------+
+       |                 |                 |
+       v                 v                 v
++-------------+   +-------------+   +-------------+
+|   Node 1    |   |   Node 2    |   |   Node 3    |
+|  (Shard/Rep)|   | (Shard/Rep) |   | (Shard/Rep) |
++------^------+   +------^------+   +------^------+
+       |                |                 |
+       +----------Network-----------------+
+```
+
+- A load balancer distributes client requests among different nodes.
+- Each node may hold a shard (partition) or a replica.
+
 ### Motivation
 
 - The design supports expanding data volumes by incorporating additional nodes, with *Scalability* being a key attribute that enables the system to grow with demand.
@@ -28,16 +50,53 @@ I. **Shared-Nothing Architecture**
 - Scales out by adding more nodes with local CPU, memory, and disk.  
 - Widely used in large-scale systems (e.g., Google’s Bigtable, Cassandra, MongoDB clusters).
 
+```
+    +---------+         +---------+         +---------+
+    | Node 1  |         | Node 2  |         | Node 3  |
+    | CPU/Mem |         | CPU/Mem |         | CPU/Mem |
+    | Disk    |         | Disk    |         | Disk    |
+    +----^----+         +----^----+         +----^----+
+         |                    |                   |
+         |                    |                   |
+         +--------- Network---+-------------------+
+```
+
 II. **Shared-Disk Architecture**  
 
 - Each node has its own CPU and memory, but all share a common disk subsystem.  
 - Often carried out via Storage Area Networks (SAN).  
 - Coordination mechanisms (like distributed locking) are needed to avoid conflicts on the shared disk.
 
+```
+    +---------+   +---------+   +---------+
+    | Node 1  |   | Node 2  |   | Node 3  |
+    | CPU/Mem |   | CPU/Mem |   | CPU/Mem |
+    +----^----+   +----^----+   +----^----+
+         |           |            |
+         +----+------+------+-----+
+              |      |      |
+              |    Shared   |
+              |     Disk    |
+              +-------------+
+```
+
 III. **Shared-Memory Architecture**  
 
 - All nodes share the same memory and possibly the same disk.  
 - Rarely used for large-scale, highly distributed systems due to scalability and contention.
+
+```
+      +------------------------+
+      |      Shared RAM       |
+      +---------+------+------+ 
+                |      |
+  +-------------v------v-------------+
+  |   CPU 1   |   CPU 2   |  CPU 3   |
+  | (Node 1)  | (Node 2)  | (Node 3) |
+  +----------------------------------+
+  |                                  |
+  +----------- Shared Disk ----------+
+```
 
 #### Centralized vs. Decentralized Coordination
 
@@ -72,6 +131,29 @@ III. **Quorum-Based Replication**
 - A transaction commits if it reaches a certain subset of replicas (write quorum), and read operations read from a certain subset (read quorum).  
 - Ties in with the CAP theorem and helps strike a balance among consistency, availability, and partition tolerance.
 
+Example:
+
+```
+          +----------------+
+          | Master (Node1) |
+          +--------^-------+
+                   |
+           Synchronous/Async
+                   |
+        +----------v----------+
+        |   Replica (Node2)   |
+        +----------^----------+
+                   |
+           Synchronous/Async
+                   |
+        +----------v----------+
+        |   Replica (Node3)   |
+        +---------------------+
+```
+
+- **Master-Replica** setup: Node1 is the primary for writes, Node2 and Node3 receive replicated data.
+- Could be synchronous (strong consistency) or asynchronous (eventual consistency).
+
 #### Partitioning / Sharding
 
 Partitioning distributes subsets (partitions or shards) of the data across multiple nodes.
@@ -90,6 +172,32 @@ III. **Functional / Entity-Based Partitioning**
 
 - Different tables or entities are distributed according to their usage patterns or business logic.  
 - For example, user profiles on one node, transaction history on another.
+
+Example:
+
+```
+ Table: USERS
+ -----------------------------------------------------
+ | user_id | name     | email             | ...
+ -----------------------------------------------------
+
+  Partition by user_id range:
+     Shard A    Shard B    Shard C
+
+  Shard A (Node 1): user_id < 10000
+  Shard B (Node 2): 10000 <= user_id < 20000
+  Shard C (Node 3): user_id >= 20000
+
+ +----------+     +----------+     +----------+
+ | Shard A  |     | Shard B  |     | Shard C  |
+ | (Node 1) |     | (Node 2) |     | (Node 3) |
+ +----^-----+     +----^-----+     +----^-----+
+      |                |                |
+      +--------- Network--------------->+
+```
+
+- Rows (by user_id range in this example) are placed on different nodes.  
+- Each node stores only a portion of the table.
 
 ### Distributed Concurrency Control
 
@@ -128,6 +236,33 @@ Concurrency control makes sure correct, consistent results when multiple transac
 - In the initial stage known as the *Prepare Phase*, the coordinator asks all nodes to get ready for a commit, with each node writing to stable storage and replying with a ready or no decision.
 - During the subsequent stage called the *Commit Phase*, the coordinator issues a commit message if every participant is prepared, or initiates a rollback if any participant is not.
 - Although this protocol is straightforward, it can lead to indefinite waiting if the coordinator fails, which calls for additional failure handling protocols.
+
+```
+           +------------------+
+           |  Coordinator     |
+           +------------------+
+                  |     ^
+Phase 1 (Prepare) |     | Phase 2 (Commit / Abort)
+                  v     |
+        +---------------------+
+        | Participant (NodeA) |
+        +---------------------+
+                 |     ^
+                 |     |
+        +---------------------+
+        | Participant (NodeB)|
+        +---------------------+
+```
+
+I. **Phase 1 (Prepare)**:  
+
+- Coordinator asks each participant if it can commit.  
+- Participants reply “ready” or “no.”
+
+II. **Phase 2 (Commit/Abort)**:  
+
+- If *all* participants are ready, coordinator sends “commit.”  
+- Otherwise, coordinator sends “abort.”
 
 #### Three-Phase Commit (3PC)
 
@@ -168,6 +303,17 @@ In a distributed system, it is impossible to simultaneously guarantee:
 - Every node displays identical data concurrently, a guarantee achieved through the principle of *Consistency* in the system.  
 - The design ensures that every request gets a response, reflecting a commitment to *Availability* even when the data may not be the absolute latest.  
 - Despite disruptions from network failures, the system continues to function smoothly due to its inherent *Partition tolerance*, which keeps operations running amid isolated segments.
+
+
+```
+         Consistency (C)
+               /\
+              /  \
+             /    \
+            /      \
+Partition /         \ Availability
+  Tolerance (P)       (A)
+```
 
 #### Implications
 
@@ -242,4 +388,3 @@ III. **NewSQL**
 - Architects often evaluate *Simplicity* against scalability, choosing between a centralized system that is easier to manage and a decentralized approach that supports growth.
 - Certain applications demand *Strong Consistency* to ensure precise data correctness, even if this choice may impact read and write performance compared to eventual consistency models.
 - When designing the overall architecture, the decision to implement a *Homogeneous* environment is weighed against integrating diverse systems, with each option offering distinct operational benefits.
-
