@@ -4,17 +4,34 @@ A database transaction is a sequence of operations performed as a single, indivi
 
 ```
 1. Initial State:
-+------------------+          +------------------+
-| Account A: $100  |          | Account B: $50   |
-+------------------+          +------------------+
 
-2. Transaction Begins:
-- Transfer $20 from Account A to Account B
+┌───────────────────────┐             ┌───────────────────────┐
+│      Account A        │             │      Account B        │
+│                       │             │                       │
+│     Balance: $100     │             │      Balance: $50     │
+└───────────────────────┘             └───────────────────────┘
+
+              │                                 │
+              │                                 │
+              ▼                                 ▼
+
+2. Transaction Initiated:
+
+┌───────────────────────────────────────────────────────────┐
+│             Transferring $20 from Account A               │
+│                         to Account B                      │
+└───────────────────────────────────────────────────────────┘
+
+              │                                 │
+              ▼                                 ▼
 
 3. After Transaction:
-+------------------+          +------------------+
-| Account A: $80   |          | Account B: $70   |
-+------------------+          +------------------+
+
+┌───────────────────────┐             ┌───────────────────────┐
+│      Account A        │             │      Account B        │
+│                       │             │                       │
+│     Balance: $80      │             │      Balance: $70     │
+└───────────────────────┘             └───────────────────────┘
 ```
 
 In the example above, the transaction involves transferring $20 from Account A to Account B. If any part of this transaction fails—say, if the system crashes after debiting Account A but before crediting Account B—the transaction management system ensures that all changes are rolled back, returning the database to its initial state.
