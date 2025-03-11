@@ -46,64 +46,90 @@ After reading the material, you should be able to answer the following questions
 
 ### ACID Properties
 
-Transactions are defined by their **ACID** properties: Atomicity, Consistency, Isolation, and Durability. These principles guarantee that database transactions are processed reliably, maintaining data integrity even in the face of errors, power failures, or other unexpected issues.
+Transactions in databases follow the **ACID** properties—Atomicity, Consistency, Isolation, and Durability—to ensure reliability, correctness, and robustness, even during errors or system failures.
 
 #### Atomicity
 
-Atomicity ensures that a transaction is all-or-nothing. This means that either all operations within the transaction are completed successfully, or none are applied at all. If any operation fails, the entire transaction is aborted, and the database remains unchanged.
+Atomicity guarantees that a transaction is treated as a single, indivisible unit. Either all operations within the transaction succeed, or none do. If any operation within a transaction fails, all previously executed steps are reversed.
 
 ```
+Transaction Example:
+
+Initial State:
+Account A: $100
+Account B: $50
+
 Transaction Steps:
-1. Debit $20 from Account A
-2. Credit $20 to Account B
+1. Debit $20 from Account A (Account A: $80)
+2. Credit $20 to Account B (Account B: $70)
 
-If Step 2 fails, Step 1 is undone.
+If Step 2 fails:
+Rollback Step 1 → Account A returns to $100
 ```
 
-In this way, atomicity prevents partial updates that could lead to data inconsistencies.
+*Atomicity prevents partial updates, preserving database consistency.*
 
 #### Consistency
 
-Consistency guarantees that a transaction brings the database from one valid state to another, adhering to all predefined rules such as integrity constraints and triggers. This means that any data written to the database must be valid according to all defined rules.
+Consistency ensures that transactions transition the database from one valid state to another valid state, following all rules, constraints, and triggers defined in the database.
 
 ```
-Before Transaction:
-- Total Balance: $150
+Transaction Example:
+
+Initial State:
+Account A: $100
+Account B: $50
 
 After Transaction:
-- Total Balance: $150
+Account A: $80
+Account B: $70
 
-The total balance remains consistent throughout the transaction.
+Total balance remains consistent:
+Before: $150 | After: $150
 ```
 
-This property ensures that the integrity of the database is maintained.
+*Consistency maintains data integrity throughout transactions.*
 
 #### Isolation
 
-Isolation means that concurrent transactions occur independently without interference. Each transaction operates as if it is the only one using the database, preventing transactions from seeing intermediate states of other concurrent transactions.
+Isolation ensures concurrent transactions operate independently, without affecting each other. Transactions run as if they are executed sequentially, preventing intermediate states from being visible to other concurrent transactions.
 
 ```
-Transaction T1: Reads and updates Account A
-Transaction T2: Reads and updates Account B
+Isolation Example:
 
-Even if T1 and T2 run simultaneously, they don't affect each other's operations.
+Transaction T1:
+Reads Account A → Updates Account A
+
+Transaction T2:
+Reads Account B → Updates Account B
+
+Even if T1 and T2 execute simultaneously:
+T1 ↔ Account A (isolated)
+T2 ↔ Account B (isolated)
+
+No interference between transactions.
 ```
 
-Isolation prevents conflicts and ensures that transactions do not compromise each other's integrity.
+*Isolation prevents transactions from causing conflicts or inconsistency.*
 
 #### Durability
 
-Durability assures that once a transaction has been committed, its changes are permanent, even in the event of a system failure. The database system ensures that committed transactions are saved to non-volatile storage.
+Durability guarantees that once a transaction is committed, its effects are permanently saved, even if a system failure occurs immediately afterward. The committed state is stored on durable, non-volatile storage.
 
 ```
-Transaction Committed:
-- Changes are written to disk.
+Durability Example:
+
+Transaction Commit:
+→ Changes saved permanently to disk.
 
 System Crash Occurs:
-- After restart, the committed changes are still present.
+→ Restart System
+
+After Recovery:
+→ Committed changes still present.
 ```
 
-This property guarantees that the results of a transaction won't be lost.
+*Durability ensures permanent recording of committed transactions.*
 
 ### Analogy of a post office
 
