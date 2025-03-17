@@ -1,6 +1,6 @@
 ## CRUD in SQL vs NoSQL
 
-Comparing common CRUD operations in SQL (relational databases) and MongoDB (a NoSQL document store) provides valuable insights into the fundamental differences between relational and non-relational databases. Understanding these differences is crucial for developers and database administrators when designing and implementing data storage solutions tailored to specific application requirements.
+Comparing common CRUD operations in SQL (relational databases) and MongoDB (a NoSQL document store) provides valuable insights into the differences between relational and non-relational databases. Understanding these differences is crucial for developers and database administrators when designing and implementing data storage solutions tailored to specific application requirements.
 
 After reading the material, you should be able to answer the following questions:
 
