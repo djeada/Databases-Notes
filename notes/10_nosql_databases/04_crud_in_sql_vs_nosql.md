@@ -207,19 +207,20 @@ The table below provides a concise comparison of CRUD operations between SQL and
 
 When working with SQL and MongoDB, adhering to best practices ensures optimal performance, scalability, and maintainability of your database systems. Here are some recommended strategies:
 
-- In **data modeling**, SQL uses normalization to reduce redundancy and maintain data integrity, while MongoDB often embeds related documents to optimize performance for read-heavy applications.  
-- Schema design should prioritize **query patterns**, ensuring that SQL minimizes expensive joins and MongoDB avoids unnecessary multiple queries.  
-- Applications requiring strict **relational integrity** and complex transactions benefit from SQL due to its adherence to ACID properties.  
-- For projects requiring flexibility and horizontal **scalability**, MongoDB is often preferred because of its schema-less design and ability to distribute data across servers.  
-- Adding **indexes** to frequently queried fields improves performance in both SQL and MongoDB, and should be guided by analysis of application query behavior.  
-- Tools like SQL EXPLAIN plans and MongoDB’s **explain()** method help developers review and optimize query performance by analyzing execution paths.  
-- When designing schemas, **normalization** in SQL ensures data consistency, while MongoDB’s denormalization strategies (e.g., embedding data) are useful for faster reads.  
-- Managing **relationships** in SQL involves foreign keys and joins, while in MongoDB, developers can embed documents or use references depending on the application’s access patterns.  
-- Strong **authentication** and role-based access control are essential in both SQL and MongoDB to secure data against unauthorized access.  
-- Protecting sensitive information requires **data encryption** both at rest and during transit to mitigate security risks.  
-- Scheduling **regular backups** for databases prevents data loss and ensures the ability to restore information after failures.  
-- Testing **disaster recovery plans** prepares organizations to handle unexpected database outages and maintain business continuity.  
-- Continuous **performance monitoring** in databases helps identify bottlenecks and optimize operations before issues escalate.  
-- Routine **maintenance** tasks, such as rebuilding indexes, archiving old data, and upgrading database versions, improve performance and security.  
-- MongoDB’s **sharding** distributes data across servers, enabling better performance for large datasets and high transaction loads.  
-- SQL databases often use **partitioning** to manage large tables effectively and improve the speed of queries on specific data ranges.
+- In *data modeling*, SQL databases use normalization to eliminate redundancy—breaking data into related tables—thus preserving data integrity. In contrast, MongoDB often embeds related documents, which reduces the overhead of joins and boosts performance for read-heavy applications, like real-time dashboards.
+- Effective schema design revolves around *query patterns*. For SQL databases, this involves minimizing costly joins by strategic table design. MongoDB schemas should limit the necessity for multiple queries by thoughtfully embedding or referencing data based on frequent access patterns.
+- Applications demanding strict *relational integrity* and complicated transaction management typically favor SQL databases due to their strong adherence to ACID principles. Financial systems and e-commerce platforms often benefit from this level of consistency and reliability.
+- Projects that emphasize flexibility and horizontal *scalability*, such as content management systems or IoT platforms, usually prefer MongoDB. Its schema-less architecture and smooth data distribution across multiple servers allow effortless scalability as data grows.
+- Creating *indexes* on frequently queried fields significantly enhances performance in both SQL and MongoDB. Developers should regularly analyze query logs and execution patterns to identify optimal fields for indexing, making sure efficient query responses.
+- Tools like SQL's EXPLAIN plans and MongoDB's *explain()* method empower developers to scrutinize and fine-tune queries. They provide insight into execution paths, pinpointing inefficient operations and guiding necessary optimizations.
+- While designing schemas, SQL databases use *normalization* techniques to enforce data consistency across multiple tables. MongoDB, conversely, uses denormalization strategies—such as embedding frequently accessed data—to accelerate read operations.
+- Managing *relationships* in SQL databases involves clearly defined foreign keys and structured joins. MongoDB provides flexibility in managing relationships by either embedding documents for rapid access or using references, depending on how the application queries data.
+- Strong *authentication* mechanisms and comprehensive role-based access control are important in securing data, whether in SQL or MongoDB. Carrying out precise permissions prevents unauthorized access and maintains data confidentiality.
+- Protecting sensitive data demands consistent *data encryption*, both when stored (at rest) and while moving across networks (in transit). This practice safeguards information against interception and breaches.
+- Setting up schedules for *regular backups* minimizes the risk of data loss. Routine backups make sure quick restoration capability following accidental deletions, corruption, or hardware failures.
+- Regularly testing *disaster recovery plans* enables organizations to respond effectively to unforeseen database outages, maintaining operational continuity and minimizing downtime.
+- Continuous *performance monitoring* allows for early detection of bottlenecks or resource contention within databases. Proactive monitoring tools alert administrators to issues before they escalate, making sure smooth operations.
+- Conducting routine *maintenance* tasks—such as rebuilding fragmented indexes, archiving outdated data, and applying security patches or upgrades—maintains database performance, stability, and security over time.
+- MongoDB’s built-in *sharding* capability distributes data efficiently across multiple servers, optimizing query performance and managing high transaction volumes, ideal for large-scale applications.
+- SQL databases frequently carry out *partitioning* strategies to handle vast datasets effectively. Partitioning large tables, such as logs or transaction records, enhances query speed by restricting operations to relevant data subsets.
+
