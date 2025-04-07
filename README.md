@@ -1,6 +1,8 @@
 # Databases
 
-This repository is an extensive guide for anyone working with data, from beginners to seasoned professionals. It covers a comprehensive range of topics related to databases, including SQL and NoSQL databases, performance optimization, security best practices, and practical applications. Real-world examples are provided to help you understand how to effectively use databases in practice.
+Welcome to my database notes. I’ve put together insights on everything from database types and transactions to indexes, isolation levels, data warehousing, replication, and even the Halloween Problem. These notes are born from my own experiences and challenges, capturing both theory and practical tips in a concise, accessible way.
+
+I update these files as I learn more and tackle new challenges in the world of databases. Your feedback or contributions are always welcome—if you see something that could be clearer or have additional ideas, please share. Let’s keep refining our understanding together.
 
 ## Motivation
 
@@ -184,16 +186,38 @@ To further enhance your understanding of databases, consider exploring the follo
 
 ## References
 
-- **[Cornell University CS4320](https://www.cs.cornell.edu/courses/cs4320/):** Database Systems course materials.
-- **[Carnegie Mellon University 15-445/645 Database Systems](https://15445.courses.cs.cmu.edu/fall2023/):** Comprehensive course on database systems.
-- **[SQL Exercises](https://pgexercises.com/):** Practice SQL queries with practical exercises.
-- **[SQL Tutorial](http://www.sql-tutorial.ru/):** In-depth SQL tutorials and examples.
-- **[Why are NoSQL Databases More Scalable than SQL?](https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql/194408#194408):** Discussion on scalability differences.
-- **[SQLZoo](https://sqlzoo.net/wiki/SQL_Tutorial):** Interactive SQL tutorials.
-- **[How Databases Work](http://coding-geek.com/how-databases-work/):** Explanation of database internals.
-- **[Database and SQL Cheat Sheet for Interviews](https://algodaily.com/lessons/databases-and-sql-cheat-sheet-for-interviews):** Quick reference for interviews.
-- **[DataLemur SQL Interview Questions](https://datalemur.com/sql-interview-questions):** Practice SQL questions for interviews.
-- **[Understanding Joins](https://joins.spathon.com/):** Visual guide to SQL joins.
+### Books
+- **Silberschatz, Abraham; Korth, Henry F.; Sudarshan, S.**  
+  *Database System Concepts, 7th Edition*  
+  [Amazon Link](https://amzn.to/4jrbQPX)
+
+- **Date, C.J.**  
+  *SQL and Relational Theory: How to Write Accurate SQL Code*  
+  [Amazon Link](https://amzn.to/42myfag)
+
+- **Redmond, Eric; Wilson, Jim R.**  
+  *Seven Databases in Seven Weeks: A Guide to Modern Databases*  
+  [Amazon Link](https://amzn.to/3R2vl5c)
+
+- **Garcia-Molina, Hector; Ullman, Jeffrey D.; Widom, Jennifer.**  
+  *Database Systems: The Complete Book*  
+  [Amazon Link](https://amzn.to/4j3Qati)
+
+- **Sadalage, Pramod J.; Fowler, Martin.**  
+  *NoSQL Distilled: A Brief Guide to the Emerging World of Polyglot Persistence*  
+  [Amazon Link](https://amzn.to/4i54Oiu)
+
+### Online Courses and Resources
+- [Cornell University CS4320](https://www.cs.cornell.edu/courses/cs4320/): Database Systems course materials.
+- [Carnegie Mellon University 15-445/645 Database Systems](https://15445.courses.cs.cmu.edu/fall2023/): Comprehensive course on database systems.
+- [SQL Exercises](https://pgexercises.com/): Practice SQL queries with practical exercises.
+- [SQL Tutorial](http://www.sql-tutorial.ru/): In-depth SQL tutorials and examples.
+- [Why are NoSQL Databases More Scalable than SQL?](https://softwareengineering.stackexchange.com/questions/194340/why-are-nosql-databases-more-scalable-than-sql/194408#194408): Discussion on scalability differences.
+- [SQLZoo](https://sqlzoo.net/wiki/SQL_Tutorial): Interactive SQL tutorials.
+- [How Databases Work](http://coding-geek.com/how-databases-work/): Explanation of database internals.
+- [Database and SQL Cheat Sheet for Interviews](https://algodaily.com/lessons/databases-and-sql-cheat-sheet-for-interviews): Quick reference for interviews.
+- [DataLemur SQL Interview Questions](https://datalemur.com/sql-interview-questions): Practice SQL questions for interviews.
+- [Understanding Joins](https://joins.spathon.com/): Visual guide to SQL joins.
 
 ## Star History
 
