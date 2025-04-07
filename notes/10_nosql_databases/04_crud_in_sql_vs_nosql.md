@@ -7,7 +7,7 @@ After reading the material, you should be able to answer the following questions
 - What does CRUD stand for, and why are these operations fundamental in database management?
 - How are data structures organized differently in SQL (relational databases) compared to MongoDB (a NoSQL document store)?
 - What are the SQL and MongoDB syntax and methods for performing Create, Read, Update, and Delete operations?
-- What are the key differences between performing CRUD operations in SQL and MongoDB, particularly regarding schema flexibility and data relationships?
+- What are the differences between performing CRUD operations in SQL and MongoDB, particularly regarding schema flexibility and data relationships?
 - When should you choose a SQL database over MongoDB, and vice versa, based on application requirements and data integrity needs?
 
 ### Overview
@@ -99,7 +99,7 @@ db.users.find({ age: 25 }, { first_name: 1, last_name: 1, age: 1, _id: 0 });
 
 This command retrieves all documents from the `users` collection where the `age` is 25, including only the `first_name`, `last_name`, and `age` fields while excluding the `_id` field.
 
-- In **SQL**, joins are used to combine data from multiple tables, a key feature for handling normalized data structures. Conversely, MongoDB promotes embedding related data within documents, which eliminates the need for joins and can improve read performance in specific scenarios.  
+- In **SQL**, joins are used to combine data from multiple tables, an important feature for handling normalized data structures. Conversely, MongoDB promotes embedding related data within documents, which eliminates the need for joins and can improve read performance in specific scenarios.  
 - MongoDB’s **aggregation framework** enables advanced data processing and transformation within the database, offering functionality comparable to SQL's `GROUP BY` and `HAVING` clauses for summarizing and filtering data.
 
 #### Update
@@ -228,7 +228,7 @@ IV. Projects that emphasize flexibility and horizontal *scalability*, such as co
 - If we skip a scalable approach in rapidly growing environments, we can hit performance limits and downtime due to single-server overload.
 - If we do leverage MongoDB’s flexible structure and horizontal scaling, we accommodate data spikes more gracefully and react faster to evolving business needs.
 
-V. Creating *indexes* on frequently queried fields significantly enhances performance in both SQL and MongoDB. Developers should regularly analyze query logs and execution patterns to identify optimal fields for indexing, making sure of efficient query responses.
+V. Creating *indexes* on frequently queried fields improves performance in both SQL and MongoDB. Developers should regularly analyze query logs and execution patterns to identify optimal fields for indexing, making sure of efficient query responses.
 
 - If we fail to create indexes where needed, queries become increasingly slow, leading to poor user experiences and timeouts in worst cases.
 - If we properly index the right fields, we accelerate lookups dramatically, reducing CPU and memory load and improving overall responsiveness.
@@ -285,7 +285,7 @@ XV. MongoDB’s built-in *sharding* capability distributes data efficiently acro
 - If we don’t implement sharding when data volume explodes, MongoDB instances can become overloaded, leading to slow queries and potential downtime.
 - If we leverage sharding strategically, we scale seamlessly while preserving high throughput and fast response times for growing workloads.
 
-XVI. SQL databases frequently carry out *partitioning* strategies to handle vast datasets effectively. Partitioning large tables, such as logs or transaction records, enhances query speed by restricting operations to relevant data subsets.
+XVI. SQL databases frequently carry out *partitioning* strategies to handle vast datasets effectively. Partitioning large tables, such as logs or transaction records, improves query speed by restricting operations to relevant data subsets.
 
 - If we don’t partition extremely large tables, queries might scan millions of unnecessary rows, bogging down performance.
 - If we employ partitioning correctly, we localize data lookups to targeted segments, speeding up queries and reducing strain on the database.
