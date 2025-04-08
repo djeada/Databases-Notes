@@ -149,36 +149,110 @@ COMMIT;
 
 By rolling back to the savepoint, the transaction undoes changes made after the savepoint without affecting earlier operations.
 
-### Visualizing Transaction Flow
+#### Visualizing Transaction Flow
 
-Understanding the flow of a transaction can help illustrate the concept of atomicity.
+To really understand **atomicity** in databases, it's useful to visualize what happens during a transaction. Think of a transaction as a sequence of steps that must either **all succeed or none at all**—no in-between.
+
+Here’s a simple diagram showing the *normal flow* of a transaction:
 
 ```
 [Start Transaction]
-       |
-   [Operation 1]
-       |
-   [Operation 2]
-       |
-[Check for Errors]
-       |
-   [No Errors]
-       |
-     [Commit]
+        |
+    [Operation 1]
+        |
+    [Operation 2]
+        |
+ [Check for Errors]
+        |
+    [No Errors]
+        |
+      [Commit]
 ```
 
-If an error is detected at any point, the transaction flow changes:
+This is the “happy path.” You start a transaction, do your operations, check for any issues, and if nothing’s wrong, you commit the changes. Committing makes everything permanent in the database.
+
+But if **any** operation fails, you don’t go forward—you go back. That’s the whole point of atomicity. You either do it all or undo it all.
+
+Let’s see what that looks like:
 
 ```
 [Start Transaction] <---
-       |               |
-   [Operation 1]       |
-       |               |
-   [Operation 2]       |
-       |               |
-[Error Detected]       |
-       |               |
-    [Rollback] ---------
+        |               |
+    [Operation 1]       |
+        |               |
+    [Operation 2]       |
+        |               |
+ [Error Detected]       |
+        |               |
+     [Rollback] ---------
 ```
 
-This visualization shows that the transaction only commits if all operations succeed, embodying the principle of atomicity.
+Here’s how this might look in actual SQL (using PostgreSQL syntax):
+
+```sql
+BEGIN;
+
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+
+COMMIT;
+```
+
+This is transferring $100 from account 1 to account 2. Simple enough.
+
+Now, let’s simulate an error. Say the second `UPDATE` fails—maybe account 2 doesn’t exist. We’d use this approach to protect data integrity:
+
+```sql
+BEGIN;
+
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+
+-- Suppose this line fails:
+UPDATE accounts SET balance = balance + 100 WHERE id = 999;
+
+ROLLBACK;
+```
+
+**What happens?**
+
+- The **first `UPDATE`** goes through and deducts $100.
+- The **second `UPDATE`** fails because account 999 doesn’t exist.
+- The database sees an error and immediately knows it must **ROLLBACK**.
+- That means the $100 deduction is also undone.
+
+**Why is this good?**
+
+Without transactions, you’d have just lost $100 from account 1. Atomicity protects you from half-done operations.
+
+Here’s how you might catch this in application code (Python + psycopg2 example):
+
+```python
+import psycopg2
+
+try:
+    conn = psycopg2.connect(...)
+    cur = conn.cursor()
+
+    cur.execute("BEGIN;")
+    cur.execute("UPDATE accounts SET balance = balance - 100 WHERE id = 1;")
+    cur.execute("UPDATE accounts SET balance = balance + 100 WHERE id = 999;")
+
+    conn.commit()
+
+except Exception as e:
+    conn.rollback()
+    print("Transaction failed and was rolled back:", e)
+
+finally:
+    cur.close()
+    conn.close()
+```
+
+Output:
+
+```
+Transaction failed and was rolled back: ERROR: account 999 does not exist
+```
+
+So the main idea is: **no partial changes allowed.** Either all steps complete, or the system undoes everything like nothing ever happened.
