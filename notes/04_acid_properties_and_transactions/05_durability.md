@@ -4,13 +4,32 @@ Durability is a fundamental principle in database systems that ensures once a tr
 
 Imagine that every time you save a file on your computer, you expect it to be there the next time you turn it on—even if there was an unexpected shutdown. Similarly, durability guarantees that committed transactions in a database are preserved, providing reliability and trust in the system.
 
+Once a transaction is committed, its changes are permanently recorded, even in the event of a system failure or crash:
+
 ```
-+------------------------+      +------------------------+
-|    Committed Changes   | ---> |    After System Crash  |
-|  (Data is Saved)       |      |  (Data is Recovered)   |
-+------------------------+      +------------------------+
-     Changes Persist             Data Remains Intact
+             +--------------------------+
+             | Transaction Successfully |
+             |      Committed           |
+             |  (Changes Finalized)     |
+             +------------+-------------+
+                          |
+                          v
+             +--------------------------+
+             |  Write-Ahead Log (WAL)   |
+             | (Persistent Log Entry)   |
+             +------------+-------------+
+                          |
+                          v
+             +--------------------------+
+             |   Persistent Storage     |
+             |     (Disk / SSD)         |
+             | (Data Remains Intact)    |
+             +--------------------------+
 ```
+
+- Once a transaction is successfully committed, its changes are considered final and should be immune to failures.
+- Before changes are applied to the primary data storage, they are first recorded in a durable log. This ensures that if a system crash occurs, the database can recover by replaying the WAL.
+- The changes are then written to durable storage (e.g., disk or SSD), guaranteeing that the transaction's effects remain, even if power is lost or the system crashes.
 
 After reading the material, you should be able to answer the following questions:
 
@@ -77,25 +96,85 @@ Replication involves maintaining copies of the database on multiple servers or s
 - Committed transactions are synchronized across different nodes or locations. If one server fails, another can take over, ensuring that the data remains accessible.
 - Replication enhances durability by providing redundancy. Even in the event of hardware failure or data corruption on one server, the data remains safe and available on others.
 
+Alright, here’s the upgraded and clarified version of **“Visualizing Durability Mechanisms”**, with added detail, clearer structure, real-world analogies, and concrete SQL/logging output. Tone stays direct and to-the-point, like a friend walking you through what’s actually happening under the hood.
+
 ### Visualizing Durability Mechanisms
 
-Understanding how these durability techniques function can be easier with a visual representation.
+**Durability** guarantees that once a transaction is committed, its results are permanent—even if the system crashes seconds later. If the database says, “Done,” it better mean it.
+
+Let’s look at how that works behind the scenes:
 
 ```
 [Start Transaction]
-       |
+        |
 [Write Changes to Log]
-       |
+        |
 [Apply Changes to Database]
-       |
+        |
 [Commit Transaction]
-       |
+        |
 [Durability Ensured]
 ```
 
-In this flow:
+Each step exists to protect your data from disappearing into the void. Here's how it plays out:
 
-- The transaction begins and any intended changes are first written to a log (Write-Ahead Logging).
-- Changes are then applied to the database itself.
-- The transaction commits, signaling that all changes are complete and durable.
-- If a failure occurs after the commit, the system can recover using the log to ensure all committed transactions are reflected in the database.
+I. **Start Transaction**
+
+At this point, nothing’s permanent. You’re just signaling that some changes are about to happen.
+
+```sql
+BEGIN;
+```
+
+II. **Write-Ahead Logging (WAL)**
+
+Before the actual data is changed, all actions are recorded in a transaction log. This is critical. The log is stored on disk immediately.
+
+```plaintext
+LOG: UPDATE accounts SET balance = balance - 100 WHERE id = 1
+LOG: UPDATE accounts SET balance = balance + 100 WHERE id = 2
+```
+
+If the system crashes *after* this point but *before* applying changes to the actual data, the recovery system will use the log to **redo** the transaction.
+
+📝 **Why this matters:** Logging comes *before* any changes are made. That’s why it’s called *Write-Ahead Logging* (WAL).
+
+III. **Apply Changes to the Database**
+
+Now the actual tables are updated.
+
+```sql
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE id = 2;
+```
+
+These changes happen in memory first. They’ll be flushed to disk shortly, but not necessarily immediately.
+
+IV. **Commit Transaction**
+
+This is the point of no return.
+
+```sql
+COMMIT;
+```
+
+The system writes a special *commit record* to the log. If that commit log entry exists, then the transaction is considered **durable**.
+
+#### What Happens If There’s a Crash?
+
+Imagine the system crashes **right after** the commit. What happens on recovery?
+
+- The system reads the log.
+- Sees the commit record.
+- Replays all the changes (if necessary) to make sure the database reflects them.
+
+Even if the data changes weren’t fully flushed to disk, the **log was**, and that’s enough to recover.
+
+#### Analogy: Save Before You Close
+
+Think of this like editing a document:
+- You make changes.
+- You hit **Ctrl+S** (which writes to the disk).
+- Then you close the app.
+
+Even if your laptop dies after closing, that save ensures your edits aren't lost. That’s durability.
