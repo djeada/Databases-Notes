@@ -147,20 +147,20 @@ Eventually, Alice fixed the stamp issue. Once both letters were ready, Tom sent 
 
 Managing transactions involves coordinating their execution to uphold the ACID properties. This ensures that the database remains reliable and consistent, even when multiple transactions occur concurrently.
 
-- The *Begin Transaction* statement initializes a transaction, signaling that subsequent operations should be treated as part of a single unit of work.
-- A *Commit* operation finalizes the transaction, ensuring that all changes made during the transaction are saved permanently to the database.
-- The *Rollback* process cancels a transaction if an error occurs or if it is explicitly invoked, reverting the database to the state it was in before the transaction started.
-- Mechanisms for *Concurrency Control* are implemented to allow multiple transactions to execute simultaneously without conflict, maintaining data consistency and isolation.
-- *Isolation Levels* define the extent to which a transaction is isolated from others, with levels like Read Uncommitted, Read Committed, Repeatable Read, and Serializable offering varying degrees of isolation.
-- The *Atomicity* property ensures that a transaction is executed entirely or not at all, maintaining data integrity in case of a failure.
-- *Consistency* guarantees that a database transitions from one valid state to another, adhering to defined rules and constraints throughout the transaction process.
-- The *Durability* principle ensures that once a transaction is committed, its changes are permanently stored, even in the event of a system failure.
-- *Locking Mechanisms* such as shared locks and exclusive locks are employed to control access to resources and prevent conflicts between concurrent transactions.
-- *Deadlocks* may occur when transactions wait indefinitely for resources locked by each other, requiring the database to detect and resolve such situations.
-- *Optimistic Concurrency Control* assumes minimal conflict and checks for data integrity at the commit stage, avoiding locks during transaction execution.
-- *Pessimistic Concurrency Control* uses locks to prevent conflicts upfront, ensuring that no other transaction modifies the data until the current one is complete.
-- A *Savepoint* is a point within a transaction that allows partial rollbacks, enabling recovery to a specific state without undoing the entire transaction.
-- *Two-Phase Commit (2PC)* is a protocol used in distributed transactions to ensure all participating nodes agree on the commit, enhancing reliability.
-- *Transaction Logs* maintain a record of all changes made during a transaction, supporting recovery processes in case of failures.
-- *Read Phenomena* like dirty reads, non-repeatable reads, and phantom reads are controlled by varying isolation levels to balance performance and consistency.
-- *Database Management Systems (DBMS)* enforce ACID properties (Atomicity, Consistency, Isolation, Durability) to ensure reliable transaction processing.
+- To start a transaction, the *Begin Transaction* statement is executed, marking subsequent operations as part of a single unit of work.
+- When finalizing a transaction, the process involves a *Commit* operation that permanently saves every change made.
+- In case of an error or explicit cancellation, the *Rollback* mechanism reverts the database to its state before the transaction began.
+- Multiple transactions can run simultaneously without conflict through the use of *Concurrency Control* mechanisms, which maintain data consistency and isolation.
+- Varying degrees of isolation are provided by *Isolation Levels*, ranging from Read Uncommitted and Read Committed to Repeatable Read and Serializable.
+- Data integrity is safeguarded by the *Atomicity* property, which requires that transactions are executed completely or not at all.
+- As a transaction progresses, *Consistency* ensures that the database smoothly transitions between valid states while adhering to all defined rules and constraints.
+- Once a transaction is committed, the *Durability* principle guarantees that its changes persist even if a system failure occurs.
+- Resource access is regulated by *Locking Mechanisms* such as shared and exclusive locks, preventing conflicts during concurrent transactions.
+- Sometimes, *Deadlocks* can emerge when transactions wait indefinitely for each other's resources, which necessitates database intervention to resolve the issue.
+- Under the assumption that conflicts are rare, *Optimistic Concurrency Control* checks data integrity at the commit stage rather than locking resources during execution.
+- In contrast, *Pessimistic Concurrency Control* proactively employs locks to ensure data isn’t altered by another transaction until the current one is completed.
+- Within a transaction, creating a *Savepoint* allows for partial rollbacks, enabling recovery to a particular state without undoing the entire process.
+- In distributed environments, the *Two-Phase Commit (2PC)* protocol ensures that every participating node agrees on the transaction's commit, enhancing overall reliability.
+- A detailed log, known as a *Transaction Log*, records all changes during a transaction, which supports effective recovery in the event of a failure.
+- Common *Read Phenomena* such as dirty reads, non-repeatable reads, and phantom reads are managed by adjusting isolation levels to balance both performance and consistency.
+- Lastly, *Database Management Systems (DBMS)* uphold the ACID properties—Atomicity, Consistency, Isolation, and Durability—to ensure that transaction processing remains reliable and robust.
