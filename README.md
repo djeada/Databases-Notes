@@ -4,6 +4,8 @@ Welcome to my database notes. I’ve put together insights on everything from da
 
 I update these files as I learn more and tackle new challenges in the world of databases. Your feedback or contributions are always welcome—if you see something that could be clearer or have additional ideas, please share. Let’s keep refining our understanding together.
 
+![database_notes](https://github.com/user-attachments/assets/8a129873-7a0a-46d1-97cc-89608b83161b)
+
 ## Motivation
 
 Throughout my career as an engineer, I have faced numerous challenges such as slow SQL queries, poorly optimized tables, and inefficient database architectures. Recognizing that a deep understanding of databases is essential for building reliable and high-performance data systems, I created this repository. It aims to serve as a comprehensive resource for myself and others to overcome database challenges and advance our skills in database engineering.
