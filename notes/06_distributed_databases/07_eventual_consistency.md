@@ -3,34 +3,35 @@
 Imagine a distributed system with multiple nodes—servers or databases—that share data. When an update occurs on one node, it doesn't instantly reflect on the others due to factors like network latency or processing delays. However, the system is designed so that all nodes will eventually synchronize their data.
 
 ```
-[Initial State]
+Initial State:
++-----------+   +-----------+   +-----------+
+| v1        |   | v1        |   | v1        |
+| Node A    |   | Node B    |   | Node C    |
++-----------+   +-----------+   +-----------+
 
-Node A: Data Version 1
-Node B: Data Version 1
-Node C: Data Version 1
-
-[After Update on Node A]
-
-Node A: Data Version 2
-Node B: Data Version 1
-Node C: Data Version 1
-
-[Over Time, Propagation Occurs]
+After Update on Node A:
++-----------+   +-----------+   +-----------+
+| v2        |   | v1        |   | v1        |
+| Node A    |   | Node B    |   | Node C    |
++-----------+   +-----------+   +-----------+
 
 Time T1:
-Node A: Data Version 2
-Node B: Data Version 1
-Node C: Data Version 1
++-----------+   +-----------+   +-----------+
+| v2        |   | v1        |   | v1        |
+| Node A    |   | Node B    |   | Node C    |
++-----------+   +-----------+   +-----------+
 
 Time T2:
-Node A: Data Version 2
-Node B: Data Version 2
-Node C: Data Version 1
++-----------+   +-----------+   +-----------+
+| v2        |   | v2        |   | v1        |
+| Node A    |   | Node B    |   | Node C    |
++-----------+   +-----------+   +-----------+
 
 Time T3:
-Node A: Data Version 2
-Node B: Data Version 2
-Node C: Data Version 2
++-----------+   +-----------+   +-----------+
+| v2        |   | v2        |   | v2        |
+| Node A    |   | Node B    |   | Node C    |
++-----------+   +-----------+   +-----------+
 ```
 
 In this scenario, Node A receives an update changing the data from Version 1 to Version 2. Initially, only Node A has the latest version. Over time, the update propagates to Node B and eventually to Node C. By Time T3, all nodes have synchronized to Data Version 2, achieving eventual consistency.
