@@ -36,7 +36,7 @@ BROKEN SYSTEM                                 ENFORCED CONSTRAINTS
 COMMON ISSUES:  
 • Duplicate ISBNs → ambiguous look-ups  
 • Orphan loans → books never marked returned  
-• Invalid dates → negative or future loan dates  =
+• Invalid dates → negative or future loan dates
 ```
 
 ### Understanding Data Integrity
@@ -45,10 +45,10 @@ Data integrity involves a set of processes and constraints that protect data fro
 
 #### Types of Data Integrity
 
-1. **Entity Integrity** ensures that every table has a primary key, which is both unique and not null, to uniquely identify each record.  
-2. **Referential Integrity** maintains consistency across related tables by using foreign keys to ensure that relationships between rows remain valid.  
-3. **Domain Integrity** enforces constraints on individual columns, restricting entries to valid types, formats, or ranges of values.  
-4. **User-Defined Integrity** applies specific business rules and constraints unique to the application, ensuring that data adheres to organizational requirements.  
+1. *Entity Integrity* guarantees that each table possesses a primary key—never empty and always distinct—so every record can be identified without ambiguity.
+2. *Referential Integrity* safeguards the coherence between tables by employing foreign keys, thereby ensuring that linked rows truly correspond to one another.
+3. *Domain Integrity* imposes rules on individual columns, limiting entries to acceptable data types, patterns, or numerical bounds to prevent invalid values.
+4. *User-Defined Integrity* captures bespoke business logic and bespoke constraints, embedding organizational policies directly into the data model.
 
 ### Implementing Data Integrity with Constraints
 
