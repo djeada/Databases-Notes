@@ -1,181 +1,94 @@
 ## Consistent Hashing
 
-Imagine you're organizing books in a vast library with shelves arranged in a circle. Each book is placed on a shelf based on its title's position in the alphabet, looping back to the beginning after 'Z'. If you add a new shelf or remove one, you wouldn't want to reshuffle all the books—just a few should need to move. Consistent hashing works similarly in computer systems, allowing data to be distributed across multiple servers efficiently, even as servers are added or removed.
+Imagine you're organizing books in a vast library with shelves arranged in a circle. Each book’s position is chosen by the first letter of its title, looping back to the beginning after **Z**. When you install a new shelf or remove one, you’d prefer not to reshuffle every book—only a small, predictable subset should move. **Consistent hashing** gives distributed computer systems that same flexibility: data spreads evenly across servers, yet when servers come or go only a fraction of keys are remapped.
 
-After reading the material, you should be able to answer the following questions:
+After working through this material you should be able to answer:
 
-1. What is consistent hashing and how does it differ from traditional hashing methods in data distribution?
-2. How does the hash ring concept work in consistent hashing, and how are nodes and data items mapped onto the ring?
-3. What are the benefits of adding or removing nodes in a consistent hashing system, and how does it minimize data movement?
-4. How do virtual nodes (VNodes) enhance load balancing and scalability in consistent hashing implementations?
-5. What are some real-world applications of consistent hashing, and what challenges might arise when implementing it?
+1. What is consistent hashing, and how does it differ from traditional hashing?
+2. How does the hash‑ring abstraction work, and how are nodes and data mapped onto it?
+3. Why does adding or removing a node trigger only limited data movement?
+4. How do virtual nodes (VNodes) improve load‑balancing and scalability?
+5. Where is consistent hashing used in the real world, and what pitfalls can appear in practice?
 
 ### The Hash Ring Concept
 
-Consistent hashing uses a logical ring to represent the entire range of possible hash values. Both data items and nodes (servers) are mapped onto this ring using a hash function.
+Consistent hashing imagines the entire hash space as a circle.  
+A typical implementation uses a 32-bit hash (0 → $2^{32} - 1$); after the last value the count “wraps” back to 0, so the ends meet like the edges of a clock dial.
 
-**Visualizing the Hash Ring:**
+* The ring abstraction lets us reason in angles, but it really represents **a modulo - $2^{32}$ number line**.  
+* **Data movement is proportional to the arc length** affected—so scaling out (or shrinking) causes only *$O(k / n)$* re-shuffles instead of moving everything.  
+* The same mechanism underpins virtual nodes (VNodes): each physical server advertises many points on the circle, smoothing load without changing the fundamental rules.
+
+
+#### Hash-ring overview
 
 ```
-#
-                      +---------+
-                      |         |
-                +-----+   0°    +-----+
-                |     |         |     |
-                |     +---------+     |
-                |                     |
-         +------+                     +------+
-         |                                    |
-    270° +                                    + 90°
-         |                                    |
-         +------+                     +------+
-                |                     |
-                |     +---------+     |
-                |     |         |     |
-                +-----+  180°   +-----+
-                      |         |
-                      +---------+
+Hash Ring:
+                         0°   (hash 0  or 2³²-1)
+                         ●
+                         │
+                         │
+   270° (¾·2³²)     ●────┼────●  90° (¼·2³²)
+                         │
+                         │
+                         ●
+                       180° (½·2³²)
 ```
 
-- The circle represents the entire hash space (e.g., 0 to 2³² - 1).
-- Positions on the ring correspond to hash values from the hash function.
-- Nodes and data are placed on the ring based on their hash values.
+* Every point on the circumference corresponds to a **possible hash value**.  
+* Moving **clockwise** always increases the hash (mod $2^{32}$) and eventually loops back to 0 (0°).  
+* A node “owns” the **arc between its position and the next node clockwise**. Any key that hashes into that arc will be stored on that node.
 
 ### Mapping Nodes and Data onto the Ring
 
-Suppose we have three nodes—**Node A**, **Node B**, and **Node C**—and several data keys that need to be stored.
+Assume three servers —**Node A**, **Node B** and **Node C**.
 
-**Assigning Nodes to the Ring:**
+#### Placing nodes
 
-- **Node A** hashes to position at 0°.
-- **Node B** hashes to position at 120°.
-- **Node C** hashes to position at 240°.
+![ring\_nodes](https://github.com/user-attachments/assets/41d53327-71e1-4014-9a5c-531ee7a5548a)
 
-**Visual Representation with Nodes:**
+| Node   | Hash angle | Covers hash interval\* |
+| ------ | ---------- | ---------------------- |
+| Node A | 0°         | (240° → 0°]            |
+| Node B | 120°       | (0° → 120°]            |
+| Node C | 240°       | (120° → 240°]          |
 
-```
-#
-                      +---------+
-                      |  Node A |
-                +-----+   0°    +-----+
-                |     |         |     |
-                |     +---------+     |
-                |                     |
-         +------+                     +------+
-         |                                    |
-         |                                    |
-         |                                    |
-         +------+                     +------+
-                |                     |
-                |     +---------+     |
-                |     | Node C  |     |
-                +-----+ 240°    +-----+
-                      |         |
-                      +---------+
-```
+Interval is *open* at the start and *closed* at the end, so each key maps to exactly one node.
 
-**Placing Data Items on the Ring:**
+#### Placing data keys
 
-Let's say we have data items with keys **K1**, **K2**, and **K3**.
+| Key | Hash angle | Stored on…                    |
+| --- | ---------- | ----------------------------- |
+| K1  | 100°       | Node B                        |
+| K2  | 200°       | Node C                        |
+| K3  | 330°       | Node A (0°) – wraps past 360° |
 
-- **K1** hashes to 100°.
-- **K2** hashes to 200°.
-- **K3** hashes to 330°.
+![ring\_nodes\_data](https://github.com/user-attachments/assets/313d5a15-1e6d-4a01-a869-ad77e40931a6)
 
-**Visual Representation with Data:**
-
-```
-#
-                      +---------+
-                      |  Node A |
-                +-----+   0°    +-----+
-                |     |         |     |
-                |     +---------+     |
-                |         ↑           |
-         +------+        K3           +------+
-         |                                    |
-         |                                    |
-         |                                    |
-         +------+                     +------+
-                |                     |
-                |     +---------+     |
-                |     | Node C  |     |
-                +-----+ 240°    +-----+
-                      |    ↑    |
-                      |   K2    |
-```
-
-### How Data Assignment Works
-
-In consistent hashing, each data item is assigned to the next node encountered when moving clockwise around the ring.
-
-- **K1 (100°)** is stored on **Node B (120°)**.
-- **K2 (200°)** is stored on **Node C (240°)**.
-- **K3 (330°)** wraps around the ring and is stored on **Node A (0°)**.
-
-**Complete Ring with Nodes and Data:**
-
-```
-#
-                      +---------+
-                      |  Node A |
-                +-----+   0°    +-----+
-                |     |    ↑    |     |
-                |     +--- K3 ---+     |
-                |                     |
-         +------+                     +------+
-         |                                    |
-         |                                    |
-         |                                    |
-         +------+                     +------+
-                |                     |
-                |     +---------+     |
-                |     | Node C  |     |
-                +-----+ 240°    +-----+
-                      |    ↑    |
-                      |   K2    |
-```
+- Rule of thumb → **“First node clockwise.”**
+- Each key walks clockwise until it hits a node marker; that node stores the key.
 
 ### Adding and Removing Nodes
 
-One of the strengths of consistent hashing is that it minimizes the amount of data that needs to move when nodes join or leave the system.
+A major advantage of consistent hashing is that **only the keys that lie in the affected arc move** when the node set changes.
 
-#### Adding a New Node
+#### Adding **Node D** at 80°
 
-Suppose we add **Node D** that hashes to 80°.
+![ring\_add\_node\_d](https://github.com/user-attachments/assets/f8800739-a2d1-496b-90b9-318c9d530c4e)
 
-- **K1 (100°)** now maps to **Node D** instead of **Node B**.
-- Only **K1** needs to be moved to the new node.
+* Node D splits Node B’s old interval. Only keys in the slice **(0° → 80°]** are affected.
+* In this example that is **just K1**, which shifts from Node B to Node D. All other keys stay put.
 
-**Ring After Adding Node D:**
+#### Removing **Node B**
 
-```
-#
-                      +---------+
-                      |  Node A |
-                +-----+   0°    +-----+
-                |     |         |     |
-                |     +---------+     |
-                |                     |
-         +------+                     +------+
-         |            Node D (80°)            |
-         |                ↑                   |
-         |               K1                   |
-         +------+                     +------+
-                |                     |
-                |     +---------+     |
-                |     | Node C  |     |
-                +-----+ 240°    +-----+
-                      |    ↑    |
-                      |   K2    |
-```
+![ring\_remove\_node\_b](https://github.com/user-attachments/assets/8b2319cd-e67a-49c9-8d2a-96e9e630ac5c)
 
-#### Removing a Node
+* When a node departs, its entire arc is reassigned to the **next clockwise node**. Here Node C inherits Node B’s range.
+* Keys that were on Node B (e.g. **K1**) slide clockwise to Node C; keys on other nodes remain untouched.
 
-If **Node B** leaves the system:
+### Virtual Nodes (VNodes)
 
-- Data items previously mapped to **Node B** now map to the next node clockwise.
-- **K1** (if still at **Node B**) would move to **Node D** or **Node C** depending on its position.
+To smooth out load in clusters with uneven node counts or heterogeneous hardware, each physical server is hashed **many** times, producing *virtual nodes* scattered around the ring. Requests are balanced across those VNodes, so even if one physical machine is temporarily overloaded only a small slice of the hash‑space suffers.
 
 ### Practical Example: Distributed Caching with Consistent Hashing
 
@@ -271,23 +184,16 @@ print(f"Key '{key}' is assigned to {assigned_node}")
 - The key `'my_data_key'` is assigned to a node based on its hash value.
 - If you add or remove nodes, only the keys that map to the affected virtual nodes need to change assignments.
 
-### Real-World Applications
+### Real‑World Uses & Challenges
 
-#### Distributed Databases: Apache Cassandra
+| System                         | Why uses consistent hashing                                       | Notable wrinkles                                          |
+| ------------------------------ | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| **Amazon Dynamo / DynamoDB**   | On‑line shopping carts must survive node loss during Black Friday | Requires anti‑entropy sync to handle “sloppy” quorums     |
+| **Apache Cassandra**           | Ring topology underpins token ranges for partitions               | Hot partitions can appear if token assignment is careless |
+| **Memcached client libraries** | Keeps cache‑hit rate high during live scaling                     | Need client‑side agreement on hash function               |
+| **CDNs (e.g., Akamai)**        | Predictable client → edge‑server mapping                          | Must integrate geo‑routing and health‑checks              |
 
-- Uses consistent hashing to distribute data across nodes in a cluster.
-- Ensures high availability and fault tolerance.
-- Supports virtual nodes to improve load balancing.
-
-#### Distributed Cache: Amazon DynamoDB
-
-- Employs consistent hashing to distribute data and handle partitions.
-- Provides seamless scaling by adding or removing nodes with minimal impact.
-
-#### Load Balancing: Web Servers
-
-- Consistent hashing can distribute client requests based on client IP addresses.
-- Helps maintain session affinity without storing session data on every server.
+Implementation challenges include choosing a non‑biased hash function, deciding how many VNodes per server, and coordinating ring state changes across clients.
 
 ### Advantages of Consistent Hashing
 
