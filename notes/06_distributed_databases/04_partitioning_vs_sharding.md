@@ -109,11 +109,9 @@ EXPLAIN SELECT * FROM orders WHERE order_date = '2025-05-05';
 * **Only one scan:** You see only `orders_2025` in the plan, proving that lookups on `orders` automatically get optimized to target just the relevant partition.
 * **Performance gain:** Partition pruning can drastically reduce I/O and CPU work, especially when you have many partitions (e.g., one per month or year).
 
-#### Decoding Common Options
-
 | Keyword / Option           | Meaning                                              | Typical Use-Case                                             |
 | -------------------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
-| `PARTITION BY RANGE (...)` | Chooses range strategy and the key column(s)         | Time-series or numeric intervals                             |
+| `PARTITION BY RANGE (...)` | Chooses range strategy and the column(s)             | Time-series or numeric intervals                             |
 | `FOR VALUES FROM () TO ()` | Declares the lower-inclusive, upper-exclusive bounds | Adjacent partitions must not overlap                         |
 | `DEFAULT PARTITION`        | Catch-all for rows that fit no explicit slice        | Shields you from insert errors when ranges lag behind growth |
 
@@ -199,8 +197,6 @@ Shard shard0001: 55% data
 * This utility reports the approximate percentage of documents or data size on each shard for the `orders` collection.
 * A near‐even split (45% vs 55%) confirms the hash function is effectively spreading user records across shards.
 * Use this periodically to catch hotspots; if one shard drifts too far in usage, you can trigger a manual rebalance or adjust chunk settings.
-
-#### Unpacking Key Flags
 
 | Flag / Parameter                 | What It Controls                                              | Insight                              |
 | -------------------------------- | ------------------------------------------------------------- | ------------------------------------ |
