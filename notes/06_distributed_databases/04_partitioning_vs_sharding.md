@@ -37,8 +37,10 @@ Although every engine offers its own bells and whistles, five patterns dominate:
 Mathematically you can model a simple range splitter with
 
 $$
-\text{partition\_id}= \left\lfloor \frac{\text{row\_value}-\text{min}}{\Delta} \right\rfloor,
-$$
+partition_{id} =
+\left\lfloor
+  \frac{row_{value}-\min}{\Delta}
+\right\rfloor$$
 
 where $\Delta$ is the chosen interval width.
 
@@ -131,7 +133,7 @@ While partitioning rearranges furniture within one house, sharding is more like 
         ┌────────────┘   └────────────┐
    ┌─────────────┐               ┌─────────────┐
    │  Shard A    │               │  Shard B    │   …
-   │ users 1-N/2 │               │ users N/2+1│
+   │ users 1-N/2 │               │ users N/2+1 │
    └─────────────┘               └─────────────┘
 ```
 
