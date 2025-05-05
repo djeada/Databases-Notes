@@ -18,7 +18,7 @@ Imagine a phone book without any order; finding a person's number would require 
 
 #### How Indexes Work
 
-An index is typically implemented using a data structure like a B-tree or a hash table, which allows for rapid searching, insertion, and deletion of data. Here's a simple ASCII diagram to illustrate the concept:
+An index is typically implemented using a data structure like a B-tree or a hash table, which allows for rapid searching, insertion, and deletion of data. Here's a simple diagram to illustrate the concept:
 
 ```
 +-------------------------------------------+
