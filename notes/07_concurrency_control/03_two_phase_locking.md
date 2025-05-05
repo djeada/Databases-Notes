@@ -7,7 +7,7 @@ Two‑Phase Locking (2PL) is a **scheduling rule** built into database engines t
 Real‑World Analogy:
 
 ```
-┌── Growing Phase ────┐          ┌── Shrinking Phase ──┐
+┌── Growing Phase ─────┐         ┌── Shrinking Phase ──┐
 | Collect all library  |         | Start returning     |
 | books you need.      |  ===►   | books; you cannot   |
 | No returns allowed   |         | borrow more.        |
