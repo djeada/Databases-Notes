@@ -105,9 +105,9 @@ EXPLAIN SELECT * FROM orders WHERE order_date = '2025-05-05';
 ->  Seq Scan on orders_2025  (cost=0.00..35.50 rows=5 width=...)
 ```
 
-* **Planner insight:** Instead of scanning every partition in turn, PostgreSQL’s planner “prunes” away all that don’t match the `WHERE` clause at plan time.
-* **Only one scan:** You see only `orders_2025` in the plan, proving that lookups on `orders` automatically get optimized to target just the relevant partition.
-* **Performance gain:** Partition pruning can drastically reduce I/O and CPU work, especially when you have many partitions (e.g., one per month or year).
+* Instead of scanning every partition in turn, PostgreSQL’s planner “prunes” away all that don’t match the `WHERE` clause at plan time.
+* You see only `orders_2025` in the plan, proving that lookups on `orders` automatically get optimized to target just the relevant partition.
+* Partition pruning can drastically reduce I/O and CPU work, especially when you have many partitions (e.g., one per month or year).
 
 | Keyword / Option           | Meaning                                              | Typical Use-Case                                             |
 | -------------------------- | ---------------------------------------------------- | ------------------------------------------------------------ |
