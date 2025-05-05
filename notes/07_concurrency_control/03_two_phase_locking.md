@@ -7,7 +7,7 @@ Two‑Phase Locking (2PL) is a **scheduling rule** built into database engines t
 Real‑World Analogy:
 
 ```
-┌── Growing Phase ────┐         ┌── Shrinking Phase ──┐
+┌── Growing Phase ────┐          ┌── Shrinking Phase ──┐
 | Collect all library  |         | Start returning     |
 | books you need.      |  ===►   | books; you cannot   |
 | No returns allowed   |         | borrow more.        |
@@ -30,6 +30,7 @@ Before diving into lock types and variations, it helps to see **where 2-phase lo
 The timeline below exaggerates every step so the **lock-point** is unmistakable.
 
 ```text
+#
            ┌────────────────────────────── Growing Phase ───────────────────────────────┐               ┌──────────── Shrinking Phase ───────────┐
 Timeline ► │  S(A)  │  X(B)  │  X(C)  │  S(D)  │  X(E)  │                               │  ----╂----    │  rel S(A) │  rel X(B) │  … │  rel X(E) │
            └────────┴────────┴────────┴────────┴────────┴── lock-point ─────────────────┘               └────────────────────────────────────────┘
@@ -50,15 +51,15 @@ The **clean hand‑off** between your code and the engine is what makes two‑ph
 * The **database engine** is the **stage manager**—it controls access to the set so no actor bumps into another mid‑scene.
 
 ```
-  ┌───────────────────────┐          BEGIN / COMMIT / ROLLBACK
-  │   Application Code    │ ───────────────────────────────────▶  starts & ends txn
-  └───────────────────────┘                                      (defines scope)
-          ▲   SQL stmts / lock hints                               │
-          │                                                        ▼
-  ┌───────────────────────┐     grants / blocks        ┌──────────────────────────┐
-  │  DB Engine Scheduler  │◄───────────────────────────│  Lock Manager (2PL)      │
-  │   (2PL enforcer)      │                            └──────────────────────────┘
-  └───────────────────────┘              protects data while letting others run
+┌───────────────────────┐          BEGIN / COMMIT / ROLLBACK
+│   Application Code    │ ───────────────────────────────────▶  starts & ends txn
+└───────────────────────┘                                      (defines scope)
+           ▲   SQL stmts / lock hints                               │
+           │                                                        ▼
+┌───────────────────────┐     grants / blocks        ┌──────────────────────────┐
+│  DB Engine Scheduler  │◄───────────────────────────│  Lock Manager (2PL)      │
+│   (2PL enforcer)      │                            └──────────────────────────┘
+└───────────────────────┘              protects data while letting others run
 ```
 
 | What needs to happen?      | **Handled inside the engine**                       | **What *you* still write**                                        |
@@ -91,7 +92,7 @@ Why it works: if every transaction follows that pattern, their critical sections
 > Keep **X** locks to the very end, release **S** locks earlier. Default in PostgreSQL, MySQL‑InnoDB, SQL Server
 
 ```
- time ► ─────────────────────────────────────────────────────────────────────────────→
+time ► ─────────────────────────────────────────────────────────────────────────────→
               growing phase                                  shrinking phase
 Row A   S: ███████████▌ release
 Row A   X:            ████████████████████████████████████┐
@@ -107,7 +108,7 @@ Row B   X:            ███████████████████
 > Hold **all** locks (shared & exclusive) until end of transaction.
 
 ```
- time ► ─────────────────────────────────────────────────────────────────────────────→
+time ► ─────────────────────────────────────────────────────────────────────────────→
 Row A   S: █████████████████████████████████████████████████┐
 Row A   X:           ███████████████████████████████████████│
 Row B   S:      ████████████████████████████████████████████│  COMMIT ─► drop every lock
@@ -121,7 +122,7 @@ Row B   X:                  █████████████████
 > Grab **every** lock you will ever need **before** doing any work. If a lock is unavailable, wait. Deadlock‑free at the cost of longer initial waits.
 
 ```
- time ► ─────────────────────────────────────────────────────────────────────────────→
+time ► ─────────────────────────────────────────────────────────────────────────────→
 try‑lock {A,B,C} ─╢ acquired ─┬────────────── work (reads/writes) ─────────────┬── COMMIT ─► release all
                             Row A X: ██████████████████████████████████████████
                             Row B X: ██████████████████████████████████████████
