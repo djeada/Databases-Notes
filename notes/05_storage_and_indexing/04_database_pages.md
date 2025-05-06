@@ -26,7 +26,7 @@ Here's a simple illustration of a database page:
 
 In this diagram, the page consists of a header containing metadata, followed by multiple records and any remaining free space.
 
-### Key Characteristics of Database Pages
+### Characteristics of Database Pages
 
 #### Fixed Size
 
@@ -87,12 +87,15 @@ The efficiency of this process depends on factors like page size, data organizat
 
 Choosing the appropriate page size can significantly affect database performance:
 
-- **Larger Pages**:
-  - Reduce the number of I/O operations for large, sequential reads.
-  - May lead to increased memory consumption and potential waste of space due to partially filled pages.
-- **Smaller Pages**:
-  - Minimize wasted space and can be more efficient for random access patterns.
-  - Might require more I/O operations to read the same amount of data.
+**Larger Pages**:
+
+- Reduce the number of I/O operations for large, sequential reads.
+- May lead to increased memory consumption and potential waste of space due to partially filled pages.
+
+**Smaller Pages**:
+  
+- Minimize wasted space and can be more efficient for random access patterns.
+- Might require more I/O operations to read the same amount of data.
 
 Selecting the right page size involves balancing these trade-offs based on the specific workload and access patterns of your application.
 
@@ -100,70 +103,15 @@ Selecting the right page size involves balancing these trade-offs based on the s
 
 A page split occurs when a page becomes full, and the DBMS needs to split it to accommodate new data:
 
-- **Consequences of Page Splits**:
-  - Can lead to fragmentation, where related data is spread across non-contiguous pages.
-  - May degrade performance due to increased I/O operations and cache misses.
+**Consequences of Page Splits**:
+
+- Can lead to fragmentation, where related data is spread across non-contiguous pages.
+- May degrade performance due to increased I/O operations and cache misses.
 
 To mitigate the negative effects of page splits:
 
 - **Proper Indexing**: Designing efficient indexes can reduce the likelihood of page splits by organizing data more effectively.
 - **Fill Factor Adjustment**: Setting an appropriate fill factor reserves space within pages for future growth, delaying the need for splits.
-
-### Practical Examples and Commands
-
-#### Viewing Page Information in PostgreSQL
-
-You can inspect page-level details using PostgreSQL's `pageinspect` extension:
-
-1. **Enable the Extension**:
-
-   ```sql
-   CREATE EXTENSION pageinspect;
-   ```
-
-2. **Examine a Specific Page**:
-
-   ```sql
-   SELECT * FROM heap_page_items(get_raw_page('your_table', 0));
-   ```
-
-   This command retrieves information about the first page (`0`) of `your_table`.
-
-**Interpreting the Output**:
-
-- **Item Offset**: Position of the record within the page.
-- **Item Length**: Size of the record in bytes.
-- **Heap Tuple Header**: Metadata about the individual record.
-- **Data**: Actual content of the record.
-
-Understanding this output helps in analyzing how data is stored and identifying potential space utilization issues.
-
-#### Monitoring Page Splits in SQL Server
-
-In Microsoft SQL Server, you can track page splits using the `sys.dm_db_index_operational_stats` dynamic management view:
-
-```sql
-SELECT 
-    OBJECT_NAME(object_id) AS TableName,
-    index_id,
-    leaf_insert_count,
-    leaf_delete_count,
-    leaf_update_count,
-    leaf_page_split_count
-FROM sys.dm_db_index_operational_stats(DB_ID(), NULL, NULL, NULL);
-```
-
-**Output Interpretation**:
-
-- **TableName**: Name of the table being monitored.
-- **Index_ID**: Identifier for the index within the table.
-- **Leaf Page Split Count**: Number of times a leaf-level page split has occurred.
-
-Monitoring these metrics helps in diagnosing performance issues related to page splits and guiding optimization efforts.
-
-### ASCII Diagrams Illustrating Concepts
-
-#### Page Split Visualization
 
 Understanding how page splits affect data storage can be visualized as:
 
@@ -203,3 +151,52 @@ Page 1:                        Page 2:
 ```
 
 The data is split between two pages, which can increase the number of I/O operations needed to retrieve related records.
+
+
+### Practical Examples and Commands
+
+#### Viewing Page Information in PostgreSQL
+
+You can inspect page-level details using PostgreSQL's `pageinspect` extension:
+
+I. **Enable the Extension**:
+
+```sql
+CREATE EXTENSION pageinspect;
+```
+
+II. **Examine a Specific Page**:
+
+```sql
+SELECT * FROM heap_page_items(get_raw_page('your_table', 0));
+```
+
+This command retrieves information about the first page (`0`) of `your_table`.
+
+- **Item Offset**: Position of the record within the page.
+- **Item Length**: Size of the record in bytes.
+- **Heap Tuple Header**: Metadata about the individual record.
+- **Data**: Actual content of the record.
+
+#### Monitoring Page Splits in SQL Server
+
+In Microsoft SQL Server, you can track page splits using the `sys.dm_db_index_operational_stats` dynamic management view:
+
+```sql
+SELECT 
+    OBJECT_NAME(object_id) AS TableName,
+    index_id,
+    leaf_insert_count,
+    leaf_delete_count,
+    leaf_update_count,
+    leaf_page_split_count
+FROM sys.dm_db_index_operational_stats(DB_ID(), NULL, NULL, NULL);
+```
+
+**Output Interpretation**:
+
+- **TableName**: Name of the table being monitored.
+- **Index_ID**: Identifier for the index within the table.
+- **Leaf Page Split Count**: Number of times a leaf-level page split has occurred.
+
+Monitoring these metrics helps in diagnosing performance issues related to page splits and guiding optimization efforts.
