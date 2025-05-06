@@ -4,7 +4,7 @@ Database replication is the process of copying and maintaining database objects,
 
 ### Understanding Database Replication
 
-To grasp how database replication works, it's helpful to visualize the architecture that synchronizes data across servers. Below is an ASCII diagram illustrating a basic replication setup:
+To grasp how database replication works, it's helpful to visualize the architecture that synchronizes data across servers. Below is a diagram illustrating a basic replication setup:
 
 ```
 +------------------+
@@ -55,8 +55,6 @@ When a client initiates a write operation, the process unfolds as follows:
 3. **Acknowledgment from Replicas**: Each replica writes the data to its storage and sends an acknowledgment back to the primary server.
 4. **Transaction Completion**: Upon receiving acknowledgments from all replicas, the primary server commits the transaction, confirming that the data is safely stored across all servers.
 
-##### Illustrative Diagram
-
 ```
 Client Write Request
           |
@@ -99,8 +97,6 @@ The process involves the following steps:
 2. The primary server writes the data to its storage and commits the transaction without waiting for replicas.
 3. The changes are queued and sent to the replicas asynchronously, allowing the primary server to handle other operations without delay.
 
-##### Illustrative Diagram
-
 ```
 Client Write Request
           |
@@ -138,8 +134,6 @@ The snapshot replication process includes:
 2. The snapshot is sent to the replicas.
 3. Each replica applies the snapshot, updating its data by overwriting previous information.
 
-##### Illustrative Diagram
-
 ```
 +---------------------+
 |   Primary Server    |
@@ -168,8 +162,6 @@ The process unfolds as follows:
 1. Clients can perform write operations on any of the primary servers.
 2. Each server replicates its changes to the other primary servers.
 3. Mechanisms are in place to handle conflicts that arise from concurrent modifications to the same data on different servers.
-
-##### Illustrative Diagram
 
 ```
 +---------------------+       +---------------------+
