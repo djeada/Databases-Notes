@@ -4,7 +4,7 @@ Master-Standby replication is a widely adopted database replication topology whe
 
 ### Understanding the Architecture
 
-To visualize how Master-Standby replication works, consider the following ASCII diagram:
+To visualize how Master-Standby replication works, consider the following diagram:
 
 ```
 #
