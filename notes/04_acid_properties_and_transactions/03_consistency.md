@@ -13,7 +13,7 @@ Valid State before Transaction
             | Transaction executes
             V
  +-------------------------+
- |  Transaction Processing  |
+ |  Transaction Processing |
  |   (apply operations,    |
  |  enforce constraints)   |
  +------------+------------+
