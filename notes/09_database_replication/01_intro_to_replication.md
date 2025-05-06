@@ -195,7 +195,7 @@ Adopting database replication offers several advantages for organizations. It pr
 
 Despite its benefits, database replication introduces several challenges that organizations must address. Maintaining data consistency across all replicas can be complex, especially in asynchronous or multi-master setups. Managing conflicting updates requires advanced conflict resolution strategies to prevent data integrity issues. Network delays can impact the speed of data replication, leading to latency between the primary server and replicas. The replication process adds complexity to the system, necessitating more sophisticated monitoring and maintenance practices. Additionally, replicating data consumes extra CPU, memory, and storage resources on both primary and replica servers.
 
-### Key Considerations for Implementing Database Replication
+### Considerations for Implementing Database Replication
 
 When setting up database replication, several factors need careful consideration to ensure a successful implementation.
 
