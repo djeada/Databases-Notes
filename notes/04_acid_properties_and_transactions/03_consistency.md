@@ -2,7 +2,7 @@
 
 Consistency is a principle in database systems that ensures data remains accurate, valid, and reliable throughout all transactions. When a transaction occurs, the database moves from one consistent state to another, always adhering to the predefined rules and constraints set within the database schema. This means that any data written to the database must satisfy all integrity constraints, such as data types, unique keys, and relationships.
 
-Imagine the database as a meticulously organized library. Every book (data entry) has a specific place, and any new book added must fit into the system without disrupting the existing order. Consistency ensures that the library remains organized and every book is where it should be, both before and after any changes.
+Imagine the database as an organized library. Every book (data entry) has a specific place, and any new book added must fit into the system without disrupting the existing order. Consistency ensures that the library remains organized and every book is where it should be, both before and after any changes.
 
 ```
 Valid State before Transaction
