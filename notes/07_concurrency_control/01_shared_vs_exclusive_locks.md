@@ -3,8 +3,6 @@
 Shared and exclusive locks are used in database systems for managing concurrent access to data. They ensure that transactions occur without conflicting with each other, maintaining the integrity and consistency of the database.
 
 ```
-Illustration of Lock Types:
-
 [Resource: Data Item X]
    |
    |-- Transaction A wants to READ --> Acquires SHARED LOCK
