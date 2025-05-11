@@ -195,11 +195,11 @@ For example, a table might first be range-partitioned by date and then hash-part
 
 ### Example Table: Historical Stock Prices
 
-Suppose you store daily OHLC (Open-High-Low-Close) data for multiple tickers. As years of data accumulate, full-table scans slow down analytics and archiving. Partitioning by date (e.g. by year or month) keeps each chunk manageable.
+When managing large volumes of time-series financial data, partitioning can dramatically improve query performance and maintenance operations. Below is an example of how to set up a partitioned MySQL/MariaDB table for daily OHLC (Open-High-Low-Close) stock prices by year.
 
 #### Create the Partitioned Table
 
-We’ll partition by **RANGE** on the integer expression `YEAR(trade_date)`, one partition per calendar year plus a catch-all for the future.
+Begin by defining your main table schema and specifying a partitioning strategy. Here we use **RANGE** partitioning on the integer expression `YEAR(trade_date)`, creating one partition per calendar year plus a catch-all for future dates.
 
 ```sql
 DROP TABLE IF EXISTS stock_prices;
@@ -225,18 +225,20 @@ PARTITION BY RANGE ( YEAR(trade_date) ) (
 );
 ```
 
-* **Partition key**: `YEAR(trade_date)` must appear in every UNIQUE/PRIMARY index (it’s in the PK).
-* **Partitions**: p2018…p2024 cover past years; **p\_future** for 2025 onward.
+* **Partition key**: `YEAR(trade_date)` must appear in every UNIQUE/PRIMARY index (it’s already in the primary key).
+* **Partitions**: p2018…p2024 cover past years; **p_future** holds any dates from 2025 onward.
 
 #### SHOW CREATE TABLE
+
+After creating the table, verify that the partitioning clause is in place by inspecting the full DDL. This ensures your partition definitions are correctly applied.
 
 ```sql
 SHOW CREATE TABLE stock_prices\G
 ```
 
-Confirms your `PARTITION BY RANGE` clause.
+#### INFORMATION_SCHEMA.PARTITIONS
 
-#### INFORMATION\_SCHEMA.PARTITIONS
+MySQL exposes partition metadata in `INFORMATION_SCHEMA.PARTITIONS`. Querying this view lets you confirm partition names, methods, expressions, and boundary values.
 
 ```sql
 SELECT
@@ -249,15 +251,15 @@ WHERE TABLE_SCHEMA = DATABASE()
   AND TABLE_NAME = 'stock_prices';
 ```
 
-| PARTITION\_NAME | METHOD | EXPRESSION         | DESCRIPTION |
+| PARTITION_NAME | METHOD | EXPRESSION         | DESCRIPTION |
 | --------------- | ------ | ------------------ | ----------- |
 | p2018           | RANGE  | YEAR(`trade_date`) | 2019        |
 | …               | …      | …                  | …           |
-| p\_future       | RANGE  | YEAR(`trade_date`) | MAXVALUE    |
+| p_future       | RANGE  | YEAR(`trade_date`) | MAXVALUE    |
 
 #### Querying with Partition Pruning
 
-Partition pruning means MariaDB only reads partitions relevant to your filter.
+Partition pruning tells the optimizer to scan only relevant partitions based on the `WHERE` clause. This avoids full-table scans and speeds up queries dramatically for time-restricted filters.
 
 ```sql
 EXPLAIN PARTITIONS
@@ -267,11 +269,11 @@ WHERE trade_date BETWEEN '2022-01-01' AND '2022-12-31'
   AND ticker = 'AAPL';
 ```
 
-In the `EXPLAIN` output you’ll see `partitions: p2022`—only that partition is scanned, then the `ticker='AAPL'` filter applies within it.
+The `EXPLAIN` output will show `partitions: p2022`, indicating only that partition is scanned before applying the `ticker='AAPL'` filter.
 
 #### Adding Next Year’s Partition
 
-At the start of 2025:
+As the calendar rolls over, you need to split the catch-all partition to include a new yearly partition and maintain the future placeholder. Execute this once at the start of each year.
 
 ```sql
 ALTER TABLE stock_prices
@@ -281,25 +283,21 @@ ALTER TABLE stock_prices
   );
 ```
 
-This splits `p_future` into `p2025` and an updated catch-all.
-
 #### Dropping an Out-of-Scope Year
 
-To remove data before 2018 in one instant operation:
+To remove historical data in bulk (e.g., before 2018), drop the corresponding partition. This operation is instantaneous and avoids expensive row-by-row deletes.
 
 ```sql
 ALTER TABLE stock_prices
   DROP PARTITION p2018;
 ```
 
-Dropping the partition deletes all its rows without row-by-row deletes—very fast.
-
 #### Automating with EVENTS
 
-You can schedule two MariaDB EVENTS:
+MariaDB EVENTS can execute partition management tasks on a schedule, reducing manual overhead. Here are two example events:
 
-1. **Add new year’s partition** on January 1st each year.
-2. **Drop partitions older than N years** (e.g. keep only the last 7 years).
+1. **Add new year’s partition** every January 1st.
+2. **Drop partitions older than N years** (e.g., keep only the last 7 years), implemented via a stored procedure.
 
 ```sql
 -- 1. Add partition
@@ -335,19 +333,19 @@ DO
 
 To make the most of partitioning, it's important to consider your data characteristics and query patterns.
 
-- Choose a partitioning method that aligns with your data and how it's accessed. For time-series data, range partitioning by date might be most effective. For data without a natural partitioning key, hash partitioning could be more suitable.
-- Regularly review your partitioning scheme to ensure it continues to meet performance goals. As data grows and access patterns change, you may need to adjust partitions or redistribute data.
-- Design queries to take advantage of partition pruning, where the database engine skips irrelevant partitions. This can significantly improve query performance by reducing the amount of data scanned.
-- Periodically reorganize or rebuild partitions as part of routine maintenance. This helps optimize storage and can improve performance, especially if partitions become unbalanced over time.
-* **Include partitioning key in all UNIQUE/PK** definitions.
-* **Avoid non-deterministic functions** on the partition key in WHERE clauses.
-* **Balance partition size**: If a year’s data grows too large, consider monthly partitions:
+* Choose a partitioning strategy that fits your data and access patterns (e.g., range-by-date for time-series, hash for unkeyed data).
+* Include the partitioning key in all PRIMARY KEY and UNIQUE constraints.
+* Avoid non-deterministic functions on the partition key in WHERE clauses to enable pruning.
+* Write queries to leverage partition pruning so the engine skips irrelevant partitions.
+* Verify pruning with `EXPLAIN PARTITIONS` whenever you introduce new filters.
+* Monitor your partitioning scheme and adjust or redistribute partitions as data volume and access patterns evolve.
+* Periodically reorganize or rebuild partitions to prevent imbalance and optimize storage.
+* Balance partition sizes—if annual data becomes too large, switch to monthly ranges, for example:
 
-  ```sql
-  PARTITION BY RANGE (TO_DAYS(trade_date)) (
-    PARTITION p2024_01 VALUES LESS THAN (TO_DAYS('2024-02-01')),
-    PARTITION p2024_02 VALUES LESS THAN (TO_DAYS('2024-03-01')),
-    … 
-  );
-  ```
-* **Test EXPLAIN PARTITIONS** whenever you add new filters to ensure pruning works.
+```sql
+PARTITION BY RANGE (TO_DAYS(trade_date)) (
+  PARTITION p2024_01 VALUES LESS THAN (TO_DAYS('2024-02-01')),
+  PARTITION p2024_02 VALUES LESS THAN (TO_DAYS('2024-03-01')),
+  …
+);
+```
