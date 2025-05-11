@@ -1,6 +1,6 @@
 ## Shared and Exclusive Locks
 
-Shared and exclusive locks are crucial in database systems for managing concurrent access to data. They ensure that transactions occur without conflicting with each other, maintaining the integrity and consistency of the database.
+Shared and exclusive locks are used in database systems for managing concurrent access to data. They ensure that transactions occur without conflicting with each other, maintaining the integrity and consistency of the database.
 
 ```
 Illustration of Lock Types:
