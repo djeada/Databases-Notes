@@ -44,8 +44,6 @@ To visualize how caching fits into an application architecture, consider the fol
                  Return Data to Client
 ```
 
-In this diagram:
-
 - The client application requests data.
 - The cache checks if it contains the requested data.
 - If the data is found (cache hit), it is served directly from the cache to the client.
@@ -112,8 +110,6 @@ def get_products():
     return jsonify({'source': source, 'products': products})
 ```
 
-In this example:
-
 - The application attempts to retrieve the list of products from the cache using a unique cache key.
 - If the data is not in the cache (cache miss), it queries the database, stores the result in the cache, and then serves the data.
 - If the data is in the cache (cache hit), it serves the data directly from the cache, reducing database load.
@@ -151,8 +147,6 @@ public class UserService {
     }
 }
 ```
-
-In this example:
 
 - The `getUserById` method first checks if the user object is in the cache.
 - If the user is not cached, it retrieves the user from the database, caches the object, and then returns it.
