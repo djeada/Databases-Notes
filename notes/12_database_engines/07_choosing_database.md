@@ -120,8 +120,8 @@ Vertical scaling, or scaling up, increases the capacity of a single node by addi
       │   upgrade
       ▼
 +------------+
-| 32 vCPU,  |
-| 256 G RAM |
+| 32 vCPU,   |
+| 256 G RAM  |
 +------------+
 ```
 
@@ -307,6 +307,7 @@ Alerts (SLO burn) ─► PagerDuty
 Answer the questions in this one diagram—then jump straight to the matching decision tree.
 
 ```
+#
                        ┌────────────────────────────────────────┐
                        │   What does your application store?    │
                        └────────────────────────────────────────┘
@@ -331,6 +332,7 @@ Answer the questions in this one diagram—then jump straight to the matching de
 ####  Structured Data
 
 ```
+#
                        ┌───────────────┐
                        │ Structured    │
                        └───────────────┘
@@ -350,9 +352,10 @@ Answer the questions in this one diagram—then jump straight to the matching de
 
 *Rule of thumb*: start simple (row-store) until analytics queries dominate or data tops \~1 TB.
 
-#### 2  Unstructured Data
+#### Unstructured Data
 
 ```
+#
                        ┌─────────────────────────────┐
                        │       Unstructured          │
                        └─────────────────────────────┘
