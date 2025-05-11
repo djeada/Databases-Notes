@@ -65,120 +65,133 @@ Despite its advantages, Master-Standby replication presents some challenges:
 
 PostgreSQL offers built-in support for streaming replication, making it a suitable choice for implementing Master-Standby replication. Below is a practical example of how to set up this replication using PostgreSQL.
 
+```text
+Topology:
+                           ┌──────────────────────────┐
+                           │  ┌────────────────────┐  │
+                           │  │  Master / Primary  │  │
+                           │  │  Node-1 10.0.0.10  │  │
+                           │  └─────────┬──────────┘  │
+                           │            │             │
+                           │   (async or synchronous) │
+                           │            │             │
+   ┌───────────────────────▼────────────┴─────────────▼────────────────────┐
+   │                                                                       │
+   │  ┌────────────────────┐                       ┌────────────────────┐  │
+   │  │  Replica-1         │                       │  Replica-2         │  │
+   │  │  Node-2 10.0.0.11  │      Streaming        │  Node-3 10.0.0.12  │  │
+   │  │  (Hot-Standby)     │ <--- Replication ---> │  (Hot-Standby)     │  │
+   │  └────────────────────┘                       └────────────────────┘  │
+   └───────────────────────────────────────────────────────────────────────┘
+```
+
+> **Legend** – We will call the nodes **Node-1 (master)**, **Node-2 (replica-1)** and **Node-3 (replica-2)** throughout.
+> Keep the diagram handy: configuration snippets below reference the IPs exactly as shown.
+
 #### Prerequisites
 
-Before beginning the setup, ensure the following:
+- **Three PostgreSQL instances installed** (same major version) on *10.0.0.10*, *10.0.0.11*, *10.0.0.12*.
+- **Network reachability** – TCP 5432 open bidirectionally (replicas must also talk *back* to the master for `pg_basebackup`).
+- **Time synchronisation** – enable `chrony`/`ntpd`; replication breaks if clocks drift.
+- **Adequate resources** – WAL can spike; leave at least 30 % free disk on the master.
+- **Linux tuning (recommended)** – increase `vm.swappiness = 1`, set `kernel.shmmax` ≥ shared\_buffers, etc.
 
-- PostgreSQL servers should be set up with at least one master server and one or more standby servers to establish a proper replication setup.  
-- The network configuration must allow communication between the servers, ensuring that the required ports for PostgreSQL replication are open and accessible.  
-- All servers involved in the setup should run compatible versions of PostgreSQL, ideally the same version, to maintain consistency and avoid compatibility problems.  
-- The servers should have sufficient hardware resources, including CPU, memory, and disk space, to handle the expected workload and accommodate replication overhead.  
+#### Configuring Node-1 (Master)
 
-#### Configuring the Master Server
+Before setting up physical replication, you need to prepare the primary server (Node-1) by adjusting its configuration to enable write-ahead logging (WAL) streaming and accept connections from standby servers. This section walks you through the required changes to PostgreSQL's configuration files and the creation of a replication role.
 
-##### Editing `postgresql.conf`
+I. Config file
 
-Locate and edit the `postgresql.conf` file, typically found in the data directory (e.g., `/var/lib/pgsql/data/` or `/etc/postgresql/`). Modify the following parameters to enable replication:
-
-```conf
-# Enable Write-Ahead Logging (WAL) level suitable for replication
-wal_level = replica
-
-# Allow the master to send WAL data to standby servers
-max_wal_senders = 3
-
-# Set the maximum number of replication slots (optional)
-max_replication_slots = 3
-
-# Retain WAL data to assist standby synchronization
-wal_keep_size = 128MB
-```
-
-##### Editing `pg_hba.conf`
-
-Update the `pg_hba.conf` file to allow the standby servers to connect for replication. Add the following line:
+As the master, Node-1 must generate and retain sufficient WAL segments for standby servers to consume. Update `postgresql.conf` with appropriate settings.
 
 ```conf
-# TYPE  DATABASE        USER            ADDRESS                 METHOD
-
-# Allow replication connections from standby servers
-host    replication     replicator      standby_ip/32           md5
+# Enable WAL suitable for physical replication
+wal_level               = replica          # 'logical' if you also need logical slots
+# Allow enough WAL sender processes for your standby servers
+max_wal_senders         = 10               # >= number of stand-bys + maintenance head-room
+# Maintain replication slots to prevent WAL removal too early
+max_replication_slots   = 10               # same logic as above
+# Keep enough WAL files to let standbys catch up without recycling
+wal_keep_size           = 512MB            # prevents WAL recycling before stand-bys catch up
+# Listen only on the master’s address (or '*' to trust all)
+listen_addresses        = '10.0.0.10'      # or '*' if all IPs are trusted
+# Choose commit behavior: local yields speed; remote_apply ensures sync
+synchronous_commit      = local            # change to 'remote_apply' for synchronous sets
 ```
 
-Replace `replicator` with the username of the replication role and `standby_ip/32` with the IP address of the standby server.
+> **Tip** – From v15 onward you can use `min_wal_size`/`max_wal_size` instead of a fixed `wal_keep_size` to auto-scale WAL retention.
 
-##### Creating a Replication User
+II. `pg_hba.conf`
 
-Log into the PostgreSQL prompt on the master server and create a user for replication:
+Standby servers must be allowed to connect for replication. Add entries to `pg_hba.conf` specifying the replication database, user, and host addresses.
+
+```conf
+# TYPE  DATABASE        USER        ADDRESS            METHOD
+host    replication     replicator  10.0.0.11/32       md5
+host    replication     replicator  10.0.0.12/32       md5
+```
+
+III. Create the replication role
+
+A dedicated role with replication privileges is required for streaming WAL to standbys. Execute the following SQL on the master:
 
 ```sql
-CREATE ROLE replicator WITH REPLICATION LOGIN ENCRYPTED PASSWORD 'your_password';
+CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'S3cUr3P@ss!';
 ```
 
-This user will be used by the standby servers to authenticate with the master.
+IV. Reload / restart Node-1
 
-##### Restarting PostgreSQL
-
-Restart the PostgreSQL service on the master server to apply the configuration changes:
+After updating configuration files and creating the role, reload or restart PostgreSQL to apply changes.
 
 ```bash
-# For Linux systems using systemd
 sudo systemctl restart postgresql
 ```
 
-#### Configuring the Standby Server
+#### Configuring Node-2 and Node-3 (Replicas)
 
-##### Stopping the PostgreSQL Service
+Once the master is prepared, each standby (Node-2 and Node-3) needs to be bootstrapped from a base backup and configured to stream WAL. You will perform the same steps on both replicas, adjusting only the connection details as needed.
 
-Ensure that the PostgreSQL service on the standby server is stopped before proceeding:
+I. Stop PostgreSQL
+
+Ensure PostgreSQL is not running on the replica before taking the base backup or restoring data.
 
 ```bash
 sudo systemctl stop postgresql
 ```
 
-##### Creating a Base Backup from the Master
+II. Take a base-backup from the master
 
-Use the `pg_basebackup` utility to create a base backup of the master server on the standby server:
-
-```bash
-pg_basebackup -h master_ip -D /var/lib/pgsql/data/ -U replicator -W -P --wal-method=stream
-```
-
-| Option                     | Description                                   |
-|----------------------------|-----------------------------------------------|
-| `-h master_ip`         | The IP address of the master server.         |
-| `-D /var/lib/pgsql/data/` | The data directory on the standby server.   |
-| `-U replicator`       | The replication user created earlier.        |
-| `-W`                   | Prompt for the password.                     |
-| `--wal-method=stream`  | Stream WAL files during the backup.          |
-
-##### Creating the `standby.signal` File
-
-For PostgreSQL versions 12 and above, create an empty file named `standby.signal` in the data directory to indicate that this server should start in standby mode:
+Use `pg_basebackup` to clone the primary’s data directory, stream WAL, and automatically write recovery settings.
 
 ```bash
-touch /var/lib/pgsql/data/standby.signal
+sudo -u postgres pg_basebackup \
+  -h 10.0.0.10 \
+  -D /var/lib/pgsql/15/data \
+  -U replicator \
+  -W -P --wal-method=stream --write-recovery-conf
 ```
 
-For versions before 12, a `recovery.conf` file is required with the necessary parameters.
+*The `--write-recovery-conf` switch auto-creates `standby.signal` and fills in `primary_conninfo`.*
 
-##### Editing `postgresql.conf` on the Standby
+III. (If you skipped `--write-recovery-conf`) edit `postgresql.conf`
 
-Set the following parameters in the standby server's `postgresql.conf` file:
+Manually enable hot standby mode and configure connection to the master, specifying the replication slot unique to each standby.
 
 ```conf
-# Enable read-only queries on standby
-hot_standby = on
-
-# Configure connection information to the primary server
-primary_conninfo = 'host=master_ip port=5432 user=replicator password=your_password'
+hot_standby          = on
+primary_conninfo     = 'host=10.0.0.10 port=5432 user=replicator password=S3cUr3P@ss!'
+primary_slot_name    = 'node2_slot'     # unique per standby (see slots below)
 ```
 
-Replace `master_ip` with the IP address of the master server and `your_password` with the password for the replication user.
+If needed, create the standby signal file to trigger recovery mode (PostgreSQL v12+):
 
-##### Starting the PostgreSQL Service
+```bash
+touch /var/lib/pgsql/15/data/standby.signal
+```
 
-Start the PostgreSQL service on the standby server:
+IV. Start the replica
+
+With configuration in place, start PostgreSQL on the standby to begin streaming WAL from the master.
 
 ```bash
 sudo systemctl start postgresql
@@ -186,79 +199,80 @@ sudo systemctl start postgresql
 
 #### Verifying Replication
 
-##### Checking Replication Status on the Master
+After configuring both master and standbys, you should verify that WAL streaming is active and data changes propagate as expected. This section covers querying replication status and performing a simple functional test.
 
-Connect to the master server and execute the following SQL query to check the replication status:
+I. On **Node-1**
+
+Check the replication status view on the master to confirm standbys are connected and streaming.
 
 ```sql
-SELECT client_addr, state
-FROM pg_stat_replication;
+SELECT client_addr, state, sync_state
+FROM   pg_stat_replication;
 ```
 
-This should display an entry for each standby server, indicating that they are connected and replicating.
+You should see rows for **10.0.0.11** and **10.0.0.12** with `state = streaming`. If you configured synchronous replication (`synchronous_standby_names`, `synchronous_commit = remote_apply`) the `sync_state` column will be `sync` for the chosen stand-bys.
 
-##### Testing Data Replication
+II. Functional test
 
-On the master server, create a test table and insert data:
+Perform a simple create-and-read test to confirm that changes on the master appear on the replica almost immediately.
 
 ```sql
--- Create a test table
+-- Master (10.0.0.10)
 CREATE TABLE replication_test (id SERIAL PRIMARY KEY, data TEXT);
+INSERT INTO replication_test (data) VALUES ('Hello replicas');
 
--- Insert sample data
-INSERT INTO replication_test (data) VALUES ('Test data');
+-- Replica (10.0.0.11 or .12)
+SELECT * FROM replication_test;  -- should return 1 row almost instantly
 ```
 
-On the standby server, query the test table to confirm that the data has been replicated:
+#### Performing a Fail-over
 
-```sql
--- Select data from the replicated table
-SELECT * FROM replication_test;
-```
+In a production environment, you need a plan for promoting a standby to master when the primary fails. This section outlines a manual fail-over process, though automation tools can streamline detection and promotion.
 
-If the data appears on the standby server, replication is working correctly.
+I. **Detect failure** of Node-1 (often automated with Patroni, pg\_auto\_failover, etc.).
 
-#### Performing a Failover Procedure
-
-In the event that the master server fails, you can promote a standby server to become the new master.
-
-##### Promoting the Standby to Master
-
-On the standby server, run the following command to promote it:
+II. **Promote** Node-2 (example)
 
 ```bash
-pg_ctl promote -D /var/lib/pgsql/data/
+sudo -u postgres pg_ctl promote -D /var/lib/pgsql/15/data
 ```
 
-Alternatively, you can create a `promote.signal` file in the data directory:
+or
 
 ```bash
-touch /var/lib/pgsql/data/promote.signal
+touch /var/lib/pgsql/15/data/promote.signal
 ```
 
-This action transitions the standby server to accept write operations.
+III. **Redirect applications** to the new master (10.0.0.11).
 
-##### Updating Application Connections
+IV. **Re-configure the old master** (once repaired) as a replica: wipe its data dir, repeat the “Replica” steps, giving it a new slot (`node1_as_replica_slot`).
 
-Redirect your application's database connections to the new master server to resume normal operations.
+#### Optional: Replication Slots (Highly Recommended)
 
-##### Reconfiguring the Failed Master as a Standby (Optional)
+Replication slots ensure that WAL segments needed by a standby are retained on the master until they have been safely replayed. This prevents standbys from falling too far behind and losing data.
 
-Once the original master server is operational again, you can configure it as a standby to the new master, ensuring it remains part of the replication setup.
-
-#### Handling Replication Slots (Optional)
-
-Replication slots prevent the master server from discarding WAL segments until they have been received by all standby servers. This helps maintain synchronization, especially when standbys are temporarily disconnected.
-
-On the master server, create a replication slot for each standby:
+On **Node-1**:
 
 ```sql
-SELECT * FROM pg_create_physical_replication_slot('standby_slot');
+SELECT pg_create_physical_replication_slot('node2_slot');
+SELECT pg_create_physical_replication_slot('node3_slot');
 ```
 
-Modify the `primary_conninfo` on the standby server to include the slot name:
+Then, on each replica’s `postgresql.conf`, match the slot:
 
 ```conf
-primary_slot_name = 'standby_slot'
+primary_slot_name = 'node2_slot'   # or node3_slot accordingly
 ```
 
+Slots guarantee that WAL remains available until every replica has replayed it—preventing the dreaded “requested WAL segment has already been removed”.
+
+#### Extra Hardening & Performance Tweaks
+
+Beyond basic replication, additional configuration can improve resilience, disaster recovery capabilities, and performance. Consider these settings as part of a hardened, high-availability setup:
+
+| Setting                                 | Why it matters (refer to ASCII diagram for scope)                    |
+| --------------------------------------- | -------------------------------------------------------------------- |
+| `checkpoint_timeout = 15min`            | Longer intervals reduce I/O on Node-1; ensure replicas can catch up. |
+| `archive_mode = on` + `archive_command` | Off-site WAL shipping for disaster recovery beyond Node-2 & Node-3.  |
+| `hot_standby_feedback = on`             | Stops long-running queries on replicas from causing bloat on master. |
+| `backup_label` & `recovery_target`      | For point-in-time restores (PITR) if required.                       |
