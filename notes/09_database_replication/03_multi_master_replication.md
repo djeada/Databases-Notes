@@ -79,25 +79,26 @@ Handling conflicts is a critical aspect of multi-master replication. Various str
 Galera Cluster is a synchronous multi-master replication plugin for MySQL and MariaDB databases. It ensures that transactions are committed on all nodes simultaneously, providing strong data consistency across the cluster.
 
 ```text
-                        ┌────────────────────────────┐
-                        │  Galera  Quorum  Network   │
-                        └────────────┬───────────────┘
-                                     │ (TCP 4567)
-               ┌─────────────────────┴─────────────────────┐
-               │                                           │
-       ┌───────▼────────┐                         ┌────────▼────────┐
-       │  Node-1        │                         │  Node-2         │
-       │  10.0.0.20     │ ←───◀──────────────►───→│  10.0.0.21      │
-       │  (Master*)     │    │  synchronous   │   │  (Master*)      │
-       └───────┬────────┘    │  replication   │   └────────┬────────┘
-               │             │  (4567/4568/   │            │
-               │             │   4444)        │            │
-               │             ▼─────────────►──┘            │
-       ┌───────▼────────┐                         ┌────────▼────────┐
-       │  Node-3        │─────────────────────────► 10.0.0.22       │
-       │  10.0.0.22     │         (Full Mesh)     │  (Master*)      │
-       │  (Master*)     │                         │                 │
-       └────────────────┘                         └─────────────────┘
+#
+                ┌────────────────────────────┐
+                │  Galera  Quorum  Network   │
+                └────────────┬───────────────┘
+                             │ (TCP 4567)
+       ┌─────────────────────┴─────────────────────┐
+       │                                           │
+┌───────▼────────┐                         ┌────────▼────────┐
+│  Node-1        │                         │  Node-2         │
+│  10.0.0.20     │ ←───◀──────────────►───→│  10.0.0.21      │
+│  (Master*)     │    │  synchronous   │   │  (Master*)      │
+└───────┬────────┘    │  replication   │   └────────┬────────┘
+       │             │  (4567/4568/   │            │
+       │             │   4444)        │            │
+       │             ▼─────────────►──┘            │
+┌───────▼────────┐                         ┌────────▼────────┐
+│  Node-3        │─────────────────────────► 10.0.0.22       │
+│  10.0.0.22     │         (Full Mesh)     │  (Master*)      │
+│  (Master*)     │                         │                 │
+└────────────────┘                         └─────────────────┘
 ```
 
 > **Legend** – All three nodes act as *masters* (“writer-writers”).
