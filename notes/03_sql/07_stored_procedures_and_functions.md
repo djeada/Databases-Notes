@@ -1,234 +1,310 @@
-## Stored Procedures and Functions in SQL
+## Stored Procedures and Functions
 
-In the realm of relational databases, stored procedures and functions are powerful tools that allow developers to encapsulate reusable pieces of SQL code. They enhance performance, promote code reusability, and encapsulate business logic within the database itself. By understanding how to create and use stored procedures and functions, you can write more efficient and maintainable database applications.
+In the realm of relational databases, stored procedures and functions are powerful tools that allow developers to encapsulate reusable pieces of SQL code. They enhance performance by caching execution plans, promote code reusability, and keep business logic close to the data. By understanding how to create and use stored procedures and functions, you can write more efficient and maintainable database applications.
 
 ### Stored Procedures
 
-A **stored procedure** is a precompiled collection of SQL statements and optional control-of-flow statements, stored under a name and processed as a unit. They can accept input parameters, return output parameters, and even return a result set of records. Stored procedures are primarily used for performing repetitive tasks and complex operations that involve multiple SQL statements.
+A **stored procedure** is a pre-compiled collection of one or more SQL statements (plus optional control-of-flow logic) saved in the database under a single name. Procedures can
+
+* accept **input** parameters,
+* return **output** parameters (scalars),
+* and/or return **result sets** (tables).
+
+They shine when you need to run the same multi-statement operation repeatedly or enforce consistent business rules.
 
 #### Advantages of Stored Procedures
 
-- Stored procedures often execute faster than dynamic SQL queries because they are precompiled and stored in the database, improving performance.
-- They promote code reusability by allowing multiple applications to call the same procedure, reducing redundancy in code.
-- Security is enhanced as permissions can be granted directly on stored procedures, limiting access to underlying tables and data.
-- Maintainability is improved since business logic is centralized within the database, simplifying updates and ensuring consistency across applications.
+| Benefit         | Why it matters                                                                                |
+| --------------- | --------------------------------------------------------------------------------------------- |
+| Performance     | Execution plan is compiled once and reused, reducing parsing/optimization overhead.           |
+| Reusability     | One definition can be called from many places (apps, jobs, other procs).                      |
+| Security        | GRANT rights on the procedure even if callers have no direct rights on the tables it touches. |
+| Maintainability | Fix or extend business logic in one spot without redeploying application code.                |
+
+#### Example Schema & Seed Data
+
+To make our examples concrete, we’ll first create a simple `Customers` table and insert a couple of rows. This seed data will serve as the foundation for demonstrating stored procedure operations.
+
+```sql
+-- Customers table used in the examples
+CREATE TABLE dbo.Customers
+(
+    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
+    FirstName  VARCHAR(50) NOT NULL,
+    LastName   VARCHAR(50) NOT NULL,
+    Email      VARCHAR(100) UNIQUE,
+    Phone      VARCHAR(20) NULL
+);
+
+-- A couple of starter rows
+INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone) VALUES
+('Alice', 'Smith', 'alice.smith@example.com', '555-0100'),
+('Bob',   'Brown', 'bob.brown@example.com',  '555-0110');
+```
+
+*Current contents before we add anything else:*
+
+| CustomerID | FirstName | LastName | Email                                                     | Phone    |
+| ---------: | --------- | -------- | --------------------------------------------------------- | -------- |
+|          1 | Alice     | Smith    | [alice.smith@example.com](mailto:alice.smith@example.com) | 555-0100 |
+|          2 | Bob       | Brown    | [bob.brown@example.com](mailto:bob.brown@example.com)     | 555-0110 |
 
 #### Creating a Stored Procedure
 
-To create a stored procedure, you use the `CREATE PROCEDURE` statement. The exact syntax may vary slightly depending on the database system, but the general structure is as follows:
+Creating a stored procedure involves specifying its name, parameters, and the logic to execute. The example below defines a procedure to insert a new customer and return its generated primary key.
 
 ```sql
-CREATE PROCEDURE procedure_name
-    @param1 data_type,
-    @param2 data_type OUTPUT,
-    ...
+CREATE PROCEDURE dbo.AddCustomer
+    @FirstName  VARCHAR(50),
+    @LastName   VARCHAR(50),
+    @Email      VARCHAR(100),
+    @CustomerID INT OUTPUT      -- Returns the newly created PK
 AS
 BEGIN
-    -- SQL statements
-    -- You can include control-of-flow statements like IF, WHILE, etc.
-END;
-```
+    SET NOCOUNT ON;
 
-**Example:**
-
-Suppose we have a `Customers` table, and we want to create a stored procedure to insert a new customer.
-
-```sql
-CREATE PROCEDURE AddCustomer
-    @FirstName VARCHAR(50),
-    @LastName VARCHAR(50),
-    @Email VARCHAR(100),
-    @CustomerID INT OUTPUT
-AS
-BEGIN
-    INSERT INTO Customers (FirstName, LastName, Email)
+    INSERT INTO dbo.Customers (FirstName, LastName, Email)
     VALUES (@FirstName, @LastName, @Email);
 
+    -- Return the identity generated in THIS scope
     SET @CustomerID = SCOPE_IDENTITY();
 END;
 ```
 
-- `AddCustomer` is the name of the stored procedure.
-- It accepts `@FirstName`, `@LastName`, and `@Email` as input parameters.
-- `@CustomerID` is an output parameter that returns the ID of the newly inserted customer.
-- `SCOPE_IDENTITY()` retrieves the last identity value inserted into an identity column in the same scope.
+* `SET NOCOUNT ON;` keeps the “(1 row affected)” message from interfering with client libraries expecting a clean result set.
+* `SCOPE_IDENTITY()` is safer than `@@IDENTITY` because it ignores inserts done by triggers further down the chain.
 
-#### Calling a Stored Procedure
+#### Calling the Stored Procedure
 
-To execute a stored procedure, you use the `EXEC` or `EXECUTE` statement (in some systems, you can also use `CALL`).
-
-**Example:**
+Once created, you invoke a stored procedure using `EXEC` (or `EXECUTE`). You can pass input values and capture any output parameters. The example below adds “John Doe” to our `Customers` table and retrieves the new ID.
 
 ```sql
-DECLARE @NewCustomerID INT;
+DECLARE @NewID INT;
 
-EXEC AddCustomer
-    @FirstName = 'John',
-    @LastName = 'Doe',
-    @Email = 'john.doe@example.com',
-    @CustomerID = @NewCustomerID OUTPUT;
+EXEC dbo.AddCustomer
+     @FirstName  = 'John',
+     @LastName   = 'Doe',
+     @Email      = 'john.doe@example.com',
+     @CustomerID = @NewID OUTPUT;
 
-SELECT @NewCustomerID AS 'New Customer ID';
+SELECT @NewID AS NewCustomerID;
 ```
 
-- We declare a variable `@NewCustomerID` to receive the output parameter.
-- We execute the `AddCustomer` procedure, passing in the values for the new customer.
-- We specify `@CustomerID = @NewCustomerID OUTPUT` to capture the output parameter.
-- Finally, we select the new customer ID to verify the insertion.
+*Sample output:*
+
+| NewCustomerID |
+| ------------: |
+|             3 |
+
+*Table contents afterwards:*
+
+| CustomerID | FirstName | LastName | Email                                                     | Phone    |
+| ---------: | --------- | -------- | --------------------------------------------------------- | -------- |
+|          1 | Alice     | Smith    | [alice.smith@example.com](mailto:alice.smith@example.com) | 555-0100 |
+|          2 | Bob       | Brown    | [bob.brown@example.com](mailto:bob.brown@example.com)     | 555-0110 |
+|          3 | John      | Doe      | [john.doe@example.com](mailto:john.doe@example.com)       | **NULL** |
 
 #### Modifying a Stored Procedure
 
-If you need to change the logic inside a stored procedure, you can use the `ALTER PROCEDURE` statement.
-
-**Example:**
+As requirements evolve, you can alter an existing procedure to accept new parameters or change logic without dropping and recreating it. Here we add a `Phone` parameter so the procedure can store customer phone numbers as well.
 
 ```sql
-ALTER PROCEDURE AddCustomer
-    @FirstName VARCHAR(50),
-    @LastName VARCHAR(50),
-    @Email VARCHAR(100),
-    @Phone VARCHAR(20),          -- Added new parameter
+ALTER PROCEDURE dbo.AddCustomer
+    @FirstName  VARCHAR(50),
+    @LastName   VARCHAR(50),
+    @Email      VARCHAR(100),
+    @Phone      VARCHAR(20),     -- NEW parameter
     @CustomerID INT OUTPUT
 AS
 BEGIN
-    INSERT INTO Customers (FirstName, LastName, Email, Phone)
+    SET NOCOUNT ON;
+
+    INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone)
     VALUES (@FirstName, @LastName, @Email, @Phone);
 
     SET @CustomerID = SCOPE_IDENTITY();
 END;
 ```
 
-- We've added a new input parameter `@Phone`.
-- The `INSERT` statement now includes the `Phone` column.
+*New call using the updated procedure:*
+
+```sql
+DECLARE @NewID INT;
+
+EXEC dbo.AddCustomer
+     @FirstName  = 'Carla',
+     @LastName   = 'Mendez',
+     @Email      = 'carla.mendez@example.com',
+     @Phone      = '555-0122',
+     @CustomerID = @NewID OUTPUT;
+
+SELECT @NewID AS NewCustomerID;
+```
+
+| NewCustomerID |
+| ------------: |
+|             4 |
+
+| CustomerID | FirstName | LastName | Email                                                       | Phone    |
+| ---------: | --------- | -------- | ----------------------------------------------------------- | -------- |
+|          … | …         | …        | …                                                           | …        |
+|          4 | Carla     | Mendez   | [carla.mendez@example.com](mailto:carla.mendez@example.com) | 555-0122 |
 
 #### Deleting a Stored Procedure
 
-To remove a stored procedure from the database, you use the `DROP PROCEDURE` statement.
-
-**Example:**
+If a stored procedure is no longer needed or must be replaced entirely, you can drop it from the database. Be cautious—dependent code will break until it’s recreated.
 
 ```sql
-DROP PROCEDURE AddCustomer;
+DROP PROCEDURE dbo.AddCustomer;
 ```
 
-**Caution:** Dropping a stored procedure is irreversible, and any applications relying on it will fail unless the procedure is recreated.
+> **Irreversible:** once dropped, dependent code will fail until the procedure is recreated.
 
 ### Functions
 
-A **function** in SQL is a database object that encapsulates a set of SQL statements and returns a single value. Functions can be used in SQL statements wherever expressions are allowed, such as in `SELECT`, `WHERE`, or `HAVING` clauses. They are primarily used for computations and data retrieval.
+Functions in SQL Server let you encapsulate reusable logic that computes and returns a value or a table. Unlike stored procedures, functions can be embedded directly within queries—such as in `SELECT`, `WHERE`, or `JOIN` clauses—making them highly composable. They’re ideal for encapsulating calculations, formatting routines, or filtering logic that you want to reuse across multiple queries or views.
+
+A **function** encapsulates logic that returns **exactly one** scalar value or a **table**. Unlike procedures, functions can be used inline in `SELECT`, `WHERE`, or `JOIN` clauses. They cannot use side-effects such as `INSERT`/`UPDATE` (with the exception of special CLR or system functions).
 
 #### Types of Functions
 
-- **Scalar functions** return a single value, often used for tasks such as calculating tax or formatting dates.
-- **Table-valued** functions return a table data type, allowing them to be used in `FROM` clauses as though they were tables.
+SQL Server supports several function types, each suited to different scenarios. Scalar functions return a single value, while table-valued functions return result sets that you can query as if they were regular tables or views. Multi-statement TVFs allow more complex row-by-row processing but can incur more overhead.
+
+| Type                       | Returns                                | Typical use-case                   |
+| -------------------------- | -------------------------------------- | ---------------------------------- |
+| Scalar                     | Single value                           | Calculations, formatting, lookups  |
+| Inline table-valued (iTVF) | Table defined by one `SELECT`          | Reusable filtered views            |
+| Multi-statement TVF        | Table assembled through multiple steps | Complex row-by-row transformations |
 
 #### Advantages of Functions
 
-- Functions can be reused across multiple queries, which helps minimize code duplication and promotes consistency.
-- Complex calculations or logic can be encapsulated within functions, enhancing modularity and simplifying query design.
-- Functions can simplify queries by abstracting repetitive logic and, in certain scenarios, may improve performance by reducing redundant computation.
+Functions promote modularity and code reuse by abstracting complex computations behind a simple call. Inline TVFs, in particular, can yield performance benefits because the optimizer can expand them directly into the calling query.
 
-#### Creating a Scalar Function
+* **Reusability & abstraction** – one central definition of complex math or business rules.
+* **Composable** – drop straight into any expression, `JOIN`, or view.
+* **Potential performance win** – especially inline TVFs, which the optimizer can treat almost like a view.
 
-To create a function, use the `CREATE FUNCTION` statement.
+#### Example Schema & Seed Data for Functions
 
-**Example:**
-
-Suppose we need a function to calculate the sales tax for a given amount.
+To illustrate functions, we’ll create a basic `Orders` table linked to our `Customers` table and populate it with sample orders. This provides a dataset for demonstrating both scalar and table-valued functions.
 
 ```sql
-CREATE FUNCTION CalculateTax
+-- Orders table used in the examples
+CREATE TABLE dbo.Orders
 (
-    @Amount DECIMAL(10, 2),
-    @TaxRate DECIMAL(4, 2)
+    OrderID    INT IDENTITY(1,1) PRIMARY KEY,
+    CustomerID INT       NOT NULL FOREIGN KEY REFERENCES dbo.Customers(CustomerID),
+    OrderDate  DATE      NOT NULL,
+    Amount     DECIMAL(10,2) NOT NULL
+);
+
+INSERT INTO dbo.Orders (CustomerID, OrderDate, Amount) VALUES
+(1, '2025-05-01', 120.00),
+(1, '2025-05-03',  60.50),
+(3, '2025-05-04', 210.75);
+```
+
+| OrderID | CustomerID | OrderDate  | Amount |
+| ------: | ---------: | ---------- | -----: |
+|       1 |          1 | 2025-05-01 | 120.00 |
+|       2 |          1 | 2025-05-03 |  60.50 |
+|       3 |          3 | 2025-05-04 | 210.75 |
+
+#### Creating a **Scalar** Function
+
+Scalar functions let you encapsulate formulae or lookups that return a single value. In the example below, we calculate sales tax based on an amount and tax rate.
+
+```sql
+CREATE FUNCTION dbo.CalculateTax
+(
+    @Amount   DECIMAL(10,2),
+    @TaxRate  DECIMAL(5,2)   -- e.g. 8.25 means 8.25 %
 )
-RETURNS DECIMAL(10, 2)
+RETURNS DECIMAL(10,2)
 AS
 BEGIN
-    DECLARE @TaxAmount DECIMAL(10, 2);
-    SET @TaxAmount = @Amount * (@TaxRate / 100);
-    RETURN @TaxAmount;
+    RETURN @Amount * (@TaxRate / 100);
 END;
 ```
 
-- `CalculateTax` is the name of the function.
-- It accepts `@Amount` and `@TaxRate` as input parameters.
-- It returns a `DECIMAL(10, 2)` value representing the calculated tax.
-- The function calculates the tax amount and returns it.
-
-#### Using the Function in a Query
-
-You can use the function in SQL statements as follows:
+*Usage – compute sales tax in a query:*
 
 ```sql
-SELECT OrderID, Amount, dbo.CalculateTax(Amount, 8.25) AS TaxAmount
-FROM Orders;
+SELECT
+    OrderID,
+    Amount,
+    dbo.CalculateTax(Amount, 8.25) AS TaxAmount
+FROM dbo.Orders;
 ```
 
-For each order, we calculate the tax amount using the `CalculateTax` function with a tax rate of 8.25%.
+| OrderID | Amount | TaxAmount |
+| ------: | -----: | --------: |
+|       1 | 120.00 |      9.90 |
+|       2 |  60.50 |      4.99 |
+|       3 | 210.75 |     17.38 |
 
-#### Creating a Table-Valued Function
+#### Creating an **Inline Table-Valued** Function
 
-Table-valued functions return a table data type.
-
-**Example:**
-
-Suppose we want a function that returns all orders for a given customer.
+Inline TVFs are essentially parameterized views. You define a single `SELECT` that returns a result set. The optimizer can integrate this directly into your queries for efficient execution.
 
 ```sql
-CREATE FUNCTION GetCustomerOrders
-(
-    @CustomerID INT
-)
+CREATE FUNCTION dbo.GetCustomerOrders (@CustomerID INT)
 RETURNS TABLE
 AS
 RETURN
 (
     SELECT OrderID, OrderDate, Amount
-    FROM Orders
-    WHERE CustomerID = @CustomerID
+    FROM   dbo.Orders
+    WHERE  CustomerID = @CustomerID
 );
 ```
 
-**Using the Table-Valued Function:**
+*Querying orders for customer #1:*
 
 ```sql
-SELECT * FROM dbo.GetCustomerOrders(123);
+SELECT *
+FROM dbo.GetCustomerOrders(1);
 ```
+
+| OrderID | OrderDate  | Amount |
+| ------: | ---------- | -----: |
+|       1 | 2025-05-01 | 120.00 |
+|       2 | 2025-05-03 |  60.50 |
 
 #### Modifying a Function
 
-To change a function, use the `ALTER FUNCTION` statement.
-
-**Example:**
+When you need to extend or tweak logic, you can alter an existing function. For example, adding a discount parameter to our tax calculation function allows for more flexible scenarios.
 
 ```sql
-ALTER FUNCTION CalculateTax
+ALTER FUNCTION dbo.CalculateTax
 (
-    @Amount DECIMAL(10, 2),
-    @TaxRate DECIMAL(4, 2),
-    @Discount DECIMAL(10, 2) = 0      -- Added optional parameter with default value
+    @Amount    DECIMAL(10,2),
+    @TaxRate   DECIMAL(5,2),
+    @Discount  DECIMAL(10,2) = 0  -- default 0
 )
-RETURNS DECIMAL(10, 2)
+RETURNS DECIMAL(10,2)
 AS
 BEGIN
-    DECLARE @TaxAmount DECIMAL(10, 2);
-    SET @TaxAmount = (@Amount - @Discount) * (@TaxRate / 100);
-    RETURN @TaxAmount;
+    RETURN (@Amount - @Discount) * (@TaxRate / 100);
 END;
 ```
 
-- Added an optional parameter `@Discount`.
-- The tax is now calculated on the discounted amount.
+*Test the new logic:*
+
+```sql
+SELECT dbo.CalculateTax(100.00, 8.25, 10.00) AS TaxOnDiscounted100;
+```
+
+| TaxOnDiscounted100 |
+| -----------------: |
+|               7.43 |
 
 #### Deleting a Function
 
-To remove a function, use the `DROP FUNCTION` statement.
-
-**Example:**
+If a function is obsolete or must be replaced entirely, you can remove it with `DROP`. As with stored procedures, any dependent code will break until the function is recreated.
 
 ```sql
-DROP FUNCTION CalculateTax;
+DROP FUNCTION dbo.CalculateTax;
 ```
 
 #### Differences Between Stored Procedures and Functions
@@ -237,9 +313,14 @@ DROP FUNCTION CalculateTax;
 - Functions can be directly used within SQL expressions, such as in `SELECT` or `WHERE` clauses, while stored procedures must be invoked independently and cannot be part of an SQL expression.
 - Stored procedures can have side effects as they can modify the database state through operations like `INSERT`, `UPDATE`, or `DELETE`, whereas functions are typically designed to be deterministic and avoid modifying database state.
 
-#### Best Practices for Using Stored Procedures and Functions
+#### Best Practices
 
 - Ensure naming conventions are consistent and descriptive, often beginning with verbs like `Get`, `Add`, `Update`, or `Calculate`, to clarify their purpose.
 - Validate all input parameters within the procedure or function to prevent errors and ensure proper operation.
 - Include robust error handling by using `TRY...CATCH` blocks to gracefully handle and log exceptions during execution.
 - Assign appropriate permissions to procedures and functions to ensure secure access and protect sensitive data from unauthorized use.
+1. **Name objects with schema prefixes** (`dbo.AddCustomer`) to avoid ambiguity.
+2. **Use `SET NOCOUNT ON;`** inside procs to reduce unnecessary network traffic.
+3. **Favor inline TVFs** over multi-statement TVFs when possible; they integrate more cleanly with the optimizer.
+4. **Keep business rules in one place** – either in your procedures/functions *or* in application code, but avoid duplicating logic.
+5. **Version-control your DDL** just like application code so changes are traceable and repeatable.
