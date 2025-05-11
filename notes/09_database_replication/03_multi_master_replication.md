@@ -4,7 +4,7 @@ Multi-master replication is a database replication model where multiple database
 
 ### Understanding the Architecture
 
-To visualize how multi-master replication works, consider the following ASCII diagram:
+To visualize how multi-master replication works, consider the following diagram:
 
 ```
 #
