@@ -23,34 +23,39 @@ The WAL, sometimes called the redo log, keeps track of all modifications. Every 
 - If the system crashes, the database can use the WAL to redo committed changes that may not have made it to the data files, or ignore changes for uncommitted transactions.
 
 ```
-+----------------+          +----------------+          +----------------+
-|                |          |                |          |                |
-|  Application   |  --->    |   Write-Ahead  |  --->    |   Data Store   |
-|    Transaction |          |      Log (WAL) |          |   (Main DB)    |
-|                |          |                |          |                |
-+----------------+          +----------------+          +----------------+
-        |                           |                           |
-        |                           |                           |
-        |                           v                           |
-        |                   +---------------+                   |
-        |                   | Append Log    |                   |
-        |                   | Records to    |                   |
-        |                   | WAL on Disk   |                   |
-        |                   +---------------+                   |
-        |                           |                           |
-        |                           v                           |
-        |                   +---------------+                   |
-        |                   | Sync WAL to   |                   |
-        |                   | Disk          |                   |
-        |                   +---------------+                   |
-        |                           |                           |
-        |                           v                           |
-        |                   +---------------+                   |
-        |                   | Apply Changes |                   |
-        |                   | to Data Store |                   |
-        |                   +---------------+                   |
-        |                                                       |
-        +-------------------------------------------------------+
+WAL:
+                           +----------------+
+                           |  Application   |
+                           |  Transaction   |
+                           +--------+-------+
+                                    |
+                                    | 1. Emit transaction
+                                    v
+                           +--------+-------+
+                           |  Write-Ahead   |
+                           |   Log (WAL)    |
+                           +--------+-------+
+                                    |
+    +-------------------------------+-------------------------------+
+    |                                                               |
+    | 2a. Append record to WAL buffer                               |
+    |                                                               |
+    |      +----------------+                   +----------------+  |
+    |      | WAL In-Memory  | --(write)-->      | WAL On-Disk    |  |
+    |      |   Buffer       |                   | (log file)     |  |
+    |      +----------------+                   +----------------+  |
+    |               |                                     |         |
+    |               | 2b. Fsync (sync to durable storage) |         |
+    |               +------------------------------------>+         |
+    |                                                               |
+    +---------------------------------------------------------------+
+                                    |
+                                    | 3. Apply logged changes
+                                    v
+                           +--------+-------+
+                           |   Data Store   |
+                           |   (Main DB)    |
+                           +----------------+
 ```
 
 ### WAL and Transaction States
