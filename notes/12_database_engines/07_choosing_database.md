@@ -375,6 +375,7 @@ Answer the questions in this one diagram—then jump straight to the matching de
 #### Semi-Structured Data
 
 ```
+#
                       ┌────────────────────────┐
                       │   Semi-Structured      │
                       └────────────────────────┘
