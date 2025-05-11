@@ -341,9 +341,9 @@ Answer the questions in this one diagram—then jump straight to the matching de
              ▼                                   ▼
          OLTP / ACID                    Analytics / OLAP
    (high-QPS, row lookups)           (large scans, aggregates)
-             │                                   │
- ┌───────────┴───────────┐             ┌─────────┴─────────┐
- ▼                       ▼             ▼                   ▼
+             │                                     │
+ ┌───────────┴───────────┐               ┌─────────┴─────────┐
+ ▼                       ▼               ▼                   ▼
 < 1 TB single node   > 1 TB or global   Column-store    Serverless
  MySQL, Postgres     NewSQL (TiDB,      (Snowflake,     column-store
  + read replicas     CockroachDB,       Redshift,       (BigQuery,
@@ -360,8 +360,8 @@ Answer the questions in this one diagram—then jump straight to the matching de
                        │       Unstructured          │
                        └─────────────────────────────┘
                                       │
-                ┌─────────────────────┼─────────────────────┐
-                ▼                     ▼                     ▼
+                ┌─────────────────────┼───────────────────────┐
+                ▼                     ▼                       ▼
         POSIX‐like FS?         Huge blobs?          µs-latency blocks?
             │ Yes                  │ Yes                      │ Yes
             ▼                      ▼                          ▼
@@ -387,11 +387,11 @@ Answer the questions in this one diagram—then jump straight to the matching de
    Document DB (Mongo,       In-Memory KV (Redis)       Graph DB (Neo4j,
    Couchbase) 10 GB-10 TB     µs latency, TTL keys       Neptune)
           │ No                     │ No                      │ No
-          └─────────────┬──────────┴───────────┬────────────┘
+          └─────────────┬──────────┴───────────┬─────────────┘
                         ▼                      ▼
                Wide/sparse cols?        Full-text search?
                     │ Yes                     │ Yes
-                    ▼                        ▼
+                    ▼                         ▼
          Wide-Column (Cassandra)     Search DB (Elastic,
              Time-series OK           OpenSearch)
                     │ No
