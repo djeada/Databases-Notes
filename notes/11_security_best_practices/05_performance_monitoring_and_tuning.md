@@ -10,6 +10,11 @@ After reading the material, you should be able to answer the following questions
 - What are the primary performance tuning strategies, such as query optimization and indexing, and how do they enhance database performance?
 - How does effective performance monitoring and tuning support resource utilization, user experience, and future growth of database systems?
 
+TODO:
+- add grafana
+- read and write speeds
+- size of index on the disk
+
 ### Ensure Optimal Performance
 
 Identifying bottlenecks and optimizing system resources are crucial for achieving better response times and higher throughput. Performance monitoring allows administrators to detect issues before they impact the system significantly.
