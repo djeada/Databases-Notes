@@ -1,4 +1,4 @@
-## Shared and Exclusive Locks in Database Systems
+## Shared and Exclusive Locks
 
 Shared and exclusive locks are crucial in database systems for managing concurrent access to data. They ensure that transactions occur without conflicting with each other, maintaining the integrity and consistency of the database.
 
@@ -45,16 +45,10 @@ Consider an online banking system where a user is transferring money from one ac
 
 Understanding how shared and exclusive locks interact is essential for managing database concurrency effectively.
 
-```
-Lock Compatibility Matrix:
-
-                 | Shared Lock Requested | Exclusive Lock Requested
------------------|-----------------------|-------------------------
-Shared Lock Held | Allowed               | Not Allowed
-Exclusive Lock Held | Not Allowed        | Not Allowed
-```
-
-This matrix shows that:
+| Lock Held \ Requested   | Shared Lock Requested | Exclusive Lock Requested |
+| ----------------------- | --------------------- | ------------------------ |
+| **Shared Lock Held**    | Allowed               | Not Allowed              |
+| **Exclusive Lock Held** | Not Allowed           | Not Allowed              |
 
 - When a shared lock is already held on a data item, other transactions can also acquire shared locks on it.
 - If a shared lock is held, an exclusive lock request will be blocked until all shared locks are released.
@@ -62,32 +56,54 @@ This matrix shows that:
 
 ### Practical Examples with Commands
 
-Suppose we have a table `Employees` and two transactions are attempting to access it.
+These examples illustrate row-level locking behavior common to most modern relational databases—**PostgreSQL**, **MySQL/InnoDB**, **MariaDB**, **SQL Server**, and **Oracle**—which support shared (S) and exclusive (X) locks at the row level. They do **not** apply to engines or table types without row-level locking (e.g., MySQL’s **MyISAM**), nor to NoSQL stores that use different concurrency controls.
 
-**Transaction 1: Reading Data**
+#### Shared vs. Exclusive Locks: Applicability
+
+* **Supported**: PostgreSQL, MySQL/InnoDB, MariaDB, SQL Server, Oracle.
+* **Not Supported**: MySQL/MyISAM (table-level only), SQLite (uses database-level or page-level locks), many cloud-managed NoSQL databases.
+
+Locking behavior may vary slightly by isolation level and vendor syntax; the following examples assume the default **READ COMMITTED** isolation level.
+
+#### Example: Reading Data (Shared Lock)
+
+In databases with row-level locking, a **shared lock** (S) permits multiple transactions to read the same rows concurrently but prevents any transaction from modifying them until all shared locks are released.
 
 ```sql
+-- Applies in PostgreSQL, MySQL/InnoDB, SQL Server, Oracle
 BEGIN TRANSACTION;
 SELECT * FROM Employees WHERE Department = 'Sales';
--- Shared lock is acquired on the rows where Department = 'Sales'
+-- Shared (S) lock on matching rows until COMMIT
 COMMIT;
 ```
 
-**Transaction 2: Updating Data**
+#### Example: Updating Data (Exclusive Lock)
+
+An **exclusive lock** (X) is required for row modifications. If another transaction holds a shared or exclusive lock on the same row, the update waits (or may deadlock under certain patterns).
 
 ```sql
+-- Applies in PostgreSQL, MySQL/InnoDB, SQL Server, Oracle
 BEGIN TRANSACTION;
 UPDATE Employees SET Salary = Salary * 1.05 WHERE Department = 'Sales';
--- Exclusive lock is requested on the same rows
--- Transaction 2 waits until Transaction 1 releases the shared lock
+-- Request X lock: waits until no other S or X locks exist on those rows
 COMMIT;
 ```
 
-**Interpretation of the Output:**
+#### Lock Interaction Timeline
 
-- Transaction 1 acquires a shared lock to read data without modifying it.
-- Transaction 2 tries to acquire an exclusive lock to update the data but must wait until Transaction 1 completes and releases its shared lock.
-- This ensures that Transaction 2 does not update data that is being read, maintaining data integrity.
+| Step | Transaction  | Action                            | Lock Held                | Outcome                                          |
+| ---- | ------------ | --------------------------------- | ------------------------ | ------------------------------------------------ |
+| 1    | T1 (Reader)  | `SELECT ... FOR SHARE` (implicit) | S on Sales rows          | Allows other S locks; blocks X locks             |
+| 2    | T2 (Updater) | `UPDATE ...`                      | Requests X on Sales rows | Waits until T1 commits and releases its S lock   |
+| 3    | T1           | `COMMIT`                          | Releases S               | T2 acquires X lock, performs update, then COMMIT |
+
+> **Note**: Some databases (e.g., Oracle) require explicit `SELECT ... FOR UPDATE` to acquire row locks for reads; others implicitly lock on `UPDATE`.
+
+#### Considerations and Variations
+
+* Under **SERIALIZABLE**, readers may acquire additional locks or trigger predicate locks. Under **READ UNCOMMITTED**, shared locks may be skipped (dirty reads).
+* MyISAM uses table-level locks, so the above does not apply. SQLite uses page or database locks.
+* If two transactions request locks in opposite order, a deadlock may occur. Most RDBMS detect and kill the victim.
 
 ### Balancing Concurrency and Integrity
 
