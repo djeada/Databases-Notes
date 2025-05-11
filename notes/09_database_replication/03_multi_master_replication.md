@@ -74,158 +74,176 @@ Handling conflicts is a critical aspect of multi-master replication. Various str
 - **Timestamp ordering** resolves conflicts by prioritizing **transactions** based on their timestamps, where the **latest transaction** overrides previous ones. This method simplifies resolution but may discard earlier valid changes.  
 - **Application-level handling** uses **custom logic** defined within the application to resolve conflicts. This approach provides **flexibility**, enabling conflict resolution tailored to the specific needs and business logic of the application.
 
-### Implementing Multi-Master Replication with MySQL and Galera Cluster
+### Implementing Multi-Master Replication with MySQL / MariaDB + Galera Cluster
 
 Galera Cluster is a synchronous multi-master replication plugin for MySQL and MariaDB databases. It ensures that transactions are committed on all nodes simultaneously, providing strong data consistency across the cluster.
 
+```text
+                        ┌────────────────────────────┐
+                        │  Galera  Quorum  Network   │
+                        └────────────┬───────────────┘
+                                     │ (TCP 4567)
+               ┌─────────────────────┴─────────────────────┐
+               │                                           │
+       ┌───────▼────────┐                         ┌────────▼────────┐
+       │  Node-1        │                         │  Node-2         │
+       │  10.0.0.20     │ ←───◀──────────────►───→│  10.0.0.21      │
+       │  (Master*)     │    │  synchronous   │   │  (Master*)      │
+       └───────┬────────┘    │  replication   │   └────────┬────────┘
+               │             │  (4567/4568/   │            │
+               │             │   4444)        │            │
+               │             ▼─────────────►──┘            │
+       ┌───────▼────────┐                         ┌────────▼────────┐
+       │  Node-3        │─────────────────────────► 10.0.0.22       │
+       │  10.0.0.22     │         (Full Mesh)     │  (Master*)      │
+       │  (Master*)     │                         │                 │
+       └────────────────┘                         └─────────────────┘
+```
+
+> **Legend** – All three nodes act as *masters* (“writer-writers”).
+> Traffic flows in a full-mesh using the Galera ports **4567 (replication)**, **4568 (incremental SST/IST)** and **4444 (state snapshot transfer)**.
+> When you see `10.0.0.20/21/22` or **Node-1/2/3** below, they refer to the diagram.
+
 #### Prerequisites
 
-To set up a Galera Cluster, you'll need:
+1. **Three Linux hosts** (Ubuntu 22.04 LTS, Debian 12, RHEL 9, etc.) with static IPs `10.0.0.20-22`.
+2. **MariaDB 10.6+** *or* **Percona XtraDB / MySQL-wsrep** build that ships Galera 4.
+3. **Open firewall**: TCP 3306 (MySQL client), TCP 4567 (replication), TCP 4568 (incremental state), TCP 4444 (full SST)
+4. **Time sync** via `chronyd` or `systemd-timesyncd`.
+5. At least **2 CPU / 4 GiB RAM / 30 GiB SSD** per node (Galera buffers and gcache like RAM + IO).
 
-- **Operating system** requirements include Linux-based distributions like **Ubuntu**, **Debian**, **CentOS**, or **RHEL**, which are commonly supported.  
-- **Database software** compatibility is necessary, requiring a **MySQL** or **MariaDB** version that supports Galera clustering.  
-- **Network configuration** is critical, ensuring that all **nodes** can communicate over the network and that **firewall settings** allow traffic through the required **ports** for cluster communication.  
-- **Cluster nodes** must have unique **IP addresses** and consistent **hostname resolution** to maintain stable communication.  
-- **Synchronized clocks** are recommended across nodes using a service like **NTP** to prevent time-related inconsistencies.  
-- **Galera software** or **plugins** specific to the database version in use should be installed on all participating nodes.  
-- **Sufficient resources**, such as CPU, memory, and disk I/O capacity, are necessary for each node to handle the expected workload and cluster operations.  
+#### Install Server & Galera
 
-#### Setting Up the Cluster
-
-##### Installation
-
-Install the database server and Galera Cluster on each master node.
-
-For Ubuntu/Debian systems:
+**Ubuntu / Debian**
 
 ```bash
-sudo apt-get update
-sudo apt-get install mariadb-server mariadb-client galera-3 rsync
+sudo apt update
+sudo apt install mariadb-server galera-4 rsync
 ```
 
-For CentOS/RHEL systems:
+**RHEL / CentOS**
 
 ```bash
-sudo yum install mariadb-server mariadb-client galera rsync
+sudo dnf install mariadb-server galera-4 rsync
 ```
 
-*Note: Replace `mariadb` with `mysql` if you prefer MySQL over MariaDB.*
+*(Replace `mariadb-…` with Percona packages if you need MySQL-8 compatibility.)*
 
-##### Configuring the Database Server
+#### Core Configuration
 
-Edit the configuration file, typically located at `/etc/mysql/my.cnf` or `/etc/my.cnf`, and add or modify the following settings:
+The foundation of a stable Galera cluster is consistent configuration across all nodes. This section outlines the essential parameters you must set in the Galera configuration file to enable multi-master replication, ensure data consistency, and tune basic performance settings.
+
+`/etc/mysql/conf.d/60-galera.cnf` or `/etc/my.cnf.d/galera.cnf`
 
 ```ini
 [mysqld]
-# Basic Settings
-bind-address = 0.0.0.0
-default_storage_engine = innodb
-binlog_format = ROW
-innodb_autoinc_lock_mode = 2
+# ==== Basic ====
+bind-address            = 0.0.0.0
+default_storage_engine  = InnoDB
+binlog_format           = ROW              # mandatory
+innodb_autoinc_lock_mode= 2                # mandatory for multi-master
 
-# Galera Provider Configuration
-wsrep_on = ON
-wsrep_provider = /usr/lib/galera/libgalera_smm.so
+# ==== Galera ====
+wsrep_on                = ON
+wsrep_provider          = /usr/lib/galera/libgalera_smm.so
 
-# Galera Cluster Configuration
-wsrep_cluster_name = "my_galera_cluster"
-wsrep_cluster_address = "gcomm://node1_ip,node2_ip,node3_ip"
+wsrep_cluster_name      = my_galera_cluster
+wsrep_cluster_address   = gcomm://10.0.0.20,10.0.0.21,10.0.0.22
 
-# Node Specific Configuration
-wsrep_node_name = "nodeX"
-wsrep_node_address = "nodeX_ip"
+# ---- Node-specific (edit on every host) ----
+wsrep_node_name         = node1            # node2 / node3 respectively
+wsrep_node_address      = 10.0.0.20        # 10.0.0.21 / 10.0.0.22
 
-# State Snapshot Transfer Method
-wsrep_sst_method = rsync
+# State Snapshot Transfer (full clone)
+wsrep_sst_method        = rsync            # mariabackup is faster for TB-scale
+wsrep_sst_auth          = sstuser:s3cr3t!  # will create below
+
+# Performance / flow-control
+innodb_buffer_pool_size = 2G               # ≥40 % RAM (adjust)
+wsrep_slave_threads     = 4                # = CPU cores (rule of thumb)
 ```
 
-Replace `node1_ip`, `node2_ip`, `node3_ip` with the IP addresses of your master nodes. Also, set `nodeX` and `nodeX_ip` to the hostname and IP address of the current node you're configuring.
+#### Creating the SST User
 
-##### Securing the Database
-
-Run the following command to secure your database installation:
+To securely transfer the initial dataset from the primary node to joining nodes, Galera uses a State Snapshot Transfer (SST) user. Create and grant the necessary privileges once on any cluster node.
 
 ```bash
-sudo mysql_secure_installation
+mysql -u root <<'SQL'
+CREATE USER 'sstuser'@'%' IDENTIFIED BY 's3cr3t!';
+GRANT RELOAD, LOCK TABLES, PROCESS, REPLICATION CLIENT ON *.* TO 'sstuser'@'%';
+FLUSH PRIVILEGES;
+SQL
 ```
 
-Follow the prompts to set a root password and remove anonymous users, enhancing the security of your database servers.
+#### Securing the Server
 
-##### Initializing the Cluster
-
-On the first node only, bootstrap the cluster:
+Before bringing up the cluster, tighten the default MariaDB security posture. Run the secure installation script to set a strong root password, remove unused accounts, and disable remote root access.
 
 ```bash
-sudo systemctl stop mysql
-sudo galera_new_cluster
+sudo mysql_secure_installation   # set root pwd, remove test DB, disallow remote root
 ```
 
-For older systems, you might use:
+#### Bootstrapping the Cluster (Node-1)
+
+The first node must be started in bootstrap mode to initialize the cluster state. This step only runs once and sets up the initial primary component.
 
 ```bash
-sudo /etc/init.d/mysql stop
-sudo service mysql bootstrap
+sudo systemctl stop mariadb
+sudo galera_new_cluster           # or: mysqld --wsrep-new-cluster &
 ```
 
-##### Starting MySQL on Other Nodes
-
-On the remaining nodes, start the MySQL service normally:
+Verify that the cluster is running and contains only the bootstrap node:
 
 ```bash
-sudo systemctl start mysql
+mysql -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';"
+# Expect Value = 1
 ```
 
-Or for older systems:
+#### Joining Remaining Nodes (Node-2 & Node-3)
+
+Subsequent nodes join the existing cluster by starting their MariaDB service. They will perform an SST from the primary node to synchronize state before becoming active members.
 
 ```bash
-sudo /etc/init.d/mysql start
+sudo systemctl start mariadb
 ```
 
-##### Verifying Cluster Status
-
-To check the cluster size and ensure all nodes are connected, run the following command on any node:
+Monitor the SST process in real time with:
 
 ```bash
-mysql -u root -p -e "SHOW STATUS LIKE 'wsrep_cluster_size';"
+journalctl -u mariadb -f
 ```
 
-The result should display the total number of nodes in the cluster, confirming that the setup is successful.
+Once complete, verify every node sees the full cluster:
 
-#### Understanding Conflict Resolution in Galera Cluster
+```bash
+mysql -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';"
+# Expect Value = 3 on every node
+```
 
-- Galera Cluster uses a certification-based replication mechanism to manage **conflicts**.  
-- Transactions are executed **optimistically** without immediate checks for conflicts.  
-- A **write-set** containing the changes is created when a transaction is committed.  
-- The write-set is **replicated** to all other nodes in the cluster.  
-- Each node performs a certification **test** on the replicated write-set.  
-- If no conflicts are found during the certification test, the transaction is **applied**.  
-- If a conflict is detected during the certification test, the transaction is **aborted**.  
-- An **error** is returned to the client when a transaction is aborted due to conflicts.  
+#### Conflict Resolution & Certification
 
-##### How Conflicts Are Detected
+Galera uses optimistic concurrency control and write-set certification to resolve conflicts in a synchronous multi-master setup. At commit time, write-sets are broadcast and validated against each node's transaction history.
 
-- Each **transaction** is assigned a **Global Transaction ID (GTID)**, which allows the cluster to track changes consistently across nodes.  
-- The cluster performs **version checks** to determine if rows affected by a transaction have been altered by other transactions since the original transaction began.  
-- When a **conflict** is detected, the transaction with the later **GTID** (indicating the last arrival) is typically **rolled back** to maintain consistency across the cluster.  
+1. **Optimistic execution** – transactions execute locally on the origin node.
+2. **Write-set creation** – at commit, row changes are packaged into a write-set.
+3. **Synchronous certification** – write-set is sent to all nodes; each node checks version vectors.
+* **No conflict** → write-set applied, client receives COMMIT.
+* **Conflict** → later GTID wins, losing node rolls back and returns WSREP\_CONFLICT error.
 
-##### Handling Conflicts in Applications
+##### Application Strategies
 
-- Applications should include logic to **retry aborted transactions**, enabling seamless recovery when conflicts occur.  
-- **Minimizing conflicts** is important and can be achieved by designing database schemas and access patterns to reduce **conflicting writes**, such as partitioning data or avoiding frequent updates to the same rows (hot spots).  
-- Applications should be designed to **handle errors gracefully**, providing users with meaningful feedback when transactions fail, and enabling them to retry or make corrective actions.  
+Proper application design can minimize and handle conflicts:
+
+* **Automatic retries** – catch SQL errno 1213 (deadlock) and retry critical transactions.
+* **Hot-spot mitigation** – avoid sequential key updates; shard counters across nodes.
+* **Deterministic primary keys** – use UUIDs or configure `auto_increment_offset` and `auto_increment_increment` to prevent PK clashes.
 
 #### Testing the Cluster
 
-- A **data consistency test** should be conducted by inserting data on one node and verifying that the data propagates correctly to all other nodes.  
-- A **conflict test** involves simultaneously writing conflicting data on different nodes to observe how the cluster resolves the conflicts.  
-- A **failover test** ensures fault tolerance by stopping one node and confirming that the cluster continues to operate without data loss or significant disruption.  
+Validate cluster behavior under different scenarios to ensure reliability. The table below outlines core tests and expected outcomes.
 
-### Best Practices
-
-To maximize the benefits of multi-master replication and ensure a stable environment, consider the following best practices:
-
-- Use monitoring tools to keep an eye on replication status, node health, and network performance. This helps in early detection of issues.
-- Ensure low-latency and reliable network connections between nodes to minimize replication delays and reduce the chance of conflicts.
-- Even with replication, regular backups are essential to protect against data corruption or catastrophic failures.
-- Perform schema changes during maintenance windows and ensure that all nodes are compatible. Galera Cluster can replicate DDL statements, but careful planning is necessary.
-- Secure communication between nodes using encryption and restrict network access to trusted hosts.
+| Test            | Procedure (refer to Node IPs)                                             | Expected result                                      |
+| --------------- | ------------------------------------------------------------------------- | ---------------------------------------------------- |
+| **Consistency** | `INSERT` on Node-1 → `SELECT` on Node-2/3                                 | Rows visible in < 1 s                                |
+| **Conflict**    | Begin two sessions, `UPDATE` the same row concurrently on Node-2 & Node-3 | One session commits, other gets errno 1213           |
+| **Failover**    | `systemctl stop mariadb` on Node-1                                        | Cluster size drops to 2, writes continue on Node-2/3 |
