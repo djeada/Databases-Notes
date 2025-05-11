@@ -1,266 +1,173 @@
-## Understanding the Storage of Tables and Indexes on Disk
+## Storage of Tables and Indexes on Disk
 
 Exploring how databases store tables and indexes on disk can provide valuable insights into optimizing performance and managing data efficiently. Let's delve into the fundamental concepts of disk storage in relational databases, focusing on the structures and mechanisms that underlie data organization.
 
-### Storage Structures
-
-Databases organize data on disk using structured approaches to ensure efficient access and manipulation.
-
-#### Pages and Extents
-
-At the core of data storage are pages, sometimes called blocks. These are fixed-size chunks of data, commonly 4KB, 8KB, or 16KB in size, depending on the database system. Pages serve as the basic units for reading from and writing to the disk.
-
-To manage storage more effectively, pages are grouped into extents. An extent is a collection of contiguous pages, which helps reduce fragmentation and improves read/write performance by allowing larger chunks of data to be processed in a single operation.
-
-Here's a simple illustration of pages grouped into extents:
+### Operating-System Files (“Datafiles”)
 
 ```
-+-------------------+
-|      Extent       |
-| +-----+  +-----+  |
-| |Page1|  |Page2|  |
-| +-----+  +-----+  |
-| +-----+  +-----+  |
-| |Page3|  |Page4|  |
-| +-----+  +-----+  |
-+-------------------+
+┌──────────────────────────────────────────────────────────────────────┐
+│ tablespace_sales                                                     │
+│┌───────────────┐┌───────────────┐┌───────────────┐                  │
+││ sales01.dbf   ││ sales02.dbf   ││ sales03.dbf   │  ← ordinary files│
+│└───────────────┘└───────────────┘└───────────────┘                  │
+└──────────────────────────────────────────────────────────────────────┘
 ```
 
-In this diagram, we see an extent containing four pages, each holding part of the table's data.
+* A tablespace/filegroup is a logical pool of one or more datafiles.
+* Every byte of every table, index, and catalog record is somewhere inside those files.
+* Growing a table means extending a file or adding another file; the DBA chooses the policy.
+* File layout on the physical platter/SSD is up to the OS unless the DBA pre-allocates contiguous space.
 
-- A table is stored in files composed of fixed-size units known as **pages**, which serve as the fundamental building blocks for simplifying **I/O operations** by standardizing data access and storage.  
-- Each **row** of data is stored within these disk pages, typically packed tightly end-to-end to maximize storage efficiency. However, gaps can occur due to **fragmentation**, which can degrade performance over time.  
-- Many databases define a **page** as their basic unit of storage, with typical sizes of 8KB in PostgreSQL and 16KB in MySQL, though this can often be configured to suit specific workload requirements or **storage hardware**.  
-- The database performs all data **reads and writes** at the page level instead of accessing individual bytes or rows, enabling more efficient interaction with storage systems.  
-- When the database fetches **data** from disk, it must load the entire page into memory, even if the query requires only a small portion of the data on that page, which can lead to inefficiencies if **data locality** is poor.  
-- **Disk I/O performance** is heavily influenced by how efficiently the database can access pages, often relying on caching frequently accessed pages in memory to minimize the need for repeated disk reads.  
-- **Data locality**, where rows frequently accessed together are stored on adjacent pages, helps reduce the number of pages the database must read for common queries, improving performance.  
-- Allocating pages in **contiguous blocks**, often grouped into larger units called extents, improves the efficiency of sequential scans by reducing the number of separate I/O operations needed to access large datasets.  
-- Aligning **page size** with the underlying storage device’s block size or performance characteristics can reduce unnecessary fragmentation, minimize overhead, and improve overall I/O efficiency.  
-- When a single **row** of data is scattered across multiple pages, the database must perform additional I/O operations to retrieve the data, slowing down queries that would otherwise benefit from quick lookups.  
-- Storage devices often operate on **fixed-size blocks**; matching the database’s page size to the block size can avoid partial block reads or writes, which waste resources and degrade performance.  
-- Reorganizing or **vacuuming tables** helps reclaim freed space within pages, making it available for future inserts and improving the database’s ability to store data compactly and efficiently.  
-
-### Table and Heap Organization
-
-- Tables without **clustered ordering** store rows in a heap-like structure where rows are appended as new inserts occur, without maintaining any particular logical order.  
-- The heap does not enforce a logical order, so retrieving specific **rows** without the use of indexes often requires scanning multiple pages sequentially, which can be inefficient for large datasets.  
-- A heap can become **sparse** if many rows are deleted, leaving gaps and unused space on pages. This empty space can be reused by future inserts, but excessive sparsity may require maintenance to optimize storage.  
-- Heap scans involve reading all the **pages** of a table sequentially from start to end, which can be slow for large tables if queries lack selective conditions to filter rows early.  
-- Physical **row identifiers** (such as TIDs in PostgreSQL) directly point to a specific page and item offset, enabling the database to quickly locate and access particular rows without additional lookups.  
-- The database engine tracks **free space** on each page using internal structures, helping it efficiently determine where to place new rows without unnecessarily extending the heap or wasting storage.  
-- High **update frequency** on variable-length columns can lead to row movement or page splits, which increase fragmentation and can degrade performance if left unchecked over time.  
-- **Compressing data** within each page allows more rows to fit into memory or storage, improving data density and reducing I/O, but at the cost of additional CPU overhead during compression and decompression processes.  
-- Dedicated **space management structures**, sometimes in the form of metadata pages, monitor how full each page is, guiding the database in selecting optimal locations for inserting new rows and minimizing fragmentation.  
-- **Row headers**, stored alongside user data, occupy part of the available space on each page. This overhead can reduce the capacity available for actual row data, especially for tables with many small rows.  
-- When a single **row** is too large to fit into one page, the database may split it into multiple segments, linked together with pointers. While this enables storage of large rows, it increases the cost of accessing them due to the need for multiple I/O operations.  
-- **Heap fragmentation** can be reduced through periodic maintenance operations, such as table vacuuming or reorganization, which compact data and ensure higher density of rows within pages, improving query performance.  
+### Extents & Pages (Allocation Units)
 
 ```
-+----------------------------------------------------+
-|                       Heap File                    |
-+----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3        |
-+------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Row3] [Row4]   | [Row5] [Row6]  |
-| [Free Space]    | [Row7]          | [Free Space]   |
-+------------------+-----------------+---------------+
+DATAFILE  (sales01.dbf)
+│
+├─ Extent #17  (8 pages @ 8 KB = 64 KB)
+│  ├─ Page 0  (heap rows)
+│  ├─ Page 1  (heap rows)
+│  ├─ Page 2  (B-tree branch)
+│  ├─ Page 3  (free)
+│  ├─ Page 4  (B-tree leaf)
+│  ├─ Page 5  (row-overflow chain)
+│  ├─ Page 6  (heap rows)
+│  └─ Page 7  (free)
+└─ Extent #18  …
 ```
 
-- Pages are fixed-size units of storage, containing rows and free space.
-- Rows (e.g., Row1, Row2) are stored in the order of insertion unless affected by updates or deletes.
+* A **page** (a.k.a. block) is the atomic I/O unit; common sizes: 4 KB, 8 KB, 16 KB.
+* Eight or sixteen consecutive pages form an **extent**; allocating extents keeps related pages adjacent.
+* The buffer pool caches whole pages; a single row read always drags its entire page into RAM.
+* Sequential scans jump extent-to-extent, minimizing head seeks on spinning media.
 
-**Scenario: Fragmentation caused by deletions**
-
-```
-+----------------------------------------------------+
-|                       Heap File                    |
-+----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3        |
-+------------------+-----------------+---------------+
-| [Row1] [Deleted]| [Row4] [Deleted]| [Row6] [Row7]  |
-| [Free Space]    | [Free Space]    | [Free Space]   |
-+------------------+-----------------+---------------+
-```
-
-Deletions leave gaps in pages, creating free space that can be reused.
-
-**Scenario: Large row spanning multiple pages**
+### Anatomy of a Data Page
 
 ```
-+----------------------------------------------------+
-|                       Heap File                    |
-+----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3        |
-+------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Part of Row8]  | [Part of Row8] |
-| [Free Space]    | [Free Space]    | [Free Space]   |
-+------------------+-----------------+---------------+
+8 KB PAGE (heap)
+┌──────────────────┐ 0x0000
+│ Page Header      │ ← checksum, LSN, page-type flag, free-space pointers
+├──────────────────┤
+│ Item Slot Array  │ ← 2-byte offsets, newest rows grow this downward
+│ ─┬─┬─┬─┬─┬─┬─┬─  │
+├─↓─↓─↓─↓─↓─↓─↓─↓──┤
+│                  │
+│   Tuple Data     │ ← rows grow upward
+│                  │
+└──────────────────┘ 0x2000 (end)
 ```
 
-A large row (Row8) is split across multiple pages, linked by pointers.
+* The header tells the engine what page type it is and where free space begins/ends.
+* The slot array lets rows move inside the page without breaking external row IDs.
+* A delete clears the slot; an update that no longer fits may move the row elsewhere and leave a forwarding stub.
+* Free space in the middle is coalesced during a **VACUUM / OPTIMIZE / REORG** pass.
 
-**Scenario: Post-maintenance compacted heap**
-
-```
-+----------------------------------------------------+
-|                       Heap File                    |
-+----------------------------------------------------+
-|  Page 1         |  Page 2         |  Page 3        |
-+------------------+-----------------+---------------+
-| [Row1] [Row2]   | [Row4] [Row6]   | [Row7]         |
-| [Free Space]    | [Free Space]    | [Free Space]   |
-+------------------+-----------------+---------------+
-```
-
-Periodic maintenance (e.g., VACUUM) reorganizes rows to reclaim space and reduce fragmentation.
-
-#### Table Storage Models
-
-Tables are stored on disk as collections of pages, but the way data is organized within these pages can vary.
-
-- **Row-Oriented Storage** organizes data by storing entire **rows** together within a single **page**, making it efficient for **transactional databases** where queries often require access to all columns of a **row**. For example, customer records in a **sales database** would store all associated fields in the same row for fast retrieval.  
-- **Column-Oriented Storage** arranges data by storing each **column** separately across multiple **rows**, making it advantageous for **analytical databases** where queries target specific **columns** across many rows. For instance, calculating the **average sales amount** would only involve reading data from the **sales amount column**, reducing unnecessary reads.
-
-Here's how a page might look in a row-oriented storage:
+### Heap Table Lifecycle
 
 ```
-+-----------------------------------+
-| Row1: [Col1, Col2, Col3, Col4]    |
-| Row2: [Col1, Col2, Col3, Col4]    |
-| Row3: [Col1, Col2, Col3, Col4]    |
-+-----------------------------------+
+INSERT PATH
+Client → Buffer Pool → find page w/ ≥ row_size free → write row → mark page dirty
+                                                             ↓
+                                            checkpoint writes dirty page back to disk
 ```
 
-And in a column-oriented storage:
+* Rows are appended to the first page listed as “enough-free” in the free-space map.
+* Delete = mark slot unused; data bytes may linger until vacuum to avoid extra WAL.
+* Update that grows = move row; original slot now a redirect pointer; causes internal fragmentation.
+* Heap scans read every page from first to last; index scans use row IDs to jump directly.
+
+### Clustered (Index-Organized) Tables
 
 ```
-+--------------------+
-| Column1 Data       |
-| [Value1, Value2,   |
-|  Value3, ...]      |
-+--------------------+
+CLUSTERED B-TREE
+          (root p500)
+        /               \
+   (p510)               (p560)   ← branch nodes
+   /   \                 /   \
+p512  p518           p562   p570 ← leaf nodes = full rows
 ```
 
-#### Indexes
+* The primary-key index *is* the table; leaf pages hold whole rows in key order.
+* Range predicates (`BETWEEN`, `>=`) read consecutive leaf pages with almost no random I/O.
+* Random UUID keys scatter inserts → many page splits → higher write amplification.
+* Enlarging a row may push it to another leaf, updating parent pointers.
 
-- Indexes are important on-disk structures that optimize database query performance by directing queries to the appropriate pages without scanning the entire heap.
-- They come in various types, each suited to different query patterns and data characteristics.
-
-```
-+-----------------+
-|    Query        |
-+--------+--------+
-         |
-         v
-+--------+--------+
-|    Index Pages  |
-+--------+--------+
-         |
-         v
-+--------+--------+
-|   Heap Pages    |
-+-----------------+
-```
-
-**B-Tree Indexes**
-
-- B-tree indexes have a balanced tree structure, supporting efficient searches, insertions, and deletions with logarithmic lookup time by navigating through a hierarchy of 
-- Suitable for a variety of query types, including range queries.
-  
-```
-Tree:
-        (root page)
-       /          \
-   (index page)  (index page)
-   /       \        /      \
-(data)   (data)  (data)  (data)
-```
-
-**Hash Indexes**
-
-- Use a hash function to map keys to specific hash buckets, offering high efficiency for equality searches.
-- Do not support range queries or sorting of rows across different pages.
+### Secondary (Non-Clustered) Index Walk
 
 ```
-[Diagram: Hash Index Mapping]
-Key1 --> Bucket A
-Key2 --> Bucket B
-Key3 --> Bucket A
+SELECT … WHERE sku = 'A42';
+┌─────────────┐
+│  index root │
+└──────┬──────┘
+       │  (binary search)
+       ▼
+┌─────────────┐
+│  index leaf │  contains (sku, page#, slot#)
+└──────┬──────┘
+       │  (single pointer hop)
+       ▼
+┌─────────────┐
+│  heap page  │  contains actual row
+└─────────────┘
 ```
 
-**Bitmap Indexes**
+* Leaf stores only key + **RID** (page#, slot#) so it stays compact.
+* Query path: traverse the B-tree → fetch heap page → return row.
+* If the leaf already includes every column in the `SELECT` list, the engine performs an **index-only scan** and never touches the heap page.
 
-- Represent data using bitmaps, effective for columns with low cardinality (few distinct values).
-- Commonly employed in data warehousing for complex analytical queries, as they can compactly represent row sets and quickly combine multiple conditions, reducing unnecessary page reads.
-
-```
-[Diagram: Bitmap Index Example]
-Value1: 101010
-Value2: 110011
-Value3: 100101
-```
-
-**Non-Clustered Indexes**
-
-- Store key values along with references (pointers) to heap rows.
-- Allow quick lookups of pages even if the heap is not sorted.
-- Queries navigate through index pages to find pointers to heap pages containing matching rows.
+### Other Index Types in One Picture
 
 ```
-[Diagram: Non-Clustered Index]
-+------------+       +------------+
-| Index Page | ----> | Heap Page  |
-+------------+       +------------+
+┌──────────── HASH ────────────┐   equality only
+│ key → hash → bucket page     │
+└──────────────────────────────┘
+┌────────── BITMAP ────────────┐   low-cardinality columns
+│ value1  1010011001           │
+│ value2  0101100100           │
+└──────────────────────────────┘
+┌───── GIN / INVERTED ─────────┐   arrays, JSON, full-text
+│ term → posting list of RIDs  │
+└──────────────────────────────┘
 ```
 
-**Clustered Indexes**
+* Hash = O(1) equality, no range support, directory may need re-splitting.
+* Bitmap = 1 bit per row; logical AND/OR of bitmaps solves multi-column predicates quickly.
+* Partial index = any type restricted by a `WHERE` clause; rows outside predicate are invisible to the index.
+* Covering/index-include = copy extra columns into leaf → query satisfied directly from index.
 
-- Physically order the table heap based on the index key, placing related rows close together on pages.
-- Improves the performance of range queries and ensures related data is stored contiguously.
-- Using random primary keys can scatter inserts across many pages, potentially degrading write performance.
-- Row updates that increase size may require moving the row to a different page, necessitating pointer adjustments.
-
-**Partial Indexes**
-
-- Store index entries only for specific rows that meet certain conditions.
-- Reduce the number of index pages used and improve performance for specialized queries.
+### Free-Space & Extent Maps
 
 ```
-+--------------+
-| Condition    |
-+--------------+
-| Indexed Rows |
-+--------------+
+FREE SPACE MAP (FSM)
+page_id │ free_bytes
+────────┼─────────────
+   100  │  800
+   101  │    0
+   102  │ 1600
+…
 ```
 
-**Covering Indexes**
+* FSM answers “which page has ≥ N free bytes?” in O(1) time.
+* When no page qualifies, the engine grabs a free page from the **Extent Map**.
+* Extent Map tracks which extents are allocated vs. brand-new vs. totally empty and reusable.
+* Large deletes make extents 100 % empty; a background task hands them back to the file so other objects can grow there.
 
-- Include all the necessary columns for a query within the index itself.
-- Allow the query to retrieve data directly from the index, avoiding access to heap pages and reducing disk I/O.
-
-```
-+------------+
-| Key + Data |
-+------------+
-```
-
-**Index-Only Scans**
-
-- Utilize indexes that contain all the requested data.
-- Enable queries to bypass heap pages, further reducing disk I/O and improving performance.
-
-**Free Space Maps**
-
-- Some databases maintain a map of free space across pages.
-- Quickly identify where new rows can be inserted, optimizing storage utilization.
+### Write-Ahead Log (WAL) Relationship
 
 ```
-+------------+------------+------------+
-| Page 1     | Page 2     | Page 3     |
-| Free Space | Used Space | Free Space |
-+------------+------------+------------+
+┌──────────────┐   (1) change row
+│ client query │ ───────────────────────────────────┐
+└──────────────┘                                    │
+                 (2) append redo record to WAL file │ (sequential)
+                                                    ▼
+                                             (3) commit-ack
+                                                    │
+                             (4) later: flush dirty page to datafile
 ```
+
+* All page changes first land in the sequential WAL so commits are fast and crash-safe.
+* Background checkpoints write dirty pages in large batches, turning many random page writes into fewer sequential WAL writes.
+* After a crash, the engine replays WAL records newer than the last checkpoint to rebuild all pages to a consistent state.
+
 
 ### Implications for Performance
 
@@ -526,15 +433,9 @@ innodb_buffer_pool_size = 4G
 
 ### Other Considerations
 
-- Some storage engines optimize **sequential scans** by prefetching pages of data into memory before they are needed. This approach takes advantage of the predictable access patterns in large analytical queries, reducing the number of individual I/O operations and significantly improving throughput for workloads that process data in sequence.  
-- **Partitioning** large tables involves splitting the data into smaller, more manageable chunks that are stored across multiple files. Each partition manages its own set of blocks or pages, which allows the database to handle queries more efficiently by accessing only the relevant partitions. This can improve performance by minimizing unnecessary I/O and increasing the concurrency of queries accessing different partitions.  
-- **Compression** techniques reduce the amount of storage required by encoding data in a more compact format. By fitting more rows into a single block, compression decreases disk usage and I/O operations. However, the tradeoff is increased CPU utilization, as the database needs to decompress data during reads and compress it again during writes. This balance is crucial in environments where both storage efficiency and processing power are important considerations.  
-- Large **indexes** can grow so much that they span multiple blocks and levels within the database’s storage hierarchy. This can slow down lookup operations due to the increased number of I/O operations needed to navigate the index. Keeping index keys short and efficient reduces the overall depth of the index structure, leading to faster searches and lower storage overhead.  
-- **Write-ahead logging (WAL)** is a mechanism that ensures data integrity by recording changes to a log file before applying them to the main data files. This approach provides crash recovery capabilities, as the log can be replayed to restore changes in the event of a failure. However, WAL requires additional storage and generates extra I/O, which can impact write performance.  
-- **SSD storage** significantly enhances the speed of random data access compared to traditional HDDs. This makes certain indexing and layout strategies, such as those optimizing for random reads, more beneficial. For example, B-tree and hash indexes perform better on SSDs due to the hardware's ability to quickly retrieve scattered blocks of data.  
-- The database engine tracks **dirty blocks** in memory—those that have been modified but not yet written back to disk. Periodically, the system flushes these blocks to disk to maintain data durability. This process can temporarily impact performance, especially if a large number of dirty blocks are written simultaneously or during peak system activity.  
-- Performing **bulk inserts** can improve data ingestion performance by writing data in large, contiguous blocks rather than executing many small, random writes. This reduces fragmentation and the overhead associated with managing multiple small I/O operations, making bulk inserts an efficient choice for loading large datasets.  
-- Monitoring **fragmentation** at the storage block level helps identify inefficiencies where data is scattered or stored in non-contiguous locations. High fragmentation can lead to increased random access patterns, slowing down query performance. Reorganizing data or rebuilding indexes can reduce fragmentation and improve access times.  
-- **Striped storage volumes**, created using techniques such as RAID, distribute data across multiple disks in a way that allows concurrent reads and writes. This parallelism enables the database to access multiple blocks simultaneously, significantly improving throughput for read-heavy and write-heavy workloads.  
-- **In-memory databases** eliminate the need for disk-based I/O, offering extremely low-latency data access by storing all data in RAM. Despite this, many in-memory systems organize their data into logical blocks or pages to maintain compatibility with traditional database algorithms and to manage memory efficiently.  
-- Queries that rely on **sequential I/O** perform well when the database can read blocks of data in order without unnecessary seeks. Read-ahead mechanisms, where the database preloads data before it is requested, further enhance performance for workloads that access data sequentially, such as table scans or range queries. 
+* Align database page size with SSD/HDD physical block (4 KB or 16 KB) to avoid partial-block I/O.
+* Keep hot rows small; overflow chaining kills cache hit rates.
+* Cluster by monotonically increasing keys when you can; if you must use UUIDs, batch inserts or use time-sorted UUID variants to reduce page splits.
+* Rebuild or `VACUUM FULL` tables that show > 20 % dead rows or 2× bloat.
+* Create covering indexes for frequent read-only analytics, but remember each extra column burdens INSERT/UPDATE.
+* Watch the free-space map: if every page shows “full” but the table keeps extending, you have bloat.
