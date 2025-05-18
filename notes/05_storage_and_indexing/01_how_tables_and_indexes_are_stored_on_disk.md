@@ -114,7 +114,7 @@ SELECT … WHERE sku = 'A42';
 * Query path: traverse the B-tree → fetch heap page → return row.
 * If the leaf already includes every column in the `SELECT` list, the engine performs an **index-only scan** and never touches the heap page.
 
-### Other Index Types in One Picture
+### Other Index Types
 
 ```
 ┌──────────── HASH ────────────┐   equality only
