@@ -77,7 +77,7 @@ The **clean hand‑off** between your code and the engine is what makes two‑ph
 During the **growing phase** the engine takes every lock the transaction asks for.  The instant the transaction releases its **first** lock it has crossed the **lock‑point** and entered the **shrinking phase**; from that moment no new locks are permitted.
 
 ```
- time ►  ─┬─── acquire S(A) ── acquire X(B) ──┬─ commit ─▶
+time ►   ─┬─── acquire S(A) ── acquire X(B) ──┬─ commit ─▶
           │         (growing)                 │  (shrinking)
           │                                   │
        lock‑point ────────────────────────────┘
