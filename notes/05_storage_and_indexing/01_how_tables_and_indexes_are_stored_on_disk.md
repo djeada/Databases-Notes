@@ -7,9 +7,9 @@ Exploring how databases store tables and indexes on disk can provide valuable in
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │ tablespace_sales                                                     │
-│┌───────────────┐┌───────────────┐┌───────────────┐                  │
-││ sales01.dbf   ││ sales02.dbf   ││ sales03.dbf   │  ← ordinary files│
-│└───────────────┘└───────────────┘└───────────────┘                  │
+│┌───────────────┐┌───────────────┐┌───────────────┐                   │
+││ sales01.dbf   ││ sales02.dbf   ││ sales03.dbf   │  ← ordinary files │
+│└───────────────┘└───────────────┘└───────────────┘                   │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -79,7 +79,7 @@ Client → Buffer Pool → find page w/ ≥ row_size free → write row → mark
 
 ```
 CLUSTERED B-TREE
-          (root p500)
+           (root p500)
         /               \
    (p510)               (p560)   ← branch nodes
    /   \                 /   \
@@ -168,7 +168,6 @@ page_id │ free_bytes
 * Background checkpoints write dirty pages in large batches, turning many random page writes into fewer sequential WAL writes.
 * After a crash, the engine replays WAL records newer than the last checkpoint to rebuild all pages to a consistent state.
 
-
 ### Implications for Performance
 
 Understanding how tables and indexes are stored can have significant implications for database performance and optimization strategies.
@@ -210,7 +209,7 @@ SELECT
  pg_size_pretty(pg_total_relation_size('your_table')) AS total_size;
 ```
 
-**Expected Output:**
+Expected Output:
 
 | table_size | indexes_size | total_size |
 |------------|--------------|------------|
@@ -229,7 +228,7 @@ II. **Analyze Query Execution with Buffer Usage**
 EXPLAIN (ANALYZE, BUFFERS) your_query;
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 Seq Scan on your_table  (cost=0.00..431.00 rows=21000 width=...)
@@ -250,7 +249,7 @@ III. **Reclaim Dead Space with VACUUM**
 VACUUM your_table;
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 VACUUM
@@ -267,15 +266,15 @@ IV. **Check Space Usage with pgstattuple**
 SELECT * FROM pgstattuple('your_table');
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
-  table_len    |  1000000
-  tuple_count  |   20000
-  tuple_len    |    800000
-  dead_tuple_count |  5000
-  dead_tuple_len   |  200000
-  free_space        |  0
+  table_len           |  1000000
+  tuple_count         |  20000
+  tuple_len           |  800000
+  dead_tuple_count    |  5000
+  dead_tuple_len      |  200000
+  free_space          |  0
 ```
 
 - **dead_tuple_count & dead_tuple_len:** Amount of space occupied by obsolete rows.
@@ -290,7 +289,7 @@ V. **Enable Page-Level Checksums**
 initdb --data-checksums -D /path/to/data
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 Data page checksums are enabled.
@@ -307,7 +306,7 @@ VI. **Monitor I/O Statistics with pg_stat_io**
 SELECT * FROM pg_stat_io;
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 query_id | read_pages | write_pages
@@ -341,7 +340,7 @@ VIII. **Update Statistics with ANALYZE**
 ANALYZE your_table;
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 ANALYZE
@@ -358,7 +357,7 @@ IX. **Reorder Table Data with CLUSTER**
 CLUSTER your_table USING your_index;
 ```
 
-**Expected Output:**
+Expected Output:
 
 ```
 CLUSTER
@@ -377,7 +376,7 @@ I. **Show Table Status**
 SHOW TABLE STATUS LIKE 'your_table';
 ```
 
-**Expected Output:**
+Expected Output:
 
 | Name      | Engine | Version | Row_format | Rows  | Avg_row_length | Data_length | Max_data_length | Index_length | ... |
 |-----------|--------|---------|------------|-------|----------------|-------------|-----------------|--------------|-----|
@@ -400,7 +399,7 @@ SHOW GLOBAL STATUS LIKE 'Innodb_buffer_pool_reads';
 - **Innodb_buffer_pool_read_requests:** Number of logical read requests.
 - **Innodb_buffer_pool_reads:** Number of reads that had to fetch data from disk.
 
-**Expected Output:**
+Expected Output:
 
 ```
 +---------------------------------+---------+
