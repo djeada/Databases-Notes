@@ -1,116 +1,81 @@
+#!/usr/bin/env python3
 import sqlite3
-import threading
 import time
+import os
+from multiprocessing import Process
 
-# Function to set up the database
+# Constants
+DATABASE = 'isolation_demo.db'
+
 def setup_database():
-    conn = sqlite3.connect('test.db')
-    conn.execute("PRAGMA journal_mode = WAL;")  # Enable Write-Ahead Logging for better concurrency
-    conn.execute("""
-        CREATE TABLE IF NOT EXISTS test_table (
-            id INTEGER PRIMARY KEY,
-            value TEXT
-        );
-    """)
-    # Initialize the table with a single row
-    conn.execute("""
-        INSERT OR REPLACE INTO test_table (id, value) 
-        VALUES 
-            (1, 'Initial');
-    """)
+    """(Re)create the database and initialize one product row."""
+    if os.path.exists(DATABASE):
+        os.remove(DATABASE)
+    with sqlite3.connect(DATABASE) as conn:
+        conn.execute("PRAGMA journal_mode = DELETE;")  # default journaling
+        conn.execute("""
+            CREATE TABLE products (
+                id       INTEGER PRIMARY KEY,
+                name     TEXT,
+                quantity INTEGER
+            );
+        """)
+        conn.execute("""
+            INSERT INTO products (id, name, quantity)
+            VALUES (1, 'Widget', 100);
+        """)
+    print("[Setup] Initialized products id=1, quantity=100\n")
+
+def writer():
+    """Start a transaction, update without committing until after a delay."""
+    conn = sqlite3.connect(DATABASE, isolation_level=None, timeout=10)
+    cur = conn.cursor()
+    cur.execute("BEGIN IMMEDIATE;")
+    print("[Writer] BEGIN IMMEDIATE")
+    cur.execute("UPDATE products SET quantity = 200 WHERE id = 1;")
+    print("[Writer] Updated quantity to 200 but not yet committed")
+    time.sleep(5)  # hold the lock / uncommitted change
     conn.commit()
+    print("[Writer] COMMIT")
     conn.close()
 
-# Transaction A: Reads data (Simulating Read Committed or Serializable)
-def transaction_a(isolation_level='READ COMMITTED'):
-    conn_a = sqlite3.connect('test.db', timeout=10, isolation_level=None)
-    cursor_a = conn_a.cursor()
-    
-    if isolation_level == 'SERIALIZABLE':
-        cursor_a.execute("BEGIN IMMEDIATE;")  # Starts a transaction with RESERVED lock
+def reader(isolated: bool):
+    """
+    Read quantity from the database.
+    If isolated=True, uses default isolation (no dirty reads).
+    If isolated=False, sets PRAGMA read_uncommitted=1 to allow dirty reads.
+    """
+    conn = sqlite3.connect(DATABASE, timeout=10)
+    cur = conn.cursor()
+    if not isolated:
+        cur.execute("PRAGMA read_uncommitted = 1;")
+        print("[Reader] PRAGMA read_uncommitted = 1 (dirty reads allowed)")
     else:
-        cursor_a.execute("BEGIN;")  # Starts a deferred transaction
-
-    print(f"Transaction A ({isolation_level}): Started.")
-
-    # Read the value
-    cursor_a.execute("SELECT value FROM test_table WHERE id = 1;")
-    value = cursor_a.fetchone()[0]
-    print(f"Transaction A ({isolation_level}): Read value = {value}")
-
-    # Simulate some processing time
-    time.sleep(2)
-
-    # Read the value again
-    cursor_a.execute("SELECT value FROM test_table WHERE id = 1;")
-    new_value = cursor_a.fetchone()[0]
-    print(f"Transaction A ({isolation_level}): Read value again = {new_value}")
-
-    conn_a.commit()
-    print(f"Transaction A ({isolation_level}): Committed.")
-    conn_a.close()
-
-# Transaction B: Writes data
-def transaction_b():
-    conn_b = sqlite3.connect('test.db', timeout=10, isolation_level=None)
-    cursor_b = conn_b.cursor()
-
-    cursor_b.execute("BEGIN IMMEDIATE;")  # Starts a transaction with RESERVED lock
-    print("Transaction B: Started.")
-
-    # Update the value
-    cursor_b.execute("UPDATE test_table SET value = 'Updated by B' WHERE id = 1;")
-    print("Transaction B: Updated value to 'Updated by B'.")
-
-    # Simulate some processing time
+        print("[Reader] Default isolation (dirty reads disallowed)")
+    # Wait a moment so writer's UPDATE has happened but before COMMIT
     time.sleep(1)
+    cur.execute("SELECT quantity FROM products WHERE id = 1;")
+    qty = cur.fetchone()[0]
+    print(f"[Reader] Read quantity = {qty}")
+    conn.close()
 
-    conn_b.commit()
-    print("Transaction B: Committed.")
-    conn_b.close()
-
-# Main function to run the simulation
-def main():
+if __name__ == '__main__':
+    # --- Isolated Transactions Demo ---
     setup_database()
+    print("--- Isolation Demo: NO dirty reads ---")
+    p_w = Process(target=writer)
+    p_r = Process(target=reader, args=(True,))
+    p_w.start()
+    p_r.start()
+    p_w.join()
+    p_r.join()
 
-    print("\n--- Simulating Read Committed Isolation Level ---")
-    # Start Transaction A with Read Committed
-    thread_a = threading.Thread(target=transaction_a, args=('READ COMMITTED',))
-    # Start Transaction B shortly after
-    thread_b = threading.Thread(target=transaction_b)
-
-    thread_a.start()
-    time.sleep(0.5)  # Ensure Transaction A starts first
-    thread_b.start()
-
-    thread_a.join()
-    thread_b.join()
-
-    # Reset the table for the next simulation
+    # --- Non-Isolated (Dirty Reads) Demo ---
     setup_database()
-
-    print("\n--- Simulating Serializable Isolation Level ---")
-    # Start Transaction A with Serializable
-    thread_a_serial = threading.Thread(target=transaction_a, args=('SERIALIZABLE',))
-    # Start Transaction B shortly after
-    thread_b_serial = threading.Thread(target=transaction_b)
-
-    thread_a_serial.start()
-    time.sleep(0.5)  # Ensure Transaction A starts first
-    thread_b_serial.start()
-
-    thread_a_serial.join()
-    thread_b_serial.join()
-
-    # Final state of the table
-    conn_final = sqlite3.connect('test.db')
-    cursor_final = conn_final.cursor()
-    cursor_final.execute("SELECT value FROM test_table WHERE id = 1;")
-    final_value = cursor_final.fetchone()[0]
-    print(f"\nFinal value in test_table: {final_value}")
-    conn_final.close()
-
-    print("\nDemo completed.")
-
-if __name__ == "__main__":
-    main()
+    print("\n--- Non-Isolation Demo: ALLOW dirty reads ---")
+    p_w = Process(target=writer)
+    p_r = Process(target=reader, args=(False,))
+    p_w.start()
+    p_r.start()
+    p_w.join()
+    p_r.join()
