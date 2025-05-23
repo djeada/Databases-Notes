@@ -123,15 +123,7 @@ The adjacency list shines in applications where you typically read or modify sma
 * Workloads with heavy write activity, where the cost of complex read queries is acceptable.
 * Systems where vendor‑specific tree extensions (e.g., Oracle `CONNECT BY`) are available.
 
-#### Alternatives for Deep Reads
-
-If you need faster full-tree reads at the cost of more complex writes or extra storage, consider one of these other models:
-
-* **Materialised Path** – store the path string (`"1/2/3"`) in each row for quick prefix searches.
-* **Nested Sets** – maintain left/right bounds; reads are *O(1)* but writes are slow.
-* **Closure Table** – keep a second table containing every ancestor → descendant pair; both reads and writes are performant but extra storage is required.
-
-### Path Enumeration (Materialised Path) Model – Practical Notes
+### Path Enumeration (Materialised Path) Model
 
 The **Path Enumeration Model**, often called the *materialised path* technique, represents hierarchies by storing each node’s complete ancestry as a single delimited string. This means any descendant or ancestor lookup requires no joins or recursion, trading read simplicity for more complex writes.
 
@@ -209,16 +201,11 @@ ORDER  BY length(path);
 
 Writes in this model require cascaded updates to keep paths consistent. Wrap each multi-step change in a transaction to avoid partial updates.
 
-| Operation                                                                  | Example (SQL pseudo‑code)                                           |        |   |                 |
-| -------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------ | - | --------------- |
-| **Insert** child under `parent_id = p`                                     | \`INSERT INTO categories\_path (category\_id, path, category\_name) |        |   |                 |
-| VALUES (\:id, (SELECT path FROM categories\_path WHERE category\_id = \:p) |                                                                     | :id    |   | '.', \:name);\` |
-| **Move** a sub‑tree                                                        | 1️⃣ Fetch `old_prefix`, `new_prefix`.                               |        |   |                 |
-| 2️⃣ \`UPDATE categories\_path                                              |                                                                     |        |   |                 |
-| SET path = REPLACE(path, old\_prefix, new\_prefix)                         |                                                                     |        |   |                 |
-| WHERE path LIKE old\_prefix                                                |                                                                     | '%';\` |   |                 |
-| **Delete** a node + sub‑tree                                               | `DELETE FROM categories_path WHERE path LIKE '1.2.3.%';`            |        |   |                 |
-
+| Operation  | Example (SQL pseudo-code)                                                                                                                                                                                                                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Insert** | `-- insert child under parent_id = :p`<br>`INSERT INTO categories_path (category_id, path, category_name)`<br>`SELECT :id, CONCAT(path, '.', :id), :name FROM categories_path WHERE category_id = :p;`                                                                                                                                                    |
+| **Move**   | `-- fetch old prefix`<br>`SELECT path AS old_prefix FROM categories_path WHERE category_id = :old_p;`<br>`-- fetch new prefix`<br>`SELECT path AS new_prefix FROM categories_path WHERE category_id = :new_p;`<br>`-- apply update`<br>`UPDATE categories_path SET path = REPLACE(path, old_prefix, new_prefix) WHERE path LIKE CONCAT(old_prefix, '%');` |
+| **Delete** | `-- delete a node and its entire sub-tree`<br>`DELETE FROM categories_path WHERE path LIKE '1.2.3.%';`                                                                                                                                                                                                                                                    |
 > *Tip:* Wrap these statements in a transaction to keep the tree consistent.
 
 #### Implementation Tips
@@ -248,13 +235,6 @@ Although materialised paths speed up reads, they can introduce maintenance chall
 | Large string updates during *move* operations      | Buffer changes in staging table, then swap; or migrate to Closure Table model for heavy mutability. |
 | Index key length limits (e.g., MySQL < 3072 bytes) | Hash long prefixes into an additional column and index that.                                        |
 | Human error constructing paths                     | Provide stored procedures or application service layer to encapsulate path math.                    |
-
-#### Alternatives for Mutable Trees
-
-When write complexity becomes a bottleneck, consider these alternatives:
-
-* **Nested Sets (MPTT)** – fastest bulk reads; costly writes due to range shifts.
-* **Closure Table** – separate table of ancestor → descendant pairs gives fast reads *and* manageable writes at the price of extra storage.
 
 ### Nested Set (Modified Preorder Tree Traversal) Model
 
@@ -379,15 +359,6 @@ Heavy shifts and concurrency can challenge MPTT; consider these strategies:
 | Integer exhaustion after many moves               | Periodically renumber tree offline (re-index).                                             |
 | Concurrency conflicts (two inserts same location) | Wrap shifts in pessimistic locks (`SELECT ... FOR UPDATE`).                                |
 
-#### Alternatives for Mutable Trees
-
-When write performance becomes critical, explore these models:
-
-* **Closure Table** – stores ancestor ↔ descendant pairs; moderate writes, fast reads.
-* **Path Enumeration** – path string for quick reads, simpler though writes can be expensive.
-* **Adjacency List + Recursive CTE** – minimal write cost, acceptable reads if depth is small or database supports fast recursion.
-
-
 ### Closure Table Model
 
 The **Closure Table Model** captures every ancestor–descendant relationship, including self-relations, in a dedicated table. By precomputing the transitive closure of the hierarchy, queries become simple joins, offering consistent performance for both upward and downward navigations.
@@ -503,15 +474,6 @@ While powerful, closure tables can grow quickly and involve complex write logic.
 | Quadratic growth in dense trees         | Limit stored depths (e.g., only `depth ≤ k` rows) or prune distant ancestors if not needed. |
 | Complex move operations                 | Encapsulate logic in atomic stored procedures rather than application code.                 |
 | Large indexes due to many relationships | Employ partial or filtered indexes and consider table partitioning.                         |
-
-#### Alternatives
-
-When different trade-offs are needed, consider:
-
-* **Nested Sets** – best for static trees with heavy read analytics; costly writes.
-* **Path Enumeration** – simpler schema with fast reads but heavy write ripples.
-* **Adjacency List + Recursive CTE** – minimal storage, simple writes, but slower deep-tree reads.
-
 
 ### Storing Hierarchical Data in SQL with **Recursive CTEs**
 
