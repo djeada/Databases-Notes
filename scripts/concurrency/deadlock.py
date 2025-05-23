@@ -1,75 +1,75 @@
-import sqlite3
 import threading
 import time
+import psycopg2
+from psycopg2 import sql, OperationalError, errors
 
-# Flag to control whether the deadlock should occur
-deadlock_mode = True  # Set to False to demonstrate without deadlock
+DSN = "dbname=test user=postgres password=secret host=localhost port=5432"
 
-# Function for connection 1
-def conn1_behavior():
-    conn1 = sqlite3.connect('test.db', timeout=5)  # timeout for locks
-    conn1.execute("BEGIN TRANSACTION;")
-    conn1.execute("UPDATE test_table SET value = 'X' WHERE id = 1;")
-    print("Connection 1: Locked row 1.")
+def setup_db():
+    with psycopg2.connect(DSN) as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                DROP TABLE IF EXISTS deadlock_demo;
+                CREATE TABLE deadlock_demo (
+                    id   SERIAL PRIMARY KEY,
+                    val  TEXT
+                );
+                INSERT INTO deadlock_demo (val) VALUES ('A'), ('B');
+            """)
+        conn.commit()
+    print("✅ Table created and initialized.")
 
-    # Simulate some processing time before trying to lock row 2
-    if deadlock_mode:
-        time.sleep(1)  # Ensure overlap with conn2's lock
-    else:
-        time.sleep(2)  # Avoid overlap, preventing deadlock
+def cleanup_db():
+    with psycopg2.connect(DSN) as conn:
+        with conn.cursor() as cur:
+            cur.execute("DROP TABLE IF EXISTS deadlock_demo;")
+        conn.commit()
+    print("🧹 Table dropped, cleanup complete.")
 
+def worker(name, first_id, second_id, delay):
+    conn = psycopg2.connect(DSN)
+    conn.autocommit = False
+    cur = conn.cursor()
     try:
-        conn1.execute("UPDATE test_table SET value = 'Y' WHERE id = 2;")
-        print("Connection 1: Successfully updated row 2.")
-    except sqlite3.OperationalError as e:
-        print(f"Connection 1: Deadlock detected! {e}")
-    conn1.rollback()  # Rollback after deadlock or success
-    conn1.close()
+        cur.execute("BEGIN;")
+        # Lock the first row
+        cur.execute(
+            sql.SQL("SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;"),
+            [first_id]
+        )
+        print(f"{name}: locked row {first_id}")
+        
+        time.sleep(delay)
+        
+        # Now try to lock the second row
+        print(f"{name}: attempting to lock row {second_id}")
+        cur.execute(
+            sql.SQL("SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;"),
+            [second_id]
+        )
+        print(f"{name}: locked row {second_id} — no deadlock?")
+        
+        conn.commit()
+    except OperationalError as e:
+        # Psycopg2 raises a generic OperationalError for deadlocks
+        print(f"{name}: DEADLOCK detected! → {e}")
+        conn.rollback()
+    finally:
+        cur.close()
+        conn.close()
 
-# Function for connection 2
-def conn2_behavior():
-    conn2 = sqlite3.connect('test.db', timeout=5)  # timeout for locks
-    conn2.execute("BEGIN TRANSACTION;")
-    conn2.execute("UPDATE test_table SET value = 'Y' WHERE id = 2;")
-    print("Connection 2: Locked row 2.")
-
-    # Simulate some processing time before trying to lock row 1
-    if deadlock_mode:
-        time.sleep(1)  # Ensure overlap with conn1's lock
-    else:
-        time.sleep(0.5)  # Avoid overlap, preventing deadlock
-
-    try:
-        conn2.execute("UPDATE test_table SET value = 'X' WHERE id = 1;")
-        print("Connection 2: Successfully updated row 1.")
-    except sqlite3.OperationalError as e:
-        print(f"Connection 2: Deadlock detected! {e}")
-    conn2.rollback()  # Rollback after deadlock or success
-    conn2.close()
-
-# Set up the test table
-def setup_database():
-    conn = sqlite3.connect('test.db')
-    conn.execute("PRAGMA journal_mode = WAL;")  # Use WAL for concurrency
-    conn.execute("CREATE TABLE IF NOT EXISTS test_table (id INTEGER PRIMARY KEY, value TEXT);")
-    conn.execute("INSERT OR REPLACE INTO test_table (id, value) VALUES (1, 'A'), (2, 'B');")
-    conn.commit()
-    conn.close()
-
-# Main function
 if __name__ == "__main__":
-    setup_database()
+    setup_db()
 
-    # Create threads for both connections
-    thread1 = threading.Thread(target=conn1_behavior)
-    thread2 = threading.Thread(target=conn2_behavior)
+    # Thread A: locks row 1 then row 2
+    t1 = threading.Thread(target=worker, args=("Thread-A", 1, 2, 1))
+    # Thread B: locks row 2 then row 1
+    t2 = threading.Thread(target=worker, args=("Thread-B", 2, 1, 1))
 
-    # Start the threads
-    thread1.start()
-    thread2.start()
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
 
-    # Wait for both threads to complete
-    thread1.join()
-    thread2.join()
-
-    print("Demo completed.")
+    cleanup_db()
+    print("🏁 Demo complete.")
