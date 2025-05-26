@@ -18,22 +18,13 @@ In environments where multiple transactions execute at the same time, issues lik
 
 The Serializable isolation level is the strictest level, ensuring that transactions are completely isolated from each other. It guarantees that the outcome of executing transactions concurrently is the same as if they were executed sequentially in some order.
 
-```
-Time | Transaction T1                | Transaction T2
---------------------------------------------------------------
-T1   | BEGIN TRANSACTION             |
-     | SELECT SUM(balance) FROM accounts; (Total = $10,000) |
-     |                                |
-T2   |                                | BEGIN TRANSACTION
-     |                                | INSERT INTO accounts (id, balance) VALUES (101, $1,000);
-     |                                |
-T3   |                                | (Blocked until T1 completes)
-     |                                |
-T4   | COMMIT                         |
-     |                                |
-T5   |                                | INSERT completes
-     |                                | COMMIT
-```
+| Time | Transaction T1                                                                 | Transaction T2                                                                             |
+|------|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
+| T1   | **BEGIN TRANSACTION**<br>SELECT SUM(balance) FROM accounts; <br> _(Total = \$10,000)_ |                                                                                           |
+| T2   |                                                                                 | **BEGIN TRANSACTION**<br>INSERT INTO accounts (id, balance) <br>VALUES (101, \$1,000);       |
+| T3   |                                                                                 | _(Blocked: waiting for T1 to complete)_                                                   |
+| T4   | **COMMIT**                                                                      |                                                                                           |
+| T5   |                                                                                 | _(Unblocked)_ INSERT completes<br>**COMMIT**                                              |
 
 In this scenario:
 
@@ -46,20 +37,13 @@ In this scenario:
 
 The Repeatable Read isolation level ensures that if a transaction reads a row, it will see the same data throughout the transaction, even if other transactions modify it. However, it doesn't prevent new rows (phantoms) from being inserted by other transactions.
 
-```
-Time | Transaction T1                  | Transaction T2
------------------------------------------------------------------
-T1   | BEGIN TRANSACTION               |
-     | SELECT * FROM orders WHERE customer_id = 1; (Returns 5 rows) |
-     |                                 |
-T2   |                                 | BEGIN TRANSACTION
-     |                                 | INSERT INTO orders (order_id, customer_id) VALUES (101, 1);
-     |                                 | COMMIT
-     |                                 |
-T3   | SELECT * FROM orders WHERE customer_id = 1; (Returns 5 rows) |
-     |                                 |
-T4   | COMMIT                          |
-```
+| Time | Transaction T1                                                                 | Transaction T2                                                                                      |
+| ---- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------|
+| T1   | **BEGIN TRANSACTION**<br>SELECT * FROM orders WHERE customer_id = 1;<br>_(Returns 5 rows)_ |                                                                                                     |
+| T2   |                                                                                 | **BEGIN TRANSACTION**<br>INSERT INTO orders (order_id, customer_id) VALUES (101, 1);<br>**COMMIT** |
+| T3   | SELECT * FROM orders WHERE customer_id = 1;<br>_(Returns 5 rows)_                |                                                                                                     |
+| T4   | **COMMIT**                                                                      |                                                                                                     |
+
 
 In this example:
 
@@ -124,26 +108,27 @@ Higher isolation levels like Serializable provide greater data integrity but can
 
 ### Understanding Phantom Reads
 
-Phantom reads occur when a transaction reads a set of rows that satisfy a condition and, upon re-reading, finds additional rows due to inserts by other transactions.
+Here’s a revised section that fixes the table layout and adds an explicit **Database State** column, plus a clear narrative of what each transaction is trying to achieve and what actually happens:
 
-**Example of Phantom Read under Repeatable Read:**
+### Understanding Phantom Reads
 
-```
-Time | Transaction T1                  | Transaction T2
------------------------------------------------------------------
-T1   | BEGIN TRANSACTION               |
-     | SELECT COUNT(*) FROM products WHERE category = 'Electronics'; (Returns 10) |
-     |                                 |
-T2   |                                 | BEGIN TRANSACTION
-     |                                 | INSERT INTO products (product_id, category) VALUES (201, 'Electronics');
-     |                                 | COMMIT
-     |                                 |
-T3   | SELECT COUNT(*) FROM products WHERE category = 'Electronics'; (Returns 11) |
-     |                                 |
-T4   | COMMIT                          |
-```
+*Phantom reads* happen when Transaction T1 re-executes a query and sees **new** rows inserted by another transaction (T2), despite using Repeatable Read.
 
-Even under Repeatable Read, T1 sees the new product inserted by T2 when it re-executes the query, leading to a phantom read.
+| Time | Transaction T1 (T1’s view)                                                        | Transaction T2                                                                                                | Database State (Electronics)   |
+| :--: | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :----------------------------- |
+|  T1  | **BEGIN TRANSACTION**<br>– Reads count of Electronics products:<br>  `COUNT = 10` |                                                                                                               | 10 rows (*IDs: 101–110*)       |
+|  T2  |                                                                                   | **BEGIN TRANSACTION**<br>– Inserts a new Electronics product:<br>  `INSERT (201,'Electronics')`<br>**COMMIT** | 11 rows (*IDs: 101–110, 201*)  |
+|  T3  | Re-reads same query:<br>  `SELECT COUNT(*) ... = 11`<br>**(Phantom row!)**        |                                                                                                               | 11 rows (*IDs: 101–110, 201*)  |
+|  T4  | **COMMIT**                                                                        |                                                                                                               | Final state preserved: 11 rows |
+
+**What T1 intended:**
+T1 began under Repeatable Read to get a stable snapshot of “all Electronics” and expected any re-reads to still return 10. Its purpose might be to calculate inventory before placing a bulk order or generating a report.
+
+**What actually happened:**
+Because T2 committed an insert of a new Electronics product before T1 re-ran its `SELECT`, T1’s second read sees 11 rows. That extra “phantom” row wasn’t visible on the first read, breaking T1’s expectation of repeatability.
+
+* *Repeatable Read* prevents non-repeatable reads of **existing** rows (you can’t see updates twice), but it does **not** stop other transactions from inserting new rows that match your `WHERE` clause. Those new rows show up as phantoms.
+* To guard against phantoms, you must use **Serializable** isolation, which effectively locks the range of possible rows or aborts conflicting transactions.
 
 ### Strategies to Prevent Phantom Reads
 
