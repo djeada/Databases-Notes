@@ -1,3 +1,7 @@
+TODO:
+
+- smaller table first when JOIN
+  
 ## Query Optimization Techniques
 
 Query optimization is a fundamental aspect of database management that focuses on improving the efficiency of SQL queries. By selecting the most effective execution strategies, query optimization reduces resource consumption and accelerates response times. This enhances the overall performance of database systems and provides a better experience for users and applications relying on the data.
@@ -276,3 +280,4 @@ We can illustrate the optimized query execution in the following way:
 - Too many indexes can slow down write operations and increase storage requirements.
 - Rewrite complex queries to be more efficient and easier for the optimizer to handle.
 - Always test query optimizations in a development environment before deploying to production.
+
