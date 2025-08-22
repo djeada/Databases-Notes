@@ -115,7 +115,6 @@ Here’s a revised section that fixes the table layout and adds an explicit **Da
 *Phantom reads* happen when Transaction T1 re-executes a query and sees **new** rows inserted by another transaction (T2), despite using Repeatable Read.
 
 | Time | Transaction T1 (T1’s view)                                                        | Transaction T2                                                                                                | Database State (Electronics)   |
-| :--: | :-------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ | :----------------------------- |
 |  T1  | **BEGIN TRANSACTION**<br>– Reads count of Electronics products:<br>  `COUNT = 10` |                                                                                                               | 10 rows (*IDs: 101–110*)       |
 |  T2  |                                                                                   | **BEGIN TRANSACTION**<br>– Inserts a new Electronics product:<br>  `INSERT (201,'Electronics')`<br>**COMMIT** | 11 rows (*IDs: 101–110, 201*)  |
 |  T3  | Re-reads same query:<br>  `SELECT COUNT(*) ... = 11`<br>**(Phantom row!)**        |                                                                                                               | 11 rows (*IDs: 101–110, 201*)  |
@@ -144,3 +143,4 @@ COMMIT;
 ```
 
 Under Serializable, T1 would not see the new product inserted by T2 during its transaction.
+
