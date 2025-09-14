@@ -10,11 +10,7 @@ After reading the material, you should be able to answer the following questions
 4. How can tools like the EXPLAIN command be used to analyze and optimize SQL queries, and what insights can they provide into query execution plans?
 5. What are the best practices for query optimization, including balancing read and write operations, avoiding excessive indexing, rewriting complex queries, and regularly reviewing and maintaining query performance?
 
-### Overview
-
-There are several techniques that can be used to optimize SQL queries. Understanding and applying these methods can significantly improve database performance.
-
-#### Indexing
+### Indexing
 
 Indexes are like a smart, alphabetized cheat-sheet for your tables. Instead of rifling through every row (a **full table scan**), the database jumps straight to where the matches live (an **index seek**).
 
@@ -27,7 +23,7 @@ Without index (slow)                  With index (fast)
 └───────────────┘                     └───────────────┘
 ```
 
-##### How Indexes Improve Query Performance
+#### How Indexes Improve Query Performance
 
 * *They shortcut the search.* On large tables, a full scan is O(n). A B-tree index can make lookups feel closer to O(log n).
 * *They help more than WHERE.* Good indexes also speed up `JOIN`s, `ORDER BY`, `GROUP BY`, and `DISTINCT`.
@@ -41,7 +37,7 @@ High selectivity (great)         Low selectivity (meh)
 email → 1 match                   is_active → 900k matches
 ```
 
-##### Creating an Index Example
+#### Creating an Index Example
 
 ```sql
 CREATE INDEX idx_customers_lastname ON customers(last_name);
@@ -101,7 +97,7 @@ WHERE LOWER(email) = LOWER('A@B.COM')
 WHERE email = 'a@b.com'   -- store emails lowercased OR use functional index
 ```
 
-##### Example
+#### Example
 
 ```sql
 EXPLAIN SELECT * FROM customers WHERE last_name = 'Smith';
@@ -132,7 +128,7 @@ Real-world wins we’ve seen:
 * Recent orders by customer with `ORDER BY created_at DESC LIMIT 20` + `(customer_id, created_at)` index: **5.6s → 85ms (\~65×)**.
 * Unique check on `sku`: **700ms → 2ms (\~350×)** after a unique index.
 
-#### Query Rewriting
+### Query Rewriting
 
 You can often get big wins by rephrasing the same question so the optimizer can pick a cheaper path.
 
@@ -141,7 +137,7 @@ Complicated shape                 Simpler shape
    (nested subquery)    →         (join/exists)  →   better plan
 ```
 
-##### Simplifying Complex Queries
+#### Simplifying Complex Queries
 
 * Choosing *JOIN* or *EXISTS* instead of `IN (subquery)` helps the planner handle large result sets efficiently, while using `IN` can slow down queries; for example, checking for matching customer IDs in a sales table performs better with a join than with a subquery returning thousands of IDs.
 * Filtering early by pushing restrictive predicates close to the base tables reduces the number of rows processed, while delaying filters forces unnecessary work; for instance, applying `WHERE status = 'active'` before a join prevents inactive rows from being carried forward.
@@ -150,7 +146,7 @@ Complicated shape                 Simpler shape
 * Not wrapping *indexed columns* in functions allows indexes to be used, while applying functions forces full scans; for example, `WHERE LOWER(username) = 'bob'` ignores an index on `username`, but `WHERE username = 'Bob'` uses it directly.
 * Watching for duplicates when switching to *JOINs* prevents inflated row counts, while ignoring this risk can distort results; for example, joining orders to customers on non-unique fields may multiply rows unless you ensure keys or apply `DISTINCT`.
 
-##### Rewriting Example
+#### Rewriting Example
 
 Inefficient query:
 
@@ -263,7 +259,7 @@ Merge/Hash Join  → better for big sets; order/hash considerations
 
 Pair **the right indexes** with **query shapes that can use them**, and you’ll usually see order-of-magnitude wins. When in doubt, run `EXPLAIN ANALYZE`, compare before/after timings, and check whether the plan switched from `Seq Scan` to an index-driven path.
 
-#### Join Optimization
+### Join Optimization
 
 Joins are common in SQL queries but can be resource-intensive. Optimizing joins can have a substantial impact on performance.
 
@@ -276,7 +272,7 @@ High level mental model
    filter early, index keys, pick join that matches row counts
 ```
 
-##### Choosing the Right Join Type
+#### Choosing the Right Join Type
 
 Different join types (INNER, LEFT, RIGHT, FULL) serve different purposes. Selecting the appropriate type ensures that only the necessary data is processed.
 
@@ -307,7 +303,7 @@ Merge Join   : fast if both inputs are pre-sorted on join keys (or can be)
 * Small → big with an **index on the big side** ⇒ Nested Loop wins.
 * Big ↔ big without supporting indexes ⇒ Hash/Merge usually wins.
 
-##### Example of Join Order Impact
+#### Example of Join Order Impact
 
 Suppose you have two tables, `large_table` and `small_table`. Joining `small_table` to `large_table` can be more efficient than the reverse **when** the engine uses a nested loop and can seek into `large_table` by key.
 
@@ -367,7 +363,7 @@ Measured wins from join tuning (illustrative):
 * Rewriting `LEFT JOIN ... WHERE st.id IS NOT NULL` to `INNER JOIN`: **1.4s → 160ms (\~9×)** due to better plan choice.
 * Switching to `EXISTS` for presence-only checks: **2.2s → 95ms (\~23×)**.
 
-#### Using EXPLAIN to Analyze Queries
+### Using EXPLAIN to Analyze Queries
 
 Most databases provide an `EXPLAIN` command that shows how a query will be executed. This tool is invaluable for understanding and optimizing query performance.
 
@@ -418,7 +414,7 @@ Measured “explain-driven” fixes (illustrative):
 * Bitmap index + heap recheck on wide table → added covering index: **1.1s → 70ms (\~16×)**.
 * Sort spill spotted in plan → added `(customer_id, created_at)` index matching `ORDER BY` : **2.0s → 90ms (\~22×)**.
 
-#### Partitioning
+### Partitioning
 
 Partitioning divides a large table into smaller, more manageable pieces. This can improve query performance by allowing the database to scan only relevant partitions (aka **partition pruning**), and can make maintenance (loads, archiving) safer and faster.
 
@@ -449,7 +445,7 @@ Trade-offs:
 * Unique constraints across partitions can be tricky (engine-dependent).
 * Hot partitions (e.g., “this month”) may still be your bottleneck.
 
-##### Partitioning Example
+#### Partitioning Example
 
 Partitioning a table by date:
 
@@ -506,7 +502,7 @@ Measured partitioning wins (illustrative):
 * Daily dashboard (same-day slice): **1.8s → 60ms (\~30×)** with a hot “today” partition and covering index.
 * Archival delete of 100M old rows: **hours → seconds** by `DETACH PARTITION` then dropping it offline.
 
-#### Materialized Views
+### Materialized Views
 
 Materialized views store the result of a query **on disk** so future lookups skip heavy joins/aggregations.
 
@@ -528,7 +524,7 @@ Trade-offs:
 * Considering *storage and refresh cost* highlights that materialized views duplicate data and require re-running the query, while ignoring this leads to wasted space and slower refresh operations; for instance, maintaining a large daily aggregate of clicks consumes both disk and CPU on every refresh.
 * Accounting for *write overhead* shows that more moving parts are needed to keep materialized views current, while neglecting this increases maintenance complexity; for example, frequent inserts into an orders table require scheduling refreshes to ensure reports stay accurate.
 
-##### Creating a Materialized View Example
+#### Creating a Materialized View Example
 
 ```sql
 -- Base example
@@ -571,7 +567,7 @@ CREATE INDEX ON sales_summary_daily (product_id, day);
 
 > Tip: Query the MV directly (`FROM sales_summary_daily`) or wire a view/feature flag so you can flip between the MV and the base query during rollout.
 
-##### Refreshing the Materialized View
+#### Refreshing the Materialized View
 
 ```sql
 -- Basic refresh (locks readers briefly in some engines)
@@ -608,7 +604,7 @@ Measured wins we’ve seen (illustrative but realistic):
 * Daily cohort report: **3.1s → 90ms (\~34×)** using a `cohorts_daily` MV + concurrent refresh every 10 min.
 * Top-selling products API (p95): **1.4s → 45ms (\~31×)** moving from on-the-fly GROUP BY to MV + index.
 
-#### Caching
+### Caching
 
 Caching keeps **recent/frequent** results close to your app so you avoid repeating expensive work.
 
@@ -636,7 +632,7 @@ Risks & mitigations:
 * Preventing a *stampede* through single-flight locks, early refresh strategies, or jittered TTLs spreads out load, while ignoring this risk causes many clients to hit the backend simultaneously when a cache entry expires; for example, using a lock in Redis ensures only one worker recomputes a popular report while others wait.
 * Managing *oversized values* by compressing data or caching only partial results keeps cache usage efficient, while leaving large uncompressed values wastes memory and slows retrieval; for example, storing compressed JSON or just the top 10 search results in cache improves both space usage and response time.
 
-##### Application-Level Caching Example
+#### Application-Level Caching Example
 
 Basic cache-aside with Redis (Python):
 
@@ -692,7 +688,7 @@ Measured wins (illustrative):
 * Search suggestions (top queries) p95: **190ms → 22ms (\~9×)** using edge + Redis fallback.
 * Cart pricing recompute under load: **1.1s → 120ms (\~9×)** via write-through of per-user totals.
 
-#### Statistics and Histograms
+### Statistics and Histograms
 
 Optimizers aren’t psychic—they bet on plans using **statistics** about your data. When those stats are fresh and detailed, the planner picks smarter joins, uses the right indexes, and avoids ugly scans.
 
@@ -724,7 +720,7 @@ Why you care:
 * Good **correlation** → cheaper **Index Scans** vs random heap hops.
 * Richer stats target on skewed columns → fewer “oops, this was 1 row not 100k.”
 
-##### Updating Statistics Example
+#### Updating Statistics Example
 
 In PostgreSQL:
 
@@ -745,7 +741,7 @@ ANALYZE customers (city);
 
 **Auto-analyze** will kick in after changes: roughly `autovacuum_analyze_threshold + autovacuum_analyze_scale_factor * reltuples`. If tables churn a lot, consider lowering those for just the hot tables.
 
-##### Verifying Updated Statistics
+#### Verifying Updated Statistics
 
 ```sql
 SELECT attname, n_distinct, most_common_vals, most_common_freqs
@@ -806,7 +802,7 @@ Nested Loop  (cost=0.00..5000.00 rows=100 width=...)
 * Two **Seq Scans** = suspicious on big tables.
 * The planner thinks only \~50 NYC customers exist (maybe stats are stale).
 
-#### Step-by-step Fix
+### Step-by-step Fix
 
 I. **Add/confirm the right indexes**
 
@@ -883,7 +879,7 @@ Hash Join
        -> Bitmap Index Scan on idx_customers_city_id
 ```
 
-#### Measured Improvements (from similar fixes)
+### Measured Improvements (from similar fixes)
 
 * Post-stats + indexes, join stayed NL but became seek-driven: **2.6s → 85ms (\~30×)** on 40M `orders`, 5M `customers`.
 * After raising `STATISTICS` on `city` (highly skewed) + creating extended stats: **1.9s → 60ms (\~31×)** thanks to accurate row estimates (no over-join).
