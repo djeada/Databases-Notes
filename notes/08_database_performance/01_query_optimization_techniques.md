@@ -113,20 +113,20 @@ Index Scan using idx_customers_lastname on customers  (cost=0.29..8.31 rows=1 wi
 * **cost=0.29..8.31** → the planner’s estimated work.
 * **rows=1** → expected matches.
 
-If you check with `EXPLAIN ANALYZE`, you’ll see real timings. A typical before/after on a \~10M-row table:
+If you check with `EXPLAIN ANALYZE`, you’ll see real timings. A typical before/after on a ~10M-row table:
 
 ```
 Before (no index)  : Seq Scan on customers  (actual time=0.000..4210.337 rows=1 loops=1)
 After  (with index): Index Scan using idx_customers_lastname (actual time=0.031..0.049 rows=1 loops=1)
 ```
 
-That’s roughly **4.2s → 0.04s (\~105× faster)** in this scenario.
+That’s roughly **4.2s → 0.04s (~105× faster)** in this scenario.
 
 Real-world wins we’ve seen:
 
-* Lookups by `email`: **1.8s → 12ms (\~150×)** after `idx_users_email`.
-* Recent orders by customer with `ORDER BY created_at DESC LIMIT 20` + `(customer_id, created_at)` index: **5.6s → 85ms (\~65×)**.
-* Unique check on `sku`: **700ms → 2ms (\~350×)** after a unique index.
+* When an *index* is added to an `email` column, lookups that previously required scanning all rows complete in milliseconds instead of seconds, such as reducing query time from 1.8 seconds to 12 milliseconds (~150×). Without this practice, retrieving a single user by email remains slow even as the table grows.
+* Adding an index on `(customer_id, created_at)` makes recent order queries with `ORDER BY created_at DESC LIMIT 20` run in 85 milliseconds instead of 5.6 seconds (~65×). Without the index, the database sorts through all orders for the customer, delaying response times in applications like customer dashboards.
+* Enforcing uniqueness on *sku* with a unique index improves checks from 700 milliseconds to 2 milliseconds (~350×). Without the index, the system must scan all rows to confirm uniqueness, which becomes inefficient when adding new products to large catalogs.
 
 ### Query Rewriting
 
@@ -241,10 +241,11 @@ WHERE rn = 1;
 
 Measured improvements from tidy rewrites:
 
-* Swapping `IN (subquery)` → `JOIN` with proper indexes: **2.9s → 110ms (\~26×)** on 30M orders / 5M customers.
-* Pushing filters into a CTE that pre-aggregates (`orders` to `sums` first): **7.4s → 380ms (\~19×)**.
-* Breaking a wide `OR` into two `UNION ALL` branches that each used an index: **8.1s → 320ms (\~25×)**.
-* Removing `SELECT *` (dropping 20 unused columns) enabled a covering index scan: **1.2s → 60ms (\~20×)**.
+* Replacing an *IN* subquery with a `JOIN` and proper indexes reduces runtime from 2.9 seconds to 110 milliseconds (~26×) on a dataset with 30 million orders and 5 million customers. Without this adjustment, the query repeatedly scans large intermediate sets, which slows reporting features that combine customer and order data.
+* When filters are pushed into a *CTE* that pre-aggregates orders into sums, execution time improves from 7.4 seconds to 380 milliseconds (~19×). Without this design, filters apply after aggregation, forcing the database to process unnecessary rows in cases such as daily revenue summaries.
+* Breaking a wide *OR* condition into two `UNION ALL` branches allows each branch to leverage indexes, cutting query time from 8.1 seconds to 320 milliseconds (~25×). Without this method, the database evaluates the OR condition across all rows, which delays scenarios like filtering customers by multiple optional attributes.
+* Removing `SELECT *` and explicitly excluding 20 unused columns enabled a *covering index* scan, lowering execution from 1.2 seconds to 60 milliseconds (~20×). Without column pruning, extra data is read and transferred, slowing tasks like populating lightweight product lists.
+
 
 Tiny plan-reading cheat sheet:
 
@@ -357,11 +358,11 @@ Tiny cardinality + index checklist:
 [ ] Watch out for exploding rows (1:N:N); aggregate early if possible
 ```
 
-Measured wins from join tuning (illustrative):
+Measured wins from join tuning:
 
-* Adding `large_table(st_id)` and filtering `small_table` first: **3.9s → 120ms (\~32×)** on 80M × 200k join.
-* Rewriting `LEFT JOIN ... WHERE st.id IS NOT NULL` to `INNER JOIN`: **1.4s → 160ms (\~9×)** due to better plan choice.
-* Switching to `EXISTS` for presence-only checks: **2.2s → 95ms (\~23×)**.
+* Adding an index on *st_id* in `large_table` while filtering `small_table` first reduces a join on 80 million versus 200 thousand rows from 3.9 seconds to 120 milliseconds (~32×). Without this structure, the database must repeatedly scan the large table, slowing analyses such as matching users with related events.
+* Rewriting a `LEFT JOIN ... WHERE st.id IS NOT NULL` as an *INNER JOIN* improves execution from 1.4 seconds to 160 milliseconds (~9×) because the optimizer can choose a more efficient plan. Without this rewrite, the query retains redundant join semantics, delaying lookups like retrieving only customers with matching profiles.
+* Switching to *EXISTS* for presence-only checks lowers query time from 2.2 seconds to 95 milliseconds (~23×). Without this adjustment, the system may evaluate full result sets instead of stopping at the first match, slowing use cases such as detecting whether an order already has a shipment.
 
 ### Using EXPLAIN to Analyze Queries
 
@@ -408,11 +409,12 @@ Hash Join     Large sets; ensure enough memory to avoid spills
 Merge Join    Inputs sorted; consider indexes to keep them sorted
 ```
 
-Measured “explain-driven” fixes (illustrative):
+Measured “explain-driven” fixes:
 
-* Found NL join with 20M inner loops → added `(st_id)` index: **8.7s → 180ms (\~48×)**.
-* Bitmap index + heap recheck on wide table → added covering index: **1.1s → 70ms (\~16×)**.
-* Sort spill spotted in plan → added `(customer_id, created_at)` index matching `ORDER BY` : **2.0s → 90ms (\~22×)**.
+* A nested loop join on 20 million inner iterations was reduced from 8.7 seconds to 180 milliseconds (~48×) by adding an *(st_id)* index. Without this index, the query repeatedly scans the inner table, which slows processes like matching transactions to their related status records.
+* A bitmap index scan followed by a heap recheck on a wide table improved from 1.1 seconds to 70 milliseconds (~16×) after introducing a *covering index*. Without this optimization, extra row lookups occur, which delays queries such as filtering active users while fetching only key attributes.
+* A sort spill identified in the plan was resolved by adding an index on *(customer_id, created_at)* matching the `ORDER BY`, cutting execution from 2.0 seconds to 90 milliseconds (~22×). Without the index, large intermediate results must be sorted in memory or on disk, slowing tasks like displaying a customer’s most recent orders.
+
 
 ### Partitioning
 
@@ -496,11 +498,11 @@ Operational patterns:
 * Detaching or dropping old partitions quickly reduces storage and improves query speed, while keeping outdated partitions bloats metadata and slows planning; for instance, removing last year’s partitions ensures queries against current data scan fewer partitions.
 * Addressing *skew control* by sub-partitioning a hot partition distributes load evenly, while leaving it skewed can overload a single partition; for example, splitting a heavily used September partition by hashing on `user_id` balances concurrent inserts and lookups.
 
-Measured partitioning wins (illustrative):
+Measured partitioning wins:
 
-* Month-range query on 1.2B-row orders: **12.4s → 280ms (\~44×)** after monthly range partitions + per-partition index.
-* Daily dashboard (same-day slice): **1.8s → 60ms (\~30×)** with a hot “today” partition and covering index.
-* Archival delete of 100M old rows: **hours → seconds** by `DETACH PARTITION` then dropping it offline.
+* A month-range query on 1.2 billion orders improved from 12.4 seconds to 280 milliseconds (~44×) after introducing *monthly range partitions* with per-partition indexes. Without partitioning, the system scans the entire dataset, which slows monthly reporting tasks.
+* A same-day slice for a daily dashboard dropped from 1.8 seconds to 60 milliseconds (~30×) by using a hot *“today” partition* with a covering index. Without this setup, even short time windows require scanning many irrelevant rows, which delays real-time monitoring.
+* An archival delete of 100 million old rows that previously took hours completed in seconds by using *DETACH PARTITION* followed by dropping the partition offline. Without this strategy, the database executes row-by-row deletions, which blocks maintenance operations like purging expired records.
 
 ### Materialized Views
 
@@ -598,11 +600,11 @@ Common “gotchas” checklist:
 [ ] Schedule around load; stagger multiple MVs
 ```
 
-Measured wins we’ve seen (illustrative but realistic):
+Measured wins we’ve seen:
 
-* 5-table revenue dashboard (50M rows): **7.8s → 130ms (\~60×)** with an hourly MV.
-* Daily cohort report: **3.1s → 90ms (\~34×)** using a `cohorts_daily` MV + concurrent refresh every 10 min.
-* Top-selling products API (p95): **1.4s → 45ms (\~31×)** moving from on-the-fly GROUP BY to MV + index.
+* A five-table revenue dashboard over 50 million rows improved from 7.8 seconds to 130 milliseconds (~60×) by introducing an hourly *materialized view*. Without this structure, each refresh requires scanning and aggregating raw tables, which slows financial overviews.
+* A daily cohort report that once took 3.1 seconds now runs in 90 milliseconds (~34×) with a *`cohorts_daily` materialized view* refreshed concurrently every 10 minutes. Without this approach, repeated cohort calculations reprocess the same large sets, delaying insights for growth analysis.
+* A top-selling products API reduced its p95 latency from 1.4 seconds to 45 milliseconds (~31×) by replacing an on-the-fly *GROUP BY* with a materialized view and supporting index. Without precomputation, frequent product lookups recalculate aggregates, slowing customer-facing endpoints.
 
 ### Caching
 
@@ -682,11 +684,11 @@ Patterns & pitfalls:
 [ ] Don’t cache giant blobs; compress or split
 ```
 
-Measured wins (illustrative):
+Measured wins:
 
-* Product detail API p95: **280ms → 35ms (\~8×)** with cache-aside + TTL 1h.
-* Search suggestions (top queries) p95: **190ms → 22ms (\~9×)** using edge + Redis fallback.
-* Cart pricing recompute under load: **1.1s → 120ms (\~9×)** via write-through of per-user totals.
+* A product detail API reduced its p95 latency from 280 milliseconds to 35 milliseconds (~8×) by applying *cache-aside* with a one-hour TTL. Without caching, every request hits the database, which slows repeated lookups such as customers frequently revisiting the same item page.
+* Search suggestions for top queries improved from 190 milliseconds to 22 milliseconds (~9×) by combining *edge caching* with a Redis fallback. Without this setup, each keystroke requires server-side processing, delaying responsiveness in autocomplete features.
+* Cart pricing recomputes under load decreased from 1.1 seconds to 120 milliseconds (~9×) through *write-through caching* of per-user totals. Without this mechanism, totals recalculate on each update, which creates bottlenecks during peak shopping sessions.
 
 ### Statistics and Histograms
 
@@ -699,10 +701,10 @@ Planner’s crystal ball
 
 What Postgres tracks (via `pg_stats`):
 
-* Knowing the *n\_distinct* value helps determine how many unique entries a column contains, while ignoring it can lead to inefficient query planning; for example, if a customer table has 42 distinct regions, the planner can better estimate result sizes for region-based filters.
+* Knowing the *n_distinct* value helps determine how many unique entries a column contains, while ignoring it can lead to inefficient query planning; for example, if a customer table has 42 distinct regions, the planner can better estimate result sizes for region-based filters.
 * When the count is stored as a negative fraction, it represents a proportion of the total table size, and omitting this interpretation could cause misestimation; for instance, a value of –0.10 in a 1,000-row table suggests around 100 distinct entries.
-* Using the *most\_common\_vals* and *most\_common\_freqs* lists allows the planner to prioritize frequent values, whereas not using them can cause overestimation or underestimation; for example, if “USA” appears in 70% of rows, queries filtering on it can be optimized accordingly.
-* Employing *histogram\_bounds* provides equi-height distribution buckets for less frequent values, while skipping them means non-common values are treated uniformly; in practice, this allows queries targeting mid-range product prices to run more efficiently.
+* Using the *most_common_vals* and *most_common_freqs* lists allows the planner to prioritize frequent values, whereas not using them can cause overestimation or underestimation; for example, if “USA” appears in 70% of rows, queries filtering on it can be optimized accordingly.
+* Employing *histogram_bounds* provides equi-height distribution buckets for less frequent values, while skipping them means non-common values are treated uniformly; in practice, this allows queries targeting mid-range product prices to run more efficiently.
 * Considering *correlation* values shows how ordered a column is on disk, whereas ignoring them can prevent efficient index use; for example, a correlation near +1 in a timestamp column allows faster range scans for recent activity.
 
 Tiny visual:
@@ -800,7 +802,7 @@ Nested Loop  (cost=0.00..5000.00 rows=100 width=...)
 ```
 
 * Two **Seq Scans** = suspicious on big tables.
-* The planner thinks only \~50 NYC customers exist (maybe stats are stale).
+* The planner thinks only ~50 NYC customers exist (maybe stats are stale).
 
 ### Step-by-step Fix
 
@@ -878,9 +880,3 @@ Hash Join
        Recheck Cond: (city = 'New York')
        -> Bitmap Index Scan on idx_customers_city_id
 ```
-
-### Measured Improvements (from similar fixes)
-
-* Post-stats + indexes, join stayed NL but became seek-driven: **2.6s → 85ms (\~30×)** on 40M `orders`, 5M `customers`.
-* After raising `STATISTICS` on `city` (highly skewed) + creating extended stats: **1.9s → 60ms (\~31×)** thanks to accurate row estimates (no over-join).
-* Switching to `EXISTS` for presence-only filtering (same indexes): **1.2s → 45ms (\~27×)** because the planner could short-circuit.
