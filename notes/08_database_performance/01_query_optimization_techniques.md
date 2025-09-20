@@ -808,6 +808,8 @@ Nested Loop  (cost=0.00..5000.00 rows=100 width=...)
 
 I. **Add/confirm the right indexes**
 
+Think of this as laying down fast lanes. We add one index to jump straight to “customers in this city” and grab their IDs, and another to find all their orders without wandering the whole table. Do it so the database stops scanning everything; expect quick, targeted lookups instead of sloggy full scans.
+
 ```sql
 -- Filter & join key on customers
 CREATE INDEX IF NOT EXISTS idx_customers_city_id
@@ -820,6 +822,8 @@ CREATE INDEX IF NOT EXISTS idx_orders_customer_id
 
 II. **Update stats (and make them richer on skewed columns)**
 
+This is giving the planner fresh glasses. We bump the stats target for `city` (because some cities are way more common) and re-run `ANALYZE`. Do it so the optimizer guesses row counts realistically; expect better join choices and fewer “why did it do that?” plans.
+
 ```sql
 ALTER TABLE customers ALTER COLUMN city SET STATISTICS 1000;
 ANALYZE customers;        -- refresh customers stats
@@ -827,6 +831,8 @@ ANALYZE orders;           -- refresh orders stats too
 ```
 
 III. **(Optional) Extended statistics** for multi-column estimates (PG 10+)
+
+Now we clue the planner in on how columns relate. By telling it about distinctness across `(city, customer_id)`, it stops making naive assumptions. Do it if your data has relationships across columns; expect smarter estimates and, in turn, smarter plans.
 
 ```sql
 -- Helps the planner understand distinctness across columns
@@ -836,7 +842,7 @@ ANALYZE customers;
 
 IV. **Shape the query so the plan can win**
 
-Keep it as a join (perfectly fine), or express “presence” with `EXISTS`:
+Same result, clearer intent. A plain join is fine, but `EXISTS` often nudges the planner into a lean “just check if there’s a matching customer” mindset. Do it to avoid generating extra rows or over-complicating the join; expect simpler, index-friendly execution.
 
 ```sql
 -- Equivalent, often better estimates:
@@ -851,6 +857,8 @@ WHERE EXISTS (
 ```
 
 V. **Re-check the plan**
+
+Quick sanity check. We run `EXPLAIN` to make sure our indexes and stats actually changed the strategy. Do it to confirm we’re not guessing; expect to see index scans and either a tidy nested loop (when NYC is small) or a hash/bitmap plan (when NYC is big).
 
 ```sql
 EXPLAIN
