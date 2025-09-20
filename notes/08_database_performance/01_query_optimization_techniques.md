@@ -268,8 +268,8 @@ Joins are common in SQL queries but can be resource-intensive. Optimizing joins 
 High level mental model
 ┌─────────┐   join key   ┌─────────┐
 │  LEFT   │◀────────────▶│  RIGHT  │
-│  rows   │               │  rows   │
-└─────────┘               └─────────┘
+│  rows   │              │  rows   │
+└─────────┘              └─────────┘
    filter early, index keys, pick join that matches row counts
 ```
 
@@ -888,3 +888,4 @@ Hash Join
        Recheck Cond: (city = 'New York')
        -> Bitmap Index Scan on idx_customers_city_id
 ```
+
