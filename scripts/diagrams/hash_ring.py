@@ -100,10 +100,10 @@ nodes_no_b  = {"Node A": 0, "Node D": 80,  "Node C": 240}
 data_keys = {"K1": 100, "K2": 200, "K3": 330}
 
 # Generate all diagrams
-draw_ring(nodes_abc,   None,       "Nodes A, B, C",            "ring_nodes.png")
-draw_ring(nodes_abc,   data_keys,  "Nodes + Data Keys",        "ring_nodes_data.png")
-draw_ring(nodes_add_d, data_keys,  "Add Node D",               "ring_add_node_d.png")
-draw_ring(nodes_no_b,  data_keys,  "Remove Node B",            "ring_remove_node_b.png")
+draw_ring(nodes_abc,   None,       "Nodes A, B, C",   "ring_nodes.png")
+draw_ring(nodes_abc,   data_keys,  "Nodes + Data Keys", "ring_nodes_data.png")
+draw_ring(nodes_add_d, data_keys,  "Add Node D",      "ring_add_node_d.png")
+draw_ring(nodes_no_b,  data_keys,  "Remove Node B",   "ring_remove_node_b.png")
 
 print("✓ Consistent hashing diagrams generated:")
 for png in ("ring_nodes.png", "ring_nodes_data.png",
