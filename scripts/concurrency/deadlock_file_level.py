@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+"""
+File-Level Deadlock Demo
+
+Goal: Demonstrate how deadlocks can occur at the file level when multiple processes
+      try to acquire locks on different databases in different orders.
+
+Concept:
+- Worker 1 locks DB1 then tries to lock DB2
+- Worker 2 locks DB2 then tries to lock DB1
+- With DEFERRED transactions and long timeouts, this creates a deadlock
+- With short timeouts, one worker detects the lock and can retry with IMMEDIATE mode
+
+Usage:
+    python deadlock_file_level.py              # Run with lock detection and recovery
+    python deadlock_file_level.py --deadlock   # Run with indefinite deadlock
+"""
 import sqlite3
 import multiprocessing
 import argparse

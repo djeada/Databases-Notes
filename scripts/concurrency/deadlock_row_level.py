@@ -1,3 +1,22 @@
+"""
+Row-Level Deadlock Demo (PostgreSQL)
+
+Goal: Demonstrate row-level deadlocks in PostgreSQL when two threads try to lock
+      the same rows in different orders.
+
+Concept:
+- Thread A locks row 1 (FOR UPDATE), then tries to lock row 2
+- Thread B locks row 2 (FOR UPDATE), then tries to lock row 1
+- PostgreSQL detects the deadlock and aborts one transaction
+- The aborted transaction should be retried
+
+Prerequisites:
+- PostgreSQL must be running and accessible at the DSN specified below
+- Use scripts/setup/start_postgres.sh to start a local PostgreSQL instance
+
+Usage:
+    python deadlock_row_level.py
+"""
 import threading
 import time
 import psycopg2

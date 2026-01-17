@@ -1,4 +1,19 @@
 #!/usr/bin/env python3
+"""
+Transaction Isolation Demo
+
+Goal: Demonstrate transaction isolation levels in SQLite using Write-Ahead Logging (WAL).
+
+Concepts Demonstrated:
+1. Snapshot Isolation: Readers see a consistent snapshot from when their transaction began,
+   preventing dirty reads even if a writer updates data.
+   
+2. Dirty Reads: When using shared cache mode with read_uncommitted pragma, readers can
+   see uncommitted changes from concurrent transactions.
+
+Usage:
+    python transaction_isolation.py
+"""
 import sqlite3, threading, time, os
 
 DB = 'isolation_demo.db'

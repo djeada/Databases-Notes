@@ -1,4 +1,21 @@
 #!/usr/bin/env python3
+"""
+Optimistic vs Pessimistic Locking Demo
+
+Goal: Compare optimistic and pessimistic locking strategies for handling concurrent
+      transactions that modify the same data.
+
+Concepts:
+- Pessimistic Locking: BEGIN IMMEDIATE acquires a RESERVED lock immediately,
+  preventing other writers from starting. Safe but can cause contention.
+  
+- Optimistic Locking: Use version numbers to detect conflicts. Transactions
+  proceed without locking, then check if data changed before committing.
+  Better concurrency but requires retry logic.
+
+Usage:
+    python optimistic_vs_pessimistic_lock.py
+"""
 import sqlite3
 import time
 import uuid
@@ -11,6 +28,7 @@ MAX_RETRIES = 3
 RETRY_DELAY = 1
 
 class VersionConflict(Exception):
+    """Raised when an optimistic locking version conflict is detected."""
     pass
 
 def setup_database():
