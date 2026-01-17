@@ -166,14 +166,14 @@ Working with sample databases is an excellent way to learn and experiment:
 
 | Topic | Description | Link |
 |-------|-------------|------|
-| 🏢 **Distributed Database Systems** | Overview of systems and architectures | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_distributed_database_systems.md) |
+| 🏢 **Distributed DB Introduction** | Basic concepts and architectures overview | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_distributed_database_systems.md) |
 | 📂 **Partitioning** | Methods of dividing and distributing data | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md) |
 | 🔀 **Sharding** | Breaking tables into distributed chunks | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/03_sharding.md) |
 | ⚔️ **Partitioning vs Sharding** | Understanding the differences | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/04_partitioning_vs_sharding.md) |
 | ⚖️ **Consistent Hashing** | Distributing data with minimal rehashing | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/05_consistent_hashing.md) |
 | 🎭 **CAP Theorem** | Consistency, availability, partition tolerance | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/06_cap_theorem.md) |
 | 🔄 **Eventual Consistency** | Convergence model for distributed systems | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md) |
-| 🌐 **Distributed Systems (Advanced)** | Advanced distributed database architectures | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/08_distributed_database_systems.md) |
+| 🌐 **Advanced Distributed Systems** | Load balancing, replication, and sharding patterns | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/08_distributed_database_systems.md) |
 
 ### 7. Concurrency Control and Locking
 
