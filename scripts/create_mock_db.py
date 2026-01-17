@@ -5,7 +5,7 @@ This script demonstrates how to create and populate a SQLite database with times
 Goal: Create a sample database with a large number of rows for testing and demonstration purposes.
 """
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 def create_connection(db_file):
@@ -60,12 +60,22 @@ def append_rows(conn, num_rows=1):
         
         # Batch insert for better performance
         batch_size = 1000
+        start_time = datetime.now()
+        
         for i in range(0, num_rows, batch_size):
             rows_to_insert = min(batch_size, num_rows - i)
             
-            # Generate timestamps for each row in the batch
-            timestamps = [(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),) 
-                         for _ in range(rows_to_insert)]
+            # Generate unique timestamps for each row
+            # Each row gets a unique timestamp with microsecond precision
+            timestamps = []
+            for j in range(rows_to_insert):
+                row_index = i + j
+                # Calculate microseconds offset (up to 999999 microseconds per second)
+                seconds_offset = row_index // 1000000
+                microsecond = row_index % 1000000
+                timestamp = start_time.replace(microsecond=0) + \
+                           timedelta(seconds=seconds_offset, microseconds=microsecond)
+                timestamps.append((timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"),))
             
             # Insert batch
             cursor.executemany(
