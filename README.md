@@ -166,14 +166,14 @@ Working with sample databases is an excellent way to learn and experiment:
 
 | Topic | Description | Link |
 |-------|-------------|------|
-| 📂 **Partitioning Types** | Methods of dividing and distributing data | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_types_of_partitioning.md) |
-| 🌐 **Billion-Row Tables** | Handling and querying massive datasets | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_working_with_billion_row_table.md) |
-| ⚖️ **Consistent Hashing** | Distributing data with minimal rehashing | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/03_consistent_hashing.md) |
-| 🔀 **Sharding** | Breaking tables into distributed chunks | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/04_sharding.md) |
-| ⚔️ **Partitioning vs Sharding** | Understanding the differences | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/05_partitioning_vs_sharding.md) |
+| 🏢 **Distributed Database Systems** | Overview of systems and architectures | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_distributed_database_systems.md) |
+| 📂 **Partitioning** | Methods of dividing and distributing data | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md) |
+| 🔀 **Sharding** | Breaking tables into distributed chunks | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/03_sharding.md) |
+| ⚔️ **Partitioning vs Sharding** | Understanding the differences | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/04_partitioning_vs_sharding.md) |
+| ⚖️ **Consistent Hashing** | Distributing data with minimal rehashing | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/05_consistent_hashing.md) |
 | 🎭 **CAP Theorem** | Consistency, availability, partition tolerance | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/06_cap_theorem.md) |
 | 🔄 **Eventual Consistency** | Convergence model for distributed systems | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md) |
-| 🏢 **Distributed Systems** | Architectures for multi-node databases | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/08_distributed_database_systems.md) |
+| 🌐 **Distributed Systems (Advanced)** | Advanced distributed database architectures | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/08_distributed_database_systems.md) |
 
 ### 7. Concurrency Control and Locking
 
@@ -222,8 +222,8 @@ Working with sample databases is an excellent way to learn and experiment:
 | 📈 **Capacity Planning** | Predicting and managing growth | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/03_capacity_planning.md) |
 | 🚚 **Database Migration** | Moving databases between environments | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/04_database_migration.md) |
 | 📊 **Performance Monitoring** | Observing and optimizing performance | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md) |
-| 🌍 **Real-Life Challenges** | Practical database management issues | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_real_life_challenges.md) |
-| ⚠️ **SQL Injection** | Understanding and preventing SQL injection | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_sql_injection.md) |
+| ⚠️ **SQL Injection** | Understanding and preventing SQL injection | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md) |
+| 🔧 **Crash Recovery** | Database crash recovery mechanisms | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md) |
 
 ### 12. Database Engines
 
@@ -251,7 +251,6 @@ Working with sample databases is an excellent way to learn and experiment:
 |-------|-------------|------|
 | 🔗 **ORM Introduction** | Bridging OOP and relational databases | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md) |
 | 🛠️ **Popular ORM Tools** | Hibernate, Entity Framework, SQLAlchemy | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/02_popular_orm_tools.md) |
-| ⚖️ **ORM Pros & Cons** | When to use ORMs and trade-offs | [View](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/03_advantages_and_disadvantages_of_orms.md) |
 
 ---
 
