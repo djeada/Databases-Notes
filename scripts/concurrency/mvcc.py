@@ -1,4 +1,20 @@
 #!/usr/bin/env python3
+"""
+Multi-Version Concurrency Control (MVCC) Demo
+
+Goal: Demonstrate a simplified MVCC implementation using SQLite where multiple
+      versions of the same row can exist, allowing concurrent transactions.
+
+Concept:
+- Each row update creates a new version with a unique version_id
+- Versions have valid_from and valid_to timestamps
+- Transactions read the appropriate version based on their snapshot time
+- Conflicts are detected when trying to update a version that's already been updated
+- One transaction succeeds, the conflicting one is aborted
+
+Usage:
+    python mvcc.py
+"""
 import sqlite3, time, uuid, os
 from multiprocessing import Process
 

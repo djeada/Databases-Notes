@@ -1,4 +1,18 @@
 #!/usr/bin/env python3
+"""
+Concurrent Readers Demo
+
+Goal: Demonstrate the difference between exclusive locking and Write-Ahead Logging (WAL)
+      in SQLite when multiple readers attempt to access data during a write operation.
+
+Concept:
+- With EXCLUSIVE locking mode, readers are blocked while a writer holds the lock
+- With WAL mode, readers can read a consistent snapshot while writes are in progress
+
+Usage:
+    python concurrent_readers.py              # Run with WAL mode (concurrent reads allowed)
+    python concurrent_readers.py --exclusive  # Run with EXCLUSIVE mode (readers blocked)
+"""
 import sqlite3
 import multiprocessing
 import argparse

@@ -1,3 +1,25 @@
+"""
+Consistent Hashing - Hash Ring Visualization
+
+Goal: Generate diagrams that illustrate how consistent hashing works using a hash ring,
+      demonstrating how data keys are distributed across nodes and how the system
+      handles node additions and removals with minimal key redistribution.
+
+Concept:
+- Nodes and keys are positioned on a circle (0-360 degrees)
+- Each key is assigned to the first node found when moving clockwise
+- Adding/removing nodes only affects keys between that node and its predecessor
+- This minimizes data movement compared to traditional hashing (key % N)
+
+Output:
+- ring_nodes.png: Shows initial node placement (A, B, C)
+- ring_nodes_data.png: Shows data keys K1, K2, K3 mapped to nodes
+- ring_add_node_d.png: Demonstrates adding Node D (only some keys remapped)
+- ring_remove_node_b.png: Demonstrates removing Node B (only some keys remapped)
+
+Usage:
+    python hash_ring.py
+"""
 import math
 import matplotlib
 matplotlib.use("Agg")             # headless backend
@@ -5,10 +27,20 @@ import matplotlib.pyplot as plt
 
 # ----------------- helper utilities -------------------------------------
 def deg2rad(deg: float) -> float:
+    """Convert degrees to radians."""
     return deg * math.pi / 180.0
 
 
 def draw_ring(nodes, data, title, outfile):
+    """
+    Draw a hash ring diagram showing node and data key positions.
+    
+    Args:
+        nodes (dict): Node names mapped to their positions (0-360 degrees)
+        data (dict): Data key names mapped to their positions (0-360 degrees), or None
+        title (str): Title for the diagram
+        outfile (str): Output filename for the PNG image
+    """
     fig = plt.figure(figsize=(5, 5))
     ax = fig.add_subplot(111, polar=True)
 
@@ -55,19 +87,25 @@ def draw_ring(nodes, data, title, outfile):
 
 
 # ----------------- scenarios --------------------------------------------
+# Scenario 1: Initial ring with three nodes evenly distributed
 nodes_abc   = {"Node A": 0, "Node B": 120, "Node C": 240}
+
+# Scenario 2: Adding Node D between A and B (affects keys in that range)
 nodes_add_d = {"Node A": 0, "Node D": 80,  "Node B": 120, "Node C": 240}
+
+# Scenario 3: Removing Node B (its keys move to the next node clockwise, Node C)
 nodes_no_b  = {"Node A": 0, "Node D": 80,  "Node C": 240}
 
-# Consistent key set
+# Data keys to be mapped (consistent across scenarios)
 data_keys = {"K1": 100, "K2": 200, "K3": 330}
 
+# Generate all diagrams
 draw_ring(nodes_abc,   None,       "Nodes A, B, C",            "ring_nodes.png")
 draw_ring(nodes_abc,   data_keys,  "Nodes + Data Keys",        "ring_nodes_data.png")
-draw_ring(nodes_add_d, data_keys,  "Add Node D","ring_add_node_d.png")
-draw_ring(nodes_no_b,  data_keys,  "Remove Node B",    "ring_remove_node_b.png")
+draw_ring(nodes_add_d, data_keys,  "Add Node D",               "ring_add_node_d.png")
+draw_ring(nodes_no_b,  data_keys,  "Remove Node B",            "ring_remove_node_b.png")
 
-print("✓ Diagrams generated:")
+print("✓ Consistent hashing diagrams generated:")
 for png in ("ring_nodes.png", "ring_nodes_data.png",
             "ring_add_node_d.png", "ring_remove_node_b.png"):
-    print("  └─ ", png)
+    print(f"  • {png}")

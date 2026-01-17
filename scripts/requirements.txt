@@ -1,0 +1,7 @@
+# Python dependencies for database demonstration scripts
+
+# Required for hash ring visualization (scripts/diagrams/hash_ring.py)
+matplotlib>=3.5.0
+
+# Required for PostgreSQL demos (scripts/concurrency/deadlock_row_level.py)
+psycopg2-binary>=2.9.0

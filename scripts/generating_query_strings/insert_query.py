@@ -1,3 +1,16 @@
+"""
+SQL INSERT Query Generator
+
+Goal: Programmatically generate SQL INSERT statements for multiple rows,
+      demonstrating batch insert operations with proper SQL escaping.
+
+Use Case: Useful for ETL pipelines, data import tools, or seeding test databases.
+
+Note: This implementation properly escapes single quotes to prevent SQL injection.
+
+Usage:
+    python insert_query.py
+"""
 from typing import List
 
 def generate_insert_query(table_name: str, data: List[List[str]]) -> str:
@@ -23,7 +36,7 @@ def generate_insert_query(table_name: str, data: List[List[str]]) -> str:
     """
     # Escaping single quotes in data and formatting rows
     escaped_data = [
-        ", ".join(f"'{str(value).replace(\"'\", \"''\")}'" for value in row)
+        ", ".join(f"'{str(value).replace(chr(39), chr(39)*2)}'" for value in row)
         for row in data
     ]
 

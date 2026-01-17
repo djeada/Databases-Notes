@@ -1,3 +1,16 @@
+"""
+SQL DELETE Query Generator
+
+Goal: Programmatically generate SQL DELETE statements with WHERE conditions,
+      demonstrating safe deletion with proper SQL escaping.
+
+Use Case: Useful for building data cleanup scripts, admin tools, or API backends.
+
+Note: This implementation properly escapes single quotes to prevent SQL injection.
+
+Usage:
+    python delete.py
+"""
 from typing import List, Tuple
 
 def generate_delete_query(table_name: str, conditions: List[Tuple[str, str]]) -> str:
@@ -16,7 +29,7 @@ def generate_delete_query(table_name: str, conditions: List[Tuple[str, str]]) ->
     "DELETE FROM students WHERE name = 'John Doe' AND age = '20';"
     """
     # Preparing the WHERE part of the query
-    where_clause = " AND ".join(f"{column} = '{value.replace(\"'\", \"''\")}'" for column, value in conditions)
+    where_clause = " AND ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in conditions)
 
     query = f"DELETE FROM {table_name} WHERE {where_clause};"
 
