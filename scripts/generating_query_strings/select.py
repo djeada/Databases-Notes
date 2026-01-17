@@ -1,3 +1,16 @@
+"""
+SQL SELECT Query Generator
+
+Goal: Programmatically generate SQL SELECT statements with column selection
+      and WHERE conditions, demonstrating filtered query construction.
+
+Use Case: Useful for query builders, reporting tools, or data export utilities.
+
+Note: This implementation properly escapes single quotes to prevent SQL injection.
+
+Usage:
+    python select.py
+"""
 from typing import List, Tuple
 
 def generate_select_query(table_name: str, columns: List[str], conditions: List[Tuple[str, str]]) -> str:
@@ -18,7 +31,8 @@ def generate_select_query(table_name: str, columns: List[str], conditions: List[
     """
     # Preparing the SELECT and WHERE parts of the query
     columns_clause = ", ".join(columns)
-    where_clause = " AND ".join(f"{column} = '{value.replace(\"'\", \"''\")}'" for column, value in conditions)
+    SINGLE_QUOTE = "'"
+    where_clause = " AND ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in conditions)
 
     query = f"SELECT {columns_clause} FROM {table_name} WHERE {where_clause};"
 

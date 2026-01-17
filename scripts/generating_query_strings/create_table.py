@@ -1,3 +1,14 @@
+"""
+SQL CREATE TABLE Query Generator
+
+Goal: Programmatically generate SQL CREATE TABLE statements from a dictionary
+      of column definitions, demonstrating how to build DDL queries dynamically.
+
+Use Case: Useful for schema generation tools, migration scripts, or ORM implementations.
+
+Usage:
+    python create_table.py
+"""
 from typing import Dict
 
 def generate_create_table_query(table_name: str, columns: Dict[str, str]) -> str:

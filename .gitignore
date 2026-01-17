@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+database.db
+demo.sqlite
+db1.sqlite
+db2.sqlite
+mvcc.db
+lock_demo.db
+isolation_demo.db
+*.db-wal
+*.db-shm
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Generated diagrams (optional - uncomment if you want to ignore)
+# *.png
