@@ -60,7 +60,7 @@ def append_rows(conn, num_rows=1):
         
         # Constants for timestamp generation
         BATCH_SIZE = 1000
-        MICROSECONDS_PER_SECOND = 1000000
+        MICROSECONDS_PER_SECOND = 1_000_000
         
         start_time = datetime.now()
         
@@ -75,8 +75,8 @@ def append_rows(conn, num_rows=1):
                 # Calculate time offset to ensure uniqueness
                 seconds_offset = row_index // MICROSECONDS_PER_SECOND
                 microsecond = row_index % MICROSECONDS_PER_SECOND
-                timestamp = start_time.replace(microsecond=0) + \
-                           timedelta(seconds=seconds_offset, microseconds=microsecond)
+                timestamp = (start_time.replace(microsecond=0) + 
+                            timedelta(seconds=seconds_offset, microseconds=microsecond))
                 timestamps.append((timestamp.strftime("%Y-%m-%d %H:%M:%S.%f"),))
             
             # Insert batch
