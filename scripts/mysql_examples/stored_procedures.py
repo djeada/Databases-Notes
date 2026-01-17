@@ -188,7 +188,7 @@ def demo_get_customer_orders(conn):
             print(f"\n  {'Order ID':<10} {'Date':<12} {'Total':<10} {'Items':<10}")
             print("  " + "-" * 42)
             for (order_id, order_date, total, item_count) in result:
-                print(f"  {order_id:<10} {order_date!s:<12} ${total:<9.2f} {item_count:<10}")
+                print(f"  {order_id:<10} {str(order_date):<12} ${total:<9.2f} {item_count:<10}")
         
         print("✓ Customer orders retrieved")
         

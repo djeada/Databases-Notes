@@ -40,7 +40,7 @@ sudo systemctl enable docker
 echo "  ✓ Docker service started and enabled"
 
 echo "Step 4/6: Pulling MySQL image..."
-docker pull mysql:latest
+docker pull mysql:8.0
 echo "  ✓ MySQL image pulled"
 
 echo "Step 5/6: Cleaning up old container (if exists)..."
@@ -60,7 +60,7 @@ docker run -d \
   -e MYSQL_USER=testuser \
   -e MYSQL_PASSWORD=testpass \
   -p 127.0.0.1:3306:3306 \
-  mysql:latest
+  mysql:8.0
 
 echo "  ✓ MySQL container started"
 echo ""
