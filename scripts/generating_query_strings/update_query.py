@@ -37,10 +37,11 @@ def generate_update_query(table_name: str, data: Dict[str, str], conditions: Lis
     "UPDATE users SET email = 'john.updated@example.com', last_name = 'UpdatedDoe' WHERE first_name = 'John' AND last_name = 'Doe';"
     """
     # Preparing the SET part of the query
-    set_clause = ", ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in data.items())
+    SINGLE_QUOTE = "'"
+    set_clause = ", ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in data.items())
 
     # Preparing the WHERE part of the query
-    where_clause = " AND ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in conditions)
+    where_clause = " AND ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in conditions)
 
     query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause};"
 

@@ -35,8 +35,9 @@ def generate_insert_query(table_name: str, data: List[List[str]]) -> str:
     "INSERT INTO users VALUES ('John', 'Doe', 'john.doe@example.com'), ('Jane', 'Doe', 'jane.doe@example.com');"
     """
     # Escaping single quotes in data and formatting rows
+    SINGLE_QUOTE = "'"
     escaped_data = [
-        ", ".join(f"'{str(value).replace(chr(39), chr(39)*2)}'" for value in row)
+        ", ".join(f"'{str(value).replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for value in row)
         for row in data
     ]
 

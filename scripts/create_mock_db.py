@@ -62,12 +62,15 @@ def append_rows(conn, num_rows=1):
         batch_size = 1000
         for i in range(0, num_rows, batch_size):
             rows_to_insert = min(batch_size, num_rows - i)
-            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
+            # Generate timestamps for each row in the batch
+            timestamps = [(datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),) 
+                         for _ in range(rows_to_insert)]
             
             # Insert batch
             cursor.executemany(
                 "INSERT INTO example_table(timestamp) VALUES(?)",
-                [(timestamp,) for _ in range(rows_to_insert)]
+                timestamps
             )
             
             # Progress indicator

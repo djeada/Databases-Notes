@@ -31,7 +31,8 @@ def generate_select_query(table_name: str, columns: List[str], conditions: List[
     """
     # Preparing the SELECT and WHERE parts of the query
     columns_clause = ", ".join(columns)
-    where_clause = " AND ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in conditions)
+    SINGLE_QUOTE = "'"
+    where_clause = " AND ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in conditions)
 
     query = f"SELECT {columns_clause} FROM {table_name} WHERE {where_clause};"
 

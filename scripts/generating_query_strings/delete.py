@@ -29,7 +29,8 @@ def generate_delete_query(table_name: str, conditions: List[Tuple[str, str]]) ->
     "DELETE FROM students WHERE name = 'John Doe' AND age = '20';"
     """
     # Preparing the WHERE part of the query
-    where_clause = " AND ".join(f"{column} = '{value.replace(chr(39), chr(39)*2)}'" for column, value in conditions)
+    SINGLE_QUOTE = "'"
+    where_clause = " AND ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in conditions)
 
     query = f"DELETE FROM {table_name} WHERE {where_clause};"
 
