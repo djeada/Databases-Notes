@@ -1,32 +1,46 @@
 """
 SQL UPDATE Query Generator
 
-Goal: Programmatically generate SQL UPDATE statements with SET clauses and
-      WHERE conditions, demonstrating safe data modification.
+Goal: Programmatically generate parameterized SQL UPDATE statements with SET
+      clauses and WHERE conditions, demonstrating safe data modification.
 
 Use Case: Useful for data transformation scripts, API update endpoints, or admin tools.
 
-Note: This implementation properly escapes single quotes to prevent SQL injection.
+Note: This implementation returns a SQL template plus parameters, which is the
+safe pattern supported by Python DB-API drivers.
 
 Usage:
     python update_query.py
 """
 from typing import Dict, List, Tuple
+import re
 
-def generate_update_query(table_name: str, data: Dict[str, str], conditions: List[Tuple[str, str]]) -> str:
+IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def validate_identifier(identifier: str, kind: str) -> str:
+    """Allow only simple SQL identifiers in this educational example."""
+    if not IDENTIFIER_RE.fullmatch(identifier):
+        raise ValueError(f"Invalid {kind}: {identifier!r}")
+    return identifier
+
+
+def generate_update_query(
+    table_name: str, data: Dict[str, object], conditions: List[Tuple[str, object]]
+) -> Tuple[str, Tuple[object, ...]]:
     """
-    Generate a SQL UPDATE query for a given table name, data, and conditions.
+    Generate a parameterized SQL UPDATE query for a given table name, data, and conditions.
 
     This function constructs a SQL UPDATE query string to update specified columns
     with provided values in a given table, based on certain conditions.
 
     Args:
     table_name (str): The name of the table to update.
-    data (Dict[str, str]): A dictionary where keys are column names and values are the new values to be set.
-    conditions (List[Tuple[str, str]]): A list of conditions for the update, with each condition represented as a (column, value) tuple.
+    data (Dict[str, object]): A dictionary where keys are column names and values are the new values to be set.
+    conditions (List[Tuple[str, object]]): A list of conditions for the update, with each condition represented as a (column, value) tuple.
 
     Returns:
-    str: A SQL UPDATE query string.
+    Tuple[str, Tuple[object, ...]]: A SQL template string and parameters tuple.
 
     Example:
     >>> generate_update_query(
@@ -34,18 +48,28 @@ def generate_update_query(table_name: str, data: Dict[str, str], conditions: Lis
             {"email": "john.updated@example.com", "last_name": "UpdatedDoe"},
             [("first_name", "John"), ("last_name", "Doe")]
         )
-    "UPDATE users SET email = 'john.updated@example.com', last_name = 'UpdatedDoe' WHERE first_name = 'John' AND last_name = 'Doe';"
+    (
+        "UPDATE users SET email = ?, last_name = ? WHERE first_name = ? AND last_name = ?;",
+        ("john.updated@example.com", "UpdatedDoe", "John", "Doe"),
+    )
     """
-    # Preparing the SET part of the query
-    SINGLE_QUOTE = "'"
-    set_clause = ", ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in data.items())
+    if not data:
+        raise ValueError("UPDATE requires at least one column to modify")
+    if not conditions:
+        raise ValueError("UPDATE requires WHERE conditions in this example")
 
-    # Preparing the WHERE part of the query
-    where_clause = " AND ".join(f"{column} = '{value.replace(SINGLE_QUOTE, SINGLE_QUOTE * 2)}'" for column, value in conditions)
+    safe_table_name = validate_identifier(table_name, "table name")
+    set_clause = ", ".join(
+        f"{validate_identifier(column, 'column name')} = ?" for column in data
+    )
+    where_clause = " AND ".join(
+        f"{validate_identifier(column, 'column name')} = ?" for column, _ in conditions
+    )
+    params = tuple(data.values()) + tuple(value for _, value in conditions)
 
-    query = f"UPDATE {table_name} SET {set_clause} WHERE {where_clause};"
+    query = f"UPDATE {safe_table_name} SET {set_clause} WHERE {where_clause};"
 
-    return query
+    return query, params
 
 if __name__ == "__main__":
     update_data = {
@@ -57,6 +81,6 @@ if __name__ == "__main__":
         ("last_name", "Doe")
     ]
 
-    # Expected output:
-    # UPDATE users SET email = 'john.updated@example.com', last_name = 'UpdatedDoe' WHERE first_name = 'John' AND last_name = 'Doe';
-    print(generate_update_query("users", update_data, update_conditions))
+    query, params = generate_update_query("users", update_data, update_conditions)
+    print(query)
+    print(params)

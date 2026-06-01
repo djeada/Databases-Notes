@@ -1,224 +1,269 @@
 # Database Scripts
 
-This directory contains practical demonstration scripts for various database concepts, **organized by database type** (SQLite, MySQL, PostgreSQL).
+This directory groups database-specific demos under engine-specific folders:
 
-## Overview
+- `sqlite/`
+- `mysql/`
+- `postgres/`
+- `mongo/`
+- `neo4j/`
 
-These scripts are designed to be **modern, clean, and demonstrate database concepts clearly**. Each script includes:
-- Clear documentation explaining the goal and concept
-- Proper error handling
-- Helpful output messages
-- Example usage instructions
+Examples that clearly belong to one engine now live in that engine's folder,
+including the former concurrency demos.
 
 ## Prerequisites
 
-### Python Environment
-All scripts require Python 3.7 or later.
+### Python
 
-### Installing Dependencies
+Use Python 3.7+ and install the script dependencies:
 
 ```bash
 cd scripts
 pip install -r requirements.txt
 ```
 
-### Database Setup
-
-#### MySQL Setup
-For MySQL-specific examples, use the setup script:
+### MySQL setup
 
 ```bash
 bash setup/start_mysql.sh
 ```
 
-This will:
-- Install Docker if needed
-- Pull and run a MySQL container
-- Configure it with test credentials
-- Connection: `mysql://testuser:testpass@127.0.0.1:3306/testdb`
+Connection used by the MySQL demos:
+`mysql://testuser:testpass@127.0.0.1:3306/testdb`
 
-#### PostgreSQL Setup
-For PostgreSQL-specific examples, use the setup script:
+### PostgreSQL setup
 
 ```bash
 bash setup/start_postgres.sh
 ```
 
-This will:
-- Install Docker if needed
-- Pull and run a PostgreSQL container
-- Configure it with test credentials
-- Connection: `postgres://demo:secret@127.0.0.1:5432/test`
+Connection used by the PostgreSQL demos:
+`postgres://demo:secret@127.0.0.1:5432/test`
 
-## Scripts by Database Type
+### MongoDB setup
 
-### SQLite Examples
+```bash
+bash setup/start_mongo.sh
+```
 
-SQLite is perfect for lightweight, embedded database demonstrations. No setup required!
+Connection used by the MongoDB demos:
+`mongodb://mongoadmin:secret@127.0.0.1:27017/?authSource=admin`
 
-#### **Full-Text Search (FTS5)**
-- **sqlite_examples/full_text_search.py** - Demonstrate SQLite's powerful FTS5 capabilities
+### Neo4j setup
+
+```bash
+bash setup/start_neo4j.sh
+```
+
+Connection used by the Neo4j demos:
+Bolt URI `bolt://127.0.0.1:7687`, user `neo4j`, password `testpass`
+
+SQLite demos need no server setup.
+
+## Layout
+
+```text
+scripts/
+├── sqlite/
+├── mysql/
+├── postgres/
+├── mongo/
+├── neo4j/
+├── diagrams/
+├── generating_query_strings/
+├── setup/
+├── README.md
+└── requirements.txt
+```
+
+## SQLite
+
+SQLite examples are fully self-contained and now include the SQLite-specific
+concurrency lessons directly in the same folder.
+
+### Commonly misunderstood concepts
+
+- **sqlite/foreign_keys_are_off_by_default.py**  
+  `PRAGMA foreign_keys = ON` is required per connection.
   ```bash
-  python sqlite_examples/full_text_search.py
-  ```
-  Covers: Basic search, phrase search, boolean operators, prefix matching, column-specific search
-
-#### **JSON Functions**
-- **sqlite_examples/json_functions.py** - Store and query JSON data in SQLite
-  ```bash
-  python sqlite_examples/json_functions.py
-  ```
-  Covers: JSON extraction, filtering, array queries, modifications, aggregations
-
-#### **Concurrency (SQLite-specific)**
-- **concurrency/concurrent_readers.py** - WAL vs Exclusive locking
-  ```bash
-  python concurrency/concurrent_readers.py           # WAL mode
-  python concurrency/concurrent_readers.py --exclusive  # Exclusive mode
-  ```
-
-- **concurrency/deadlock_file_level.py** - File-level deadlock detection
-  ```bash
-  python concurrency/deadlock_file_level.py          # With recovery
-  python concurrency/deadlock_file_level.py --deadlock  # Indefinite deadlock
-  ```
-
-- **concurrency/mvcc.py** - Multi-Version Concurrency Control
-  ```bash
-  python concurrency/mvcc.py
-  ```
-
-- **concurrency/optimistic_vs_pessimistic_lock.py** - Compare locking strategies
-  ```bash
-  python concurrency/optimistic_vs_pessimistic_lock.py
-  ```
-
-- **concurrency/transaction_isolation.py** - Isolation levels and dirty reads
-  ```bash
-  python concurrency/transaction_isolation.py
+  python sqlite/foreign_keys_are_off_by_default.py
   ```
 
-### MySQL Examples
-
-MySQL examples demonstrate features that work best with a full-featured RDBMS.
-
-*Requires MySQL running - use `bash setup/start_mysql.sh`*
-
-#### **Stored Procedures**
-- **mysql_examples/stored_procedures.py** - Create and use stored procedures
+- **sqlite/integer_primary_key_vs_autoincrement.py**  
+  `INTEGER PRIMARY KEY` already auto-generates rowids; `AUTOINCREMENT` mainly
+  changes reuse semantics and adds overhead.
   ```bash
-  python mysql_examples/stored_procedures.py
-  ```
-  Covers: Procedures with parameters, calculating aggregates, returning result sets
-
-#### **Triggers**
-- **mysql_examples/triggers.py** - Automatic actions on database events
-  ```bash
-  python mysql_examples/triggers.py
-  ```
-  Covers: BEFORE/AFTER triggers, INSERT/UPDATE/DELETE events, audit logging, validation
-
-#### **Transaction Isolation Levels**
-- **mysql_examples/transaction_isolation.py** - Compare isolation levels
-  ```bash
-  python mysql_examples/transaction_isolation.py
-  ```
-  Covers: READ UNCOMMITTED, READ COMMITTED, REPEATABLE READ, dirty reads, phantom reads
-
-### PostgreSQL Examples
-
-PostgreSQL-specific features.
-
-*Requires PostgreSQL running - use `bash setup/start_postgres.sh`*
-
-#### **Row-Level Deadlocks**
-- **concurrency/deadlock_row_level.py** - Row-level deadlock detection in PostgreSQL
-  ```bash
-  python concurrency/deadlock_row_level.py
+  python sqlite/integer_primary_key_vs_autoincrement.py
   ```
 
-### General Examples
-
-These work across database types or are database-agnostic.
-
-#### **Mock Database Creation**
-- **create_mock_db.py** - Create and populate a SQLite database with sample data
+- **sqlite/type_affinity_surprises.py**  
+  Shows why storing numeric data as text produces surprising sorting and filters.
   ```bash
-  python create_mock_db.py
+  python sqlite/type_affinity_surprises.py
   ```
 
-#### **Diagram Generation**
-- **diagrams/hash_ring.py** - Generate consistent hashing visualizations
+### SQLite features and behavior
+
+- **sqlite/full_text_search.py** - FTS5 queries  
+  ```bash
+  python sqlite/full_text_search.py
+  ```
+
+- **sqlite/json_functions.py** - JSON queries and updates  
+  ```bash
+  python sqlite/json_functions.py
+  ```
+
+- **sqlite/create_mock_db.py** - Create and populate a sample SQLite database  
+  ```bash
+  python sqlite/create_mock_db.py
+  ```
+
+- **sqlite/concurrent_readers.py** - WAL snapshot reads vs exclusive locking  
+  ```bash
+  python sqlite/concurrent_readers.py
+  python sqlite/concurrent_readers.py --exclusive
+  ```
+
+- **sqlite/deadlock_file_level.py** - File-level deadlock behavior  
+  ```bash
+  python sqlite/deadlock_file_level.py
+  python sqlite/deadlock_file_level.py --deadlock
+  ```
+
+- **sqlite/mvcc.py** - MVCC-style versioning and stale snapshots  
+  ```bash
+  python sqlite/mvcc.py
+  ```
+
+- **sqlite/optimistic_vs_pessimistic_lock.py** - Version checks vs immediate write locking  
+  ```bash
+  python sqlite/optimistic_vs_pessimistic_lock.py
+  ```
+
+- **sqlite/transaction_isolation.py** - SQLite isolation and dirty-read caveats  
+  ```bash
+  python sqlite/transaction_isolation.py
+  ```
+
+## MySQL
+
+- **mysql/ddl_implicit_commit.py**  
+  Shows that MySQL DDL implicitly commits the surrounding transaction.
+  ```bash
+  python mysql/ddl_implicit_commit.py
+  ```
+
+- **mysql/stored_procedures.py**  
+  Stored procedures with parameters and result sets.
+  ```bash
+  python mysql/stored_procedures.py
+  ```
+
+- **mysql/triggers.py**  
+  BEFORE/AFTER triggers, validation, and audit logging.
+  ```bash
+  python mysql/triggers.py
+  ```
+
+- **mysql/transaction_isolation.py**  
+  READ UNCOMMITTED, READ COMMITTED, and REPEATABLE READ examples.
+  ```bash
+  python mysql/transaction_isolation.py
+  ```
+
+## PostgreSQL
+
+- **postgres/sequences_are_not_rolled_back.py**  
+  Explains why sequence-based IDs can have gaps after rollbacks.
+  ```bash
+  python postgres/sequences_are_not_rolled_back.py
+  ```
+
+- **postgres/transactional_ddl.py**  
+  Shows that PostgreSQL DDL is usually transactional.
+  ```bash
+  python postgres/transactional_ddl.py
+  ```
+
+- **postgres/deadlock_row_level.py**  
+  Row-level deadlock detection and retry behavior.
+  ```bash
+  python postgres/deadlock_row_level.py
+  ```
+
+## MongoDB
+
+- **mongo/replace_one_vs_update_one.py**  
+  Shows that `replace_one()` replaces the entire document, while
+  `update_one(..., {"$set": ...})` patches only the named fields.
+  ```bash
+  python mongo/replace_one_vs_update_one.py
+  ```
+
+- **mongo/null_vs_missing_fields.py**  
+  Demonstrates that `{field: null}` matches both explicit null and missing fields.
+  ```bash
+  python mongo/null_vs_missing_fields.py
+  ```
+
+## Neo4j
+
+- **neo4j/merge_full_pattern_duplicates_nodes.py**  
+  Shows why `MERGE` on a full pattern can create duplicate nodes when you
+  really meant to reuse existing nodes and create only the relationship.
+  ```bash
+  python neo4j/merge_full_pattern_duplicates_nodes.py
+  ```
+
+- **neo4j/detach_delete_vs_delete.py**  
+  Demonstrates that `DELETE` fails on nodes with attached relationships, while
+  `DETACH DELETE` removes the node and its edges together.
+  ```bash
+  python neo4j/detach_delete_vs_delete.py
+  ```
+
+## Cross-database utilities
+
+- **generating_query_strings/\*.py**  
+  Database-agnostic SQL construction examples using identifier validation and
+  DB-API placeholders for values.
+  ```bash
+  python generating_query_strings/select.py
+  ```
+
+- **diagrams/hash_ring.py**  
+  Consistent hashing visualization utility.
   ```bash
   python diagrams/hash_ring.py
   ```
-  *Generates PNG files showing hash ring behavior for distributed systems*
-
-#### **Query String Generators**
-Programmatic SQL query generation (database-agnostic):
-
-- **generating_query_strings/create_table.py** - CREATE TABLE statements
-- **generating_query_strings/insert_query.py** - INSERT statements
-- **generating_query_strings/select.py** - SELECT statements
-- **generating_query_strings/update_query.py** - UPDATE statements
-- **generating_query_strings/delete.py** - DELETE statements
-
-Run any of them:
-```bash
-python generating_query_strings/create_table.py
-```
-
-## Features by Database
-
-| Feature | SQLite | MySQL | PostgreSQL |
-|---------|--------|-------|------------|
-| Full-Text Search (FTS5) | ✓ | | |
-| JSON Functions | ✓ | ✓ | ✓ |
-| Stored Procedures | Limited | ✓ | ✓ |
-| Triggers | ✓ | ✓ | ✓ |
-| File-Level Locking | ✓ | | |
-| Row-Level Locking | | ✓ | ✓ |
-| MVCC | ✓ | ✓ | ✓ |
-| Multiple Isolation Levels | Limited | ✓ | ✓ |
-
-## Modern Code Quality
-
-- ✓ Clear module docstrings explaining goals and concepts
-- ✓ Type hints where applicable
-- ✓ Proper error handling with informative messages
-- ✓ Progress indicators for long-running operations
-- ✓ SQL injection prevention (proper escaping)
-- ✓ Visual indicators (✓, ✗, •) in output
-
-## Educational Value
-
-Each script:
-- Explains what concept it demonstrates
-- Shows practical use cases
-- Includes inline comments for complex logic
-- Provides clear output with visual indicators
-- Can be run independently
 
 ## Troubleshooting
 
-### "ModuleNotFoundError"
-Install dependencies: `pip install -r requirements.txt`
+### `ModuleNotFoundError`
 
-### "Connection refused" (MySQL scripts)
-Start MySQL: `bash setup/start_mysql.sh`
+Install dependencies:
 
-### "Connection refused" (PostgreSQL scripts)
-Start PostgreSQL: `bash setup/start_postgres.sh`
+```bash
+pip install -r requirements.txt
+```
 
-### "Database is locked" errors
-This is expected behavior in some SQLite concurrency demos that intentionally create conflicts.
+### `Connection refused`
+
+Start the matching database first:
+
+- MySQL: `bash setup/start_mysql.sh`
+- PostgreSQL: `bash setup/start_postgres.sh`
+- MongoDB: `bash setup/start_mongo.sh`
+- Neo4j: `bash setup/start_neo4j.sh`
+
+### `database is locked`
+
+Some SQLite examples intentionally create write contention to demonstrate how
+SQLite locking works.
 
 ## Contributing
 
-When adding new scripts:
-1. Choose the appropriate directory (sqlite_examples, mysql_examples, or general)
-2. Include a module-level docstring with Goal, Concept, Prerequisites, and Usage
-3. Add proper error handling
-4. Use clear, informative output messages
-5. Update this README with the new script
-6. Add any new dependencies to requirements.txt
+1. Put SQLite examples in `sqlite/`, MySQL examples in `mysql/`, PostgreSQL examples in `postgres/`, MongoDB examples in `mongo/`, and Neo4j examples in `neo4j/`.
+2. Keep engine-specific concurrency examples in the matching engine folder.
+3. Update this README when you add, move, or remove a script.

@@ -11,7 +11,7 @@ Concept:
 - Includes built-in ranking and highlighting
 
 Usage:
-    python sqlite_examples/full_text_search.py
+    python sqlite/full_text_search.py
 """
 import sqlite3
 import os

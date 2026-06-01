@@ -15,14 +15,16 @@ Prerequisites:
 - Use scripts/setup/start_postgres.sh to start a local PostgreSQL instance
 
 Usage:
-    python deadlock_row_level.py
+    python postgres/deadlock_row_level.py
 """
 import threading
 import time
+import random
 import psycopg2
-from psycopg2 import sql, OperationalError, errors
+from psycopg2 import Error, errors
 
-DSN = "dbname=test user=postgres password=secret host=localhost port=5432"
+DSN = "dbname=test user=demo password=secret host=localhost port=5432"
+MAX_RETRIES = 2
 
 def setup_db():
     with psycopg2.connect(DSN) as conn:
@@ -46,36 +48,46 @@ def cleanup_db():
     print("🧹 Table dropped, cleanup complete.")
 
 def worker(name, first_id, second_id, delay):
-    conn = psycopg2.connect(DSN)
-    conn.autocommit = False
-    cur = conn.cursor()
-    try:
-        cur.execute("BEGIN;")
-        # Lock the first row
-        cur.execute(
-            sql.SQL("SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;"),
-            [first_id]
-        )
-        print(f"{name}: locked row {first_id}")
-        
-        time.sleep(delay)
-        
-        # Now try to lock the second row
-        print(f"{name}: attempting to lock row {second_id}")
-        cur.execute(
-            sql.SQL("SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;"),
-            [second_id]
-        )
-        print(f"{name}: locked row {second_id} — no deadlock?")
-        
-        conn.commit()
-    except OperationalError as e:
-        # Psycopg2 raises a generic OperationalError for deadlocks
-        print(f"{name}: DEADLOCK detected! → {e}")
-        conn.rollback()
-    finally:
-        cur.close()
-        conn.close()
+    for attempt in range(1, MAX_RETRIES + 1):
+        conn = psycopg2.connect(DSN)
+        conn.autocommit = False
+        cur = conn.cursor()
+        try:
+            cur.execute("BEGIN;")
+            cur.execute(
+                "SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;",
+                [first_id],
+            )
+            print(f"{name}: locked row {first_id} (attempt {attempt})")
+
+            time.sleep(delay)
+
+            print(f"{name}: attempting to lock row {second_id}")
+            cur.execute(
+                "SELECT val FROM deadlock_demo WHERE id = %s FOR UPDATE;",
+                [second_id],
+            )
+            print(f"{name}: locked row {second_id}")
+
+            conn.commit()
+            print(f"{name}: committed successfully")
+            return
+        except errors.DeadlockDetected as e:
+            print(f"{name}: DEADLOCK detected on attempt {attempt}! → {e.diag.message_primary}")
+            conn.rollback()
+            if attempt < MAX_RETRIES:
+                backoff = random.uniform(0.05, 0.2)
+                print(f"{name}: retrying after {backoff:.2f}s")
+                time.sleep(backoff)
+            else:
+                print(f"{name}: giving up after {MAX_RETRIES} attempts")
+        except Error as e:
+            print(f"{name}: database error → {e}")
+            conn.rollback()
+            return
+        finally:
+            cur.close()
+            conn.close()
 
 if __name__ == "__main__":
     setup_db()

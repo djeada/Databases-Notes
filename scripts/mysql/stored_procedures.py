@@ -14,7 +14,7 @@ Prerequisites:
 - Use scripts/setup/start_mysql.sh to start a local MySQL instance
 
 Usage:
-    python mysql_examples/stored_procedures.py
+    python mysql/stored_procedures.py
 """
 import mysql.connector
 from mysql.connector import Error

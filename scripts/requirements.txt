@@ -3,8 +3,14 @@
 # Required for hash ring visualization (scripts/diagrams/hash_ring.py)
 matplotlib>=3.5.0
 
-# Required for PostgreSQL demos (scripts/concurrency/deadlock_row_level.py)
+# Required for PostgreSQL demos (scripts/postgres/*.py)
 psycopg2-binary>=2.9.0
 
-# Required for MySQL demos (scripts/mysql_examples/*.py)
+# Required for MySQL demos (scripts/mysql/*.py)
 mysql-connector-python>=8.0.0
+
+# Required for MongoDB demos (scripts/mongo/*.py)
+pymongo>=4.0.0
+
+# Required for Neo4j demos (scripts/neo4j/*.py)
+neo4j>=5.0.0

@@ -14,7 +14,7 @@ Prerequisites:
 - Use scripts/setup/start_mysql.sh to start a local MySQL instance
 
 Usage:
-    python mysql_examples/transaction_isolation.py
+    python mysql/transaction_isolation.py
 """
 import mysql.connector
 from mysql.connector import Error
@@ -139,8 +139,11 @@ def demo_read_uncommitted():
     print("✓ Demo complete: T2 read uncommitted data that was later rolled back\n")
 
 def demo_read_committed():
-    """Demonstrate READ COMMITTED - prevents dirty reads."""
-    print("\n--- Demo: READ COMMITTED (No Dirty Reads) ---\n")
+    """Demonstrate READ COMMITTED - sees the latest committed row version."""
+    print("\n--- Demo: READ COMMITTED (Non-Repeatable Read) ---\n")
+
+    updated_event = threading.Event()
+    committed_event = threading.Event()
     
     def transaction1():
         conn = create_connection()
@@ -153,11 +156,13 @@ def demo_read_committed():
             
             cursor.execute("UPDATE accounts SET balance = balance + 500 WHERE name = 'Bob';")
             print("[T1] Updated Bob's balance (uncommitted)")
+            updated_event.set()
             
-            time.sleep(2)  # Give T2 time to try reading
+            time.sleep(2)  # Give T2 time to perform its first read
             
             conn.commit()
             print("[T1] Committed transaction")
+            committed_event.set()
             
         except Error as e:
             print(f"[T1] Error: {e}")
@@ -166,7 +171,7 @@ def demo_read_committed():
             conn.close()
     
     def transaction2():
-        time.sleep(0.5)
+        updated_event.wait()
         conn = create_connection()
         cursor = conn.cursor()
         
@@ -174,11 +179,17 @@ def demo_read_committed():
             cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED;")
             cursor.execute("START TRANSACTION;")
             
-            # This will wait for T1's commit
-            print("[T2] Attempting to read Bob's balance...")
+            print("[T2] First read before T1 commits...")
             cursor.execute("SELECT balance FROM accounts WHERE name = 'Bob';")
-            balance = cursor.fetchone()[0]
-            print(f"[T2] Read Bob's balance: ${balance:.2f} (after T1 committed)")
+            before_commit = cursor.fetchone()[0]
+            print(f"[T2] Bob's balance before commit: ${before_commit:.2f}")
+
+            committed_event.wait()
+
+            print("[T2] Second read in the same transaction after T1 commits...")
+            cursor.execute("SELECT balance FROM accounts WHERE name = 'Bob';")
+            after_commit = cursor.fetchone()[0]
+            print(f"[T2] Bob's balance after commit: ${after_commit:.2f}")
             
             conn.commit()
             
@@ -196,7 +207,7 @@ def demo_read_committed():
     t1.join()
     t2.join()
     
-    print("✓ Demo complete: T2 waited for T1 to commit (no dirty read)\n")
+    print("✓ Demo complete: T2 saw the new committed value on the second read\n")
 
 def demo_repeatable_read():
     """Demonstrate REPEATABLE READ - consistent reads within transaction."""

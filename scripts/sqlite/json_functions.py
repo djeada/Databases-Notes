@@ -11,7 +11,7 @@ Concept:
 - Useful for flexible schemas and nested data
 
 Usage:
-    python sqlite_examples/json_functions.py
+    python sqlite/json_functions.py
 """
 import sqlite3
 import json

@@ -9,16 +9,15 @@ Concepts:
 - Pessimistic Locking: BEGIN IMMEDIATE acquires a RESERVED lock immediately,
   preventing other writers from starting. Safe but can cause contention.
   
-- Optimistic Locking: Use version numbers to detect conflicts. Transactions
-  proceed without locking, then check if data changed before committing.
-  Better concurrency but requires retry logic.
+- Optimistic Locking: Read a version first, do work without holding a write
+  lock, then use a conditional UPDATE to detect whether another writer changed
+  the row in the meantime. Better concurrency but requires retry logic.
 
 Usage:
-    python optimistic_vs_pessimistic_lock.py
+    python sqlite/optimistic_vs_pessimistic_lock.py
 """
 import sqlite3
 import time
-import uuid
 import os
 from multiprocessing import Process
 
@@ -72,24 +71,28 @@ def pessimistic_transaction(name, delay_before_update=2):
         print(f"{name}: OperationalError - {e}\n")
 
 def optimistic_transaction(name, delay_before_update=2):
-    """Optimistic: read-version, check-and-set, retry on conflict."""
+    """Optimistic: read-version, then conditionally update later."""
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            with sqlite3.connect(DATABASE, timeout=5) as conn:
+            with sqlite3.connect(DATABASE, timeout=10) as conn:
                 conn.execute("PRAGMA journal_mode = WAL;")
                 cur = conn.cursor()
-                print(f"{name}: BEGIN (attempt {attempt})")
-                cur.execute("BEGIN;")
                 cur.execute("SELECT quantity, version FROM products WHERE id = 1;")
                 row = cur.fetchone()
                 if row is None:
                     print(f"{name}: no row found, aborting\n")
                     return
                 qty, ver = row
-                print(f"{name}: read quantity = {qty}, version = {ver}")
-                time.sleep(delay_before_update)
-                new_qty = qty - 10
-                new_ver = ver + 1
+                print(f"{name}: snapshot read quantity = {qty}, version = {ver} (attempt {attempt})")
+
+            time.sleep(delay_before_update)
+            new_qty = qty - 10
+            new_ver = ver + 1
+
+            with sqlite3.connect(DATABASE, timeout=10, isolation_level=None) as conn:
+                conn.execute("PRAGMA journal_mode = WAL;")
+                cur = conn.cursor()
+                cur.execute("BEGIN IMMEDIATE;")
                 cur.execute("""
                     UPDATE products
                        SET quantity = ?, version = ?
@@ -98,14 +101,15 @@ def optimistic_transaction(name, delay_before_update=2):
                 if cur.rowcount == 0:
                     raise VersionConflict()
                 print(f"{name}: updated to quantity = {new_qty}, version = {new_ver}")
+
             print(f"{name}: COMMIT\n")
             return
         except VersionConflict:
             print(f"{name}: version conflict, retrying after {RETRY_DELAY}s...\n")
             time.sleep(RETRY_DELAY)
         except sqlite3.OperationalError as e:
-            print(f"{name}: OperationalError - {e}\n")
-            return
+            print(f"{name}: OperationalError - {e}. Retrying...\n")
+            time.sleep(RETRY_DELAY)
     print(f"{name}: failed after {MAX_RETRIES} attempts\n")
 
 def display_final_state():

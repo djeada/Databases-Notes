@@ -12,7 +12,7 @@ Concepts Demonstrated:
    see uncommitted changes from concurrent transactions.
 
 Usage:
-    python transaction_isolation.py
+    python sqlite/transaction_isolation.py
 """
 import sqlite3, threading, time, os
 

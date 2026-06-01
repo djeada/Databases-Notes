@@ -12,8 +12,8 @@ Concept:
 - With short timeouts, one worker detects the lock and can retry with IMMEDIATE mode
 
 Usage:
-    python deadlock_file_level.py              # Run with lock detection and recovery
-    python deadlock_file_level.py --deadlock   # Run with indefinite deadlock
+    python sqlite/deadlock_file_level.py
+    python sqlite/deadlock_file_level.py --deadlock
 """
 import sqlite3
 import multiprocessing

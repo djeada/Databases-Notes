@@ -1,21 +1,28 @@
 #!/usr/bin/env python3
 """
-Multi-Version Concurrency Control (MVCC) Demo
+Multi-Version Concurrency Control (MVCC) Versioning Demo
 
-Goal: Demonstrate a simplified MVCC implementation using SQLite where multiple
-      versions of the same row can exist, allowing concurrent transactions.
+Goal: Demonstrate a simplified MVCC-style versioning approach using SQLite
+      where multiple versions of the same row can exist and stale writers are
+      rejected cleanly.
 
 Concept:
-- Each row update creates a new version with a unique version_id
-- Versions have valid_from and valid_to timestamps
-- Transactions read the appropriate version based on their snapshot time
-- Conflicts are detected when trying to update a version that's already been updated
-- One transaction succeeds, the conflicting one is aborted
+- Each update creates a new row version with a unique version_id.
+- Versions have valid_from and valid_to timestamps.
+- A worker first reads a snapshot, then later tries to promote that snapshot
+  into a new version.
+- The final write uses a conditional UPDATE to ensure the original version is
+  still current. If another worker updated it first, the stale worker aborts.
+- SQLite still allows only one writer at a time, so the long "thinking" phase
+  stays outside the write transaction to focus on MVCC conflict detection.
 
 Usage:
-    python mvcc.py
+    python sqlite/mvcc.py
 """
-import sqlite3, time, uuid, os
+import os
+import sqlite3
+import time
+import uuid
 from multiprocessing import Process
 
 DB = "mvcc.db"
@@ -27,6 +34,7 @@ def setup():
         os.remove(DB)
     with sqlite3.connect(DB) as conn:
         c = conn.cursor()
+        c.execute("PRAGMA journal_mode = WAL;")
         c.execute(f"""
             CREATE TABLE {TBL} (
                 id           INTEGER,
@@ -46,14 +54,15 @@ def setup():
         conn.commit()
 
 def transaction(label, delta, sleep_secs):
-    conn = sqlite3.connect(DB, isolation_level=None)  # autocommit off
+    conn = sqlite3.connect(DB, isolation_level=None, timeout=10)
     c = conn.cursor()
-    # 1) start a snapshot
-    c.execute("BEGIN;")
-    start_ts = time.time()
-    print(f"[{label}] BEGIN at {start_ts:.3f}")
+    c.execute("PRAGMA journal_mode = WAL;")
 
-    # 2) read
+    # 1) read a snapshot of the current version
+    start_ts = time.time()
+    print(f"[{label}] snapshot at {start_ts:.3f}")
+
+    # 2) read the currently visible version
     c.execute(f"""
         SELECT quantity, version_id
         FROM {TBL}
@@ -63,36 +72,44 @@ def transaction(label, delta, sleep_secs):
     row = c.fetchone()
     if not row:
         print(f"[{label}] nothing to read!")
-        c.execute("ROLLBACK;")
+        conn.close()
         return
     qty, vid = row
     print(f"[{label}] read qty={qty} vid={vid}")
 
-    time.sleep(sleep_secs)  # simulate work
+    time.sleep(sleep_secs)  # simulate work outside the write transaction
 
-    # 3) attempt to expire & insert new version
+    # 3) attempt to expire the old version and insert a new one
     now = time.time()
-    # expire *only if* version_id still matches, otherwise conflict
-    updated = c.execute(f"""
+    c.execute("BEGIN IMMEDIATE;")
+    updated = c.execute(
+        f"""
         UPDATE {TBL}
-          SET valid_to=?
-        WHERE id=1
-          AND version_id=?
-          AND valid_to={SENTINEL};
-    """, (now, vid)).rowcount
+           SET valid_to=?
+         WHERE id=1
+           AND version_id=?
+           AND valid_to={SENTINEL};
+        """,
+        (now, vid),
+    ).rowcount
 
     if updated != 1:
-        print(f"[{label}] ABORT: concurrent write detected")
+        print(f"[{label}] ABORT: snapshot is stale")
         c.execute("ROLLBACK;")
+        conn.close()
         return
 
     new_qty = qty + delta
-    c.execute(f"""
+    c.execute(
+        f"""
         INSERT INTO {TBL}(id,name,quantity,version_id,valid_from)
         VALUES(1,'Widget',?, ?, ?);
-    """, (new_qty, str(uuid.uuid4()), now))
+        """,
+        (new_qty, str(uuid.uuid4()), now),
+    )
     c.execute("COMMIT;")
     print(f"[{label}] COMMIT new_qty={new_qty}")
+    conn.close()
 
 def show_versions():
     with sqlite3.connect(DB) as conn:
