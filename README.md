@@ -10,11 +10,9 @@
 
 [📚 Browse Notes](#-notes) • [🚀 Quick Start](#-quick-start) • [💡 Features](#-features) • [📖 References](#-references) • [⭐ Star History](#-star-history)
 
-<img width="1254" height="1254" alt="database_notes" src="https://github.com/user-attachments/assets/4f746c57-a4dc-4c04-892a-ef901c64386f" />
+<img width="1254" height="1254" alt="database_notes" src="https://github.com/user-attachments/assets/038d51ed-75bb-4f0c-ab98-1ead881f729d" />
 
 </div>
-
----
 
 ## 📋 Table of Contents
 
