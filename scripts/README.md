@@ -192,6 +192,17 @@ concurrency lessons directly in the same folder.
   python postgres/deadlock_row_level.py
   ```
 
+- **[postgres/acid_escape_room/](postgres/acid_escape_room/README.md)**  
+  Eight multiprocessing scenarios: intentionally BAD and GOOD implementations
+  of **Atomicity, Consistency, Isolation, and Durability**. Includes a dedicated
+  PostgreSQL Docker Compose stack, sample-data seeding, run assertions, and a
+  post-restart durability check. **Use its separate README and disposable
+  `acid_lab` database**, not the generic PostgreSQL setup above.
+  ```bash
+  python postgres/acid_escape_room/lab.py seed --workers 8
+  python postgres/acid_escape_room/lab.py run --property all --mode both --workers 8
+  ```
+
 ## MongoDB
 
 - **mongo/replace_one_vs_update_one.py**  
