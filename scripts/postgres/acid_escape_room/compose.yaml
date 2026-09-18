@@ -1,0 +1,19 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: acid_lab
+      POSTGRES_USER: acid
+      POSTGRES_PASSWORD: local_only_secret
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - acid_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U acid -d acid_lab"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  acid_pg_data:
