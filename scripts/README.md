@@ -7,6 +7,7 @@ This directory groups database-specific demos under engine-specific folders:
 - `postgres/`
 - `mongo/`
 - `neo4j/`
+- `sqlserver/`
 
 Examples that clearly belong to one engine now live in that engine's folder,
 including the former concurrency demos.
@@ -15,7 +16,8 @@ including the former concurrency demos.
 
 ### Python
 
-Use Python 3.7+ and install the script dependencies:
+Use Python 3.7+ for the existing demos and Python 3.10+ for the SQL Server
+console. Install the script dependencies:
 
 ```bash
 cd scripts
@@ -69,6 +71,7 @@ scripts/
 ├── postgres/
 ├── mongo/
 ├── neo4j/
+├── sqlserver/
 ├── diagrams/
 ├── generating_query_strings/
 ├── setup/
@@ -234,6 +237,44 @@ concurrency lessons directly in the same folder.
   python neo4j/detach_delete_vs_delete.py
   ```
 
+## SQL Server
+
+### Multiline Docker console
+
+`sqlserver/sql_docker_console.py` connects to an existing SQL Server container
+through the Docker CLI and keeps one `sqlcmd` session alive between scripts.
+The container must be running and have `sqlcmd` installed (default path:
+`/opt/mssql-tools18/bin/sqlcmd`). Install `prompt-toolkit` in the Python
+environment used to launch the console:
+
+```bash
+python3 -m pip install prompt-toolkit
+python3 sqlserver/sql_docker_console.py
+```
+
+Run these commands from `scripts/`. The default container is `sqlserver-demo`,
+with server `localhost`, login `sa`, and initial database `master`. The console
+prompts for connection settings and a hidden password. Override prompt defaults
+with `--container`, `--server`, `--user`, `--database`, and `--sqlcmd`:
+
+```bash
+python3 sqlserver/sql_docker_console.py --container my-sqlserver --database mydb
+```
+
+`SQL_DOCKER_CONTAINER` also sets the default container. `SQLCMDPASSWORD` can
+supply the password; otherwise it is requested interactively. The password is
+passed to the container through stdin rather than the Docker command line.
+
+- Paste multiline SQL, including `GO` batch separators.
+- Enter inserts a newline; Ctrl+R or Esc then Enter executes the entire script.
+- Arrow keys move through the editor; Ctrl+C clears the buffer.
+- Enter submits commands on their own line: `:help`, `:use DATABASE`, `:status`,
+  and `:quit`.
+- Ctrl+D exits when the buffer is empty.
+
+Results and SQL messages appear separately. Database changes and session state
+persist across executions because the connection remains open.
+
 ## Cross-database utilities
 
 - **generating_query_strings/\*.py**  
@@ -275,6 +316,6 @@ SQLite locking works.
 
 ## Contributing
 
-1. Put SQLite examples in `sqlite/`, MySQL examples in `mysql/`, PostgreSQL examples in `postgres/`, MongoDB examples in `mongo/`, and Neo4j examples in `neo4j/`.
+1. Put SQLite examples in `sqlite/`, MySQL examples in `mysql/`, PostgreSQL examples in `postgres/`, MongoDB examples in `mongo/`, Neo4j examples in `neo4j/`, and SQL Server utilities in `sqlserver/`.
 2. Keep engine-specific concurrency examples in the matching engine folder.
 3. Update this README when you add, move, or remove a script.
