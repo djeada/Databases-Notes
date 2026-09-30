@@ -8,6 +8,8 @@ This directory groups database-specific demos under engine-specific folders:
 - `mongo/`
 - `neo4j/`
 - `sqlserver/`
+- `big_data/`
+- `orm/`
 
 Examples that clearly belong to one engine now live in that engine's folder,
 including the former concurrency demos.
@@ -72,6 +74,8 @@ scripts/
 ├── mongo/
 ├── neo4j/
 ├── sqlserver/
+├── big_data/
+├── orm/
 ├── diagrams/
 ├── generating_query_strings/
 ├── setup/
@@ -274,6 +278,34 @@ passed to the container through stdin rather than the Docker command line.
 
 Results and SQL messages appear separately. Database changes and session state
 persist across executions because the connection remains open.
+
+## Big Data
+
+These demos are local teaching examples for the final Big Data chapter. They keep
+the data small so the execution model is visible without requiring a cluster.
+
+- **big_data/warehouse_demo.py** - Builds a small star schema in DuckDB and runs
+  an analytical aggregation.
+  ```bash
+  python big_data/warehouse_demo.py
+  ```
+
+- **big_data/spark_sql_demo.py** - Starts Spark in local mode, runs SQL over a
+  DataFrame, prints the execution plan, writes Parquet, and reads it back.
+  A compatible Java runtime is required.
+  ```bash
+  java -version
+  python big_data/spark_sql_demo.py
+  ```
+
+## ORM
+
+- **orm/sqlalchemy_demo.py** - Maps users and posts with SQLAlchemy 2.x, runs a
+  transaction, demonstrates select-in relationship loading, updates a row, and
+  enables SQL logging so the generated statements are visible.
+  ```bash
+  python orm/sqlalchemy_demo.py
+  ```
 
 ## Cross-database utilities
 
