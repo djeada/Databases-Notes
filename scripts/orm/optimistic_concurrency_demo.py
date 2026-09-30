@@ -10,6 +10,9 @@ Run from the repository root:
 
 from __future__ import annotations
 
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 from sqlalchemy import String, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 from sqlalchemy.orm.exc import StaleDataError
@@ -30,50 +33,56 @@ class Document(Base):
 
 
 def main() -> None:
-    engine = create_engine("sqlite:///:memory:", echo=True)
-    Base.metadata.create_all(engine)
+    with TemporaryDirectory(prefix="orm_concurrency_") as tmpdir:
+        db_path = Path(tmpdir) / "demo.db"
+        engine = create_engine(f"sqlite:///{db_path}", echo=True)
+        Base.metadata.create_all(engine)
 
-    with Session(engine) as seed:
-        seed.add(Document(title="Initial title"))
-        seed.commit()
+        with Session(engine) as seed:
+            seed.add(Document(title="Initial title"))
+            seed.commit()
 
-    session_a = Session(engine)
-    session_b = Session(engine)
+        session_a = Session(engine, expire_on_commit=False)
+        session_b = Session(engine, expire_on_commit=False)
 
-    try:
-        doc_a = session_a.scalar(select(Document).where(Document.id == 1))
-        doc_b = session_b.scalar(select(Document).where(Document.id == 1))
-
-        if doc_a is None or doc_b is None:
-            raise RuntimeError("Expected document row")
-
-        print(
-            f"Both sessions loaded version {doc_a.version_id}: "
-            f"A={doc_a.title!r}, B={doc_b.title!r}"
-        )
-
-        doc_a.title = "Edited by session A"
-        session_a.commit()
-        print(f"Session A committed version {doc_a.version_id}")
-
-        doc_b.title = "Edited by session B"
         try:
-            session_b.commit()
-        except StaleDataError:
-            session_b.rollback()
-            print("Session B was rejected because its version was stale.")
+            doc_a = session_a.scalar(select(Document).where(Document.id == 1))
+            doc_b = session_b.scalar(select(Document).where(Document.id == 1))
 
-        with Session(engine) as verify:
-            current = verify.get(Document, 1)
-            if current is None:
-                raise RuntimeError("Document disappeared")
+            if doc_a is None or doc_b is None:
+                raise RuntimeError("Expected document row")
+
             print(
-                f"Final row: title={current.title!r}, "
-                f"version={current.version_id}"
+                f"Both sessions loaded version {doc_a.version_id}: "
+                f"A={doc_a.title!r}, B={doc_b.title!r}"
             )
-    finally:
-        session_a.close()
-        session_b.close()
+
+            # Release B's read transaction while deliberately keeping its
+            # in-memory object unchanged at version 1.
+            session_b.commit()
+
+            doc_a.title = "Edited by session A"
+            session_a.commit()
+            print(f"Session A committed version {doc_a.version_id}")
+
+            doc_b.title = "Edited by session B"
+            try:
+                session_b.commit()
+            except StaleDataError:
+                session_b.rollback()
+                print("Session B was rejected because its version was stale.")
+
+            with Session(engine) as verify:
+                current = verify.get(Document, 1)
+                if current is None:
+                    raise RuntimeError("Document disappeared")
+                print(
+                    f"Final row: title={current.title!r}, "
+                    f"version={current.version_id}"
+                )
+        finally:
+            session_a.close()
+            session_b.close()
 
 
 if __name__ == "__main__":
