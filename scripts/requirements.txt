@@ -17,4 +17,3 @@ neo4j>=5.0.0
 
 # Required for the SQL Server multiline console (scripts/sqlserver/sql_docker_console.py)
 prompt-toolkit>=3.0.0
-
