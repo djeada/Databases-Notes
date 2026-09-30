@@ -72,6 +72,14 @@ Expected:
 PONG
 ```
 
+Run the repository command demo:
+
+```bash
+cat demo.redis | docker exec -i redis-notes redis-cli
+```
+
+The file exercises strings, hashes, counters, sorted sets, and streams.
+
 Stop it:
 
 ```bash
