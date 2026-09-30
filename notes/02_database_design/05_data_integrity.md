@@ -90,6 +90,119 @@ An `ON DELETE` action expresses a reference policy where supported. `CASCADE` me
 
 Use constraints where they express the rule, and transaction/concurrency logic for the remaining requirements. A pre-insert application check can race: two clients may both pass it before either inserts. A database uniqueness rule closes that particular gap.
 
+## Distinguish the kinds of integrity being protected
+
+**Entity integrity** keeps an identifier unambiguous. **Referential integrity** keeps relationships valid. **Domain integrity** limits the allowed values of an attribute. **Business integrity** preserves the application's larger invariants, such as a reservation corresponding to an order.
+
+The mechanisms overlap but do not replace one another. A unique identifier does not validate an amount, and a valid amount does not establish that the transaction was authorized. Constraints define the rules you encoded, not every possible truth about the world.
+
+## Try deletion policies on a small independent model
+
+Continue in the same SQLite connection or use another fresh one with foreign-key enforcement enabled:
+
+```sql
+PRAGMA foreign_keys = ON;
+CREATE TABLE integrity_departments (
+    department_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL
+);
+CREATE TABLE integrity_staff (
+    staff_id INTEGER PRIMARY KEY,
+    department_id INTEGER REFERENCES integrity_departments(department_id)
+        ON DELETE SET NULL,
+    name TEXT NOT NULL
+);
+INSERT INTO integrity_departments VALUES (1, 'Support');
+INSERT INTO integrity_staff VALUES (10, 1, 'Sam');
+DELETE FROM integrity_departments WHERE department_id = 1;
+SELECT staff_id, department_id, name FROM integrity_staff;
+```
+
+| staff_id | department_id | name |
+|---|---|---|
+| 10 | NULL | Sam |
+
+`SET NULL` retains the employee but removes the reference. The reference column is nullable so that policy is representable. Declaring it `NOT NULL` would conflict with the intended result when deletion happens.
+
+`CASCADE` instead deletes dependent rows, useful when their lifecycle truly belongs to the parent. Restricting or rejecting deletion keeps the relationship intact until a deliberate alternative is chosen. “No action” and “restrict” can differ in check timing, so use the chosen engine's definition rather than treating every rejection policy as identical.
+
+For historical order data, cascading customer deletion could erase facts needed by accounting or customer service. Decide the retention and anonymization model with its owners instead of selecting cascade because it makes a delete command succeed.
+
+## Deferred constraints check at a different boundary
+
+Sometimes records form relationships before all of the transaction's statements have executed. A deferred foreign key can allow temporary missing references while requiring a valid state by commit. This is a SQLite example:
+
+```sql
+CREATE TABLE integrity_parents (parent_id INTEGER PRIMARY KEY);
+CREATE TABLE integrity_children (
+    child_id INTEGER PRIMARY KEY,
+    parent_id INTEGER NOT NULL,
+    FOREIGN KEY (parent_id) REFERENCES integrity_parents(parent_id)
+        DEFERRABLE INITIALLY DEFERRED
+);
+BEGIN;
+INSERT INTO integrity_children VALUES (1, 99);
+INSERT INTO integrity_parents VALUES (99);
+COMMIT;
+SELECT child_id, parent_id FROM integrity_children;
+```
+
+| child_id | parent_id |
+|---|---|
+| 1 | 99 |
+
+After the first insert, the parent is not yet present. After the second, the reference is valid, so commit succeeds. Removing the parent insert would make commit fail and leave error handling to the application. Deferral changes **when** a rule must hold, not whether it matters. See [SQLite foreign keys](https://www.sqlite.org/foreignkeys.html).
+
+## Model a uniqueness rule spanning two columns
+
+A booking must not reuse the same seat for one screening, while that seat can be used at other screenings:
+
+```sql
+CREATE TABLE integrity_bookings (
+    booking_id INTEGER PRIMARY KEY,
+    screening_id INTEGER NOT NULL,
+    seat_number TEXT NOT NULL,
+    customer_name TEXT NOT NULL,
+    UNIQUE (screening_id, seat_number)
+);
+INSERT INTO integrity_bookings VALUES (1, 100, 'A1', 'Alice');
+INSERT INTO integrity_bookings VALUES (2, 101, 'A1', 'Bob');
+SELECT screening_id, seat_number FROM integrity_bookings ORDER BY screening_id;
+```
+
+| screening_id | seat_number |
+|---|---|
+| 100 | A1 |
+| 101 | A1 |
+
+The pair is unique, not each field individually. Two concurrent attempts to reserve `(100, A1)` must pass the same database rule, so only one can be accepted under the constraint. A preliminary application check for availability is useful for messaging but cannot replace the unique constraint: another writer can act after the check.
+
+A global rule such as “at most ten active reservations per customer” is more complex. A row-level check normally cannot count other rows safely. Consider a redesigned counter or allocation structure, locking the owning entity, or serializable transactions with retry, according to the engine.
+
+## Type declarations are engine-specific enforcement
+
+PostgreSQL normally rejects a text value for an integer amount unless an appropriate conversion succeeds. Ordinary SQLite tables use type affinity rather than treating every type declaration as strict enforcement. For supported SQLite versions, strict tables are an option:
+
+```sql
+CREATE TABLE integrity_strict_amounts (
+    amount_id INTEGER PRIMARY KEY,
+    amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0)
+) STRICT;
+INSERT INTO integrity_strict_amounts VALUES (1, 1500);
+```
+
+SQLite 3.37 or later is required. Even strict typing does not prove the amount is the correct price or uses the correct currency. Syntax validation, domain checks, and business calculation are different layers. See [SQLite strict tables](https://www.sqlite.org/stricttables.html).
+
+## Import, repair, and monitor without silently weakening the model
+
+For imports, stage records in a separate area, validate them, report rejected rows, and load accepted records through a controlled transaction policy. Decide whether the batch is all-or-nothing or whether partial acceptance is allowed and recorded. Do not disable constraints and assume that turning them on afterward validates everything already loaded.
+
+If data was written while checks were absent, use engine-supported integrity checks and explicit reconciliation queries. SQLite provides `PRAGMA foreign_key_check`; it reports violations rather than repairing them. Record the rule being checked, the affected identifiers, and an owner for remediation.
+
+Constraints use work: foreign-key checks, uniqueness searches, and cascading operations can need indexes and acquire locks. Measure those costs, but first preserve the correctness requirement. An appropriate index on referencing columns can make related checks and deletions much cheaper than repeatedly scanning the child table.
+
+Translate failures into useful application outcomes: duplicate email, missing referenced product, or unavailable seat are different causes. Do not expose raw database internals as the only user feedback. A constraint error inside a transaction also needs a rollback or retry decision; the statement failure alone does not complete the business workflow.
+
 ## Check your understanding
 
 1. Why is a required unique email declared with both `NOT NULL` and `UNIQUE`?

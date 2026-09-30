@@ -80,6 +80,108 @@ Produce a small entity-relationship diagram, a list of facts and rules, the impo
 
 Then convert the agreed model into tables and constraints. Revisit the requirements when workflows change; adding a table is not a substitute for deciding what the new behavior means.
 
+## Make the requirements testable before choosing a product
+
+“Fast,” “scalable,” and “secure” do not specify a design. Replace them with operations and conditions that can be observed. For example, an order-history page might return 20 orders at a time and have a measured latency target under an agreed concurrent load. A stock reservation might require that two requests cannot both claim the final copy. A daily report might allow yesterday's data rather than requiring every sale immediately.
+
+Record the target, the representative data size and distribution, and how it will be measured. **Latency** is time per request; **throughput** is completed requests per unit time. An average can hide a slow tail, so record a percentile when that describes the requirement better. The illustrative targets here are decisions to agree with stakeholders, not universal database benchmarks.
+
+Capacity planning should distinguish storage growth, query CPU, connection count, and write contention. Adding read replicas can help suitable reads, but does not automatically divide one primary's write workload. Choosing a shard key before understanding the queries can make ordinary cross-customer reports expensive. The requirements should explain which bottleneck the chosen architecture is meant to address.
+
+## A second worked domain: university enrollment
+
+A university example shows why a model must follow the rules rather than merely name tables. A registrar manages enrollment, lecturers need rosters, students need schedules, and administrators need historical reports. Those stakeholders can disagree about what should be retained, who can change it, and when it is considered final.
+
+Start with these agreed rules:
+
+| Statement from a stakeholder | Modeling consequence |
+|---|---|
+| A student may attend several courses | Student–course membership is many-to-many |
+| A course may have many students | Introduce an enrollment relationship |
+| A professor teaches several courses | Professor identifier is referenced by courses |
+| An enrolled student may not yet have a grade | Grade is optional rather than replaced with zero |
+| A student cannot enroll twice in the same course in this exercise | Pair of student and course identifiers must be unique |
+| Old enrollments must survive a student name correction | Refer to stable identifiers rather than copy the current name |
+
+This deliberately small model treats a course as one offered class. A real university normally separates the catalog course from an offering in a term, and can have several lecturers per offering. Discover that distinction before enforcing a rule such as “one professor per course.” Otherwise a convenient tutorial assumption becomes a production limitation.
+
+### Create the proposed model and ask a stakeholder's question
+
+Run this standalone SQLite example in a fresh database. The `uni_` prefix distinguishes these tables from the bookstore:
+
+```sql
+PRAGMA foreign_keys = ON;
+CREATE TABLE uni_students (
+    student_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL
+);
+CREATE TABLE uni_professors (
+    professor_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL
+);
+CREATE TABLE uni_courses (
+    course_id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    professor_id INTEGER NOT NULL REFERENCES uni_professors(professor_id)
+);
+CREATE TABLE uni_enrollments (
+    student_id INTEGER NOT NULL REFERENCES uni_students(student_id),
+    course_id INTEGER NOT NULL REFERENCES uni_courses(course_id),
+    grade INTEGER CHECK (grade BETWEEN 0 AND 100),
+    PRIMARY KEY (student_id, course_id)
+);
+INSERT INTO uni_students VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Carol');
+INSERT INTO uni_professors VALUES (10, 'Dr Lee'), (20, 'Dr Rao');
+INSERT INTO uni_courses VALUES (101, 'Databases', 10), (102, 'Networks', 20);
+INSERT INTO uni_enrollments VALUES (1, 101, 88), (2, 101, NULL), (1, 102, 91);
+
+SELECT s.name, e.grade
+FROM uni_enrollments AS e
+JOIN uni_students AS s ON s.student_id = e.student_id
+WHERE e.course_id = 101
+ORDER BY s.student_id;
+```
+
+| name | grade |
+|---|---|
+| Alice | 88 |
+| Bob | NULL |
+
+The roster returns Bob despite his missing grade. Interpreting null as zero would incorrectly turn “not graded yet” into a failing result. The pair key prevents duplicate enrollment under the stated rule, while foreign keys prevent missing students and courses.
+
+Ask the professor how they would use this roster. Do they need withdrawn students, a preferred name, or a section number? Each answer can change the required schema or filter. A working query is a way to validate a requirement, not proof that the entire domain has been understood.
+
+### Validate a report that keeps courses with no students
+
+```sql
+SELECT c.title, COUNT(e.student_id) AS enrolled_students
+FROM uni_courses AS c
+LEFT JOIN uni_enrollments AS e ON e.course_id = c.course_id
+GROUP BY c.course_id, c.title
+ORDER BY c.course_id;
+```
+
+| title | enrolled_students |
+|---|---|
+| Databases | 2 |
+| Networks | 1 |
+
+A left join lets an empty course remain in the report. Counting the non-null enrollment identifier would give it zero; `COUNT(*)` would count its unmatched result row instead. That distinction should be established before a report is used for staffing or capacity decisions.
+
+## Resolve priorities and disagreements explicitly
+
+Separate required correctness from optional convenience. A useful initial scope might require a valid roster and duplicate-enrollment protection, while postponing automatic recommendations. Do not postpone a rule that prevents lost money or invalid records simply because it has no visible user-interface element.
+
+Keep a decision log: the rule, its owner, the selected interpretation, and an example that demonstrates it. Walk through rejected cases as well as successful ones. If one stakeholder wants permanent history and another wants to remove a record, determine what must be deleted, anonymized, archived, or retained under the organization's policy. Do not make that choice silently in `ON DELETE CASCADE`.
+
+## Security and integration produce schema requirements too
+
+List operations by actor: lecturers might read rosters and enter grades for their classes; a registrar might manage enrollment; students might read their own results. Authentication establishes identity. Authorization determines which records and actions that identity may access. A shared application database account does not by itself implement those per-user rules.
+
+Integrations need stable identifiers, ownership, and a conflict policy. If an identity system supplies a student identifier, decide whether it is also the database key and what happens to mergers or corrections. Define import validation, duplicate detection, failure reporting, and whether a partially loaded batch may be accepted. An API response or CSV column is an interface contract, not automatically the database's internal schema.
+
+Deliver a conceptual diagram, a logical schema, representative data, a query list, an access matrix, capacity assumptions, and acceptance cases. Then test the assumptions with a small implementation before committing to storage and indexes. The university example's roster is one such acceptance case; the bookstore's stock reservation is another.
+
 ## Check your understanding
 
 1. Why must a purchase price be recorded separately from a current product price?

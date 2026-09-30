@@ -105,6 +105,147 @@ Use `NOT NULL`, `UNIQUE`, `CHECK`, or a foreign key when they express the rule d
 
 The tradeoff is less visible behavior. An update may write several tables, acquire additional locks, or activate further triggers. Review multi-row updates, rollback behavior, and interactions with other triggers. Keep trigger code short and document the behavior beside the schema.
 
+## Validate a transition when the old row matters
+
+A row check can require an allowed status, but it cannot ordinarily express “a completed order must not return to open” using both the old and new versions. A SQLite trigger can reject that specific transition:
+
+```sql
+CREATE TRIGGER prevent_completed_order_reopening
+BEFORE UPDATE OF status ON orders
+FOR EACH ROW
+WHEN OLD.status = 'completed' AND NEW.status = 'open'
+BEGIN
+    SELECT RAISE(ABORT, 'completed orders cannot be reopened');
+END;
+```
+
+Run this **deliberately failing** statement separately:
+
+```sql
+-- Expected trigger error; not part of a successful script
+UPDATE orders SET status = 'open' WHERE order_id = 101;
+```
+
+Order 101 remains completed. `RAISE(ABORT, ...)` aborts the statement; it does not mean that every earlier statement in an already open transaction has been rolled back. Application error handling still owns that larger boundary.
+
+This rule prohibits one transition. It does not fully specify a state machine, and it does not validate refunds. If cancelled orders may never reopen either, declare that additional rule. Prefer a check for rules about one new row alone, and a trigger only when the old row or related work is essential.
+
+## Supply writes through a SQLite view explicitly
+
+SQLite views do not automatically accept writes. An `INSTEAD OF` trigger can give a view a narrow update interface:
+
+```sql
+CREATE VIEW trigger_product_prices AS
+SELECT product_id, title, price_cents FROM products;
+
+CREATE TRIGGER update_price_through_view
+INSTEAD OF UPDATE OF price_cents ON trigger_product_prices
+FOR EACH ROW
+BEGIN
+    UPDATE products
+    SET price_cents = NEW.price_cents
+    WHERE product_id = OLD.product_id;
+END;
+
+BEGIN;
+UPDATE trigger_product_prices SET price_cents = 1800 WHERE product_id = 10;
+SELECT product_id, price_cents FROM products WHERE product_id = 10;
+SELECT COUNT(*) AS change_count FROM product_price_changes;
+ROLLBACK;
+```
+
+Continuing the earlier price-history exercise, the intermediate price is 1800 and history count is 2. Updating the base table activates its existing audit trigger as well. The rollback returns the price to 1600 and count to 1. The view trigger chooses the old product ID as the target and only writes price; it is not a general-purpose implementation for every possible update to this view.
+
+These nested effects are why readers of schema code need to know which triggers exist. A single visible update may touch several objects, and an error in the additional work can reject the original statement.
+
+## Modify a new row using PostgreSQL's trigger function
+
+PostgreSQL defines the trigger's behavior in a function returning `trigger`. Unlike SQLite's syntax, a PostgreSQL before-row function can assign fields in `NEW`:
+
+```sql
+-- PostgreSQL; independent setup
+CREATE TABLE trigger_pg_notes (
+    note_id INTEGER PRIMARY KEY,
+    body TEXT NOT NULL,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE FUNCTION trigger_pg_stamp_note()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    NEW.updated_at := statement_timestamp();
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER stamp_note_update
+BEFORE UPDATE ON trigger_pg_notes
+FOR EACH ROW EXECUTE FUNCTION trigger_pg_stamp_note();
+
+INSERT INTO trigger_pg_notes (note_id, body) VALUES (1, 'first draft');
+UPDATE trigger_pg_notes SET body = 'revised draft' WHERE note_id = 1;
+SELECT note_id, body, updated_at FROM trigger_pg_notes;
+```
+
+The row contains 1, revised draft, and the update statement's timestamp. The exact timestamp depends on execution time. `RETURN NEW` supplies the row version to write. `CURRENT_TIMESTAMP` in PostgreSQL represents the transaction's start time; using `statement_timestamp()` here deliberately records the statement's start instead. Neither timestamp is automatically a precise commit time.
+
+A default handles the initial insert, while a trigger handles later updates. MySQL permits assignments with its own `SET NEW.column = ...` syntax in a before trigger. The same requirement can therefore have different executable forms across engines.
+
+## Handle all affected rows in SQL Server
+
+SQL Server DML triggers operate per statement. Its `inserted` and `deleted` tables can contain multiple rows. A trigger that picks one scalar value from them can miss changes during a bulk update. This independent example records every changed price with a set-based insert:
+
+```sql
+-- SQL Server; use SSMS or sqlcmd for GO
+CREATE TABLE dbo.TriggerProducts (
+    ProductId INT PRIMARY KEY,
+    PriceCents INT NOT NULL
+);
+CREATE TABLE dbo.TriggerPriceHistory (
+    ProductId INT NOT NULL,
+    OldPriceCents INT NOT NULL,
+    NewPriceCents INT NOT NULL
+);
+INSERT INTO dbo.TriggerProducts VALUES (10, 1500), (20, 2500);
+GO
+CREATE TRIGGER dbo.RecordTriggerPrices
+ON dbo.TriggerProducts
+AFTER UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.TriggerPriceHistory (ProductId, OldPriceCents, NewPriceCents)
+    SELECT i.ProductId, d.PriceCents, i.PriceCents
+    FROM inserted AS i
+    JOIN deleted AS d ON d.ProductId = i.ProductId
+    WHERE i.PriceCents <> d.PriceCents;
+END;
+GO
+UPDATE dbo.TriggerProducts SET PriceCents = PriceCents + 100;
+SELECT ProductId, OldPriceCents, NewPriceCents
+FROM dbo.TriggerPriceHistory ORDER BY ProductId;
+GO
+```
+
+The history has `(10, 1500, 1600)` and `(20, 2500, 2600)`. The join assumes product IDs are stable during the update. A mutable primary key requires a different matching policy. The trigger handles the statement's full set without a cursor.
+
+## Manage trigger lifecycle and cost
+
+SQLite changes an existing trigger by dropping and recreating it. PostgreSQL and SQL Server provide different replace or alter mechanisms. For the SQLite practice rule, cleanup is:
+
+```sql
+-- SQLite
+DROP TRIGGER prevent_completed_order_reopening;
+```
+
+This removes the transition check, not the orders. Version that definition with the schema so every environment has the same behavior. Avoid assuming the firing order of several triggers supplies a reliable workflow unless the engine explicitly supports and defines that order.
+
+Triggers add work to the original statement. Audit inserts need space, indexes require maintenance, and cross-table updates acquire more locks. Recursive trigger behavior is also configurable or restricted by the engine. Test a multi-row change, a no-op update, a failure in the trigger body, and outer rollback. Long network calls and irreversible external effects are poor trigger responsibilities; recording an outbox row keeps the database-side intent transactional.
+
+References: [PostgreSQL trigger functions](https://www.postgresql.org/docs/current/plpgsql-trigger.html) and [SQL Server multirow triggers](https://learn.microsoft.com/en-us/sql/relational-databases/triggers/create-dml-triggers-to-handle-multiple-rows-of-data).
+
 ## Check your understanding
 
 1. Why does `AFTER` not mean “after commit”?

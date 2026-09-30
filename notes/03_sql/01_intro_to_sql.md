@@ -69,6 +69,16 @@ INSERT INTO order_items VALUES
 
 A **statement** is one SQL command. The semicolon ends a statement. `--` introduces a comment continuing to the end of the line. Keywords such as `SELECT` are capitalized here to make the structure easier to see; capitalization is not generally required for those keywords.
 
+## Distinguish a database, a table, and a schema
+
+The bookstore database contains several tables. A table defines a kind of record, such as a customer or an order line. Its rows are the current records, while its columns describe the attributes. A **schema** can mean the overall definition of those objects; in PostgreSQL and SQL Server it also names a namespace grouping objects inside a database, as in `public.orders` or `dbo.Orders`.
+
+SQLite's `main` names the primary attached database, not an identical PostgreSQL-style schema system. Knowing the engine helps interpret a qualified object name. A tutorial's table named `orders` and a production table named `sales.orders` may share a concept without sharing a namespace or permissions.
+
+A **primary key** identifies one row. A **foreign key** validates a reference to another eligible key. In the setup, `orders.customer_id` references `customers.customer_id`; `order_items` uses `(order_id, line_number)` together to identify a line. Line number 1 can appear in several different orders, so line number alone is not its key.
+
+A **result set** is the output of a query, not automatically a stored table. It can have calculated columns, duplicate-looking rows, or nulls introduced by joins. A **view** saves a query definition so callers can reuse it. The joins note develops those differences with examples.
+
 ## Read a query one clause at a time
 
 ```sql
@@ -166,6 +176,183 @@ The required columns in this setup reject nulls. Later, a left join can still pr
 | DCL: data control | Grant or revoke privileges in engines that support them. | `GRANT`, `REVOKE` |
 
 Some classifications place `SELECT` in a separate query-language group. Understanding what a statement does matters more than remembering one taxonomy.
+
+## Read conditions as questions about each row
+
+The bookstore asks three different questions: which books fall in a price band, which selected books are available, and which titles contain a word. Each has a direct SQL expression:
+
+```sql
+SELECT product_id, title
+FROM products
+WHERE price_cents BETWEEN 1500 AND 1800
+ORDER BY product_id;
+
+SELECT product_id, title
+FROM products
+WHERE product_id IN (10, 30) AND stock > 0
+ORDER BY product_id;
+
+SELECT product_id, title
+FROM products
+WHERE title LIKE '%Computing%'
+ORDER BY product_id;
+```
+
+The first query returns products 10 and 30. `BETWEEN` includes both endpoints; product 10 is not excluded for costing exactly 1500 cents. The second returns only product 10: membership in a list and availability must both hold. The third returns product 30. In a `LIKE` pattern, `%` matches any sequence of characters and `_` matches one character. Case matching and escaping depend on the database and collation, so do not assume that a search behaves identically on every engine.
+
+A search box should pass its value as a parameter, not paste it into the statement. In Python's SQLite interface:
+
+```python
+search = '%Computing%'
+rows = connection.execute(
+    'SELECT product_id, title FROM products WHERE title LIKE ? ORDER BY product_id',
+    (search,),
+).fetchall()
+```
+
+Here `connection` is the connection containing the setup. The parameter is a value, not SQL syntax. A value containing a quote remains data. Parameters do not substitute table names or an entire `ORDER BY` expression; choose allowed identifiers in application code when those must vary.
+
+## Order before choosing the first few rows
+
+```sql
+SELECT product_id, title, price_cents
+FROM products
+ORDER BY price_cents DESC, product_id
+LIMIT 2;
+```
+
+This returns SQL Practice at 2500 cents, followed by History of Computing at 1800 cents. `LIMIT` restricts the result count. It does not mean “the newest” or “the highest” without an appropriate ordering. The ID breaks ties so that a page boundary is predictable.
+
+SQLite and PostgreSQL support this `LIMIT` spelling. SQL Server commonly uses `TOP` or `OFFSET ... FETCH`; an example copied between engines may need syntax changes. Offset pagination can also shift when other users insert rows. For a changing order history, a cursor based on the last `(order_date, order_id)` can provide a more stable continuation.
+
+## Distinguish filtering rows from filtering groups
+
+Suppose the report should include only completed orders worth at least 5000 cents:
+
+```sql
+SELECT o.order_id,
+       SUM(i.quantity * i.unit_price_cents) AS total_cents
+FROM orders AS o
+JOIN order_items AS i ON i.order_id = o.order_id
+WHERE o.status = 'completed'
+GROUP BY o.order_id
+HAVING SUM(i.quantity * i.unit_price_cents) >= 5000
+ORDER BY o.order_id;
+```
+
+The result is order 101 with 5500 cents and order 103 with 5000 cents. `WHERE` removes order 102 before totals are calculated. `HAVING` then tests each completed order's total. Putting a total calculation directly in `WHERE` would confuse a condition on one input row with a condition on a group.
+
+Select the grouping key and aggregate values deliberately. SQLite permits some non-grouped columns in aggregate queries, but that can produce an arbitrary representative value and is rejected by other engines. Do not rely on that permissive behavior to choose which customer's name belongs to a total.
+
+## Build a report in two understandable steps
+
+A **common table expression (CTE)** names a query result within one statement. It is useful when an intermediate result has a clear meaning:
+
+```sql
+WITH customer_spending AS (
+    SELECT o.customer_id,
+           SUM(i.quantity * i.unit_price_cents) AS spent_cents
+    FROM orders AS o
+    JOIN order_items AS i ON i.order_id = o.order_id
+    GROUP BY o.customer_id
+)
+SELECT c.name, COALESCE(s.spent_cents, 0) AS spent_cents
+FROM customers AS c
+LEFT JOIN customer_spending AS s ON s.customer_id = c.customer_id
+ORDER BY c.customer_id;
+```
+
+Alice has 7000 cents, Bob 5000, and Carol 0. This example includes all statuses; an accounting report would first decide whether open or cancelled orders belong in its definition of spending. The CTE totals each customer's lines. The outer query includes every customer and converts a missing total to zero for display. `COALESCE` returns the first non-null argument.
+
+A CTE is not automatically a stored table or a performance improvement. The optimizer's handling varies. Its immediate value here is that “calculate customer totals” and “display all customers” are visible as separate steps.
+
+A **subquery** can also provide one value for a condition:
+
+```sql
+SELECT product_id, title
+FROM products
+WHERE price_cents > (SELECT AVG(price_cents) FROM products)
+ORDER BY product_id;
+```
+
+The average is about 1933.33 cents, so only SQL Practice qualifies. The inner query returns one scalar value. Later notes explain subqueries that refer to the current outer row and queries that test whether any matching row exists.
+
+## Make changes without losing the practice data
+
+Reading with `SELECT` does not reserve a book. A change must use a writing statement. This exercise inserts a customer, updates their name, and removes the row inside one transaction:
+
+```sql
+BEGIN;
+INSERT INTO customers (customer_id, name, email)
+VALUES (4, 'Dana', 'dana@example.com');
+UPDATE customers SET name = 'Dana Lee' WHERE customer_id = 4;
+SELECT customer_id, name FROM customers WHERE customer_id = 4;
+DELETE FROM customers WHERE customer_id = 4;
+ROLLBACK;
+```
+
+The intermediate result is `4, Dana Lee`. The final rollback restores the state from before `BEGIN`. The example is a rehearsal, not a recommended way to create then immediately delete a real customer. In an actual operation, use `COMMIT` only after the required work succeeds.
+
+The predicate is crucial: `UPDATE customers SET name = 'Dana Lee'` would target every customer. Inspect the corresponding `SELECT` when learning, and have application code check how many rows a write affected when it expects exactly one.
+
+## Practice structure changes on a separate object
+
+The main setup is DDL followed by DML. Try both families on a small scratch table:
+
+```sql
+CREATE TABLE intro_import_batches (
+    batch_id INTEGER PRIMARY KEY,
+    source_name TEXT NOT NULL
+);
+ALTER TABLE intro_import_batches ADD COLUMN imported_rows INTEGER NOT NULL DEFAULT 0;
+INSERT INTO intro_import_batches (batch_id, source_name)
+VALUES (1, 'supplier catalog');
+SELECT batch_id, source_name, imported_rows FROM intro_import_batches;
+DROP TABLE intro_import_batches;
+```
+
+The query returns `1, supplier catalog, 0`. `CREATE` defines the empty table, `ALTER` adds a column, and `INSERT` supplies a record under that definition. `DROP` removes the scratch object afterward. Use this disposable table for practice; changing a populated application's structure requires the migration procedure in the next note.
+
+A text declaration does not by itself validate a date, and a number does not carry a currency unit automatically. Integer cents are suitable for this single-currency exercise, but currency conversions, fractional unit prices, and taxes require an explicit precision and rounding policy. PostgreSQL's `NUMERIC` and other engines' exact decimal types can serve different requirements from approximate floating point.
+
+## Preview a window without replacing the detailed lesson
+
+The order lines can retain their individual rows while showing the order's total beside each line:
+
+```sql
+SELECT order_id, line_number,
+       quantity * unit_price_cents AS line_total_cents,
+       SUM(quantity * unit_price_cents) OVER (PARTITION BY order_id) AS order_total_cents
+FROM order_items
+ORDER BY order_id, line_number;
+```
+
+Order 101 has two rows, with line totals 3000 and 2500; both carry the order total 5500. Orders 102 and 103 have one row each, with totals 1500 and 5000. `GROUP BY` would instead collapse each order into one row. This difference is the starting point for the window-function note, which later adds ordering, ranking, and frames.
+
+Partitioning a large table and replicating a database are different topics from a window's `PARTITION BY`. Table partitioning divides storage by a chosen rule; replication maintains another copy of data. Neither automatically repairs a query that counts the same fact twice. First learn what the query should return, then investigate its plan and the deployment's scaling needs.
+
+## What changes when you move to another SQL engine?
+
+The basic ideas—tables, joins, predicates, groups, and transactions—carry across SQLite, PostgreSQL, MySQL, and SQL Server. Their details differ:
+
+| Decision | SQLite examples here | A production engine may offer |
+| --- | --- | --- |
+| Money | Integer cents for one currency. | Exact `DECIMAL`/`NUMERIC` with chosen precision and scale. |
+| Dates | ISO-formatted text. | Validated date/time types and time zone operations. |
+| Generated IDs | `INTEGER PRIMARY KEY` behavior. | Identity columns or sequences, with engine-specific syntax. |
+| Permissions | Access controlled around the database file and application. | Database users, roles, and object privileges. |
+| Plans | `EXPLAIN QUERY PLAN`. | Engine-specific `EXPLAIN` or execution-plan tools. |
+
+An index may change how a query finds rows without changing which rows it should return. To inspect SQLite's choice, run:
+
+```sql
+EXPLAIN QUERY PLAN
+SELECT title FROM products WHERE product_id = 10;
+```
+
+The exact plan text varies by version. Look for access through the integer primary key. A plan describes an access strategy; timing, data size, and the workload determine whether that strategy is useful. Three sample products cannot establish that a production query is fast.
+
+The following notes develop this foundation in order: DDL defines the rules, DML changes the facts, DCL controls who may act, and TCL groups changes. Joins and routines then build larger queries, while aggregates and windows answer reporting questions.
 
 ## Practice before moving on
 

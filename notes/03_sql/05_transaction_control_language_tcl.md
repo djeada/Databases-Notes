@@ -116,6 +116,98 @@ Two buyers can both read “one copy remains.” A transaction does not automati
 
 A transaction also does not undo an email or remote payment already sent. External effects need their own coordination or retry-safe design.
 
+## Follow a transfer all the way through failure
+
+Two updates can form one business operation. Use a separate pair of accounts:
+
+```sql
+CREATE TABLE tcl_accounts (
+    account_id INTEGER PRIMARY KEY,
+    balance_cents INTEGER NOT NULL CHECK (balance_cents >= 0)
+);
+INSERT INTO tcl_accounts VALUES (1, 10000), (2, 2000);
+
+BEGIN;
+UPDATE tcl_accounts SET balance_cents = balance_cents - 3000
+WHERE account_id = 1 AND balance_cents >= 3000;
+UPDATE tcl_accounts SET balance_cents = balance_cents + 3000
+WHERE account_id = 2;
+SELECT account_id, balance_cents FROM tcl_accounts ORDER BY account_id;
+ROLLBACK;
+```
+
+Inside the transaction the balances are 7000 and 5000; after rollback they are 10000 and 2000. A successful transfer would commit instead. However, the SQL alone has a gap: an update can affect zero rows without raising an error. If the destination were missing, blindly committing would debit money without crediting an account.
+
+The application must verify both outcomes. This helper uses Python's default SQLite transaction mode and assumes the account setup has been committed before the call:
+
+```python
+def transfer(connection, source_id, destination_id, amount_cents):
+    if source_id == destination_id:
+        raise ValueError('choose different accounts')
+    if not isinstance(amount_cents, int) or amount_cents <= 0:
+        raise ValueError('amount must be positive integer cents')
+    with connection:
+        debit = connection.execute(
+            'UPDATE tcl_accounts SET balance_cents = balance_cents - ? '
+            'WHERE account_id = ? AND balance_cents >= ?',
+            (amount_cents, source_id, amount_cents),
+        )
+        if debit.rowcount != 1:
+            raise ValueError('source missing or insufficient funds')
+        credit = connection.execute(
+            'UPDATE tcl_accounts SET balance_cents = balance_cents + ? '
+            'WHERE account_id = ?',
+            (amount_cents, destination_id),
+        )
+        if credit.rowcount != 1:
+            raise ValueError('destination missing')
+```
+
+Calling `transfer(connection, 1, 2, 3000)` commits the two changes. Calling it with destination 999 raises an error and rolls the debit back. The amount and account checks express the operation's rules; the transaction supplies all-or-nothing persistence for the successful statements. Atomicity does not itself decide that the destination is valid.
+
+For multiple concurrent SQL Server or PostgreSQL transfers, conflicting account updates may wait or deadlock. A consistent account-lock ordering can reduce deadlocks, and the application must handle retriable transaction failures. SQLite serializes writers rather than providing the same row-lock model.
+
+## Know whether the connection starts a transaction for you
+
+In a shell, the examples use explicit `BEGIN`, `COMMIT`, and `ROLLBACK`. Drivers also manage transaction state. Python's `sqlite3` default legacy handling implicitly begins a transaction for writing statements; the connection context manager commits or rolls back an existing transaction when it exits. It does not begin a transaction merely because `with connection:` was entered.
+
+Python 3.12 introduced the `autocommit` configuration, while retaining legacy behavior by default. If the connection is in SQLite autocommit mode, the context manager does not group separately committed statements into a transfer. Configure the mode deliberately, or use explicit transaction statements with a compatible driver configuration. Do not copy a helper that assumes one mode into a connection using another.
+
+An application should own the full transaction boundary. Returning a pooled connection with a transaction left open can leave locks, old snapshots, or unrelated changes for the next borrower. On an exception, roll back before reusing or returning it. On normal completion, commit only the work the current operation owns.
+
+## A savepoint is a recovery boundary inside a transaction
+
+A savepoint does not create an independently committed transaction. This SQLite example keeps one accepted adjustment and abandons an optional second adjustment:
+
+```sql
+BEGIN;
+UPDATE tcl_accounts SET balance_cents = balance_cents + 100 WHERE account_id = 1;
+SAVEPOINT optional_adjustment;
+UPDATE tcl_accounts SET balance_cents = balance_cents + 500 WHERE account_id = 2;
+ROLLBACK TO optional_adjustment;
+RELEASE optional_adjustment;
+SELECT account_id, balance_cents FROM tcl_accounts ORDER BY account_id;
+ROLLBACK;
+```
+
+On the original account setup, the intermediate result is 10100 and 2000. Rolling back to the savepoint preserves the first adjustment and undoes the second. Releasing the savepoint removes that inner boundary; the final outer rollback still undoes the first adjustment. If you ran the successful Python transfer first, begin this exercise with a fresh account setup to obtain these values.
+
+In PostgreSQL, an error normally leaves the transaction unable to execute ordinary statements until rollback, or rollback to an appropriate earlier savepoint. In SQLite, many constraint errors undo just the failed statement and leave the transaction active. The application should not infer one engine's error handling from another's behavior.
+
+## Keep slow external work outside the database transaction
+
+A transaction that waits for a customer to click a button or for an email server to respond can hold locks for seconds or minutes. Collect input and perform work that does not require protected database state before beginning. Inside the transaction, read the necessary state, validate it using an appropriate concurrency strategy, write, and commit promptly.
+
+An email is not undone by `ROLLBACK`. If an order and a notification request must persist together, insert the order and an outbox row in one transaction. A separate worker sends the message after commit and records its progress. That worker still needs duplicate-handling because it might send successfully and fail before marking the row sent.
+
+## Retry the operation, with a way to recognize it
+
+A deadlock or serialization failure may require rerunning the complete transaction against fresh state. Repeating only the last statement can reuse decisions made from an obsolete read. Use bounded retries for errors the driver identifies as retriable; do not retry a bad email address or an insufficient balance as though it were temporary.
+
+A broken connection during commit is different: the server might have committed even though the client did not receive the reply. Use a unique operation identifier for a checkout or payment instruction, and look up its outcome after reconnecting. Blindly submitting the same operation under a new identifier can create a duplicate. Transaction control and idempotency address related but distinct failures.
+
+References: [Python SQLite transaction control](https://docs.python.org/3/library/sqlite3.html#transaction-control) and [PostgreSQL savepoints](https://www.postgresql.org/docs/current/sql-savepoint.html).
+
 ## Check your understanding
 
 1. Which changes belong in the same checkout transaction?

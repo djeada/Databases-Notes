@@ -21,6 +21,8 @@ Here are the most commonly used aggregate functions in SQL:
 Run this setup once in a **fresh SQLite database**. It is separate from the bookstore database. Continue using this same database through the chapter; the null-value section explicitly adds one more employee.
 
 ```sql
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE Departments (
     DepartmentID INTEGER PRIMARY KEY,
     DepartmentName TEXT NOT NULL
@@ -399,6 +401,67 @@ FROM Employees;
 - Be mindful that most aggregate functions (e.g., `SUM`, `AVG`) ignore `NULL` values, which might lead to unexpected results.
 - Limit the number of columns in the `GROUP BY` clause to only those essential for your analysis, as excessive grouping can increase query complexity and runtime.
 - Use the `HAVING` clause to filter groups after aggregation, allowing conditions based on aggregated results.
+
+## Distinguish no rows, unknown values, and a known zero
+
+A report with no qualifying salaries has a different input from a report containing employees whose salaries are unknown:
+
+```sql
+SELECT COUNT(*) AS row_count,
+       COUNT(Salary) AS known_salary_count,
+       SUM(Salary) AS salary_sum,
+       AVG(Salary) AS salary_average,
+       COALESCE(SUM(Salary), 0) AS displayed_sum
+FROM Employees
+WHERE EmployeeID < 0;
+```
+
+The result is `0, 0, NULL, NULL, 0`. An aggregate without `GROUP BY` still returns a result row on empty input: counts are zero, while `SUM` and `AVG` are null. With a grouping key, empty input has no groups and therefore produces no result rows.
+
+Displaying zero may be appropriate for “no payroll entries this period.” It can be misleading for “payroll total unavailable,” so choose the fallback from the report's meaning. `AVG(COALESCE(Salary, 0))` treats unknown salaries as actual zero salaries and changes the denominator. `COALESCE(AVG(Salary), 0)` leaves unknown salaries out of the calculation and only replaces an absent final average. These expressions answer different questions.
+
+## Count known and missing values together
+
+Continue after the earlier null-value section has inserted Susan, whose salary is null. A conditional aggregate makes completeness visible beside the report:
+
+```sql
+SELECT DepartmentID,
+       COUNT(*) AS employee_count,
+       COUNT(Salary) AS known_salary_count,
+       SUM(CASE WHEN Salary IS NULL THEN 1 ELSE 0 END) AS missing_salary_count
+FROM Employees
+GROUP BY DepartmentID
+ORDER BY DepartmentID;
+```
+
+Human Resources has 3 employees, 2 known salaries, and 1 missing salary. Engineering has 2, 2, 0; Marketing has 1, 1, 0. `CASE` produces one or zero for every input row, then `SUM` counts the selected condition. This technique generalizes to approved orders, overdue invoices, or available stock while keeping one row per reporting group.
+
+PostgreSQL and SQLite also support aggregate `FILTER` clauses, but `CASE` is widely portable. If a left join is used to include empty departments, account for its null-extended row: `COUNT(*)` would count that preserved row, and a null-salary condition could confuse “no employee” with “employee with missing salary.” Test the employee ID's presence as well.
+
+## Define the report's grain and unit before summing
+
+A sum is meaningful only when each input row represents the intended fact once. Employee salary is annual pay in this example. Summing it does not calculate the cost of a particular month unless the report defines the conversion, employment dates, and other adjustments. Likewise, different currencies should not be added as if they shared one unit.
+
+Joining Employees to a table of projects can duplicate an employee who has several projects. Summing salary after that join then counts their salary several times. If the report needs payroll per department, aggregate the employees independently. If it needs allocated payroll per project, store and validate an allocation rule rather than deduplicating arbitrary result values.
+
+`SUM(DISTINCT Salary)` does not repair this problem. John and another employee can legitimately earn the same amount; distinct salary values would count that shared amount only once. Deduplication must use the identity of the fact being counted, not merely its numeric value.
+
+## Filter groups after deciding which employees belong
+
+For “departments with at least two known salaries above 60000,” apply the salary requirement to rows first:
+
+```sql
+SELECT DepartmentID, COUNT(*) AS qualifying_employees
+FROM Employees
+WHERE Salary > 60000
+GROUP BY DepartmentID
+HAVING COUNT(*) >= 2
+ORDER BY DepartmentID;
+```
+
+Only Engineering qualifies, with 2 employees. Jane qualifies individually in Human Resources, but John at exactly 60000 does not pass the strict inequality, and Susan's unknown salary does not pass either. `HAVING` tests the resulting group count. Moving `Salary > 60000` into an arbitrary non-grouped expression changes or invalidates the query.
+
+An index on a selective filter can reduce the input to aggregate, but an aggregate still needs an appropriate plan to group or sort that input. A report over almost every row can legitimately use a scan. Inspect the actual plan and workload rather than indexing every aggregated column.
 
 ## Review questions
 

@@ -33,6 +33,63 @@ The performance benefit therefore has to include both sides:
 | Change a line | Change the line. | Change the line and maintain the total. |
 | Diagnose disagreement | One representation to inspect. | Compare the total with its source lines. |
 
+## Implement a stored total and its maintenance path
+
+Use the fresh [SQLite bookstore setup](../03_sql/01_intro_to_sql.md). This example adds a derived field to orders while leaving line items authoritative:
+
+```sql
+ALTER TABLE orders ADD COLUMN cached_total_cents INTEGER;
+UPDATE orders
+SET cached_total_cents = (
+    SELECT COALESCE(SUM(i.quantity * i.unit_price_cents), 0)
+    FROM order_items AS i
+    WHERE i.order_id = orders.order_id
+);
+SELECT order_id, cached_total_cents FROM orders ORDER BY order_id;
+```
+
+| order_id | cached_total_cents |
+|---|---|
+| 101 | 5500 |
+| 102 | 1500 |
+| 103 | 5000 |
+
+A correlated subquery calculates each order's total; `COALESCE` chooses zero for an order without lines. The nullable field lets the initial migration represent “not computed yet.” After backfilling and checking it, an engine-appropriate migration can enforce a stronger required-value rule if needed.
+
+### Follow a complete write rather than updating only the display field
+
+```sql
+BEGIN;
+UPDATE order_items SET quantity = 3 WHERE order_id = 101 AND line_number = 1;
+UPDATE orders
+SET cached_total_cents = (
+    SELECT COALESCE(SUM(quantity * unit_price_cents), 0)
+    FROM order_items WHERE order_id = 101
+)
+WHERE order_id = 101;
+SELECT cached_total_cents FROM orders WHERE order_id = 101;
+ROLLBACK;
+```
+
+The query sees `7000` inside the transaction. Rollback returns both the quantity and the cached total to their earlier values. Atomic grouping prevents committing just one change, but all writers still need a concurrency-safe maintenance policy. The example relies on one SQLite writer at a time; do not infer that this recomputation is safe under every multi-writer engine and isolation level.
+
+For a server database, concurrent edits can require locking the owning order, applying safe deltas, or serializable transactions with retries. A trigger can centralize maintenance but must handle inserts, updates, deletes, moves between orders, and multi-row operations. A trigger that updates only for inserts would leave deletions wrong.
+
+### Detect drift and rebuild
+
+```sql
+SELECT o.order_id, o.cached_total_cents,
+       COALESCE(SUM(i.quantity * i.unit_price_cents), 0) AS actual_total_cents
+FROM orders AS o
+LEFT JOIN order_items AS i ON i.order_id = o.order_id
+GROUP BY o.order_id, o.cached_total_cents
+HAVING o.cached_total_cents IS NULL
+    OR o.cached_total_cents <> COALESCE(SUM(i.quantity * i.unit_price_cents), 0)
+ORDER BY o.order_id;
+```
+
+The correctly initialized sample returns no rows. Run the original backfill expression to rebuild totals from the source. Reconciliation is part of the design: “the application normally updates it” is not enough when bugs, old clients, or imports can bypass that path.
+
 ## Choose how the copy is maintained
 
 **In the same transaction:** the line change and total update commit together. All writers must follow the maintenance rule, or database-side logic must enforce it. Concurrent changes still need safe coordination.
@@ -62,6 +119,62 @@ If denormalization is still justified, document:
 - How to rebuild and reconcile the copy after an error.
 
 An **index** adds an access path to existing data; a stored total adds another representation of a calculation. A **cache** is another copy with its own expiry or invalidation rules. Do not treat these mechanisms as identical.
+
+## Compare four concrete techniques
+
+| Technique | Read saved | Additional write responsibility |
+|---|---|---|
+| Redundant column | Avoid fetching a related value | Keep the copy aligned with its authoritative owner |
+| Precomputed aggregate | Avoid repeated sums or counts | Apply every relevant source change or refresh |
+| Separate read table | Present a flattened report in one lookup | Rebuild and synchronize the entire projection |
+| Embedded document | Load a bounded aggregate as one record | Decide which shared facts are duplicated and how they change |
+
+A **projection** is a representation prepared for a particular read. A customer-order dashboard might use a row containing the order identifier, current customer display name, and total. It is useful only if readers know whether it means current state, an as-issued snapshot, or a delayed report.
+
+## PostgreSQL materialized views provide a managed stored result
+
+This independent PostgreSQL example requires a database where you can create objects. It keeps the setup small so it does not depend on SQLite's dialect:
+
+```sql
+-- PostgreSQL
+CREATE TABLE denorm_sales (
+    sale_id INTEGER PRIMARY KEY,
+    sold_on DATE NOT NULL,
+    amount_cents BIGINT NOT NULL
+);
+INSERT INTO denorm_sales VALUES (1, DATE '2025-01-10', 3000),
+                               (2, DATE '2025-01-10', 2500);
+CREATE MATERIALIZED VIEW denorm_daily_sales AS
+SELECT sold_on, SUM(amount_cents) AS revenue_cents
+FROM denorm_sales GROUP BY sold_on;
+
+SELECT sold_on, revenue_cents FROM denorm_daily_sales ORDER BY sold_on;
+```
+
+The initial result is January 10 with revenue `5500`. Adding a sale does not automatically update this ordinary PostgreSQL materialized view:
+
+```sql
+-- PostgreSQL
+INSERT INTO denorm_sales VALUES (3, DATE '2025-01-10', 1500);
+REFRESH MATERIALIZED VIEW denorm_daily_sales;
+SELECT sold_on, revenue_cents FROM denorm_daily_sales ORDER BY sold_on;
+```
+
+After refresh it shows `7000`. A concurrent refresh has extra requirements, including a suitable unique index; it is not the default behavior merely because the view exists. See [PostgreSQL materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html).
+
+This can fit a report that accepts refresh delay. It is a poor substitute for a checkout decision that must use current stock. An ordinary view stores a query definition; a materialized view stores its result according to its refresh model.
+
+## Document and query-oriented stores make the same tradeoff visible
+
+MongoDB can embed a bounded set of order lines inside the order document, making one-order reads convenient. Cassandra often maintains different tables for different keyed queries. These are concrete reasons a model can use deliberate redundancy, not reasons to copy every field indiscriminately.
+
+A background projection needs a version or progress marker, retry handling, and a policy for duplicate or out-of-order changes. If a consumer applies an increment twice, its total drifts even when every event was valid. Rebuilding from authoritative data and comparing results gives an escape path when the incremental copy becomes suspect.
+
+## Decide whether the measured benefit justifies the cost
+
+Compare response-time distribution, source rows read, update cost, storage growth, and reconciliation complexity. Test typical and unusually large orders. Check whether the latest display must include a just-committed write. A faster stale total is not an equivalent result if the application promised a current amount.
+
+Document the source, refresh or update mechanism, permitted delay, ownership, and rebuild procedure beside the schema. Retire a projection when the workload no longer needs it instead of carrying its write cost indefinitely.
 
 ## Check your understanding
 
