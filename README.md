@@ -165,11 +165,17 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Data Warehousing](notes/13_big_data/01_data_warehousing.md) — Architectures for large-scale analytics.
 - [Hadoop & HDFS](notes/13_big_data/02_hadoop_and_hdfs.md) — Distributed file system for big data.
 - [Spark SQL](notes/13_big_data/03_spark_sql.md) — Large-scale data processing with SQL.
+- [Data Lakes and Lakehouses](notes/13_big_data/04_data_lakes_and_lakehouses.md) — Object storage, Parquet, table formats, catalogs, snapshots, and lakehouse trade-offs.
+- [Streaming, Kafka, and CDC](notes/13_big_data/05_streaming_kafka_and_cdc.md) — Event logs, partitions, consumer groups, delivery semantics, CDC, and the outbox pattern.
+- [Data Pipelines, Orchestration, and Data Quality](notes/13_big_data/06_data_pipelines_orchestration_and_quality.md) — DAGs, retries, backfills, dbt, lineage, quality tests, and production pipeline design.
 
 ### 14. Object-Relational Mapping (ORM)
 
 - [ORM Introduction](notes/14_orm/01_introduction_to_orm.md) — Bridging OOP and relational databases.
-- [Popular ORM Tools](notes/14_orm/02_popular_orm_tools.md) — Hibernate, Entity Framework, SQLAlchemy.
+- [Popular ORM Tools](notes/14_orm/02_popular_orm_tools.md) — Hibernate, Entity Framework, SQLAlchemy, Django ORM, Prisma, and related approaches.
+- [Schema Migrations](notes/14_orm/03_schema_migrations.md) — Alembic-style migrations, expand-and-contract deployments, backfills, and production safety.
+- [Relationship Loading and Query Performance](notes/14_orm/04_relationship_loading_and_query_performance.md) — N+1 queries, eager loading, projections, pagination, generated SQL, and execution plans.
+- [Transactions, Concurrency, and Unit of Work](notes/14_orm/05_transactions_concurrency_and_unit_of_work.md) — Flush/commit semantics, optimistic and pessimistic locking, retries, and concurrency-safe writes.
 
 ## Exercises and demonstrations
 
