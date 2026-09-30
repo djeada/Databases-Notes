@@ -1,1 +1,2 @@
-duckdb>=1.0.0\npyspark>=3.5.0\n
+duckdb>=1.0.0
+pyspark>=3.5.0
