@@ -284,6 +284,12 @@ persist across executions because the connection remains open.
 These demos are local teaching examples for the final Big Data chapter. They keep
 the data small so the execution model is visible without requiring a cluster.
 
+Install their optional dependencies:
+
+```bash
+pip install -r big_data/requirements.txt
+```
+
 - **big_data/warehouse_demo.py** - Builds a small star schema in DuckDB and runs
   an analytical aggregation.
   ```bash
@@ -299,6 +305,12 @@ the data small so the execution model is visible without requiring a cluster.
   ```
 
 ## ORM
+
+Install the ORM demo dependency:
+
+```bash
+pip install -r orm/requirements.txt
+```
 
 - **orm/sqlalchemy_demo.py** - Maps users and posts with SQLAlchemy 2.x, runs a
   transaction, demonstrates select-in relationship loading, updates a row, and
