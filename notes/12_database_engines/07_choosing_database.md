@@ -1,4 +1,4 @@
-## Choosing a Database
+# Choosing a Database
 
 Choosing the right database can significantly influence your project’s reliability, performance, cost, and ability to scale. A good database choice is not only about picking a popular engine; it is about matching the database to your data shape, query patterns, consistency needs, latency requirements, operational capacity, and long-term growth.
 
@@ -16,11 +16,11 @@ A useful rule of thumb:
 
 **Choose the database model based on the shape of your data and access pattern first. Choose the specific database engine later.**
 
-### Data Models
+## Data Models
 
 Different database models are optimized for different types of data and workloads. Most systems do not use only one database forever. It is common to start with one primary database and introduce specialized systems later for caching, search, analytics, or time-series workloads.
 
-#### Relational Databases / Row-Store SQL
+### Relational Databases / Row-Store SQL
 
 Relational databases store data in tables with rows and columns. They usually enforce a fixed schema and support strong consistency, transactions, constraints, joins, and relational integrity.
 
@@ -47,7 +47,7 @@ Use relational databases when your data has clear relationships and you need rel
 
 Avoid forcing everything into relational tables when the data is deeply nested, rapidly changing, or mostly accessed as whole documents.
 
-#### Document and Key-Value Databases
+### Document and Key-Value Databases
 
 Document databases store semi-structured records, usually as JSON-like documents. Key-value databases store values under unique keys and are optimized for simple lookups.
 
@@ -83,7 +83,7 @@ delete value by key
 
 Be careful when your workload needs many joins, complex ad-hoc queries, or multi-record transactions. Some NoSQL systems support these features, but they are usually not their strongest area.
 
-#### Time-Series Databases
+### Time-Series Databases
 
 Time-series databases are optimized for data points indexed by time. They are designed for high write rates, compression, retention policies, rollups, and time-window queries.
 
@@ -116,7 +116,7 @@ Use a time-series database when most queries ask questions like:
 
 A normal relational database can handle small or moderate time-series workloads, especially with good indexing and partitioning. Dedicated time-series systems become more valuable when ingest volume, retention, and aggregation needs grow.
 
-#### Graph Databases
+### Graph Databases
 
 Graph databases represent data as nodes and edges. They are optimized for traversing relationships, finding paths, and querying highly connected data.
 
@@ -141,7 +141,7 @@ Use a graph database when the relationships between entities are as important as
 
 A relational database can model graphs using tables, but deep relationship traversal can become slow or complicated as the number of hops increases.
 
-#### In-Memory Databases and Caches
+### In-Memory Databases and Caches
 
 In-memory systems keep data in RAM to provide very low-latency access. They are often used as a cache in front of a primary database, but some can also be used as primary data stores for specific workloads.
 
@@ -168,7 +168,7 @@ Be careful with cache invalidation. A cache can improve performance, but it also
 * What happens if the cache is unavailable?
 * Is the cache a performance layer or a source of truth?
 
-### Scalability
+## Scalability
 
 Scalability is about how your database handles growth in users, traffic, data volume, and query complexity.
 
@@ -179,7 +179,7 @@ There are two broad approaches:
 
 Most systems start with vertical scaling because it is simpler. Horizontal scaling becomes necessary when one machine is no longer enough or when availability and geographic distribution become important.
 
-#### Scale-Up / Vertical Scaling
+### Scale-Up / Vertical Scaling
 
 Vertical scaling increases the resources of a single database node by adding more CPU, RAM, storage, or IOPS.
 
@@ -204,7 +204,7 @@ Example:
 
 Vertical scaling is often the best first step because it avoids distributed-system complexity. However, it eventually reaches a limit.
 
-#### Read Replication
+### Read Replication
 
 Read replication creates one or more copies of the primary database. The primary handles writes, while replicas handle read queries.
 
@@ -226,7 +226,7 @@ Read replicas help when reads dominate writes. They do not automatically solve w
 
 Be careful when your application reads immediately after writing. If it reads from a lagging replica, it may not see the latest data.
 
-#### Sharding / Partitioning
+### Sharding / Partitioning
 
 Sharding splits data across multiple nodes. Each shard stores only part of the data, usually based on a shard key such as `user_id`, `tenant_id`, or a hash of a key.
 
@@ -254,7 +254,7 @@ Good shard keys usually have:
 * alignment with common query patterns,
 * low risk of one shard receiving most of the traffic.
 
-#### Geo-Distributed / Active-Active
+### Geo-Distributed / Active-Active
 
 Geo-distributed systems place database nodes in multiple regions. Active-active systems allow writes in more than one region.
 
@@ -277,7 +277,7 @@ There are two broad types of active-active systems:
 
 Use active-active only when the business requirement justifies the operational complexity.
 
-#### Serverless / Elastic Autoscaling
+### Serverless / Elastic Autoscaling
 
 Serverless and elastic database platforms automatically adjust capacity based on demand. They can be useful for unpredictable or spiky workloads.
 
@@ -296,7 +296,7 @@ Load
 
 Serverless databases can reduce operational burden, but they are not automatically cheaper. They are often cost-effective for variable workloads, but steady high traffic may be cheaper on provisioned capacity.
 
-#### Dedicated Cache Layer
+### Dedicated Cache Layer
 
 A cache layer stores frequently accessed data in memory to reduce pressure on the primary database.
 
@@ -320,7 +320,7 @@ Caching is usually most effective when:
 
 Avoid using caching to hide a poor data model too early. First make sure your queries, indexes, and schema are reasonable.
 
-#### Availability and Reliability
+### Availability and Reliability
 
 Availability is about keeping the database accessible. Reliability is about keeping the data correct and recoverable.
 
@@ -352,7 +352,7 @@ A useful principle:
 
 **Resilience is an architecture decision, not a lucky outcome. Choose a pattern that matches your SLA, risk tolerance, and budget.**
 
-#### Single Node + Local Backup
+### Single Node + Local Backup
 
 This is the simplest setup: one database node and periodic backups.
 
@@ -368,7 +368,7 @@ App ──► DB ──► local backup
 
 This is not enough for important production systems because the database server remains a single point of failure.
 
-#### Synchronous Failover
+### Synchronous Failover
 
 Synchronous replication writes data to a replica before confirming the transaction. This reduces data loss risk because the replica has the latest committed writes.
 
@@ -386,7 +386,7 @@ Primary ──sync──► Standby
 
 For stronger availability, synchronous failover is usually more useful when the standby is in a different availability zone, not the same rack or same failure domain.
 
-#### Cross-Zone Asynchronous Replication
+### Cross-Zone Asynchronous Replication
 
 Asynchronous replication sends changes to another node after the primary commits. This improves availability and geographic fault tolerance, but the replica may lag behind.
 
@@ -402,7 +402,7 @@ AZ-A Primary ──async──► AZ-B Standby
 
 This is a common and cost-effective production pattern. It improves resilience but does not guarantee zero data loss.
 
-#### Multi-Region Active-Passive / Warm Standby
+### Multi-Region Active-Passive / Warm Standby
 
 In this pattern, one region serves production traffic while another region stays ready as a standby. Data is continuously replicated to the standby region.
 
@@ -418,7 +418,7 @@ Primary Region ──logs / replication──► Standby Region
 
 Warm standby is often a practical compromise between cost and resilience. It is less complex than active-active but still protects against major regional outages.
 
-#### Multi-Region Active-Active
+### Multi-Region Active-Active
 
 Active-active systems allow multiple regions to accept traffic at the same time. This can improve global latency and availability, but it is significantly more complex.
 
@@ -436,7 +436,7 @@ Example:
 
 Use active-active only when you truly need it. Many applications can meet their requirements with active-passive disaster recovery, read replicas, or regional caching.
 
-#### Immutable Backups + Point-in-Time Restore
+### Immutable Backups + Point-in-Time Restore
 
 Backups protect against data loss, corruption, ransomware, accidental deletion, and bad deployments.
 
@@ -455,7 +455,7 @@ DB logs      ──► Point-in-time restore
 
 Backups should be tested regularly. An untested backup is only a hope, not a recovery plan.
 
-#### Observability and Chaos Testing
+### Observability and Chaos Testing
 
 Observability helps you detect problems before users notice them. Chaos testing verifies whether the system behaves correctly under failure.
 
@@ -484,7 +484,7 @@ Fault injection → Monitoring → Alert → Runbook → Recovery
 
 Reliability is not only about database features. It also depends on the application, deployment process, network, backups, monitoring, and team response.
 
-### Decision-Making Trees
+## Decision-Making Trees
 
 Use these trees as a starting point, not as strict rules. Real systems often combine multiple database types.
 
@@ -500,7 +500,7 @@ ClickHouse or BigQuery for analytics
 
 Start with the simplest system that meets your needs, then add specialized components when the workload proves they are necessary.
 
-### First Question: What Shape Is the Data?
+## First Question: What Shape Is the Data?
 
 ```text
                        ┌────────────────────────────────────────┐
@@ -520,13 +520,13 @@ Start with the simplest system that meets your needs, then add specialized compo
 
 Use this as a guideline:
 
-* Choose **structured** when the data fits cleanly into tables and relationships.
-* Choose **semi-structured** when records have flexible or evolving fields.
-* Choose **unstructured** when the main data is files, media, large objects, or raw streams.
+* Choose structured when the data fits cleanly into tables and relationships.
+* Choose semi-structured when records have flexible or evolving fields.
+* Choose unstructured when the main data is files, media, large objects, or raw streams.
 
 Do not overreact to small schema variation. A relational database can still handle some flexible fields through JSON columns. But if flexible nested objects are the core of your workload, a document model may be more natural.
 
-### Structured Data Decision Tree
+## Structured Data Decision Tree
 
 ```text
                        ┌─────────────────┐
@@ -557,7 +557,7 @@ Rule of thumb:
 
 **Start with PostgreSQL or MySQL for transactional apps unless you already know you need global distribution, extreme scale, or specialized analytics.**
 
-### Semi-Structured Data Decision Tree
+## Semi-Structured Data Decision Tree
 
 ```text
                       ┌──────────────────────┐
@@ -599,7 +599,7 @@ Rule of thumb:
 
 **Pick the system based on the dominant access pattern: document retrieval, key lookup, search, graph traversal, or time-window analysis.**
 
-### Unstructured Data Decision Tree
+## Unstructured Data Decision Tree
 
 ```text
                        ┌─────────────────────┐
@@ -628,7 +628,7 @@ Rule of thumb:
 
 **Choose by access semantics: object, file, or block. Then decide based on latency, durability, cost, and access frequency.**
 
-### How to Use These Trees
+## How to Use These Trees
 
 1. **Identify the data shape.** Is it structured, semi-structured, or unstructured?
 2. **Identify the access pattern.** Are you doing transactions, key lookups, document reads, graph traversals, time-window queries, full-text search, or analytics?
@@ -637,7 +637,7 @@ Rule of thumb:
 5. **Measure before adding complexity.** Add caching, sharding, replicas, or specialized systems when measurements prove you need them.
 6. **Revisit the choice periodically.** Traffic, data volume, team size, and cloud services change over time.
 
-### Practical Selection Checklist
+## Practical Selection Checklist
 
 Before choosing a database, answer these questions:
 

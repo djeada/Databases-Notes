@@ -1,222 +1,75 @@
-## Row-based and Column-based Databases
+# Row Storage and Column Storage
 
-Exploring the differences between row-based and column-based databases can help you make informed decisions about data storage and retrieval strategies. This guide delves into the characteristics, use cases, and trade-offs of these two database models, providing clarity on how each can impact performance and efficiency.
+A table's logical shape does not determine its physical layout. Both row-oriented and column-oriented systems can expose rows and columns to SQL. The difference is which values they keep together in storage.
 
-### Introduction
+Consider a small sales table:
 
-Databases organize and store data in various ways to optimize for different types of workloads. The two primary storage models are row-based (row-oriented) and column-based (column-oriented) databases. Understanding these models is crucial for selecting the right database system for your application's needs.
+| sale_id | customer_id | product_id | quantity | amount_cents |
+|---|---|---|---|---|
+| 101 | 1 | 10 | 2 | 3000 |
+| 102 | 1 | 20 | 1 | 2500 |
+| 103 | 2 | 20 | 2 | 5000 |
 
-### Characteristics of Row-based Databases
+## Row storage keeps one record together
 
-In row-based databases, data is stored one row at a time, with each row containing all the attributes of a single record. This storage model aligns well with transactional systems where operations often involve entire records.
+A simplified row layout is:
 
-- **Data Organization**: Rows are stored contiguously, making it efficient to read or write all columns of a record at once.
-- **Data Insertion and Updates**: Adding or modifying records is straightforward since the database deals with complete rows.
-- **Typical Use Cases**: Ideal for Online Transaction Processing (OLTP) systems like banking applications or e-commerce platforms, where quick, row-level operations are common.
-
-Here's a simple representation of row-based storage:
-
-```
-+---------------------------------------------+
-| Row 1: [ID, Name, Age, Email, Address, ...] |
-| Row 2: [ID, Name, Age, Email, Address, ...] |
-| Row 3: [ID, Name, Age, Email, Address, ...] |
-+---------------------------------------------+
+```text
+(101, 1, 10, 2, 3000)
+(102, 1, 20, 1, 2500)
+(103, 2, 20, 2, 5000)
 ```
 
-Each row holds all the data for a single record, stored together on disk.
+When the application opens sale 101, it usually needs several of that sale's fields. Keeping those values together suits this access pattern. Small inserts and updates also operate naturally on individual records, although actual costs depend on indexes, logging, and concurrency.
 
-### Characteristics of Column-based Databases
+This pattern is common in **online transaction processing (OLTP)**: many short operations such as placing an order or changing a customer's address.
 
-Column-based databases store data one column at a time, with each column containing data for a specific attribute across all records. This model is optimized for analytical queries that process large volumes of data but focus on a few attributes.
+## Column storage keeps one field's values together
 
-- **Data Organization**: Columns are stored contiguously, allowing efficient access and compression of data.
-- **Read Efficiency**: Only the necessary columns are read during a query, reducing I/O operations.
-- **Typical Use Cases**: Suited for Online Analytical Processing (OLAP) systems like data warehouses or business intelligence applications, where aggregate functions and column-specific calculations are frequent.
+A simplified column layout is:
 
-An illustration of column-based storage:
-
-```
-+------------------+------------------+------------------+
-| Column: ID       | Column: Name     | Column: Age      |
-| [ID1, ID2, ... ] | [Name1, Name2...]| [Age1, Age2, ...]|
-+------------------+------------------+------------------+
+```text
+sale_id:      101, 102, 103
+customer_id:    1,   1,   2
+product_id:    10,  20,  20
+quantity:      2,   1,   2
+amount_cents: 3000, 2500, 5000
 ```
 
-Data for each attribute is stored separately, enhancing performance for column-centric operations.
+A report asking for `SUM(amount_cents)` needs the amount column, not every customer's identifier or product field. For a much larger table, reading only the relevant columns can avoid substantial work.
 
-### Use Cases and Examples
+Similar values stored together also often compress well. **Compression** represents data with fewer bytes; for example, repeated customer identifiers can be encoded compactly. Less data to read can improve throughput, though decoding has a cost too.
 
-#### Row-based Databases in Practice
+This pattern is common in **online analytical processing (OLAP)**: reports and aggregations that examine many records. Engines may process groups of column values in batches, often called **vectorized execution**.
 
-Consider a customer management system where each customer's complete profile needs to be accessed or updated regularly. A row-based database efficiently handles these operations.
+## Compare the work, not just the label
 
-Example SQL command to retrieve a customer's full profile:
+| Request | Why row storage may suit it | Why column storage may suit it |
+|---|---|---|
+| Open one sale by its identifier | Related fields are stored together | Needs an efficient lookup and reconstruction across columns |
+| Sum amounts across millions of sales | May scan unrelated fields too | Can read and aggregate the amount column |
+| Insert one small order at a time | Fits individual-record operations | May rely on buffering before writing column segments |
+| Load a large batch for reporting | Supported, but layout may read more for later scans | Bulk loading and analytical scans often fit the design |
 
-```sql
-SELECT * FROM customers WHERE customer_id = 12345;
-```
+These are tendencies, not guarantees. Indexes, partitions, memory, compression, and the engine's implementation can change the result. Hybrid engines and columnar indexes can support both access patterns.
 
-This command retrieves all columns for the specified customer, benefiting from the contiguous storage of row-based databases.
+## Do not confuse column storage with wide-column databases
 
-#### Column-based Databases in Practice
+A **columnar analytical engine** organizes values by column to process scans efficiently. A **wide-column database**, such as Cassandra, organizes records around partition keys and clustering keys for distributed access patterns. “Column” appears in both names, but they describe different design decisions.
 
-In a scenario where a company wants to analyze sales trends over time, a column-based database can quickly process large datasets by focusing on relevant columns.
+Similarly, choosing row storage does not mean queries are limited to one row, and choosing column storage does not mean SQL joins are unavailable.
 
-Example SQL query to calculate total sales per month:
+## Choose from a concrete workload
 
-```sql
-SELECT month, SUM(sales_amount) FROM sales_data GROUP BY month;
-```
+For the bookstore's checkout system, ask how individual orders are written and retrieved. For its annual revenue dashboard, ask which columns reports scan and how fresh the reports must be. It can be sensible to keep operational data in a transactional database and load a separate analytical store.
 
-The database reads only the `month` and `sales_amount` columns, making the operation faster and more efficient.
+That separation introduces a data pipeline: a process that copies or transforms data between systems. The report may lag behind recent sales, so freshness becomes part of the requirements. [Data warehousing](../13_big_data/01_data_warehousing.md) develops this design.
 
-### Trade-offs Between the Models
+## Check your understanding
 
-Each storage model offers advantages and disadvantages, impacting performance and storage requirements.
+1. Which values does a revenue sum actually need to read?
+2. Why can storing similar values together help compression?
+3. How does OLTP differ from OLAP in its typical work?
+4. Why is a wide-column database not simply a columnar SQL engine?
 
-#### Storage Efficiency
-
-- **Row-based Databases**: May use more disk space due to the storage of diverse data types together, which can limit compression effectiveness.
-- **Column-based Databases**: Often achieve higher compression ratios since similar data types are stored together, reducing storage costs.
-
-#### Query Performance
-
-- **Row-based Databases**: Perform well for queries that need full records but may be less efficient for aggregations on specific columns.
-- **Column-based Databases**: Excel at queries involving large datasets and specific columns, like statistical analyses or report generation.
-
-#### Write and Update Operations
-
-- **Row-based Databases**: Offer faster writes and updates since entire rows are handled in single operations.
-- **Column-based Databases**: Can be slower for writes and updates because data for each attribute is stored separately, potentially requiring multiple write operations.
-
-### Practical Examples with Commands and Outputs
-
-#### Inserting Data in a Row-based Database (MySQL)
-
-When adding a new user to a row-based database:
-
-```sql
-INSERT INTO users (user_id, name, email, age)
-VALUES (101, 'Alice Johnson', 'alice@example.com', 28);
-```
-
-- **Operation**: Inserts a complete record in one go.
-- **Efficiency**: Optimized for transactional operations that deal with full records.
-
-#### Querying Data in a Row-based Database
-
-Retrieving a user's full profile:
-
-```sql
-SELECT * FROM users WHERE user_id = 101;
-```
-
-Expected output:
-
-| user_id | name           | email             | age |
-|---------|----------------|-------------------|-----|
-| 101     | Alice Johnson  | alice@example.com | 28  |
-
-Interpretation:
-
-- All user information is fetched efficiently due to contiguous row storage.
-- Ideal for applications where full record access is common.
-
-#### Inserting Data in a Column-based Database (Apache Cassandra)
-
-Adding a new entry to a column-based database:
-
-```sql
-INSERT INTO users (user_id, name, email, age)
-VALUES (101, 'Alice Johnson', 'alice@example.com', 28);
-```
-
-- **Operation**: Data is distributed across column families.
-- **Consideration**: May involve multiple write operations internally.
-
-#### Querying Data in a Column-based Database
-
-Fetching specific attributes:
-
-```sql
-SELECT name, email FROM users WHERE user_id = 101;
-```
-
-Expected output:
-
-| name           | email             |
-|----------------|-------------------|
-| Alice Johnson  | alice@example.com |
-
-Interpretation:
-
-- Only the requested columns are read, reducing unnecessary data retrieval.
-- Enhances performance for queries that don't require full records.
-
-### Using Tables to Explain Command Options
-
-Understanding command options can be easier when presented in a table format. Here's an example using SQL query clauses:
-
-| Clause      | Purpose                                        |
-|-------------|------------------------------------------------|
-| `SELECT`    | Specifies the columns to retrieve              |
-| `FROM`      | Indicates the table to query                   |
-| `WHERE`     | Filters records based on conditions            |
-| `GROUP BY`  | Aggregates data across specified columns       |
-| `ORDER BY`  | Sorts the result set according to given columns|
-
-This table helps clarify the function of each clause in an SQL statement.
-
-### ASCII Diagrams Illustrating Concepts
-
-#### Row-based Storage Visualization
-
-When data is stored in rows:
-
-```
-+----------------------------+
-| Record 1: [A, B, C, D]     |
-+----------------------------+
-| Record 2: [E, F, G, H]     |
-+----------------------------+
-| Record 3: [I, J, K, L]     |
-+----------------------------+
-```
-
-All attributes of a record are stored together, facilitating quick access to full records.
-
-#### Column-based Storage Visualization
-
-When data is stored in columns:
-
-```
-+-----------+-----------+-----------+-----------+
-| Column A  | Column B  | Column C  | Column D  |
-+-----------+-----------+-----------+-----------+
-| A         | B         | C         | D         |
-| E         | F         | G         | H         |
-| I         | J         | K         | L         |
-+-----------+-----------+-----------+-----------+
-```
-
-Data for each attribute is stored separately, enhancing performance for column-specific queries.
-
-### Considering Hybrid Approaches
-
-Some database systems offer hybrid models to leverage the advantages of both storage types.
-
-- **Example**: Microsoft's SQL Server offers clustered columnstore indexes, allowing for both row-based and column-based storage within the same database.
-- **Benefit**: Supports a mix of transactional and analytical workloads by optimizing storage based on usage patterns.
-
-### Performance Implications
-
-#### Data Compression
-
-Column-based databases can compress data more effectively due to the uniformity of data types within a column, leading to reduced storage costs and improved cache efficiency.
-
-#### I/O Operations
-
-- **Row-based Databases**: May perform more I/O operations when queries involve only a few columns but require reading entire rows.
-- **Column-based Databases**: Reduce I/O by reading only the necessary columns, which is beneficial for large-scale data analysis.
-
+Continue with [primary and secondary keys](03_primary_key_vs_secondary_key.md), then [database pages](04_database_pages.md).

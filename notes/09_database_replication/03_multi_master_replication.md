@@ -1,8 +1,8 @@
-## Multi-Master Replication
+# Multi-Master Replication
 
 Multi-master replication is a database replication model where multiple database nodes, referred to as masters, can perform read and write operations concurrently. Each master node propagates its data changes to every other master node, ensuring consistency across the entire system. This approach enhances scalability, availability, and performance but introduces complexities like conflict resolution and increased configuration overhead.
 
-### Understanding the Architecture
+## Understanding the Architecture
 
 To visualize how multi-master replication works, consider the following diagram:
 
@@ -17,7 +17,7 @@ To visualize how multi-master replication works, consider the following diagram:
                           |
            +--------------+---------------------+----------------------------------+
            |                                    |                                  |
- Write & Read Operations                 Write & Read Operations           Write & Read Operations  
+ Write & Read Operations                 Write & Read Operations           Write & Read Operations
            |                                    |                                  |
            v                                    v                                  v
 +----------+-----------+              +---------+----------+             +---------+----------+
@@ -29,7 +29,7 @@ To visualize how multi-master replication works, consider the following diagram:
 
 In this setup, each master node is connected to every other master node through replication links. Data changes made on any node are replicated to all other nodes, and clients can connect to any master node for both read and write operations. This interconnected architecture allows for a highly available and scalable system.
 
-#### Characteristics
+### Characteristics
 
 Multi-master replication has several defining features:
 
@@ -38,7 +38,7 @@ Multi-master replication has several defining features:
 - The system remains operational even if one or more master nodes fail, providing high availability.
 - Mechanisms are required to handle conflicting updates due to concurrent writes, which adds complexity to the system.
 
-#### Purpose of Multi-Master Replication
+### Purpose of Multi-Master Replication
 
 The primary goals of multi-master replication include:
 
@@ -47,7 +47,7 @@ The primary goals of multi-master replication include:
 3. In geographically dispersed systems, allowing writes to the nearest master reduces latency and improves performance for users in different locations.
 4. Balancing both read and write operations across multiple nodes optimizes resource utilization and prevents any single node from becoming overwhelmed.
 
-### Advantages
+## Advantages
 
 Implementing multi-master replication offers several benefits:
 
@@ -56,7 +56,7 @@ Implementing multi-master replication offers several benefits:
 - Localized writes reduce the delay associated with remote database access, providing faster response times for users.
 - Distributes workloads across multiple nodes, preventing bottlenecks and optimizing performance.
 
-### Challenges
+## Challenges
 
 Despite its advantages, multi-master replication introduces several challenges:
 
@@ -65,18 +65,18 @@ Despite its advantages, multi-master replication introduces several challenges:
 - Configuring, managing, and monitoring a multi-master setup is more complicated than single-master configurations.
 - Replicating data across multiple nodes increases network traffic, which can affect performance if not managed properly.
 
-### Conflict Resolution Strategies
+## Conflict Resolution Strategies
 
 Handling conflicts is a critical aspect of multi-master replication. Various strategies can be employed:
 
-- **Synchronous replication** ensures data consistency by using **locking mechanisms** that allow only one node to modify a specific piece of data at any given time. This approach can result in reduced performance due to increased latency caused by waiting for acknowledgments from other nodes.  
-- **Asynchronous replication** with **conflict detection** improves performance by allowing changes to proceed without waiting for all nodes to acknowledge. However, it introduces the risk of **temporary inconsistencies**, which are resolved later through conflict detection and resolution mechanisms.  
-- **Timestamp ordering** resolves conflicts by prioritizing **transactions** based on their timestamps, where the **latest transaction** overrides previous ones. This method simplifies resolution but may discard earlier valid changes.  
-- **Application-level handling** uses **custom logic** defined within the application to resolve conflicts. This approach provides **flexibility**, enabling conflict resolution tailored to the specific needs and business logic of the application.
+- **Synchronous replication** waits for a configured remote acknowledgment or coordination. Conflicting writes still require a separate conflict-control protocol. This approach can result in reduced performance due to increased latency caused by waiting for acknowledgments from other nodes.
+- **Asynchronous replication** with conflict detection improves performance by allowing changes to proceed without waiting for all nodes to acknowledge. However, it introduces the risk of temporary inconsistencies, which are resolved later through conflict detection and resolution mechanisms.
+- **Timestamp ordering** resolves conflicts by prioritizing transactions based on their timestamps, where the latest transaction overrides previous ones. This method simplifies resolution but may discard earlier valid changes.
+- **Application-level handling** uses custom logic defined within the application to resolve conflicts. This approach provides flexibility, enabling conflict resolution tailored to the specific needs and business logic of the application.
 
-### Implementing Multi-Master Replication with MySQL / MariaDB + Galera Cluster
+## Implementing Multi-Master Replication with MySQL / MariaDB + Galera Cluster
 
-Galera Cluster is a synchronous multi-master replication plugin for MySQL and MariaDB databases. It ensures that transactions are committed on all nodes simultaneously, providing strong data consistency across the cluster.
+Galera Cluster is a synchronous multi-master replication plugin for MySQL and MariaDB databases. It uses write-set certification to order and validate transactions. Applying changes on a remote node can lag, so read consistency depends on configuration; commits are not literally simultaneous on every node.
 
 ```text
 #
@@ -105,7 +105,7 @@ Galera Cluster is a synchronous multi-master replication plugin for MySQL and Ma
 > Traffic flows in a full-mesh using the Galera ports **4567 (replication)**, **4568 (incremental SST/IST)** and **4444 (state snapshot transfer)**.
 > When you see `10.0.0.20/21/22` or **Node-1/2/3** below, they refer to the diagram.
 
-#### Prerequisites
+### Prerequisites
 
 1. **Three Linux hosts** (Ubuntu 22.04 LTS, Debian 12, RHEL 9, etc.) with static IPs `10.0.0.20-22`.
 2. **MariaDB 10.6+** *or* **Percona XtraDB / MySQL-wsrep** build that ships Galera 4.
@@ -113,7 +113,7 @@ Galera Cluster is a synchronous multi-master replication plugin for MySQL and Ma
 4. **Time sync** via `chronyd` or `systemd-timesyncd`.
 5. At least **2 CPU / 4 GiB RAM / 30 GiB SSD** per node (Galera buffers and gcache like RAM + IO).
 
-#### Install Server & Galera
+### Install Server & Galera
 
 **Ubuntu / Debian**
 
@@ -130,7 +130,7 @@ sudo dnf install mariadb-server galera-4 rsync
 
 *(Replace `mariadb-…` with Percona packages if you need MySQL-8 compatibility.)*
 
-#### Core Configuration
+### Core Configuration
 
 The foundation of a stable Galera cluster is consistent configuration across all nodes. This section outlines the essential parameters you must set in the Galera configuration file to enable multi-master replication, ensure data consistency, and tune basic performance settings.
 
@@ -164,7 +164,7 @@ innodb_buffer_pool_size = 2G               # ≥40 % RAM (adjust)
 wsrep_slave_threads     = 4                # = CPU cores (rule of thumb)
 ```
 
-#### Creating the SST User
+### Creating the SST User
 
 To securely transfer the initial dataset from the primary node to joining nodes, Galera uses a State Snapshot Transfer (SST) user. Create and grant the necessary privileges once on any cluster node.
 
@@ -176,7 +176,7 @@ FLUSH PRIVILEGES;
 SQL
 ```
 
-#### Securing the Server
+### Securing the Server
 
 Before bringing up the cluster, tighten the default MariaDB security posture. Run the secure installation script to set a strong root password, remove unused accounts, and disable remote root access.
 
@@ -184,7 +184,7 @@ Before bringing up the cluster, tighten the default MariaDB security posture. Ru
 sudo mysql_secure_installation   # set root pwd, remove test DB, disallow remote root
 ```
 
-#### Bootstrapping the Cluster (Node-1)
+### Bootstrapping the Cluster (Node-1)
 
 The first node must be started in bootstrap mode to initialize the cluster state. This step only runs once and sets up the initial primary component.
 
@@ -200,7 +200,7 @@ mysql -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';"
 # Expect Value = 1
 ```
 
-#### Joining Remaining Nodes (Node-2 & Node-3)
+### Joining Remaining Nodes (Node-2 & Node-3)
 
 Subsequent nodes join the existing cluster by starting their MariaDB service. They will perform an SST from the primary node to synchronize state before becoming active members.
 
@@ -221,7 +221,7 @@ mysql -e "SHOW GLOBAL STATUS LIKE 'wsrep_cluster_size';"
 # Expect Value = 3 on every node
 ```
 
-#### Conflict Resolution & Certification
+### Conflict Resolution & Certification
 
 Galera uses optimistic concurrency control and write-set certification to resolve conflicts in a synchronous multi-master setup. At commit time, write-sets are broadcast and validated against each node's transaction history.
 
@@ -231,7 +231,7 @@ Galera uses optimistic concurrency control and write-set certification to resolv
 * **No conflict** → write-set applied, client receives COMMIT.
 * **Conflict** → later GTID wins, losing node rolls back and returns WSREP\_CONFLICT error.
 
-##### Application Strategies
+#### Application Strategies
 
 Proper application design can minimize and handle conflicts:
 
@@ -239,7 +239,7 @@ Proper application design can minimize and handle conflicts:
 * **Hot-spot mitigation** – avoid sequential key updates; shard counters across nodes.
 * **Deterministic primary keys** – use UUIDs or configure `auto_increment_offset` and `auto_increment_increment` to prevent PK clashes.
 
-#### Testing the Cluster
+### Testing the Cluster
 
 Validate cluster behavior under different scenarios to ensure reliability. The table below outlines core tests and expected outcomes.
 

@@ -1,290 +1,118 @@
-## Database Normalization
+# Normalization: Store Each Fact in the Right Place
 
-Database normalization is a systematic approach to organizing data in a relational database. By minimizing redundancy and ensuring data integrity, normalization helps in efficiently structuring databases. The process addresses issues that arise when the same data is stored in multiple places, which can lead to complications during updates, deletions, or insertions. To resolve these problems, data is decomposed into multiple related tables.
+Normalization is a way to organize related facts so a change does not require editing many copies of the same information. Begin with the problems in a combined table, then use the normal forms to explain how to separate it safely.
 
-After reading the material, you should be able to answer the following questions:
+You should already understand rows, primary keys, and foreign keys from [data models](../01_introduction_to_databases/04_data_models.md).
 
-1. What is database normalization, and why is it important in organizing and managing relational databases?
-2. What are the different normal forms (1NF through 6NF), and what specific rules must a table meet to achieve each normal form?
-3. How does normalization help in eliminating data redundancy and ensuring data integrity within a database?
-4. Can you provide examples of how to apply the first three normal forms (1NF, 2NF, and 3NF) to transform denormalized tables into normalized ones?
-5. What are the benefits and potential challenges associated with implementing higher normal forms like BCNF, 4NF, and 5NF in database design?
+## Start with a table that repeats facts
 
-### The Importance of Normalization
+Suppose every order line stores the customer's details and the product's title:
 
-Understanding why normalization is necessary involves recognizing its key benefits. First and foremost, normalization eliminates redundancy by minimizing duplicate data within tables. This not only conserves storage space but also enhances database performance. Each piece of information should be stored only once to maintain consistency.
+| order_id | line_number | customer_id | customer_name | product_id | product_title | quantity |
+| --- | --- | --- | --- | --- | --- | --- |
+| 101 | 1 | 1 | Alice | 10 | Database Basics | 2 |
+| 101 | 2 | 1 | Alice | 20 | SQL Practice | 1 |
+| 102 | 1 | 1 | Alice | 10 | Database Basics | 1 |
 
-Ensuring data integrity is another crucial aspect. By enforcing rules and constraints, normalization preserves the accuracy and consistency of the data throughout the database. It essentially transforms complex schemas with undesirable characteristics into smaller, well-structured schemas.
+The row's identifier is the pair `(order_id, line_number)`. Alice's name is repeated, even though it describes a customer rather than a particular line.
 
-Simplifying database design is also a significant advantage. Breaking down complex tables into smaller, more manageable ones makes it easier to maintain and query data. This modular approach streamlines database interactions and reduces the potential for errors.
+If she changes her name, all three rows need an update. Missing one update leaves contradictory names for customer 1. This is an **update anomaly**: a problem caused by storing one fact in several places.
 
-### Example of a Denormalized Table
+Two other anomalies follow. We cannot record a new product without inventing an order line, an **insertion anomaly**. Deleting the last line containing a product would lose its title, a **deletion anomaly**.
 
-To illustrate the concept, consider a simple database for a library system. In a denormalized table, information about books and publishers might be stored together:
+## First normal form: represent separate facts separately
 
-| Book_ID | Book_Title | Authors           | Publisher_ID | Publisher_Name | Publisher_Location |
-|---------|------------|-------------------|--------------|----------------|--------------------|
-| B1      | Book A     | John Doe, Jane Doe| P1           | Publish Corp   | New York           |
-| B2      | Book B     | Mary Lee          | P2           | Bookmania      | Los Angeles        |
-| B3      | Book C     | John Doe          | P1           | Publish Corp   | New York           |
-| B4      | Book D     | Jane Doe          | P3           | Literature Inc | San Francisco      |
+A column such as `products = '10,20,30'` bundles several independently meaningful product references into one value. To find one product or attach a quantity, the application must parse that string.
 
-In this table, publisher information is repeated for each book from the same publisher. This redundancy can lead to inconsistencies and anomalies, such as outdated or conflicting data about publishers. Normalization helps eliminate these issues by separating related data into different tables.
+Use an order-items table with one row per line instead. This removes the repeating list and gives each value a clear role. That is the practical idea behind **first normal form**, or **1NF**.
 
-### Normal Forms
+“Atomic” values are values used as one value in the chosen model. A date is not invalid because it contains a year, month, and day. The issue is how a fact is represented and used, not whether it can ever be subdivided.
 
-Normal forms are guidelines that help in structuring relational databases to reduce redundancy and dependency. Edgar Codd, the inventor of the relational model, introduced these concepts. Each normal form represents a set of rules that a database must follow to achieve a certain level of normalization.
+## Understand a dependency with a question
 
-The normal forms, in order of increasing strictness, are:
+A **functional dependency** `X → Y` means that knowing X determines Y. Ask: “if two rows have the same X, must they have the same Y?”
 
-1. **First Normal Form (1NF)**
-2. **Second Normal Form (2NF)**
-3. **Third Normal Form (3NF)**
-4. **Boyce-Codd Normal Form (BCNF)**
-5. **Fourth Normal Form (4NF)**
-6. **Fifth Normal Form (5NF)**
-7. **Sixth Normal Form (6NF)**
-8. **Domain/Key Normal Form (DKNF)**
+In our bookstore:
 
-Higher normal forms reduce redundancy but may increase complexity and affect performance. Deciding how far to normalize depends on the specific requirements and constraints of the database system.
+```text
+customer_id → customer_name
+product_id → product_title
+order_id → customer_id
+(order_id, line_number) → product_id, quantity, purchase_price
+```
 
-#### When to Use Each Normal Form
+These are assumed business rules. A sample with no contradictions does not prove a rule. Product titles, for example, need not determine product IDs because several products can share a title.
 
-1. *First Normal Form (1NF)* requires that each table has a unique identifier (a primary key) and that every cell in the table holds only a single, simple value. For example, instead of having a column with a list of phone numbers, you would create separate rows or a separate table for phone numbers. It also means you shouldn’t have repeated groups or columns that store the same type of information.
-2. Building on 1NF, *Second Normal Form (2NF)* ensures that every column in the table is fully dependent on the entire primary key—not just part of it. This is important when the primary key consists of more than one column (a composite key). For instance, in a table with order details where the key is a combination of order ID and product ID, every other column should relate to both the order and the product. If some data applies only to the order, you would move it to a separate table.
-3. *Third Normal Form (3NF)* goes further by making sure that every non-key column depends only on the primary key, not on any other non-key column. This prevents situations where one piece of data indirectly determines another. For example, if a table has a column for city and another for state, and the state can be determined from the city, then state should be stored in a different table or handled separately, ensuring each piece of information is directly linked to the primary key.
-4. *Boyce-Codd Normal Form (BCNF)* is a stricter version of 3NF. It deals with issues that may arise from the way columns determine each other (functional dependencies). In a BCNF table, whenever one set of columns determines another set, that set must be a candidate key (unique for every row). This approach helps eliminate any odd cases where the data structure might allow unexpected duplication or inconsistency.
-5. *Fourth Normal Form (4NF)* focuses on tables that might contain two or more independent one-to-many relationships. In simple terms, if a table has columns that can each have multiple values independently (such as a person’s hobbies and skills), these should be split into separate tables. This separation keeps the data clean and avoids duplicate rows with repeating groups of information.
-6. *Fifth Normal Form (5NF)* also known as Project-Join Normal Form, 5NF aims to remove redundancy that might occur when joining several tables together. It ensures that complex relationships between data are broken into the simplest parts without losing any essential links. For example, if a table can be split into several smaller tables that can perfectly recreate the original data through joins, then the design meets 5NF.
-7. *Sixth Normal Form (6NF)* is used mainly for databases that track changes over time (temporal databases). It involves breaking tables into even smaller parts so that each record represents a single point in time. This structure makes it easier to manage historical data and understand how information has changed over time without mixing data from different time periods in one record.
-8. *Domain/Key Normal Form (DKNF)* represents the highest level of normalization. It ensures that every rule (or constraint) in the database comes directly from the definitions of keys and the allowed values (domains) for each column. Although it is an ideal approach, it is often very difficult to achieve in practice because it requires all business rules to be captured through keys and domains. As a result, DKNF is more of a theoretical goal than something most practical systems fully implement.
+## Second normal form: use the whole key
 
-### First Normal Form (1NF)
+Our combined table has a two-column key. But the customer for an order depends on `order_id` alone, without needing `line_number`.
 
-The first normal form sets the foundation for normalization. A table is in 1NF if it meets the following criteria:
+Move order-level facts into `orders`. Keep line-level facts in `order_items`:
 
-- It has a primary key that uniquely identifies each row.
-- Each column contains atomic, indivisible values.
-- Column names are unique, and data types are consistent.
-- There are no duplicate rows.
+```text
+orders(order_id, customer_id, customer_name)
+order_items(order_id, line_number, product_id, product_title, quantity, purchase_price)
+```
 
-For example, consider a table of students and their subjects:
+This removes a **partial dependency**: a non-key fact depending on only part of a candidate key. **2NF** requires 1NF and no such dependency on a proper subset of any candidate key.
 
-| StudentID | Subject           |
-|-----------|-------------------|
-| 1         | Math, Science     |
-| 2         | English, History  |
-| 3         | Art, Music        |
+A **candidate key** is a minimal identifier: removing any of its columns would stop it identifying the row. Consider all candidate keys, not only the one chosen as primary.
 
-This table violates 1NF because the 'Subject' column contains multiple values. To conform to 1NF, the table should be restructured so that each cell contains only one value:
+## Third normal form: remove the extra hop
 
-| StudentID | Subject  |
-|-----------|----------|
-| 1         | Math     |
-| 1         | Science  |
-| 2         | English  |
-| 2         | History  |
-| 3         | Art      |
-| 3         | Music    |
+The new `orders` table still repeats Alice's name. The dependency is indirect:
 
-Now, each record is unique, and each cell contains a single value, satisfying the requirements of 1NF.
+```text
+order_id → customer_id → customer_name
+```
 
-### Second Normal Form (2NF)
+The name belongs with the customer. Move it there. Likewise, keep product titles in `products`:
 
-Advancing to the second normal form involves ensuring that every non-prime attribute is fully functionally dependent on the entire primary key. A table in 2NF must:
+```text
+customers(customer_id, customer_name)
+products(product_id, product_title, current_price)
+orders(order_id, customer_id)
+order_items(order_id, line_number, product_id, quantity, purchase_price)
+```
 
-- Be in 1NF.
-- Have no partial dependencies; non-key attributes cannot depend on only part of a composite primary key.
+Now renaming Alice changes one row. Orders still identify her by `customer_id`. A join reconstructs the customer name when a report needs it.
 
-Consider the following table:
+This illustrates **3NF**: in this simple design, non-key facts should not depend on another non-key fact rather than directly on the relevant identifier. Designs with several overlapping candidate keys need the more precise definition below.
 
-| StudentID | Subject | Teacher |
-|-----------|---------|---------|
-| 1         | Math    | Mr. A   |
-| 1         | Science | Ms. B   |
-| 2         | English | Ms. C   |
-| 2         | History | Mr. D   |
-| 3         | Art     | Mr. E   |
-| 3         | Music   | Ms. F   |
+## Purchase price is not unnecessary duplication
 
-Here, 'Teacher' depends only on 'Subject', not on the composite key of 'StudentID' and 'Subject'. To achieve 2NF, the table should be split:
+A product's current price and the price charged on an order line are different facts. If product 10 now costs 18.00 but a past sale charged 15.00, storing both values is correct.
 
-**Student_Subject Table**
+Normalization asks what a value means before deciding where it belongs. Removing purchase price and substituting a join to the current price would destroy historical information.
 
-| StudentID | Subject |
-|-----------|---------|
-| 1         | Math    |
-| 1         | Science |
-| 2         | English |
-| 2         | History |
-| 3         | Art     |
-| 3         | Music   |
+## Split tables without inventing combinations
 
-**Subject_Teacher Table**
+A good decomposition must be **lossless**: joining the pieces reconstructs the original facts without adding false combinations or losing facts.
 
-| Subject  | Teacher |
-|----------|---------|
-| Math     | Mr. A   |
-| Science  | Ms. B   |
-| English  | Ms. C   |
-| History  | Mr. D   |
-| Art      | Mr. E   |
-| Music    | Ms. F   |
+For example, split `(customer_id, customer_name, email)` into tables connected by the customer ID, rather than separating a list of names from a list of emails with no reliable link.
 
-By separating the tables, each non-key attribute depends on the whole primary key, satisfying 2NF.
+Also check **dependency preservation**: can the original rules still be enforced on the separate tables without joining them merely to check validity? Some decompositions make enforcement more complicated even when the join is lossless.
 
-### Third Normal Form (3NF)
+## More precise definitions and higher forms
 
-The third normal form eliminates transitive dependencies, ensuring that non-key columns are dependent only on the primary key. A table is in 3NF if it:
+Use these after the examples, rather than as the starting explanation. A **superkey** identifies a row but may contain unnecessary columns. A **prime attribute** belongs to at least one candidate key. A dependency is **nontrivial** when it determines something not already included on its left side.
 
-- Is in 2NF.
-- Has no transitive functional dependencies.
-
-Consider the following table:
-
-| StudentID | Course   | CourseLeader | LeaderPhone |
-|-----------|----------|--------------|-------------|
-| 1         | Math     | Mr. A        | 1234567890  |
-| 2         | English  | Ms. B        | 0987654321  |
-| 3         | Art      | Mr. C        | 1122334455  |
-
-Here, 'LeaderPhone' is dependent on 'CourseLeader', which is dependent on 'Course', introducing a transitive dependency through 'CourseLeader'. To achieve 3NF, the table should be divided:
-
-**Student_Course Table**
-
-| StudentID | Course   | CourseLeader |
-|-----------|----------|--------------|
-| 1         | Math     | Mr. A        |
-| 2         | English  | Ms. B        |
-| 3         | Art      | Mr. C        |
-
-**Leader_Contact Table**
-
-| CourseLeader | LeaderPhone |
-|--------------|-------------|
-| Mr. A        | 1234567890  |
-| Ms. B        | 0987654321  |
-| Mr. C        | 1122334455  |
-
-This separation removes the transitive dependency, placing the table in 3NF.
-
-### Boyce-Codd Normal Form (BCNF)
-
-The Boyce-Codd Normal Form is a stricter version of 3NF. A table is in BCNF if:
-
-- It is in 3NF.
-- For every functional dependency X → Y, X is a superkey.
-
-BCNF addresses anomalies that 3NF doesn't cover. Consider the table:
-
-| EmployeeID | Project  | Department | DepartmentHead |
-|------------|----------|------------|----------------|
-| 1          | ProjectA | Dept1      | Mr. A          |
-| 2          | ProjectB | Dept1      | Mr. A          |
-| 3          | ProjectC | Dept2      | Ms. B          |
-
-In this table, 'DepartmentHead' depends on 'Department', not on the primary key 'EmployeeID' and 'Project'. 'Department' is not a superkey, violating BCNF. To correct this, split the table:
-
-**Employee_Project Table**
-
-| EmployeeID | Project  | Department |
-|------------|----------|------------|
-| 1          | ProjectA | Dept1      |
-| 2          | ProjectB | Dept1      |
-| 3          | ProjectC | Dept2      |
-
-**Department_Head Table**
-
-| Department | DepartmentHead |
-|------------|----------------|
-| Dept1      | Mr. A          |
-| Dept2      | Ms. B          |
-
-Now, every determinant is a candidate key, satisfying BCNF.
-
-### Fourth Normal Form (4NF)
-
-Fourth Normal Form deals with multi-valued dependencies. A table is in 4NF if:
-
-- It is in BCNF.
-- It has no multi-valued dependencies.
-
-Multi-valued dependencies occur when one attribute in a table depends on multiple independent attributes. For example:
-
-| EmployeeID | Skill    | Hobby     |
-|------------|----------|-----------|
-| 1          | Coding   | Football  |
-| 1          | Design   | Football  |
-| 2          | Design   | Music     |
-
-Here, 'Skill' and 'Hobby' are independent of each other but depend on 'EmployeeID'. To achieve 4NF, split the table:
-
-**Employee_Skill Table**
-
-| EmployeeID | Skill    |
-|------------|----------|
-| 1          | Coding   |
-| 1          | Design   |
-| 2          | Design   |
-
-**Employee_Hobby Table**
-
-| EmployeeID | Hobby     |
-|------------|-----------|
-| 1          | Football  |
-| 2          | Music     |
-
-This removes the multi-valued dependencies, placing the tables in 4NF.
-
-### Fifth Normal Form (5NF)
-
-Fifth Normal Form, or Project-Join Normal Form, addresses cases where information can be reconstructed from smaller pieces. A table is in 5NF if:
-
-- It is in 4NF.
-- Every join dependency in the table is implied by the candidate keys.
-
-Consider a table involving suppliers, parts, and projects:
-
-| Supplier | Part | Project |
-|----------|------|---------|
-| S1       | P1   | J1      |
-| S1       | P2   | J1      |
-| S2       | P1   | J2      |
-| S2       | P3   | J2      |
-| S3       | P1   | J3      |
-
-This table represents multiple relationships that can be decomposed:
-
-**Supplier_Part Table**
-
-| Supplier | Part |
-|----------|------|
-| S1       | P1   |
-| S1       | P2   |
-| S2       | P1   |
-| S2       | P3   |
-| S3       | P1   |
-
-**Part_Project Table**
-
-| Part | Project |
-|------|---------|
-| P1   | J1      |
-| P2   | J1      |
-| P1   | J2      |
-| P3   | J2      |
-| P1   | J3      |
-
-**Supplier_Project Table**
-
-| Supplier | Project |
-|----------|---------|
-| S1       | J1      |
-| S2       | J2      |
-| S3       | J3      |
-
-By decomposing the original table, we eliminate redundancy and ensure that the join dependencies are maintained, achieving 5NF.
-
-### Sixth Normal Form (6NF)
-
-Although not mentioned earlier, the sixth normal form is mainly used in databases that handle historical or time-variant data. A table is in 6NF if it satisfies no non-trivial join dependencies at all—that is, the table cannot be decomposed any further. This form is particularly useful in data warehousing and complex data analysis.
+| Form | Rule or problem addressed |
+| --- | --- |
+| 3NF | For every nontrivial `X → A`, X is a superkey or A is prime. |
+| BCNF | For every nontrivial functional dependency, the determinant is a superkey. This removes 3NF's exception for prime attributes. |
+| 4NF | Separate independent multivalued facts, such as a person's independent lists of skills and hobbies. Formally, every nontrivial multivalued dependency has a superkey determinant. |
+| 5NF | Address join dependencies not implied by candidate keys, without creating spurious combinations. |
+| 6NF | No nontrivial join dependencies; useful in some temporal designs. Adding a timestamp alone does not establish 6NF. |
+| DKNF | All constraints follow from domains and keys. This is an ideal target, not simply the next numbered step. |
+
+For a BCNF example, suppose each teacher teaches one subject and each student has one teacher per subject. In `(student, subject, teacher)`, `teacher → subject`, but teacher alone does not identify a row. Splitting teacher-subject and student-teacher facts is lossless, yet enforcing one teacher per student and subject now needs a cross-table rule. BCNF can therefore trade simpler facts for harder constraint enforcement.
+
+## Check your understanding
+
+1. Which anomaly appears when Alice has different names on different order lines?
+2. Why does an order's customer belong in `orders`, rather than every item row?
+3. Why should purchase price remain on the order item?
+4. What could go wrong if a decomposition loses the columns connecting its pieces?
+
+Continue with [denormalization](03_denormalization.md) to learn when a measured read workload justifies deliberate duplication.

@@ -1,7 +1,6 @@
-## PostgreSQL
-- PostgreSQL: a powerful, open-source object-relational database management system (ORDBMS)
-- Developed and maintained by the PostgreSQL Global Development Group
-- Suitable for a wide range of applications, from small-scale projects to enterprise-level systems
+# PostgreSQL
+
+PostgreSQL is an open-source object-relational database maintained by the PostgreSQL Global Development Group. It supports relational queries, extensible types, and transactions for a wide range of applications.
 
 ## Features
 
@@ -13,7 +12,7 @@ Supports ACID transactions, ensuring data consistency and reliability
 - Supports stored procedures, triggers, and views
 
 ### Concurrency Control
-Uses Multi-Version Concurrency Control (MVCC) to handle concurrent access without locking
+Uses MVCC so ordinary reads can observe committed versions while writers work. Writes, explicit locking reads, and schema operations still use locks.
 
 ### Robust Security
 Offers strong encryption, authentication, and authorization mechanisms
@@ -84,7 +83,7 @@ WHERE condition;
 DROP TABLE table_name;
 ```
 
-##  Administration and Management
+## Administration and Management
 
 ### pgAdmin
 A popular, open-source graphical administration tool for PostgreSQL
@@ -111,14 +110,14 @@ Built-in statistics collector for monitoring and diagnosing performance issues
 - Suitable for data warehousing and analytical processing workloads
 - Ideal for large-scale enterprise applications requiring a robust and feature-rich RDBMS
 
-## ENgine
+## Storage architecture
 
-PostgreSQL uses a single, unified storage engine. However, PostgreSQL provides a rich and flexible architecture for handling data and offers many advanced features. Unlike MySQL, which uses multiple storage engines, PostgreSQL uses a unified engine but provides mechanisms to customize storage and indexing behaviors.
+Ordinary PostgreSQL tables use heap storage and MVCC. The system also supports extensible table and index access methods; these are different from MySQL’s storage-engine model.
 
 ### **Key Features of PostgreSQL’s Storage System**
 
 #### 1. **Unified Storage Engine**
-   - PostgreSQL uses a single, robust storage engine for all operations, ensuring ACID compliance and high performance across a variety of workloads.
+   - Heap storage is the normal built-in table access method. Concurrency, recovery, and extensible access methods work together; performance depends on the workload and design.
 
 ---
 
@@ -207,4 +206,3 @@ PostgreSQL supports a variety of indexing methods, allowing customization for di
 - **Concurrency:** PostgreSQL’s MVCC implementation often outperforms MySQL for high-concurrency scenarios.
 - **Extensibility:** PostgreSQL supports custom data types, extensions, and advanced indexing, making it more flexible for complex applications.
 - **ACID Compliance:** PostgreSQL is fully ACID-compliant by default, whereas MySQL depends on the storage engine (e.g., InnoDB is ACID-compliant, MyISAM is not).
-

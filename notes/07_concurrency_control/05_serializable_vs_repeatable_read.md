@@ -1,146 +1,78 @@
-## Serializable and Repeatable Read in Database Systems
+# Serializable and Repeatable Read
 
-Transaction isolation levels are essential for maintaining data integrity and managing concurrency in database systems. Two of the highest isolation levels are **Serializable** and **Repeatable Read**, each offering different guarantees to prevent anomalies that can occur when multiple transactions interact with the same data concurrently.
+Isolation controls which effects of concurrent transactions a transaction can observe. **Repeatable Read** protects repeated reads; **Serializable** additionally guarantees that committed transactions have an outcome equivalent to some serial execution. Neither requires transactions to run one at a time.
 
-After reading the material, you should be able to answer the following questions:
+## The anomalies to distinguish
 
-1. What is the Serializable isolation level, and how does it ensure complete isolation of transactions in a database system?
-2. How does the Repeatable Read isolation level differ from Serializable, and what types of data anomalies does it prevent?
-3. In what scenarios would you choose to use Serializable isolation over Repeatable Read, and why?
-4. What are phantom reads, and how does the Serializable isolation level prevent them compared to Repeatable Read?
-5. What are the performance implications of using higher isolation levels like Serializable, and how can applications balance consistency with system performance?
+| Anomaly | What happens |
+| --- | --- |
+| Dirty read | A transaction reads another transaction's uncommitted change. |
+| Non-repeatable read | Re-reading a row returns a value changed by a concurrent commit. |
+| Phantom read | Repeating a predicate query returns a different set of matching rows because of a concurrent commit. |
+| Write skew | Transactions read the same rule-related data, update different rows, and jointly violate a rule. |
 
-### The Need for Isolation Levels
+## Repeatable Read depends on the engine
 
-In environments where multiple transactions execute at the same time, issues like dirty reads, non-repeatable reads, and phantom reads can arise. Without proper isolation, one transaction might read data that another transaction is modifying, leading to inconsistent or incorrect results. Isolation levels define how transactions are isolated from one another to prevent these problems.
+The SQL standard permits phantom reads at Repeatable Read. An engine can provide stronger guarantees.
 
-### Serializable Isolation Level
+- **PostgreSQL:** ordinary reads use a stable transaction snapshot, so concurrent inserts do not appear as phantoms. Write skew can still occur.
+- **MySQL InnoDB:** ordinary consistent reads share a snapshot. Locking reads and writes use different rules; range locking can block inserts. Do not mix snapshot reads and locking reads as though they observe the same state.
+- **SQL Server:** Repeatable Read holds read locks on existing rows but does not generally protect the gaps between them. A repeated query can see new matching rows. `SNAPSHOT` is a separate isolation level.
 
-The Serializable isolation level is the strictest level, ensuring that transactions are completely isolated from each other. It guarantees that the outcome of executing transactions concurrently is the same as if they were executed sequentially in some order.
+### Example: a concurrent insert
 
-| Time | Transaction T1                                                                 | Transaction T2                                                                             |
-|------|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
-| T1   | **BEGIN TRANSACTION**<br>SELECT SUM(balance) FROM accounts; <br> _(Total = \$10,000)_ |                                                                                           |
-| T2   |                                                                                 | **BEGIN TRANSACTION**<br>INSERT INTO accounts (id, balance) <br>VALUES (101, \$1,000);       |
-| T3   |                                                                                 | _(Blocked: waiting for T1 to complete)_                                                   |
-| T4   | **COMMIT**                                                                      |                                                                                           |
-| T5   |                                                                                 | _(Unblocked)_ INSERT completes<br>**COMMIT**                                              |
+Suppose customer 1 initially has five orders. T1 starts at Repeatable Read and executes an ordinary `SELECT`.
 
-In this scenario:
+| Step | T1 | T2 |
+| --- | --- | --- |
+| 1 | Read orders for customer 1: five rows. | |
+| 2 | | Insert a sixth order and commit. |
+| 3 | Repeat the query. | |
 
-- **Transaction T1** calculates the total balance of all accounts.
-- **Transaction T2** attempts to insert a new account but is blocked until T1 commits.
-- T1's calculation does not include the new account from T2, ensuring a consistent view of the data.
-- T2 proceeds only after T1 has finished, maintaining serializability.
+At step 3, PostgreSQL and InnoDB snapshot reads still return five rows. SQL Server Repeatable Read can return six. T1's own writes remain visible to T1 in these models.
 
-### Repeatable Read Isolation Level
+## Why a stable snapshot is not enough
 
-The Repeatable Read isolation level ensures that if a transaction reads a row, it will see the same data throughout the transaction, even if other transactions modify it. However, it doesn't prevent new rows (phantoms) from being inserted by other transactions.
+Suppose two doctors are on call and at least one must remain available.
 
-| Time | Transaction T1                                                                 | Transaction T2                                                                                      |
-| ---- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------|
-| T1   | **BEGIN TRANSACTION**<br>SELECT * FROM orders WHERE customer_id = 1;<br>_(Returns 5 rows)_ |                                                                                                     |
-| T2   |                                                                                 | **BEGIN TRANSACTION**<br>INSERT INTO orders (order_id, customer_id) VALUES (101, 1);<br>**COMMIT** |
-| T3   | SELECT * FROM orders WHERE customer_id = 1;<br>_(Returns 5 rows)_                |                                                                                                     |
-| T4   | **COMMIT**                                                                      |                                                                                                     |
+1. T1 and T2 each read a snapshot showing two doctors on call.
+2. T1 marks doctor A off call; T2 marks doctor B off call.
+3. They update different rows, so a simple same-row conflict check need not stop either transaction.
+4. If both commit, no doctor remains on call.
 
+Each transaction saw stable data, but the combined outcome violates the rule. This is write skew. A valid serial execution would make the second doctor see only one doctor remaining and stay on call.
 
-In this example:
+## What Serializable adds
 
-- **Transaction T1** reads all orders for customer 1 and gets 5 rows.
-- **Transaction T2** inserts a new order for customer 1 and commits.
-- When T1 reads the orders again, it still sees only the original 5 rows.
-- T1 is unaware of the new order inserted by T2 during its transaction.
+A serializable implementation prevents such an outcome from committing. Lock-based implementations can block conflicting operations; PostgreSQL uses Serializable Snapshot Isolation to detect dangerous dependencies and abort a transaction when necessary.
 
-### Comparing Serializable and Repeatable Read
+Applications must retry the **whole transaction**, including its reads, after a serialization failure. Retrying only the final write can reuse an invalid decision. Keep retries bounded and avoid repeating external side effects such as sending a payment or email; use idempotency or an outbox where needed.
 
-Both isolation levels aim to maintain data consistency but differ in their handling of concurrent transactions and the types of anomalies they prevent.
-
-**Serializable Isolation Level:**
-
-- Prevents **dirty reads**, **non-repeatable reads**, and **phantom reads**.
-- Ensures complete isolation by serializing transactions.
-- May lead to reduced concurrency due to extensive locking.
-
-**Repeatable Read Isolation Level:**
-
-- Prevents **dirty reads** and **non-repeatable reads**.
-- Does not prevent **phantom reads** (new rows inserted by other transactions may be visible).
-- Allows higher concurrency compared to Serializable.
-
-### Practical Examples and Commands
-
-To set the isolation level to Serializable:
+### PostgreSQL syntax
 
 ```sql
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-BEGIN TRANSACTION;
--- Transaction operations here
+BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
+-- Read the rule-related rows, make a decision, and perform the writes.
 COMMIT;
 ```
 
-To set the isolation level to Repeatable Read:
+For a stable snapshot without full serializability:
 
 ```sql
-SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
-BEGIN TRANSACTION;
--- Transaction operations here
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+SELECT * FROM orders WHERE customer_id = 1;
+-- A later ordinary SELECT uses the same transaction snapshot.
 COMMIT;
 ```
 
-- **Serializable** ensures that the transaction operates as if it's the only one interacting with the database, providing the highest level of isolation.
-- **Repeatable Read** maintains consistency for the data read during the transaction but allows for other transactions to insert new rows that could affect subsequent queries.
+## Choosing a level
 
-### When to Use Each Isolation Level
+Use Repeatable Read for work that needs a stable view and whose correctness does not depend on unprotected cross-row rules. Use Serializable when concurrent decisions must behave like a serial execution. Constraints, conditional updates, and explicit locking can also protect specific rules, provided every relevant writer follows the protocol.
 
-Choosing between Serializable and Repeatable Read depends on the specific needs of your application.
+Measure throughput, lock waits, and retry rates under a realistic workload. The isolation level alone does not determine performance.
 
-- **Use Serializable** when it's critical that transactions are completely isolated to prevent all types of anomalies. This is suitable for financial systems where accurate and consistent data is paramount.
-- **Use Repeatable Read** when you need to prevent dirty reads and non-repeatable reads but can tolerate phantom reads. This level offers a balance between data consistency and system performance, making it appropriate for many general-purpose applications.
+## References
 
-### Balancing Performance and Consistency
-
-Higher isolation levels like Serializable provide greater data integrity but can impact performance due to increased locking and decreased concurrency. Lower isolation levels improve performance but may expose the application to data anomalies.
-
-- It is important to assess application requirements by determining the acceptable level of data **anomalies** based on the application's functionality and user expectations.
-- Testing under load involves evaluating how different isolation levels affect **performance** in a simulated production environment.
-- Considering optimistic concurrency control can improve concurrency without sacrificing data **integrity** by using techniques that detect conflicts at commit time.
-
-### Understanding Phantom Reads
-
-Here’s a revised section that fixes the table layout and adds an explicit **Database State** column, plus a clear narrative of what each transaction is trying to achieve and what actually happens:
-
-### Understanding Phantom Reads
-
-*Phantom reads* happen when Transaction T1 re-executes a query and sees **new** rows inserted by another transaction (T2), despite using Repeatable Read.
-
-| Time | Transaction T1 (T1’s view)                                                        | Transaction T2                                                                                                | Database State (Electronics)   |
-|  T1  | **BEGIN TRANSACTION**<br>– Reads count of Electronics products:<br>  `COUNT = 10` |                                                                                                               | 10 rows (*IDs: 101–110*)       |
-|  T2  |                                                                                   | **BEGIN TRANSACTION**<br>– Inserts a new Electronics product:<br>  `INSERT (201,'Electronics')`<br>**COMMIT** | 11 rows (*IDs: 101–110, 201*)  |
-|  T3  | Re-reads same query:<br>  `SELECT COUNT(*) ... = 11`<br>**(Phantom row!)**        |                                                                                                               | 11 rows (*IDs: 101–110, 201*)  |
-|  T4  | **COMMIT**                                                                        |                                                                                                               | Final state preserved: 11 rows |
-
-**What T1 intended:**
-T1 began under Repeatable Read to get a stable snapshot of “all Electronics” and expected any re-reads to still return 10. Its purpose might be to calculate inventory before placing a bulk order or generating a report.
-
-**What actually happened:**
-Because T2 committed an insert of a new Electronics product before T1 re-ran its `SELECT`, T1’s second read sees 11 rows. That extra “phantom” row wasn’t visible on the first read, breaking T1’s expectation of repeatability.
-
-* *Repeatable Read* prevents non-repeatable reads of **existing** rows (you can’t see updates twice), but it does **not** stop other transactions from inserting new rows that match your `WHERE` clause. Those new rows show up as phantoms.
-* To guard against phantoms, you must use **Serializable** isolation, which effectively locks the range of possible rows or aborts conflicting transactions.
-
-### Strategies to Prevent Phantom Reads
-
-If phantom reads pose a problem, consider using the Serializable isolation level or implementing additional locking mechanisms.
-
-**Using Serializable Isolation Level:**
-
-```sql
-SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
-BEGIN TRANSACTION;
--- Transaction operations
-COMMIT;
-```
-
-Under Serializable, T1 would not see the new product inserted by T2 during its transaction.
-
+- [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
+- [InnoDB consistent reads](https://dev.mysql.com/doc/refman/8.4/en/innodb-consistent-read.html)
+- [SQL Server isolation levels](https://learn.microsoft.com/en-us/sql/t-sql/statements/set-transaction-isolation-level-transact-sql)

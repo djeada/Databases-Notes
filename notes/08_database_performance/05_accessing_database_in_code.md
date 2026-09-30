@@ -1,20 +1,12 @@
-## Accessing Databases in Code
+# Accessing Databases in Code
 
 Accessing databases through code is a fundamental skill for developers building applications that rely on data storage and retrieval. Whether you're developing a web application, mobile app, or any software that requires data persistence, understanding how to interact with databases programmatically is essential.
 
-After reading the material, you should be able to answer the following questions:
-
-1. What is database caching, and how does it enhance the performance and scalability of applications?
-2. What are the different caching strategies, such as in-memory caching, client-side caching, and server-side caching, and when is each type most effectively utilized?
-3. How do caching techniques like query result caching, object caching, database buffer caching, and prepared statement caching improve database performance? Provide examples of each.
-4. What are the primary cache invalidation strategies, including Time-to-Live (TTL), event-based invalidation, and manual invalidation, and how do they help maintain data consistency between the cache and the underlying database?
-5. What are the best practices for implementing database caching, such as selecting which data to cache, setting appropriate TTL values, monitoring cache performance, and ensuring the security of cached data?
-
-### Database Connection
+## Database Connection
 
 Establishing a connection to the database is the first step in interacting with it programmatically.
 
-#### Connection Libraries
+### Connection Libraries
 
 Each programming language and database system requires specific libraries or drivers to facilitate communication.
 
@@ -37,7 +29,7 @@ Each programming language and database system requires specific libraries or dri
 pip install psycopg2-binary
 ```
 
-#### Connection Strings
+### Connection Strings
 
 A connection string contains the information required to establish a connection to the database.
 
@@ -75,7 +67,7 @@ props.setProperty("password", "my_password");
 Connection conn = DriverManager.getConnection(url, props);
 ```
 
-#### Connection Pooling
+### Connection Pooling
 
 Connection pooling manages a pool of database connections, reusing them instead of creating new ones for each request.
 
@@ -106,11 +98,11 @@ conn = db_pool.getconn()
 db_pool.putconn(conn)
 ```
 
-### Query Execution
+## Query Execution
 
 Executing SQL queries is the core of database interactions.
 
-#### Parameterized Queries
+### Parameterized Queries
 
 Parameterized queries prevent SQL injection by separating SQL code from data.
 
@@ -130,11 +122,11 @@ results = cursor.fetchall()
 - Prevents attackers from injecting malicious SQL code.
 - Allows database to cache execution plans.
 
-#### CRUD Operations
+### CRUD Operations
 
 CRUD stands for Create, Read, Update, Delete—fundamental operations in data manipulation.
 
-##### Create
+#### Create
 
 **Inserting Data**:
 
@@ -146,7 +138,7 @@ cursor.execute(sql, data)
 conn.commit()
 ```
 
-##### Read
+#### Read
 
 **Selecting Data**:
 
@@ -156,7 +148,7 @@ cursor.execute(sql, (True,))
 users = cursor.fetchall()
 ```
 
-##### Update
+#### Update
 
 **Updating Data**:
 
@@ -166,7 +158,7 @@ cursor.execute(sql, ('new_email@example.com', user_id))
 conn.commit()
 ```
 
-##### Delete
+#### Delete
 
 **Deleting Data**:
 
@@ -176,7 +168,7 @@ cursor.execute(sql, (user_id,))
 conn.commit()
 ```
 
-#### Fetching Results
+### Fetching Results
 
 After executing a SELECT query, you need to retrieve the results.
 
@@ -194,7 +186,7 @@ for user in all_users:
     print(user)
 ```
 
-#### Transactions
+### Transactions
 
 Transactions ensure that a series of operations either all succeed or all fail, maintaining data integrity.
 
@@ -213,16 +205,16 @@ except Exception as e:
 
 **ACID Properties**:
 
-- **Atomicity** ensures that all operations in a transaction either complete successfully or do not occur at all, preventing partial updates.  
-- **Consistency** guarantees that a database moves from one valid state to another after a transaction, maintaining data integrity.  
-- **Isolation** ensures that concurrent transactions do not interfere with each other, preserving correctness.  
-- **Durability** ensures that once a transaction is committed, its changes are permanently saved, even in the event of a system failure.  
+- **Atomicity** ensures that all operations in a transaction either complete successfully or do not occur at all, preventing partial updates.
+- **Consistency** guarantees that a database moves from one valid state to another after a transaction, maintaining data integrity.
+- **Isolation** ensures that concurrent transactions do not interfere with each other, preserving correctness.
+- **Durability** ensures that once a transaction is committed, its changes are permanently saved, even in the event of a system failure.
 
-### Error Handling
+## Error Handling
 
 Proper error handling is crucial for building robust applications.
 
-#### Catching Exceptions
+### Catching Exceptions
 
 Use try-except blocks to handle exceptions gracefully.
 
@@ -235,7 +227,7 @@ except psycopg2.Error as e:
     print(f"Database error: {e}")
 ```
 
-#### Logging Errors
+### Logging Errors
 
 Logging errors helps in diagnosing issues, especially in production environments.
 
@@ -252,7 +244,7 @@ except Exception as e:
     logging.error(f"Error executing query: {e}")
 ```
 
-#### Retrying Failed Operations
+### Retrying Failed Operations
 
 Implement retry logic for transient errors like network issues.
 
@@ -273,9 +265,9 @@ for attempt in range(max_retries):
             raise
 ```
 
-### Best Practices
+## Best Practices
 
-#### Perform Data Processing in the Database
+### Perform Data Processing in the Database
 
 **Why**:
 
@@ -299,15 +291,15 @@ cursor.execute("SELECT * FROM orders WHERE amount > %s;", (1000,))
 large_orders = cursor.fetchall()
 ```
 
-#### Implement Permission Checking via SQL
+### Implement Permission Checking via SQL
 
 Enforce permissions at the database level for consistency and security.
 
 **Methods**:
 
-- **Views** allow the creation of predefined queries that expose only permitted data to users.  
-- **Stored Procedures** encapsulate complex operations into reusable database functions.  
-- **Row-Level Security** provides control over access to specific rows in a table, available in databases like PostgreSQL.  
+- **Views** allow the creation of predefined queries that expose only permitted data to users.
+- **Stored Procedures** encapsulate complex operations into reusable database functions.
+- **Row-Level Security** provides control over access to specific rows in a table, available in databases like PostgreSQL.
 
 **Example of a View**:
 
@@ -318,15 +310,15 @@ SELECT id, username, email FROM users WHERE active = TRUE;
 GRANT SELECT ON active_users TO regular_user_role;
 ```
 
-#### Use Object-Relational Mapping (ORM)
+### Use Object-Relational Mapping (ORM)
 
 ORMs allow you to interact with the database using objects instead of raw SQL.
 
 **Benefits**:
 
-- **Productivity** improves as ORMs reduce the need for repetitive boilerplate code in database interactions.  
-- **Maintainability** is improved through centralized models that represent database tables in code.  
-- **Database Agnostic** design allows easier switching between different database systems without major code changes.  
+- **Productivity** improves as ORMs reduce the need for repetitive boilerplate code in database interactions.
+- **Maintainability** is improved through centralized models that represent database tables in code.
+- **Database Agnostic** design allows easier switching between different database systems without major code changes.
 
 **Popular ORMs**:
 
@@ -355,15 +347,15 @@ engine = create_engine('sqlite:///users.db')
 Base.metadata.create_all(engine)
 ```
 
-#### Treat SQL as an API
+### Treat SQL as an API
 
 Expose specific database functionalities securely.
 
 **Methods**:
 
-- **Stored Procedures** encapsulate complex logic within the database, enabling reusable and secure operations.  
-- **APIs** provide an indirect way to interact with the database, often using RESTful methods for controlled access.  
-- **Database Roles and Permissions** help restrict and manage user access based on their responsibilities.  
+- **Stored Procedures** encapsulate complex logic within the database, enabling reusable and secure operations.
+- **APIs** provide an indirect way to interact with the database, often using RESTful methods for controlled access.
+- **Database Roles and Permissions** help restrict and manage user access based on their responsibilities.
 
 **Example of a Stored Procedure in MySQL**:
 
@@ -378,12 +370,12 @@ END //
 DELIMITER ;
 ```
 
-#### Secure Database Connections and Credentials
+### Secure Database Connections and Credentials
 
-- **Use Environment Variables** to store credentials securely instead of hard-coding them in the application.  
-- **Encrypt Connections** with SSL/TLS to ensure data transmission is secure.  
-- **Restrict Access** by limiting database connectivity to only necessary hosts.  
-- **Regularly Update Credentials** to enhance security by periodically changing passwords.  
+- **Use Environment Variables** to store credentials securely instead of hard-coding them in the application.
+- **Encrypt Connections** with SSL/TLS to ensure data transmission is secure.
+- **Restrict Access** by limiting database connectivity to only necessary hosts.
+- **Regularly Update Credentials** to enhance security by periodically changing passwords.
 
 **Example**:
 
@@ -399,20 +391,20 @@ conn = psycopg2.connect(
 )
 ```
 
-#### Handle Errors and Exceptions Gracefully
+### Handle Errors and Exceptions Gracefully
 
 Ensure your application remains stable under unexpected conditions.
 
-- **User-Friendly Messages** help inform users about issues without revealing sensitive details.  
-- **Fallback Mechanisms** provide alternative solutions or retry options to ensure application reliability.  
-- **Alerting** ensures administrators are notified promptly about critical issues for timely resolution.  
+- **User-Friendly Messages** help inform users about issues without revealing sensitive details.
+- **Fallback Mechanisms** provide alternative solutions or retry options to ensure application reliability.
+- **Alerting** ensures administrators are notified promptly about critical issues for timely resolution.
 
-#### Monitor and Analyze Database Performance
+### Monitor and Analyze Database Performance
 
 Regularly assess performance to optimize and prevent issues.
 
-- **Database Logs** are useful for analyzing slow queries and identifying performance bottlenecks.  
-- **Monitoring Software** such as New Relic and Datadog provides insights into database performance and health.  
+- **Database Logs** are useful for analyzing slow queries and identifying performance bottlenecks.
+- **Monitoring Software** such as New Relic and Datadog provides insights into database performance and health.
 - **Query Profiling** with tools like `EXPLAIN` helps understand how queries are executed and optimized.
 
 **Example of Query Profiling**:
@@ -421,15 +413,15 @@ Regularly assess performance to optimize and prevent issues.
 EXPLAIN SELECT * FROM users WHERE email = 'john@example.com';
 ```
 
-#### Continuously Review and Refactor Code
+### Continuously Review and Refactor Code
 
 Maintain code quality and adapt to changing requirements.
 
-- **Code Reviews** involve peer evaluations to identify and address potential issues in the code.  
-- **Automated Testing** ensures reliability by using unit and integration tests to validate functionality.  
-- **Refactoring** focuses on regularly improving the structure and maintainability of the code.  
+- **Code Reviews** involve peer evaluations to identify and address potential issues in the code.
+- **Automated Testing** ensures reliability by using unit and integration tests to validate functionality.
+- **Refactoring** focuses on regularly improving the structure and maintainability of the code.
 
-#### Use Migrations for Schema Changes
+### Use Migrations for Schema Changes
 
 Manage database schema changes systematically.
 
@@ -445,3 +437,11 @@ Manage database schema changes systematically.
 alembic revision --autogenerate -m "Added new column to users"
 alembic upgrade head
 ```
+
+## Review questions
+
+1. What is database caching, and how does it enhance the performance and scalability of applications?
+2. What are the different caching strategies, such as in-memory caching, client-side caching, and server-side caching, and when is each type most effectively utilized?
+3. How do caching techniques like query result caching, object caching, database buffer caching, and prepared statement caching improve database performance? Provide examples of each.
+4. What are the primary cache invalidation strategies, including Time-to-Live (TTL), event-based invalidation, and manual invalidation, and how do they help maintain data consistency between the cache and the underlying database?
+5. What are the best practices for implementing database caching, such as selecting which data to cache, setting appropriate TTL values, monitoring cache performance, and ensuring the security of cached data?

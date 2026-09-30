@@ -1,229 +1,70 @@
-## Consistency in Database Transactions
+# Consistency: Preserve the Rules That Make Data Valid
 
-Consistency is a principle in database systems that ensures data remains accurate, valid, and reliable throughout all transactions. When a transaction occurs, the database moves from one consistent state to another, always adhering to the predefined rules and constraints set within the database schema. This means that any data written to the database must satisfy all integrity constraints, such as data types, unique keys, and relationships.
+In ACID, **consistency** means that correct transactions take the database from a valid state to another valid state. A valid state satisfies the system's required rules. The database enforces declared constraints; the application must correctly implement rules that are not fully expressed by those constraints.
 
-Imagine the database as an organized library. Every book (data entry) has a specific place, and any new book added must fit into the system without disrupting the existing order. Consistency ensures that the library remains organized and every book is where it should be, both before and after any changes.
+This use of “consistency” concerns valid data. [Eventual consistency](../06_distributed_databases/07_eventual_consistency.md) concerns when separate copies agree. The same word describes different questions.
 
-```
-Valid State before Transaction
-   +------------------+
-   |    Valid DB      |
-   | (Integrity OK)   |
-   +--------+---------+
-            | Transaction executes
-            V
- +-------------------------+
- |  Transaction Processing |
- |   (apply operations,    |
- |  enforce constraints)   |
- +------------+------------+
-            |
-            V
-Valid State after Transaction
-   +------------------+
-   |    Valid DB      |
-   | (Integrity OK)   |
-   +------------------+
-```
+## Name the rules before choosing a mechanism
 
-After reading the material, you should be able to answer the following questions:
+For the bookstore, “the data should be correct” is too vague. These rules are specific enough to test:
 
-1. What is consistency in database transactions, and how does it ensure that data remains accurate and reliable throughout all transactions?
-2. Why is consistency important for preserving data integrity and preventing errors and conflicts within a database system?
-3. How do unique constraints, foreign key relationships, and domain constraints contribute to maintaining consistency in a database?
-4. What are transaction isolation levels, and how do they impact the consistency of data when multiple transactions occur concurrently?
-5. How do concurrency control techniques like locking mechanisms, optimistic concurrency control, and multi-version concurrency control (MVCC) help uphold consistency in database transactions?
+| Rule | Possible enforcement |
+|---|---|
+| Every customer has a distinct email | `UNIQUE` and `NOT NULL` |
+| Each order references an existing customer | `FOREIGN KEY` and `NOT NULL` |
+| Stock cannot be negative | `CHECK (stock >= 0)` and `NOT NULL` |
+| A purchased quantity is positive | `CHECK (quantity > 0)` and `NOT NULL` |
+| A successful checkout records both its stock change and its items | Correct transaction logic |
 
-### The Importance of Consistency
+A **constraint** is a rule declared in the schema that the database checks when data changes. An **invariant** is any condition that must remain true as the system operates. An invariant may be implemented by a constraint, transaction logic, or both.
 
-Maintaining consistency in a database is crucial for several reasons. It preserves the integrity of the data, ensures that all transactions lead to valid states, and prevents errors that could arise from invalid or conflicting data entries.
+## Test a declared rule
 
-#### Preserving Data Integrity
+Use the fresh [bookstore setup](../03_sql/01_intro_to_sql.md). Product 10 starts with stock 5 and has a nonnegative-stock constraint.
 
-Consistency ensures that all data within the database adheres to the rules defined by the database schema. This includes data types, uniqueness, referential integrity, and other constraints. By enforcing these rules, the database prevents anomalies like duplicate entries, invalid references, or incorrect data formats.
-
-#### Preventing Errors and Conflicts
-
-By checking each transaction against the defined constraints, the database can detect and prevent operations that would lead to an inconsistent state. This proactive error prevention is essential for maintaining the reliability and correctness of the data over time.
-
-### Real-World Examples
-
-To better understand how consistency works in practice, let's explore some scenarios where this principle plays a critical role.
-
-#### Enforcing Unique Constraints
-
-Consider a social media platform where each user must have a unique username. When a new user attempts to register, the database checks whether the desired username already exists.
-
-If someone tries to register with the username "alexsmith" and that username is already taken, the database enforces the unique constraint by rejecting the new entry. This prevents duplicate usernames and ensures that each user can be uniquely identified.
-
-#### Maintaining Foreign Key Relationships
-
-Imagine an online store that manages orders and products. Each order includes a product ID that references the products available in the inventory.
-
-When an order is placed, the database verifies that the product ID exists in the products table. If an attempt is made to create an order with a non-existent product ID, the database rejects the transaction. This maintains consistency by ensuring all orders reference valid products.
-
-#### Applying Domain Constraints
-
-Suppose a banking system requires that account balances never fall below zero. The database enforces a constraint that prevents any transaction from reducing an account balance into the negative.
-
-If a withdrawal transaction attempts to deduct more money than is available in the account, the database disallows the transaction. This ensures that all account balances remain within acceptable limits, maintaining the financial integrity of the system.
-
-### Mechanisms for Ensuring Consistency
-
-Databases employ various mechanisms to maintain consistency, especially when handling multiple transactions concurrently. These mechanisms help prevent conflicts and ensure that all data modifications adhere to the established rules.
-
-#### Transaction Isolation Levels
-
-Transaction isolation defines how and when the changes made by one transaction become visible to others. Different isolation levels offer a balance between consistency and performance.
-
-- The **Read Uncommitted** isolation level allows transactions to access data modified by other transactions before they are committed, increasing the risk of dirty reads.
-- At the **Read Committed** level, a transaction can only access data that has been committed, avoiding dirty reads but still permitting non-repeatable reads.
-- The **Repeatable Read** level ensures that once a transaction reads a data item, subsequent reads of the same item will yield the same value, eliminating non-repeatable reads but not phantom reads.
-- The **Serializable** isolation level provides complete transaction isolation, preventing dirty reads, non-repeatable reads, and phantom reads, ensuring maximum data consistency.
-
-By choosing the appropriate isolation level, applications can ensure the necessary degree of consistency based on their specific requirements.
-
-#### Concurrency Control Techniques
-
-To manage concurrent transactions, databases implement concurrency control methods that coordinate access to data.
-
-##### Locking Mechanisms
-
-Locking restricts access to data items during a transaction.
-
-- **Shared Locks** enable multiple transactions to read the same data item simultaneously while restricting any transaction from modifying it.
-- **Exclusive Locks** grant a single transaction the ability to read and modify a data item, preventing all other transactions from accessing it until the lock is released.
-
-For example, if a transaction is updating a customer's address, an exclusive lock ensures that no other transaction can read or modify that customer's data until the update is complete.
-
-##### Optimistic Concurrency Control
-
-Optimistic concurrency control assumes that transaction conflicts are rare and allows transactions to proceed without locking resources.
-
-- Transactions execute without immediate interference.
-- Before committing, the database checks for conflicts.
-- If a conflict is detected, the transaction is rolled back and can be retried.
-
-This approach can improve performance in systems where data conflicts are infrequent.
-
-##### Multi-Version Concurrency Control (MVCC)
-
-MVCC allows multiple versions of data to exist simultaneously, enhancing concurrency without significant locking.
-
-- Each transaction works with a snapshot of the data at a specific point in time.
-- Writers create new versions of data items rather than overwriting them.
-- Readers access the version of data that was committed before their transaction began.
-
-This method reduces contention between reading and writing transactions, maintaining consistency without heavy locking.
-
-### Visualizing Consistency in Action
-
-Consistency is about making sure the data in your database always follows the rules you define—things like valid references, correct relationships, and logical constraints. If a transaction would break any of these rules, the database stops it to keep data consistent.
-
-```
-[Begin Transaction]
-         |
-     [Perform Operations]
-         |
-[Check Constraints and Rules]
-         |
-[Constraints Satisfied?]--- No ---> [Transaction Fails]
-         |
-         Yes
-         |
-   [Transaction Can Proceed]
+```sql
+UPDATE products SET stock = -1 WHERE product_id = 10;
 ```
 
-This simplified diagram shows that each operation in a transaction is checked against the database’s integrity rules (constraints). If an operation would violate those rules—like inserting a duplicate unique key or referencing a non-existent row—the transaction is **not** allowed to finalize. When a transaction proceeds successfully, it means the database remains in a valid, consistent state.
+This statement is deliberately invalid. SQLite rejects it with a check-constraint failure; it does not store stock -1. Run it on its own, rather than including it in a script expected to complete successfully.
 
-### Consistency in SQL Transactions
-
-In SQL, consistency is maintained through mechanisms like constraints and the schema design:
-
-- **Constraints** (PRIMARY KEY, FOREIGN KEY, UNIQUE, CHECK, etc.) define what valid data looks like.
-- **Schema Rules** (like data types and relationships) enforce logical correctness.  
-
-By applying these consistently, any data change is automatically verified. If the change fails, the database prevents it from being fully applied, ensuring the data remains correct and “consistent” at all times.
-
-### Defining Constraints in Tables
-
-Constraints are embedded into your table definitions to ensure any data written matches your rules:
-
-- **Primary Key**: Ensures each row has a unique identifier. This prevents ambiguity and keeps data references accurate.
-- **Unique Constraint**: Prohibits duplicate values in specified columns, enforcing uniqueness.
-- **Foreign Key**: Requires rows in one table to match valid entries in another table. This keeps relationships consistent and prevents “orphan” data.
-- **Check Constraint**: Forces values to match some logical condition, such as “salary must be greater than zero.”
-- **Not Null**: Disallows empty fields in columns where a value is required.
-
-### Example: Enforcing Unique and Foreign Key Constraints
-
-Below is a schema for `users` and `orders`:
-
-```
-CREATE TABLE users (
-    user_id INT PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL
-);
-
-CREATE TABLE orders (
-    order_id INT PRIMARY KEY,
-    user_id INT NOT NULL,
-    order_date DATE NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
-);
+```sql
+SELECT stock FROM products WHERE product_id = 10;
 ```
 
-#### How Consistency Is Preserved
+The value is still 5. The constraint protects this rule even if an application sends a bad update.
 
-- **Unique Columns**: The database will refuse any new `username` or `email` if it already exists in `users`. This safeguards against duplicate records.
-- **Foreign Key Link**: Each `orders.user_id` must be a valid `users.user_id`. If you attempt to insert an order tied to a non-existent user, the database won’t allow it.
+`CHECK (stock >= 0)` alone does not reject `NULL` in SQL: a check generally rejects a false result, while an unknown result is allowed. `NOT NULL` supplies the separate requirement that a value be present. Likewise, foreign-key enforcement must actually be enabled; the SQLite setup uses `PRAGMA foreign_keys = ON` for each connection.
 
-So, any data you insert must keep these relationships correct. If you try to break these rules, the operation is blocked, preserving consistency.
+## A valid row can still belong to an invalid workflow
 
-### Example: Transaction Checking Consistency
+Consider decreasing stock by one and committing without creating an order. Every remaining row may satisfy its keys and checks. Nevertheless, the checkout's business rule has been violated.
 
-Let’s say you want to place an order:
+The engine cannot infer that every stock reduction must correspond to a sale: stock might also decrease because a damaged book was removed. The application needs a clearly defined operation, the right transaction boundary, and suitable concurrency control.
 
-```
-BEGIN TRANSACTION;
+**Atomicity** makes changes an all-or-nothing unit. **Consistency** asks whether that unit performs a valid change. A transaction can atomically deduct the wrong quantity.
 
-INSERT INTO orders (order_id, user_id, order_date)
-VALUES (101, 1, '2023-11-24');
+## A check followed by a write can race
 
-COMMIT;
-```
+Suppose one copy remains. Two transactions each read stock 1 and independently decide that a sale is allowed. Their decisions were based on data that can change before they write.
 
-For this transaction to be consistent:
-1. **Is `user_id = 1` valid in `users`?**  
-2. **Is `order_id = 101` unique in `orders`?**
+For a simple stock reservation, combine the condition and modification:
 
-If these conditions hold true, the data remains valid—no broken links, no duplicates—so the database moves to a new consistent state. If any condition fails, the database disallows the operation to keep the existing data correct.
-
-### Using Check Constraints
-
-Check constraints let you define more specific rules within your table, ensuring logical accuracy:
-
-```
-CREATE TABLE employees (
-    employee_id INT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    salary DECIMAL(10, 2) CHECK (salary > 0),
-    department VARCHAR(50) CHECK (department IN ('HR', 'Sales', 'IT', 'Finance'))
-);
+```sql
+UPDATE products
+SET stock = stock - 1
+WHERE product_id = 10 AND stock >= 1;
 ```
 
-- **Salary Must Be Greater Than 0**: Any attempt to set `salary` to zero or a negative number is rejected.
-- **Department Must Be One of the Listed Values**: Only `HR`, `Sales`, `IT`, or `Finance` are allowed. Anything else fails the check.
+Continue only if one row changed. Handle any concurrency failure according to the engine and retry policy. Keep the order inserts in the same transaction. This avoids relying on an earlier, separate availability check.
 
-Whenever you insert or update a row, the database verifies these conditions. If any are violated, the data never enters an inconsistent state; it’s simply not accepted.
+More complex invariants can span multiple rows. For example, limiting a customer's total unpaid orders cannot generally be enforced by an ordinary row-level `CHECK`. The design may require a different schema, explicit locking, or serializable isolation with retries. See [Isolation](04_isolation.md) and the [double booking problem](../07_concurrency_control/04_double_booking_problem.md).
 
-### Atomicity vs. Consistency
+## Check your understanding
 
-- **Atomicity** focuses on the “all-or-nothing” aspect of a transaction. If any part of a transaction fails, the entire transaction is rolled back, leaving the database unchanged. This is about whether the changes happen as one complete unit or not at all.
-- **Consistency** ensures that any data written to the database follows all the predefined rules and integrity constraints. Consistency is about making sure the end result of a transaction does not break the logical correctness of the database.
+1. Why are `CHECK` and `NOT NULL` separate requirements?
+2. Can a database satisfy every declared constraint while a checkout is still wrong?
+3. What changes when the stock test becomes part of the update?
+4. How does ACID consistency differ from replicas eventually agreeing?
 
-In short:
-
-- **Atomicity** protects your database from partial updates if something goes wrong.
-- **Consistency** guarantees that any final state of the database is valid with respect to the rules you set.
+Next: [Isolation](04_isolation.md) explains what concurrent transactions can observe.

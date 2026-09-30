@@ -1,16 +1,8 @@
-## Partitioning
+# Partitioning
 
 Partitioning involves dividing a large database table into smaller, more manageable pieces called partitions. This method helps improve query performance because the database can access only the relevant partitions when executing queries, rather than scanning the entire table. It also simplifies data management tasks like backups, archiving, and purging old data.
 
-After reading the material, you should be able to answer the following questions:
-
-1. What is partitioning and how does it enhance database performance and manageability?
-2. What are the different types of partitioning methods and in what scenarios are they most effectively used?
-3. How does range partitioning work, and what are its advantages and potential drawbacks?
-4. What best practices should be followed to optimize the use of partitioning in a database environment?
-5. How do composite partitioning strategies combine multiple partitioning methods, and what benefits do they offer?
-
-### What do we mean by Partitioning?
+## What do we mean by Partitioning?
 
 Imagine a colossal table that stores millions of rows. Searching through this massive table every time can be time-consuming and inefficient. Partitioning slices the table into smaller sections based on specific criteria, allowing the database engine to quickly locate and retrieve the data it needs.
 
@@ -30,17 +22,17 @@ Imagine a colossal table that stores millions of rows. Searching through this ma
 
 In this diagram, the large table is divided into multiple parts. Part 1 contains rows 1 to 2000, Part 2 holds rows 2001 to 4000, and so on. This approach allows the database to target specific partitions during queries, reducing the amount of data it needs to process.
 
-### Purpose of Partitioning
+## Purpose of Partitioning
 
 The main goal of partitioning is to optimize database performance and enhance manageability, especially for large tables. By dividing a table into smaller partitions, queries can execute more efficiently because they only need to access the relevant partitions. This reduces query response times and improves overall system performance.
 
 Partitioning also simplifies maintenance tasks. For example, if you need to archive data from a certain time period, you can easily identify and handle the specific partition without affecting the rest of the table. This makes tasks like backups, archiving, and purging more straightforward and less disruptive.
 
-### Types of Partitioning
+## Types of Partitioning
 
 There are several partitioning methods, each suited to different types of data and query patterns. Let's explore some of the most common partitioning strategies.
 
-#### Range Partitioning
+### Range Partitioning
 
 Range partitioning splits a table based on a range of values in a particular column. This method is ideal for time-based data or continuous numerical data. For instance, you might partition sales data by date or customer data by age groups.
 
@@ -88,7 +80,7 @@ Using range partitioning on the "Hire Date" column, we can divide this table int
 
 With this setup, queries targeting employees hired in a specific year can quickly access the relevant partition, improving query performance.
 
-#### List Partitioning
+### List Partitioning
 
 List partitioning divides a table based on a predefined list of values in a column. It's suitable for categorical data, such as departments or regions.
 
@@ -121,7 +113,7 @@ Using the same employee table, we can partition it based on the "Department" col
 
 List partitioning allows queries that target a specific department to access only the relevant partition, reducing query execution time.
 
-#### Hash Partitioning
+### Hash Partitioning
 
 Hash partitioning uses a hash function on a column to distribute rows evenly across partitions. This method is useful when there's no clear range or list partitioning criteria and helps balance the data load.
 
@@ -154,7 +146,7 @@ Suppose we apply a hash function to the "ID" column using modulus 3 (hash(ID) mo
 
 Hash partitioning ensures that data is evenly distributed, which can improve performance for queries that access data randomly.
 
-#### Key Partitioning
+### Key Partitioning
 
 Key partitioning is similar to hash partitioning but specifically uses the primary key columns for the hash function. This method is effective when queries frequently access data based on primary keys.
 
@@ -187,17 +179,17 @@ Using the employee table, we can partition it based on ranges of the "ID" primar
 
 Key partitioning can improve performance for queries that target specific ranges of primary keys.
 
-#### Composite Partitioning
+### Composite Partitioning
 
 Composite partitioning combines two or more partitioning methods, such as range-hash or range-list partitioning. This approach is suitable for complex data and query requirements, allowing for more granular data management and performance optimization.
 
 For example, a table might first be range-partitioned by date and then hash-partitioned within each date range partition. This method provides the benefits of both partitioning strategies, catering to specific query patterns and data distribution needs.
 
-### Example Table: Historical Stock Prices
+## Example Table: Historical Stock Prices
 
 When managing large volumes of time-series financial data, partitioning can dramatically improve query performance and maintenance operations. Below is an example of how to set up a partitioned MySQL/MariaDB table for daily OHLC (Open-High-Low-Close) stock prices by year.
 
-#### Create the Partitioned Table
+### Create the Partitioned Table
 
 Begin by defining your main table schema and specifying a partitioning strategy. Here we use **RANGE** partitioning on the integer expression `YEAR(trade_date)`, creating one partition per calendar year plus a catch-all for future dates.
 
@@ -226,9 +218,9 @@ PARTITION BY RANGE ( YEAR(trade_date) ) (
 ```
 
 * **Partition key**: `YEAR(trade_date)` must appear in every UNIQUE/PRIMARY index (it’s already in the primary key).
-* **Partitions**: p2018…p2024 cover past years; **p_future** holds any dates from 2025 onward.
+* **Partitions**: p2018…p2024 cover past years; p_future holds any dates from 2025 onward.
 
-#### SHOW CREATE TABLE
+### SHOW CREATE TABLE
 
 After creating the table, verify that the partitioning clause is in place by inspecting the full DDL. This ensures your partition definitions are correctly applied.
 
@@ -236,7 +228,7 @@ After creating the table, verify that the partitioning clause is in place by ins
 SHOW CREATE TABLE stock_prices\G
 ```
 
-#### INFORMATION_SCHEMA.PARTITIONS
+### INFORMATION_SCHEMA.PARTITIONS
 
 MySQL exposes partition metadata in `INFORMATION_SCHEMA.PARTITIONS`. Querying this view lets you confirm partition names, methods, expressions, and boundary values.
 
@@ -257,7 +249,7 @@ WHERE TABLE_SCHEMA = DATABASE()
 | …               | …      | …                  | …           |
 | p_future       | RANGE  | YEAR(`trade_date`) | MAXVALUE    |
 
-#### Querying with Partition Pruning
+### Querying with Partition Pruning
 
 Partition pruning tells the optimizer to scan only relevant partitions based on the `WHERE` clause. This avoids full-table scans and speeds up queries dramatically for time-restricted filters.
 
@@ -271,7 +263,7 @@ WHERE trade_date BETWEEN '2022-01-01' AND '2022-12-31'
 
 The `EXPLAIN` output will show `partitions: p2022`, indicating only that partition is scanned before applying the `ticker='AAPL'` filter.
 
-#### Adding Next Year’s Partition
+### Adding Next Year’s Partition
 
 As the calendar rolls over, you need to split the catch-all partition to include a new yearly partition and maintain the future placeholder. Execute this once at the start of each year.
 
@@ -283,7 +275,7 @@ ALTER TABLE stock_prices
   );
 ```
 
-#### Dropping an Out-of-Scope Year
+### Dropping an Out-of-Scope Year
 
 To remove historical data in bulk (e.g., before 2018), drop the corresponding partition. This operation is instantaneous and avoids expensive row-by-row deletes.
 
@@ -292,7 +284,7 @@ ALTER TABLE stock_prices
   DROP PARTITION p2018;
 ```
 
-#### Automating with EVENTS
+### Automating with EVENTS
 
 MariaDB EVENTS can execute partition management tasks on a schedule, reducing manual overhead. Here are two example events:
 
@@ -322,14 +314,14 @@ DO
   CALL drop_old_stock_partitions(@cutoff);
 ```
 
-#### Effects on “Normal” Queries
+### Effects on “Normal” Queries
 
 * **No query syntax change**: You still `SELECT * FROM stock_prices WHERE …`.
 * Date‐range filters only scan relevant partitions.
 * Secondary indexes (e.g. on `ticker`) are local to each partition.
 * **Fast maintenance**: Archiving or deleting old data is a single `DROP PARTITION`.
 
-### Best Practices for Partitioning
+## Best Practices for Partitioning
 
 To make the most of partitioning, it's important to consider your data characteristics and query patterns.
 
@@ -349,3 +341,11 @@ PARTITION BY RANGE (TO_DAYS(trade_date)) (
   …
 );
 ```
+
+## Review questions
+
+1. What is partitioning and how does it enhance database performance and manageability?
+2. What are the different types of partitioning methods and in what scenarios are they most effectively used?
+3. How does range partitioning work, and what are its advantages and potential drawbacks?
+4. What best practices should be followed to optimize the use of partitioning in a database environment?
+5. How do composite partitioning strategies combine multiple partitioning methods, and what benefits do they offer?

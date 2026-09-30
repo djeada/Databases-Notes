@@ -1,225 +1,84 @@
-## Database Management Systems (DBMS)
+# What a Database Management System Does
 
-Database Management Systems, often abbreviated as DBMS, are software tools that facilitate the creation, management, and manipulation of databases. They serve as an intermediary between users or applications and the database itself, ensuring that data is consistently organized and remains easily accessible. For anyone involved in backend development, a solid grasp of various DBMS types is crucial for designing effective and efficient data management solutions.
+A **database** is the stored collection of data. A **database management system (DBMS)** is the software that interprets requests, checks rules, manages access, and maintains storage. In everyday speech, “database” often means both; separating them helps explain how an application works.
 
-```
-+-------------+       +-------------------+       +--------------+
-|             |       |                   |       |              |
-|   Clients   | <---> |       DBMS        | <---> |   Database   |
-|             |       |                   |       |              |
-+-------------+       +-------------------+       +--------------+
-```
+## Follow one bookstore request
 
-In the diagram above, clients interact with the DBMS to perform operations like querying or updating data, while the DBMS communicates directly with the database to execute these operations.
+Suppose Alice opens her order history:
 
-After reading the material, you should be able to answer the following questions:
-
-1. What are Database Management Systems (DBMS), and how do they function as intermediaries between clients and databases to facilitate data operations?
-2. What are the different types of DBMS, including Relational, Object-Oriented, Hierarchical, Network, and NoSQL systems, and what are their unique characteristics and use cases?
-3. How do various NoSQL database models—such as document-based, column-based, key-value, and graph-based databases—differ in structure and application, and what are their respective strengths and limitations?
-4. What key factors should be considered when selecting a DBMS for an application, including data structure, scalability, performance, consistency, availability, security, cost, community support, and operational complexity?
-5. How do SQL, NoSQL, and NewSQL databases compare in terms of data models, scalability, performance, consistency, availability, security, cost, community support, and operational complexity, and how can this comparison guide the choice of the most suitable DBMS for specific application needs?
-
-### Types of Database Management Systems
-
-There are several types of DBMS, each tailored to specific data storage needs and use cases. Understanding these types helps in selecting the most appropriate system for a given application.
-
-#### Relational Database Management Systems (RDBMS)
-
-Relational DBMS store data in structured formats using tables, which consist of rows and columns. Each table represents an entity, and relationships between tables are established through keys. This model relies on a predefined schema to maintain data integrity and uses Structured Query Language (SQL) for data manipulation.
-
-Imagine a simple online store database:
-
-```
-Table: Customers
-+----+-----------+------------------+
-| ID |   Name    |      Email       |
-+----+-----------+------------------+
-| 1  | Alice     | alice@example.com|
-| 2  | Bob       | bob@example.com  |
-+----+-----------+------------------+
-
-Table: Orders
-+---------+-----------+---------+
-| OrderID | CustomerID| Amount  |
-+---------+-----------+---------+
-| 101     | 1         | $250.00 |
-| 102     | 2         | $150.00 |
-+---------+-----------+---------+
+```text
+Browser --> Application --> DBMS --> Stored data
+Browser <-- Application <-- Query result
 ```
 
-In this example, the `Orders` table references the `Customers` table through the `CustomerID`, establishing a relationship between orders and customers.
+The browser asks the application for a page. The application sends a database query. The DBMS reads the relevant data and returns rows; the application turns those rows into a page.
 
-Popular RDBMS include MySQL, PostgreSQL, Oracle Database, and Microsoft SQL Server. They are ideal for applications requiring complex queries and transactions, such as financial systems, inventory management, and enterprise resource planning. These systems ensure data reliability through ACID (Atomicity, Consistency, Isolation, Durability) properties.
+A **client** is a program that sends requests to the DBMS. It could be the application, a command-line SQL shell, or an administration tool. The browser usually talks to the application, rather than connecting directly with unrestricted database credentials.
 
-#### Object-Oriented Database Management Systems (OODBMS)
+## Inside the DBMS
 
-Object-Oriented DBMS integrate database capabilities with object-oriented programming languages, allowing data to be stored as objects. This approach enables the database to store complex data structures directly, preserving relationships and behaviors defined in the application code.
+Consider this query:
 
-Consider a graphics application managing different shapes:
-
-```
-Class: Shape
-- Properties: color, position
-- Methods: draw(), move()
-
-Class: Circle extends Shape
-- Properties: radius
-- Methods: calculateArea()
-
-Class: Rectangle extends Shape
-- Properties: width, height
-- Methods: calculateArea()
+```sql
+SELECT order_id, order_date
+FROM orders
+WHERE customer_id = 1;
 ```
 
-An OODBMS can store instances of these classes, maintaining their properties and methods. This makes data retrieval and manipulation more efficient, especially for applications with complex data models.
+It assumes the `orders` table from the [introductory example](01_databases_intro.md).
 
-Examples of OODBMS are ObjectDB, db4o, and Versant Object Database. They are well-suited for applications in fields like computer-aided design (CAD), multimedia systems, and scientific research, where data relationships are intricate and performance is critical.
+The DBMS typically does several kinds of work:
 
-#### Hierarchical Database Management Systems (HDBMS)
+1. **Parse and check:** interpret the SQL and check that the table, columns, and permissions are valid.
+2. **Plan:** choose a way to find the rows, such as searching an index or scanning the table.
+3. **Execute:** read the data and apply the filter.
+4. **Return:** send the selected values back to the client.
 
-Hierarchical DBMS organize data in a tree-like structure, using parent-child relationships to represent data hierarchy. Each child record has only one parent, but a parent can have multiple children.
+A **query plan** describes the operations the engine chooses. An **index** is a separate access structure that can help it find matching rows. A **scan** examines rows or pages in a larger part of the data. Scanning is reasonable when the table is small or most rows are needed.
 
-Visualize an organizational chart:
+The application describes the desired result; it usually does not dictate every storage read. That separation lets an engine change its execution strategy as the amount of data changes.
 
-```
-Company
-|
-+-- Department A
-|   +-- Employee 1
-|   +-- Employee 2
-|
-+-- Department B
-    +-- Employee 3
-    +-- Employee 4
-```
+## Check rules when data changes
 
-In this structure, navigating from the company to employees follows a clear hierarchical path.
+If an application inserts an order for customer 99, a foreign-key rule can reject it when customer 99 does not exist. If two registrations use the same required unique email, a unique constraint can prevent the duplicate.
 
-IBM's Information Management System (IMS) is a classic example of an HDBMS. These systems are efficient for applications where data relationships are consistently hierarchical, such as file systems and reservation systems.
+A **constraint** is a rule declared in the database definition. Every writer that changes the relevant data is subject to it. Checking only in one web form leaves other writers, such as an import script, able to bypass that form's validation.
 
-#### Network Database Management Systems (NDBMS)
+The DBMS cannot infer every business rule. It does not know that an item is “available for sale” unless the design and transaction logic express what that means.
 
-Network DBMS extend the hierarchical model by allowing multiple relationships between records, forming a network structure. In this model, a child record can have more than one parent, enabling more complex data relationships.
+## Coordinate work that happens together
 
-Consider a university course registration system:
+Creating an order and reducing stock are related changes. A **transaction** allows the application to group them, commit the completed work, or roll it back if the workflow fails.
 
-```
-Student A
-|
-+-- Enrolled in --> Course X
-+-- Enrolled in --> Course Y
+Several clients can run transactions at the same time. **Concurrency control** governs their interaction. It prevents certain conflicting outcomes using locks, row versions, or conflict checks, depending on the engine and isolation level. Choosing correct transaction logic remains the application's responsibility.
 
-Student B
-|
-+-- Enrolled in --> Course Y
-+-- Enrolled in --> Course Z
-```
+## Keep useful data close to the processor
 
-Here, courses have multiple students, and students enroll in multiple courses, creating a many-to-many relationship.
+Reading persistent storage repeatedly is expensive. A DBMS commonly keeps recently used data pages in memory. A **page** is a storage unit containing records or parts of an index; a **buffer cache** holds pages already brought into memory.
 
-Examples of NDBMS include Integrated Data Store (IDS) and Raima Database Manager (RDM). They are useful in applications like supply chain management and network modeling, where data relationships are complex and interconnected.
+This explains why the same query can be faster on its second run: the required pages may already be cached. It does not mean the first result was incorrect or that every later request avoids storage work.
 
-#### NoSQL Database Management Systems
+## Recover after a failure
 
-NoSQL DBMS are designed to handle unstructured or semi-structured data with flexibility and scalability. They often sacrifice some ACID properties in favor of performance and distributed computing capabilities.
+Many engines record changes in a transaction log, a sequence of recovery information. After a crash, the log helps recover the appropriate committed state. A backup supplies a separately recoverable copy for situations such as accidental deletion or loss of live storage.
 
-##### Document-Based Databases
+Crash recovery and restoring a backup are related but different operations. The engine's guarantees depend on its configuration and storage, so recovery should be tested rather than assumed.
 
-These databases store data as documents, typically in formats like JSON or BSON. Each document contains all the information for an entity, which can include nested data structures.
+## Embedded software or a separate server?
 
-Example document for a user profile:
+| Deployment | How the application talks to it | Example |
+| --- | --- | --- |
+| Embedded | Calls a library inside the application process. | SQLite |
+| Client-server | Uses a connection to a separately running database service. | PostgreSQL or MySQL |
+| Managed service | Connects to database infrastructure operated partly by a provider. | A hosted PostgreSQL service |
 
-```
-{
-  "userID": "u123",
-  "name": "Alice",
-  "email": "alice@example.com",
-  "orders": [
-    {"orderID": "101", "amount": 250.00},
-    {"orderID": "103", "amount": 175.00}
-  ]
-}
-```
+A managed service still needs application-level design, permissions, and recovery decisions. An embedded engine still manages queries and transactions; it simply has no separate database server process.
 
-MongoDB and Couchbase are popular document-based databases. They are ideal for content management systems, blogging platforms, and applications where data models evolve frequently.
+## Check your understanding
 
-##### Column-Based Databases
+1. Where does the DBMS fit between an application and stored rows?
+2. Why can two executions of the same SQL use different plans?
+3. Why is a database constraint useful even when a form validates input?
+4. How are a buffer cache, transaction log, and backup different?
 
-Also known as wide-column stores, these databases store data in columns rather than rows, optimizing for large-scale data queries and aggregation.
-
-An example using time-series data:
-
-```
-Row Key: sensor1
-Columns:
-  - timestamp: 1627890000
-  - temperature: 22.5
-  - humidity: 45%
-
-Row Key: sensor2
-Columns:
-  - timestamp: 1627890000
-  - temperature: 23.0
-  - humidity: 50%
-```
-
-Apache Cassandra and Google Cloud Bigtable are examples of column-based databases. They are suited for applications like analytics platforms, time-series data storage, and big data processing.
-
-##### Key-Value Databases
-
-Key-Value stores are the simplest type of NoSQL databases, where data is stored as a collection of key-value pairs.
-
-Example in a caching scenario:
-
-```
-Key: "user_session_u123"
-Value: "{ 'userID': 'u123', 'loginTime': '2021-08-01T12:00:00Z' }"
-```
-
-Redis and Amazon DynamoDB (in key-value mode) are commonly used key-value databases. They excel in scenarios requiring fast data retrieval, like session management, caching, and real-time messaging.
-
-##### Graph-Based Databases
-
-Graph databases focus on the relationships between data points, representing data as nodes (entities) and edges (relationships).
-
-Example of social network connections:
-
-```
-(Node: User A) --[FRIENDS_WITH]--> (Node: User B)
-(Node: User A) --[LIKES]--> (Node: Post X)
-```
-
-Neo4j and Amazon Neptune are examples of graph databases. They are particularly effective for social networking platforms, recommendation engines, and fraud detection systems.
-
-### Factors to Consider When Selecting a DBMS
-
-Choosing the right DBMS involves evaluating several key factors to ensure it aligns with your application's requirements.
-
-1. When choosing a database, consider the **data structure and complexity**, evaluating whether your data is structured, semi-structured, or unstructured, and if you need to support transactions and complex queries.  
-2. Assess your **scalability needs** by determining if vertical scalability through hardware upgrades or horizontal scalability by adding more machines is required, with NoSQL databases often excelling at the latter.  
-3. Evaluate your **performance requirements**, including the desired read/write speeds, latency, and throughput, noting that key-value stores excel in high-speed retrieval while relational databases handle complex queries efficiently.  
-4. The **consistency and reliability of data** should align with your application's needs, as some can tolerate eventual consistency, while others demand strong, immediate consistency.  
-5. Consider **availability and fault tolerance**, prioritizing systems with built-in replication and failover mechanisms to minimize downtime and ensure continuous operation.  
-6. Ensure the chosen database offers **security features** such as authentication, authorization, encryption, and auditing to protect sensitive data.  
-7. Analyze the **cost and licensing implications**, including factors like licensing fees, hardware investments, and ongoing maintenance costs, with open-source options potentially reducing expenses but requiring more internal resources.  
-8. A strong **community and support network** can significantly ease troubleshooting and development, making systems with active user bases and professional support desirable.  
-9. Factor in **operational complexity**, considering how easy it is to set up, administer, back up, and recover the system, with some databases offering comprehensive tools and others requiring manual effort.  
-
-### Comparison of Different Database Management Systems
-
-Here's a comparison highlighting key aspects of SQL, NoSQL, and NewSQL databases:
-
-| Feature                 | SQL Databases (e.g., MySQL, PostgreSQL)         | NoSQL Databases (e.g., MongoDB, Cassandra)       | NewSQL Databases (e.g., CockroachDB, Google Spanner) |
-|-------------------------|-------------------------------------------------|--------------------------------------------------|------------------------------------------------------|
-| **Data Model**          | Structured tables with predefined schemas       | Flexible schemas, suitable for unstructured data | Combines SQL features with NoSQL scalability         |
-| **Scalability**         | Vertical scaling, limited horizontal scaling    | Horizontal scaling, distributed architecture     | Horizontal scaling with strong consistency           |
-| **Performance**         | Optimized for complex queries and transactions  | High throughput, low latency for read/write      | High performance with ACID compliance                |
-| **Consistency**         | Strong consistency (ACID transactions)          | Eventual or tunable consistency levels           | Strong consistency across distributed systems        |
-| **Availability**        | High availability with replication/failover     | Built-in redundancy and fault tolerance          | Designed for minimal downtime                        |
-| **Security**            | Robust security features, granular access control| Varies by system                                 | Enterprise-level security features                   |
-| **Cost and Licensing**  | Open-source and commercial options              | Often open-source, with enterprise editions      | Mixed models, potentially higher costs               |
-| **Community Support**   | Large, established communities                  | Growing communities                              | Emerging communities with increasing support         |
-| **Operational Complexity** | Mature tools for management and maintenance  | Varies, tooling improving over time              | Designed for ease of operation                       |
-
-This table serves as a guideline to help decide which DBMS aligns best with your application's specific needs.
+Continue with [data models](04_data_models.md) to turn a description of a business into entities, relationships, and tables.

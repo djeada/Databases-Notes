@@ -1,16 +1,16 @@
-## Window Functions in SQL
+# Window Functions in SQL
 
-Window functions in SQL are powerful tools that allow you to perform calculations across a set of table rows that are related to the current row. Unlike aggregate functions, window functions do not collapse rows into a single output row; instead, they retain the individual row identities while providing additional analytical capabilities. Window functions are essential for advanced data analysis, reporting, and generating insights that require comparisons or calculations across related rows.
+A window function calculates a value across rows related to the current row while retaining those rows in the result. Use it for rankings, running totals, and comparisons with earlier or later rows. `OVER` defines the partition, order, and, where applicable, frame.
 
-After reading the material, you should be able to answer the following questions:
+## Read the window in three parts
 
-1. What are window functions in SQL, and how do they differ from aggregate functions?
-2. What are some common window functions, and what are their typical use cases?
-3. How does the `OVER` clause define the window for window functions, and what components can it include?
-4. What are the advantages and limitations of using window functions compared to traditional methods like self-joins?
-5. What best practices should be followed when implementing window functions in SQL to ensure optimal performance and maintainability?
+An aggregate with `GROUP BY ProductID` produces one result row per product. A windowed sum can put that same product total beside **each original sale**. It calculates across related rows without collapsing them.
 
-### Common Window Functions
+Inside `OVER`, `PARTITION BY` chooses related rows, `ORDER BY` puts them in calculation order, and a **frame** selects which of those rows participate in the current calculation. A running total uses an expanding frame; a moving average can use a small frame around the current row. Ranking and offset functions use the partition and order with their own rules, rather than all behaving like framed sums.
+
+Read [aggregate functions](10_aggregate_functions.md) first. Start here with row numbering and running totals, then compare ranks, earlier/later values, and moving averages. The sales example below is a separate practice database.
+
+## Common Window Functions
 
 Here are some of the most commonly used window functions in SQL:
 
@@ -22,9 +22,40 @@ Here are some of the most commonly used window functions in SQL:
 - **`LAG()`**: Provides access to a preceding row’s data without the need for a self-join.
 - **Aggregate Window Functions**: Such as `SUM()`, `AVG()`, `COUNT()`, which perform aggregate calculations over a window.
 
-### Setting Up Example Tables
+## Setting Up Example Tables
 
-Suppose we have two tables: `Sales` and `Products`.
+Run this setup once in a **fresh SQLite database** with window-function support. Continue using this database throughout the chapter; the null-value section adds sale 11 explicitly.
+
+```sql
+CREATE TABLE Products (
+    ProductID INTEGER PRIMARY KEY,
+    ProductName TEXT NOT NULL,
+    Category TEXT NOT NULL
+);
+CREATE TABLE Sales (
+    SaleID INTEGER PRIMARY KEY,
+    ProductID INTEGER NOT NULL REFERENCES Products(ProductID),
+    SaleDate TEXT NOT NULL,
+    Quantity INTEGER,
+    Price REAL NOT NULL
+);
+INSERT INTO Products VALUES
+    (101, 'Widget A', 'Gadgets'), (102, 'Widget B', 'Gadgets'),
+    (103, 'Gizmo C', 'Widgets'), (104, 'Gizmo D', 'Widgets');
+INSERT INTO Sales VALUES
+    (1, 101, '2024-01-05', 10, 15.00),
+    (2, 102, '2024-01-07', 5, 25.00),
+    (3, 101, '2024-01-10', 20, 15.00),
+    (4, 103, '2024-01-12', 7, 30.00),
+    (5, 102, '2024-01-15', 10, 25.00),
+    (6, 101, '2024-01-20', 15, 15.00),
+    (7, 103, '2024-01-22', 5, 30.00),
+    (8, 104, '2024-01-25', 12, 20.00),
+    (9, 102, '2024-01-28', 8, 25.00),
+    (10, 104, '2024-01-30', 10, 20.00);
+```
+
+`Price` is the per-unit sale price. `REAL` demonstrates the calculations simply; use an intentional exact representation for production money. These statements produce the following initial data:
 
 **Sales Table**
 
@@ -50,7 +81,13 @@ Suppose we have two tables: `Sales` and `Products`.
 | 103       | Gizmo C         | Widgets        |
 | 104       | Gizmo D         | Widgets        |
 
-### Understanding the `OVER` Clause
+## Ordering and dialect assumptions
+
+Examples use window-capable SQL engines. Date-range `RANGE` frames and interval syntax are engine-specific. With tied dates, `ROW_NUMBER`, `LAG`, and `LEAD` need an additional unique ordering column such as `SaleID` for deterministic results. Preserve ties deliberately when demonstrating `RANK` and `DENSE_RANK`. A window's `ORDER BY` does not sort the final result.
+
+For running totals, specify a `ROWS` frame when you want one row at a time; the default ordered frame can include all peers sharing the ordering value. The later nullable-quantity examples assume sale 11 has been added to the initial sample.
+
+## Understanding the `OVER` Clause
 
 Window functions use the `OVER` clause to define the window or the set of rows the function should operate on. The `OVER` clause can include:
 
@@ -58,11 +95,11 @@ Window functions use the `OVER` clause to define the window or the set of rows t
 - **`ORDER BY`**: Defines the logical order of rows within each partition.
 - **Window Frame Specification**: Specifies the subset of rows within the partition for frame-based calculations (e.g., `ROWS BETWEEN`).
 
-### ROW_NUMBER Function
+## ROW_NUMBER Function
 
 The `ROW_NUMBER()` function assigns a unique sequential integer to rows within a partition, starting at 1 for the first row in each partition.
 
-#### Example: Assigning Row Numbers to Sales per Product
+### Example: Assigning Row Numbers to Sales per Product
 
 ```sql
 SELECT
@@ -97,14 +134,14 @@ ORDER BY
 - The `ROW_NUMBER()` function assigns a unique row number to each sale within its `ProductID` partition based on the `SaleDate`.
 - Useful for tasks like pagination or identifying specific rows within partitions.
 
-### RANK and DENSE_RANK Functions
+## RANK and DENSE_RANK Functions
 
 Both `RANK()` and `DENSE_RANK()` assign a rank to each row within a partition. The difference lies in how they handle ties.
 
 - **`RANK()`**: Assigns the same rank to tied rows but leaves gaps in the ranking sequence.
 - **`DENSE_RANK()`**: Assigns the same rank to tied rows without leaving gaps.
 
-#### Example: Ranking Sales by Quantity per Product
+### Example: Ranking Sales by Quantity per Product
 
 ```sql
 SELECT
@@ -113,8 +150,8 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    RANK() OVER (PARTITION BY ProductID ORDER BY Quantity DESC) AS Rank,
-    DENSE_RANK() OVER (PARTITION BY ProductID ORDER BY Quantity DESC) AS DenseRank
+    RANK() OVER (PARTITION BY ProductID ORDER BY CASE WHEN Quantity IS NULL THEN 1 ELSE 0 END, Quantity DESC) AS Rank,
+    DENSE_RANK() OVER (PARTITION BY ProductID ORDER BY CASE WHEN Quantity IS NULL THEN 1 ELSE 0 END, Quantity DESC) AS DenseRank
 FROM
     Sales
 ORDER BY
@@ -126,24 +163,24 @@ ORDER BY
 
 | SaleID | ProductID | SaleDate   | Quantity | Price | Rank | DenseRank |
 |--------|-----------|------------|----------|-------|------|-----------|
-| 101    | 101       | 2024-01-10 | 20       | 15.00 | 1    | 1         |
+| 3      | 101       | 2024-01-10 | 20       | 15.00 | 1    | 1         |
 | 6      | 101       | 2024-01-20 | 15       | 15.00 | 2    | 2         |
 | 1      | 101       | 2024-01-05 | 10       | 15.00 | 3    | 3         |
-| 102    | 102       | 2024-01-15 | 10       | 25.00 | 1    | 1         |
+| 5      | 102       | 2024-01-15 | 10       | 25.00 | 1    | 1         |
 | 9      | 102       | 2024-01-28 | 8        | 25.00 | 2    | 2         |
 | 2      | 102       | 2024-01-07 | 5        | 25.00 | 3    | 3         |
-| 103    | 103       | 2024-01-12 | 7        | 30.00 | 1    | 1         |
+| 4      | 103       | 2024-01-12 | 7        | 30.00 | 1    | 1         |
 | 7      | 103       | 2024-01-22 | 5        | 30.00 | 2    | 2         |
-| 104    | 104       | 2024-01-25 | 12       | 20.00 | 1    | 1         |
+| 8      | 104       | 2024-01-25 | 12       | 20.00 | 1    | 1         |
 | 10     | 104       | 2024-01-30 | 10       | 20.00 | 2    | 2         |
 
-- **`RANK()`** and **`DENSE_RANK()`** are useful for identifying the position of rows within partitions, especially when dealing with ties.
+- **`RANK()`** and `DENSE_RANK()` are useful for identifying the position of rows within partitions, especially when dealing with ties.
 
-### NTILE Function
+## NTILE Function
 
 The `NTILE()` function distributes the rows in an ordered partition into a specified number of roughly equal groups.
 
-#### Example: Dividing Sales into Quartiles per Product
+### Example: Dividing Sales into Quartiles per Product
 
 ```sql
 SELECT
@@ -164,25 +201,25 @@ ORDER BY
 
 | SaleID | ProductID | SaleDate   | Quantity | Price | Quartile |
 |--------|-----------|------------|----------|-------|----------|
-| 101    | 101       | 2024-01-10 | 20       | 15.00 | 1        |
+| 3      | 101       | 2024-01-10 | 20       | 15.00 | 1        |
 | 6      | 101       | 2024-01-20 | 15       | 15.00 | 2        |
 | 1      | 101       | 2024-01-05 | 10       | 15.00 | 3        |
-| 102    | 102       | 2024-01-15 | 10       | 25.00 | 1        |
+| 5      | 102       | 2024-01-15 | 10       | 25.00 | 1        |
 | 9      | 102       | 2024-01-28 | 8        | 25.00 | 2        |
 | 2      | 102       | 2024-01-07 | 5        | 25.00 | 3        |
-| 103    | 103       | 2024-01-12 | 7        | 30.00 | 1        |
+| 4      | 103       | 2024-01-12 | 7        | 30.00 | 1        |
 | 7      | 103       | 2024-01-22 | 5        | 30.00 | 2        |
-| 104    | 104       | 2024-01-25 | 12       | 20.00 | 1        |
+| 8      | 104       | 2024-01-25 | 12       | 20.00 | 1        |
 | 10     | 104       | 2024-01-30 | 10       | 20.00 | 2        |
 
 - The `NTILE(4)` function divides each `ProductID` partition into four quartiles based on `Quantity`.
 - Useful for categorizing data into percentile-based groups.
 
-### LEAD and LAG Functions
+## LEAD and LAG Functions
 
 `LEAD()` and `LAG()` functions allow you to access subsequent and preceding rows' data without the need for self-joins.
 
-#### Example: Comparing Current Sale with Previous Sale Quantity per Product
+### Example: Comparing Current Sale with Previous Sale Quantity per Product
 
 ```sql
 SELECT
@@ -219,11 +256,11 @@ ORDER BY
 - **`LEAD()`** can similarly retrieve data from subsequent rows.
 - Useful for trend analysis and calculating differences between consecutive rows.
 
-### Aggregate Window Functions
+## Aggregate Window Functions
 
 Aggregate functions like `SUM()`, `AVG()`, and `COUNT()` can also be used as window functions to perform calculations across a window of rows.
 
-#### Example: Calculating Running Total of Sales Amount per Product
+### Example: Calculating Running Total of Sales Amount per Product
 
 ```sql
 SELECT
@@ -259,15 +296,21 @@ ORDER BY
 - **`SUM(Quantity * Price) OVER (...)`** calculates a running total of sales amounts within each `ProductID` partition ordered by `SaleDate`.
 - The window frame `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` defines the range from the first row to the current row for cumulative calculations.
 
-### Handling NULL Values in Window Functions
+## Handling NULL Values in Window Functions
 
 Window functions typically handle `NULL` values based on the specific function's behavior. For example, `SUM()` ignores `NULL` values, while `ROW_NUMBER()` assigns a unique number regardless of `NULL`s.
 
-#### Example: Assigning Row Numbers with NULL Quantities
+### Example: Assigning Row Numbers with NULL Quantities
 
 Suppose we have an additional sale with a `NULL` quantity.
 
-**Updated Sales Table**
+Before the examples in this section and all later sections, add the following sale once:
+
+```sql
+INSERT INTO Sales VALUES (11, 101, '2024-01-25', NULL, 15.00);
+```
+
+**The additional row**
 
 | SaleID | ProductID | SaleDate   | Quantity | Price |
 |--------|-----------|------------|----------|-------|
@@ -303,69 +346,27 @@ ORDER BY
 - The `ROW_NUMBER()` function assigns a row number to the sale with `NULL` quantity without any issues.
 - Other window functions may handle `NULL` values differently, depending on their logic.
 
-### Practical Tips for Using Window Functions
+## Readability and filtering
 
-- **Use Meaningful Aliases**: Assign descriptive aliases to window function results to improve query readability.
-  
-  ```sql
-  ROW_NUMBER() OVER (...) AS RowNumber
-  ```
+Give calculated columns clear aliases, such as `RowNum` or `RunningTotal`. Use the same partition and ordering consistently when the calculations describe the same sequence. Add a unique tie-breaker for row numbering and earlier/later comparisons, but preserve ties deliberately for ranking.
 
-- **Combine with `PARTITION BY` and `ORDER BY`**: Leverage `PARTITION BY` to segment data and `ORDER BY` to define the sequence within each partition.
-  
-  ```sql
-  RANK() OVER (PARTITION BY Category ORDER BY SaleAmount DESC) AS SaleRank
-  ```
+To filter by a window result, calculate it in a CTE or subquery and filter in an outer query. A window result is not available to the same query level's `WHERE` clause. The later top-two-sales example demonstrates the complete pattern.
 
-- **Leverage Window Frames for Advanced Calculations**: Use window frame specifications like `ROWS BETWEEN` to define dynamic ranges for calculations.
-  
-  ```sql
-  AVG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate ROWS BETWEEN 3 PRECEDING AND CURRENT ROW) AS MovingAverage
-  ```
+A window may require sorting many rows. Inspect the execution plan on representative data rather than assuming a shorter query must run faster.
 
-- **Avoid Overusing Window Functions**: While powerful, excessive use of window functions can lead to complex and less performant queries. Use them judiciously.
-
-- **Understand Performance Implications**: Window functions can impact query performance, especially on large datasets. Ensure proper indexing and consider query optimization techniques.
-
-- **Combine with Other SQL Features**: Window functions can be combined with CTEs (Common Table Expressions), subqueries, and other SQL features for more complex analyses.
-  
-  ```sql
-  WITH RankedSales AS (
-      SELECT
-          SaleID,
-          ProductID,
-          SaleDate,
-          Quantity,
-          Price,
-          RANK() OVER (PARTITION BY ProductID ORDER BY Quantity DESC) AS SaleRank
-      FROM
-          Sales
-  )
-  SELECT
-      rs.SaleID,
-      rs.ProductID,
-      rs.SaleDate,
-      rs.Quantity,
-      rs.Price
-  FROM
-      RankedSales rs
-  WHERE
-      rs.SaleRank = 1;
-  ```
-
-### Window Functions vs. Aggregate Functions
+## Window Functions vs. Aggregate Functions
 
 While both window functions and aggregate functions perform calculations over sets of rows, they differ in key ways:
 
-- **Row Retention**: 
+- **Row Retention**:
   - **Aggregate Functions**: Collapse multiple rows into a single summary row per group.
   - **Window Functions**: Retain individual row identities while providing additional calculated data.
 
 - **Usage with `GROUP BY`**:
-  - **Aggregate Functions**: Require `GROUP BY` to define grouping.
+  - **Aggregate Functions**: Use `GROUP BY` for multiple groups; without it, aggregate over the entire input.
   - **Window Functions**: Use the `OVER` clause to define partitions and ordering without collapsing rows.
 
-#### Example: Comparing Aggregate and Window Functions
+### Example: Comparing Aggregate and Window Functions
 
 **Aggregate Function Example: Total Sales per Product**
 
@@ -396,14 +397,14 @@ ORDER BY
     SaleDate;
 ```
 
-- The **aggregate function** provides a summarized view with one row per `ProductID`.
-- The **window function** adds the total sales per product to each individual sale row without reducing the number of rows.
+- The aggregate function provides a summarized view with one row per `ProductID`.
+- The window function adds the total sales per product to each individual sale row without reducing the number of rows.
 
-### Combining Multiple Window Functions
+## Combining Multiple Window Functions
 
 You can use multiple window functions within a single query to perform various analyses simultaneously.
 
-#### Example: Sales Analysis with Multiple Window Functions
+### Example: Sales Analysis with Multiple Window Functions
 
 ```sql
 SELECT
@@ -413,7 +414,7 @@ SELECT
     Quantity,
     Price,
     ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate) AS RowNum,
-    RANK() OVER (PARTITION BY ProductID ORDER BY Quantity DESC) AS QuantityRank,
+    RANK() OVER (PARTITION BY ProductID ORDER BY CASE WHEN Quantity IS NULL THEN 1 ELSE 0 END, Quantity DESC) AS QuantityRank,
     SUM(Quantity * Price) OVER (PARTITION BY ProductID ORDER BY SaleDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal
 FROM
     Sales
@@ -426,9 +427,9 @@ ORDER BY
 
 | SaleID | ProductID | SaleDate   | Quantity | Price | RowNum | QuantityRank | RunningTotal |
 |--------|-----------|------------|----------|-------|--------|--------------|--------------|
-| 1      | 101       | 2024-01-05 | 10       | 15.00 | 1      | 2            | 150.00       |
+| 1      | 101       | 2024-01-05 | 10       | 15.00 | 1      | 3            | 150.00       |
 | 3      | 101       | 2024-01-10 | 20       | 15.00 | 2      | 1            | 450.00       |
-| 6      | 101       | 2024-01-20 | 15       | 15.00 | 3      | 3            | 675.00       |
+| 6      | 101       | 2024-01-20 | 15       | 15.00 | 3      | 2            | 675.00       |
 | 11     | 101       | 2024-01-25 | NULL     | 15.00 | 4      | 4            | 675.00       |
 | 2      | 102       | 2024-01-07 | 5        | 25.00 | 1      | 3            | 125.00       |
 | 5      | 102       | 2024-01-15 | 10       | 25.00 | 2      | 1            | 375.00       |
@@ -442,11 +443,11 @@ ORDER BY
 - **`RANK()`** assigns ranks based on `Quantity` within each `ProductID`.
 - **`SUM() OVER (...)`** calculates a running total of sales amounts per `ProductID`.
 
-### Window Frames
+## Window Frames
 
 Window frames define the subset of rows within the partition to be used for calculations in window functions. They are specified using the `ROWS BETWEEN` or `RANGE BETWEEN` clauses.
 
-#### Example: Calculating a Moving Average of Quantity
+### Example: Calculating a Moving Average of Quantity
 
 ```sql
 SELECT
@@ -474,7 +475,7 @@ ORDER BY
 | 1      | 101       | 2024-01-05 | 10       | 15.00 | 10.00          |
 | 3      | 101       | 2024-01-10 | 20       | 15.00 | 15.00          |
 | 6      | 101       | 2024-01-20 | 15       | 15.00 | 15.00          |
-| 11     | 101       | 2024-01-25 | NULL     | 15.00 | 12.50          |
+| 11     | 101       | 2024-01-25 | NULL     | 15.00 | 17.50          |
 | 2      | 102       | 2024-01-07 | 5        | 25.00 | 5.00           |
 | 5      | 102       | 2024-01-15 | 10       | 25.00 | 7.50           |
 | 9      | 102       | 2024-01-28 | 8        | 25.00 | 7.67           |
@@ -486,7 +487,7 @@ ORDER BY
 - The `AVG(Quantity)` function calculates the average quantity over the current row and the two preceding rows within each `ProductID` partition.
 - Useful for trend analysis and smoothing out short-term fluctuations.
 
-### Practical Use Cases for Window Functions
+## Practical Use Cases for Window Functions
 
 - **Pagination**: Assign row numbers to implement pagination in queries.
 - **Running Totals and Moving Averages**: Calculate cumulative sums or averages over a specified window.
@@ -494,11 +495,11 @@ ORDER BY
 - **Comparative Analysis**: Compare current row values with previous or next rows without self-joins.
 - **Data Transformation**: Restructure data for reporting and analytics purposes.
 
-### Combining Window Functions with Other SQL Features
+## Combining Window Functions with Other SQL Features
 
 Window functions can be combined with Common Table Expressions (CTEs), subqueries, and other SQL constructs to perform complex data transformations and analyses.
 
-#### Example: Identifying Top 2 Sales per Product
+### Example: Identifying Top 2 Sales per Product
 
 ```sql
 WITH RankedSales AS (
@@ -508,7 +509,7 @@ WITH RankedSales AS (
         SaleDate,
         Quantity,
         Price,
-        RANK() OVER (PARTITION BY ProductID ORDER BY Quantity DESC) AS SaleRank
+        RANK() OVER (PARTITION BY ProductID ORDER BY CASE WHEN Quantity IS NULL THEN 1 ELSE 0 END, Quantity DESC) AS SaleRank
     FROM
         Sales
 )
@@ -543,11 +544,11 @@ ORDER BY
 - The CTE `RankedSales` assigns a rank to each sale based on `Quantity` within each `ProductID`.
 - The outer query filters to include only the top 2 sales per product.
 
-### Comparing Window Functions with Self-Joins
+## Comparing Window Functions with Self-Joins
 
 Before window functions were widely supported, similar analyses often required complex self-joins. Window functions simplify these operations, making queries more readable and efficient.
 
-#### Example: Using Window Functions vs. Self-Joins to Compare Current and Previous Sales
+### Example: Using Window Functions vs. Self-Joins to Compare Current and Previous Sales
 
 **Using Window Functions**
 
@@ -594,48 +595,25 @@ ORDER BY
     s1.SaleDate;
 ```
 
-- The **window function** approach is more straightforward, readable, and performs better.
-- The **self-join** approach is more complex and can be less efficient, especially on large datasets.
+- The window function directly expresses the previous-row operation and is usually easier to read. Compare plans to determine its performance benefit.
+- The self-join approach is more complex and can be less efficient, especially on large datasets.
 
-### Limitations and Considerations
+## Limitations and Considerations
 
-- **Performance**: Window functions can be resource-intensive on large datasets. Proper indexing and query optimization are crucial.
+- **Performance**: The ranking examples put null quantities last explicitly so the result is independent of the engine’s default null ordering. Window functions can be resource-intensive on large datasets. Proper indexing and query optimization are crucial.
 - **Compatibility**: Ensure that your SQL database system supports the window functions you intend to use (e.g., PostgreSQL, SQL Server, Oracle, MySQL 8.0+).
 - **Complexity**: While window functions simplify many operations, overusing them or using them in overly complex ways can make queries harder to maintain.
 - **Understanding Window Frames**: Properly defining window frames is essential for accurate calculations, especially for running totals and moving averages.
 
-### Advanced Window Function Features
+## Further frame choices
 
-- **Frame Specifications**: Define dynamic ranges for window functions to perform calculations like moving averages, cumulative sums, etc.
-  
-  ```sql
-  SUM(Quantity) OVER (
-      PARTITION BY ProductID
-      ORDER BY SaleDate
-      ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING
-  ) AS SumQuantity
-  ```
+`ROWS` counts positions in the ordered sequence. For example, `ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING` includes the previous row, current row, and next row where present. It does not mean “the previous and next day.” The existing moving-average query shows a runnable row-based frame.
 
-- **Multiple Partitioning and Ordering**: Combine multiple columns in `PARTITION BY` and `ORDER BY` for more granular control.
+`RANGE` works with ordering values and peer groups rather than simply counting rows. Date-based range offsets and interval syntax depend on the engine; a PostgreSQL interval expression cannot be pasted unchanged into this SQLite exercise. Multiple-column partitioning is also possible when several fields define the group, provided those columns actually exist in the input.
 
-  ```sql
-  ROW_NUMBER() OVER (
-      PARTITION BY Category, SubCategory
-      ORDER BY SaleDate DESC
-  ) AS RowNum
-  ```
+Before using a more advanced frame, state which rows should contribute for a concrete current row, then compare that prediction with the result. Frame clauses affect aggregate windows differently from ranking and offset functions.
 
-- **Using `RANGE` Instead of `ROWS`**: Define frames based on logical ranges rather than physical row counts.
-
-  ```sql
-  AVG(Price) OVER (
-      PARTITION BY ProductID
-      ORDER BY SaleDate
-      RANGE BETWEEN INTERVAL '7' DAY PRECEDING AND CURRENT ROW
-  ) AS WeeklyAveragePrice
-  ```
-
-### Example Use Case: Sales Trend Analysis
+## Example Use Case: Sales Trend Analysis
 
 Suppose you want to analyze sales trends by calculating the percentage change in quantity compared to the previous sale for each product.
 
@@ -647,8 +625,9 @@ SELECT
     Quantity,
     Price,
     LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS PreviousQuantity,
-    CASE 
-        WHEN LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) IS NULL THEN NULL
+    CASE
+        WHEN LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) IS NULL
+          OR LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) = 0 THEN NULL
         ELSE ((Quantity - LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate)) * 100.0) / LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate)
     END AS PercentageChange
 FROM
@@ -665,7 +644,7 @@ ORDER BY
 | 1      | 101       | 2024-01-05 | 10       | 15.00 | NULL              | NULL              |
 | 3      | 101       | 2024-01-10 | 20       | 15.00 | 10                | 100.00            |
 | 6      | 101       | 2024-01-20 | 15       | 15.00 | 20                | -25.00            |
-| 11     | 101       | 2024-01-25 | NULL     | 15.00 | 15                | -100.00           |
+| 11     | 101       | 2024-01-25 | NULL     | 15.00 | 15                | NULL           |
 | 2      | 102       | 2024-01-07 | 5        | 25.00 | NULL              | NULL              |
 | 5      | 102       | 2024-01-15 | 10       | 25.00 | 5                 | 100.00            |
 | 9      | 102       | 2024-01-28 | 8        | 25.00 | 10                | -20.00            |
@@ -676,3 +655,11 @@ ORDER BY
 
 - This query calculates the percentage change in `Quantity` compared to the previous sale for each `ProductID`.
 - Useful for identifying trends, growth, or decline in sales over time.
+
+## Review questions
+
+1. What are window functions in SQL, and how do they differ from aggregate functions?
+2. What are some common window functions, and what are their typical use cases?
+3. How does the `OVER` clause define the window for window functions, and what components can it include?
+4. What are the advantages and limitations of using window functions compared to traditional methods like self-joins?
+5. What best practices should be followed when implementing window functions in SQL to ensure optimal performance and maintainability?

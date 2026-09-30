@@ -1,326 +1,114 @@
-## Stored Procedures and Functions
+# Stored Procedures and Functions: Name Reusable Database Work
 
-In the realm of relational databases, stored procedures and functions are powerful tools that allow developers to encapsulate reusable pieces of SQL code. They enhance performance by caching execution plans, promote code reusability, and keep business logic close to the data. By understanding how to create and use stored procedures and functions, you can write more efficient and maintainable database applications.
+A view names a query. A **stored routine** names database code that can accept inputs and perform work. Two common kinds are procedures and functions. Their syntax, return values, transaction rules, and privileges depend on the engine.
 
-### Stored Procedures
+Read [joins, subqueries, and views](06_joins_subqueries_and_views.md) first. This note uses **PostgreSQL**, because SQLite does not provide SQL `CREATE PROCEDURE` or `CREATE FUNCTION` commands. SQLite applications can register functions through their programming-language API, which is a different mechanism.
 
-A **stored procedure** is a pre-compiled collection of one or more SQL statements (plus optional control-of-flow logic) saved in the database under a single name. Procedures can
+## Start with the work you want to reuse
 
-* accept **input** parameters,
-* return **output** parameters (scalars),
-* and/or return **result sets** (tables).
+The bookstore often needs an order's total: multiply each line's quantity by its purchase price, then add the amounts. A plain query is already sufficient. A function can give that calculation a reusable name and accept the order identifier as an argument.
 
-They shine when you need to run the same multi-statement operation repeatedly or enforce consistent business rules.
-
-#### Advantages of Stored Procedures
-
-| Benefit         | Why it matters                                                                                |
-| --------------- | --------------------------------------------------------------------------------------------- |
-| Performance     | Execution plan is compiled once and reused, reducing parsing/optimization overhead.           |
-| Reusability     | One definition can be called from many places (apps, jobs, other procs).                      |
-| Security        | GRANT rights on the procedure even if callers have no direct rights on the tables it touches. |
-| Maintainability | Fix or extend business logic in one spot without redeploying application code.                |
-
-#### Example Schema & Seed Data
-
-To make our examples concrete, we’ll first create a simple `Customers` table and insert a couple of rows. This seed data will serve as the foundation for demonstrating stored procedure operations.
+For this standalone PostgreSQL exercise, create a small practice table in a database where you may create objects:
 
 ```sql
--- Customers table used in the examples
-CREATE TABLE dbo.Customers
-(
-    CustomerID INT IDENTITY(1,1) PRIMARY KEY,
-    FirstName  VARCHAR(50) NOT NULL,
-    LastName   VARCHAR(50) NOT NULL,
-    Email      VARCHAR(100) UNIQUE,
-    Phone      VARCHAR(20) NULL
+CREATE TABLE routine_order_items (
+    order_id INTEGER NOT NULL,
+    line_number INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK (quantity > 0),
+    unit_price_cents INTEGER NOT NULL CHECK (unit_price_cents >= 0),
+    PRIMARY KEY (order_id, line_number)
 );
 
--- A couple of starter rows
-INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone) VALUES
-('Alice', 'Smith', 'alice.smith@example.com', '555-0100'),
-('Bob',   'Brown', 'bob.brown@example.com',  '555-0110');
+INSERT INTO routine_order_items VALUES
+    (101, 1, 2, 1500),
+    (101, 2, 1, 2500),
+    (102, 1, 1, 1500);
 ```
 
-*Current contents before we add anything else:*
+These rows reproduce the first two orders from the SQLite tutorial without requiring you to translate its whole setup.
 
-| CustomerID | FirstName | LastName | Email                                                     | Phone    |
-| ---------: | --------- | -------- | --------------------------------------------------------- | -------- |
-|          1 | Alice     | Smith    | [alice.smith@example.com](mailto:alice.smith@example.com) | 555-0100 |
-|          2 | Bob       | Brown    | [bob.brown@example.com](mailto:bob.brown@example.com)     | 555-0110 |
-
-#### Creating a Stored Procedure
-
-Creating a stored procedure involves specifying its name, parameters, and the logic to execute. The example below defines a procedure to insert a new customer and return its generated primary key.
+## Define and call a function
 
 ```sql
-CREATE PROCEDURE dbo.AddCustomer
-    @FirstName  VARCHAR(50),
-    @LastName   VARCHAR(50),
-    @Email      VARCHAR(100),
-    @CustomerID INT OUTPUT      -- Returns the newly created PK
-AS
-BEGIN
-    SET NOCOUNT ON;
+CREATE FUNCTION bookstore_order_total(p_order_id INTEGER)
+RETURNS BIGINT
+LANGUAGE SQL
+AS $$
+    SELECT COALESCE(SUM(quantity * unit_price_cents::BIGINT), 0)
+    FROM routine_order_items
+    WHERE order_id = p_order_id;
+$$;
 
-    INSERT INTO dbo.Customers (FirstName, LastName, Email)
-    VALUES (@FirstName, @LastName, @Email);
-
-    -- Return the identity generated in THIS scope
-    SET @CustomerID = SCOPE_IDENTITY();
-END;
+SELECT bookstore_order_total(101) AS total_cents;
 ```
 
-* `SET NOCOUNT ON;` keeps the “(1 row affected)” message from interfering with client libraries expecting a clean result set.
-* `SCOPE_IDENTITY()` is safer than `@@IDENTITY` because it ignores inserts done by triggers further down the chain.
+The expected result is `5500`.
 
-#### Calling the Stored Procedure
+Read the definition in order:
 
-Once created, you invoke a stored procedure using `EXEC` (or `EXECUTE`). You can pass input values and capture any output parameters. The example below adds “John Doe” to our `Customers` table and retrieves the new ID.
+- `p_order_id` is the input parameter. The prefix distinguishes it from the table's `order_id` column.
+- `RETURNS BIGINT` declares the result type.
+- `LANGUAGE SQL` says the body is SQL code.
+- `$$ ... $$` quotes the function body without escaping its internal quotes.
+- `::BIGINT` converts the price before multiplication, avoiding the smaller integer type's multiplication range.
+- `COALESCE(..., 0)` chooses zero when `SUM` has no input values.
 
-```sql
-DECLARE @NewID INT;
+This function also returns zero for an identifier with no items. That policy does **not** distinguish a missing order from an existing empty order. A production design must choose the intended behavior, perhaps checking an orders table or returning null.
 
-EXEC dbo.AddCustomer
-     @FirstName  = 'John',
-     @LastName   = 'Doe',
-     @Email      = 'john.doe@example.com',
-     @CustomerID = @NewID OUTPUT;
+PostgreSQL functions can return scalars or sets and can do more than arithmetic. Their allowed effects and declarations matter; do not assume every function is pure or evaluated just once. See the official [function documentation](https://www.postgresql.org/docs/current/sql-createfunction.html).
 
-SELECT @NewID AS NewCustomerID;
-```
+## Define and call a procedure
 
-*Sample output:*
-
-| NewCustomerID |
-| ------------: |
-|             3 |
-
-*Table contents afterwards:*
-
-| CustomerID | FirstName | LastName | Email                                                     | Phone    |
-| ---------: | --------- | -------- | --------------------------------------------------------- | -------- |
-|          1 | Alice     | Smith    | [alice.smith@example.com](mailto:alice.smith@example.com) | 555-0100 |
-|          2 | Bob       | Brown    | [bob.brown@example.com](mailto:bob.brown@example.com)     | 555-0110 |
-|          3 | John      | Doe      | [john.doe@example.com](mailto:john.doe@example.com)       | **NULL** |
-
-#### Modifying a Stored Procedure
-
-As requirements evolve, you can alter an existing procedure to accept new parameters or change logic without dropping and recreating it. Here we add a `Phone` parameter so the procedure can store customer phone numbers as well.
+A procedure is invoked to perform an operation rather than used as an expression in a `SELECT`. This example creates another independent practice table:
 
 ```sql
-ALTER PROCEDURE dbo.AddCustomer
-    @FirstName  VARCHAR(50),
-    @LastName   VARCHAR(50),
-    @Email      VARCHAR(100),
-    @Phone      VARCHAR(20),     -- NEW parameter
-    @CustomerID INT OUTPUT
-AS
-BEGIN
-    SET NOCOUNT ON;
-
-    INSERT INTO dbo.Customers (FirstName, LastName, Email, Phone)
-    VALUES (@FirstName, @LastName, @Email, @Phone);
-
-    SET @CustomerID = SCOPE_IDENTITY();
-END;
-```
-
-*New call using the updated procedure:*
-
-```sql
-DECLARE @NewID INT;
-
-EXEC dbo.AddCustomer
-     @FirstName  = 'Carla',
-     @LastName   = 'Mendez',
-     @Email      = 'carla.mendez@example.com',
-     @Phone      = '555-0122',
-     @CustomerID = @NewID OUTPUT;
-
-SELECT @NewID AS NewCustomerID;
-```
-
-| NewCustomerID |
-| ------------: |
-|             4 |
-
-| CustomerID | FirstName | LastName | Email                                                       | Phone    |
-| ---------: | --------- | -------- | ----------------------------------------------------------- | -------- |
-|          … | …         | …        | …                                                           | …        |
-|          4 | Carla     | Mendez   | [carla.mendez@example.com](mailto:carla.mendez@example.com) | 555-0122 |
-
-#### Deleting a Stored Procedure
-
-If a stored procedure is no longer needed or must be replaced entirely, you can drop it from the database. Be cautious—dependent code will break until it’s recreated.
-
-```sql
-DROP PROCEDURE dbo.AddCustomer;
-```
-
-> **Irreversible:** once dropped, dependent code will fail until the procedure is recreated.
-
-### Functions
-
-Functions in SQL Server let you encapsulate reusable logic that computes and returns a value or a table. Unlike stored procedures, functions can be embedded directly within queries—such as in `SELECT`, `WHERE`, or `JOIN` clauses—making them highly composable. They’re ideal for encapsulating calculations, formatting routines, or filtering logic that you want to reuse across multiple queries or views.
-
-A **function** encapsulates logic that returns **exactly one** scalar value or a **table**. Unlike procedures, functions can be used inline in `SELECT`, `WHERE`, or `JOIN` clauses. They cannot use side-effects such as `INSERT`/`UPDATE` (with the exception of special CLR or system functions).
-
-#### Types of Functions
-
-SQL Server supports several function types, each suited to different scenarios. Scalar functions return a single value, while table-valued functions return result sets that you can query as if they were regular tables or views. Multi-statement TVFs allow more complex row-by-row processing but can incur more overhead.
-
-| Type                       | Returns                                | Typical use-case                   |
-| -------------------------- | -------------------------------------- | ---------------------------------- |
-| Scalar                     | Single value                           | Calculations, formatting, lookups  |
-| Inline table-valued (iTVF) | Table defined by one `SELECT`          | Reusable filtered views            |
-| Multi-statement TVF        | Table assembled through multiple steps | Complex row-by-row transformations |
-
-#### Advantages of Functions
-
-Functions promote modularity and code reuse by abstracting complex computations behind a simple call. Inline TVFs, in particular, can yield performance benefits because the optimizer can expand them directly into the calling query.
-
-* **Reusability & abstraction** – one central definition of complex math or business rules.
-* **Composable** – drop straight into any expression, `JOIN`, or view.
-* **Potential performance win** – especially inline TVFs, which the optimizer can treat almost like a view.
-
-#### Example Schema & Seed Data for Functions
-
-To illustrate functions, we’ll create a basic `Orders` table linked to our `Customers` table and populate it with sample orders. This provides a dataset for demonstrating both scalar and table-valued functions.
-
-```sql
--- Orders table used in the examples
-CREATE TABLE dbo.Orders
-(
-    OrderID    INT IDENTITY(1,1) PRIMARY KEY,
-    CustomerID INT       NOT NULL FOREIGN KEY REFERENCES dbo.Customers(CustomerID),
-    OrderDate  DATE      NOT NULL,
-    Amount     DECIMAL(10,2) NOT NULL
+CREATE TABLE routine_orders (
+    order_id INTEGER PRIMARY KEY,
+    status TEXT NOT NULL CHECK (status IN ('open', 'completed', 'cancelled'))
 );
 
-INSERT INTO dbo.Orders (CustomerID, OrderDate, Amount) VALUES
-(1, '2025-05-01', 120.00),
-(1, '2025-05-03',  60.50),
-(3, '2025-05-04', 210.75);
+INSERT INTO routine_orders VALUES (101, 'completed'), (102, 'open');
+
+CREATE PROCEDURE cancel_open_order(p_order_id INTEGER)
+LANGUAGE SQL
+AS $$
+    UPDATE routine_orders
+    SET status = 'cancelled'
+    WHERE order_id = p_order_id AND status = 'open';
+$$;
+
+CALL cancel_open_order(102);
+SELECT order_id, status FROM routine_orders ORDER BY order_id;
 ```
 
-| OrderID | CustomerID | OrderDate  | Amount |
-| ------: | ---------: | ---------- | -----: |
-|       1 |          1 | 2025-05-01 | 120.00 |
-|       2 |          1 | 2025-05-03 |  60.50 |
-|       3 |          3 | 2025-05-04 | 210.75 |
+| order_id | status |
+|---|---|
+| 101 | completed |
+| 102 | cancelled |
 
-#### Creating a **Scalar** Function
+Calling it again changes nothing. The procedure also silently does nothing for a missing order or a completed order. That is this example's behavior, not proof that the requested cancellation succeeded. A richer routine can expose an outcome or raise an error.
 
-Scalar functions let you encapsulate formulae or lookups that return a single value. In the example below, we calculate sales tax based on an amount and tax rate.
+This routine changes status only. It is not a complete cancellation workflow: it does not handle refunds or restock items. Keep the operation's name and contract specific enough for callers to understand what it guarantees.
 
-```sql
-CREATE FUNCTION dbo.CalculateTax
-(
-    @Amount   DECIMAL(10,2),
-    @TaxRate  DECIMAL(5,2)   -- e.g. 8.25 means 8.25 %
-)
-RETURNS DECIMAL(10,2)
-AS
-BEGIN
-    RETURN @Amount * (@TaxRate / 100);
-END;
-```
+## A routine is not a transaction boundary by itself
 
-*Usage – compute sales tax in a query:*
+Calling a routine happens within database transaction rules. These examples do not contain an internal `COMMIT`; callers can group their calls with other statements using a transaction.
 
-```sql
-SELECT
-    OrderID,
-    Amount,
-    dbo.CalculateTax(Amount, 8.25) AS TaxAmount
-FROM dbo.Orders;
-```
+Procedural languages add variables, branches, loops, and error handling. PostgreSQL's **PL/pgSQL** is one such language. Its `BEGIN ... END` groups code; it is distinct from the SQL `BEGIN` that starts a transaction. PostgreSQL permits transaction control inside procedures only under specified calling conditions. See the official [procedure documentation](https://www.postgresql.org/docs/current/sql-createprocedure.html).
 
-| OrderID | Amount | TaxAmount |
-| ------: | -----: | --------: |
-|       1 | 120.00 |      9.90 |
-|       2 |  60.50 |      4.99 |
-|       3 | 210.75 |     17.38 |
+## Decide whether the database is the right home
 
-#### Creating an **Inline Table-Valued** Function
+A routine can centralize behavior used by several applications and reduce network round trips. It also introduces database code to version, deploy, debug, and test. An ordinary parameterized query or view may already be enough.
 
-Inline TVFs are essentially parameterized views. You define a single `SELECT` that returns a result set. The optimizer can integrate this directly into your queries for efficient execution.
+Do not assume a routine is faster because it is “precompiled.” Planning and plan reuse depend on the engine, language, and query. A routine still needs suitable indexes and efficient SQL.
 
-```sql
-CREATE FUNCTION dbo.GetCustomerOrders (@CustomerID INT)
-RETURNS TABLE
-AS
-RETURN
-(
-    SELECT OrderID, OrderDate, Amount
-    FROM   dbo.Orders
-    WHERE  CustomerID = @CustomerID
-);
-```
+Privileges also require an explicit design. PostgreSQL normally runs a routine with the caller's privileges (`SECURITY INVOKER`). `SECURITY DEFINER` uses the owner's privileges and needs careful control of object resolution and access. Merely moving a query into a routine does not automatically bypass table permissions or prevent injection in dynamically assembled SQL.
 
-*Querying orders for customer #1:*
+## Check your understanding
 
-```sql
-SELECT *
-FROM dbo.GetCustomerOrders(1);
-```
+1. Why is the total function used in `SELECT`, while the cancellation procedure is invoked with `CALL`?
+2. What does the total function return when no items match, and what ambiguity does that create?
+3. Why does the cancellation procedure not guarantee a complete business cancellation?
+4. Why does storing code in the database not guarantee better performance?
 
-| OrderID | OrderDate  | Amount |
-| ------: | ---------- | -----: |
-|       1 | 2025-05-01 | 120.00 |
-|       2 | 2025-05-03 |  60.50 |
-
-#### Modifying a Function
-
-When you need to extend or tweak logic, you can alter an existing function. For example, adding a discount parameter to our tax calculation function allows for more flexible scenarios.
-
-```sql
-ALTER FUNCTION dbo.CalculateTax
-(
-    @Amount    DECIMAL(10,2),
-    @TaxRate   DECIMAL(5,2),
-    @Discount  DECIMAL(10,2) = 0  -- default 0
-)
-RETURNS DECIMAL(10,2)
-AS
-BEGIN
-    RETURN (@Amount - @Discount) * (@TaxRate / 100);
-END;
-```
-
-*Test the new logic:*
-
-```sql
-SELECT dbo.CalculateTax(100.00, 8.25, 10.00) AS TaxOnDiscounted100;
-```
-
-| TaxOnDiscounted100 |
-| -----------------: |
-|               7.43 |
-
-#### Deleting a Function
-
-If a function is obsolete or must be replaced entirely, you can remove it with `DROP`. As with stored procedures, any dependent code will break until the function is recreated.
-
-```sql
-DROP FUNCTION dbo.CalculateTax;
-```
-
-#### Differences Between Stored Procedures and Functions
-
-- Functions are required to return a value, which can be scalar, table, or any defined data type, whereas stored procedures are not obligated to return a value but can use output parameters or return result sets.
-- Functions can be directly used within SQL expressions, such as in `SELECT` or `WHERE` clauses, while stored procedures must be invoked independently and cannot be part of an SQL expression.
-- Stored procedures can have side effects as they can modify the database state through operations like `INSERT`, `UPDATE`, or `DELETE`, whereas functions are typically designed to be deterministic and avoid modifying database state.
-
-#### Best Practices
-
-- Ensure naming conventions are consistent and descriptive, often beginning with verbs like `Get`, `Add`, `Update`, or `Calculate`, to clarify their purpose.
-- Validate all input parameters within the procedure or function to prevent errors and ensure proper operation.
-- Include robust error handling by using `TRY...CATCH` blocks to gracefully handle and log exceptions during execution.
-- Assign appropriate permissions to procedures and functions to ensure secure access and protect sensitive data from unauthorized use.
-1. **Name objects with schema prefixes** (`dbo.AddCustomer`) to avoid ambiguity.
-2. **Use `SET NOCOUNT ON;`** inside procs to reduce unnecessary network traffic.
-3. **Favor inline TVFs** over multi-statement TVFs when possible; they integrate more cleanly with the optimizer.
-4. **Keep business rules in one place** – either in your procedures/functions *or* in application code, but avoid duplicating logic.
-5. **Version-control your DDL** just like application code so changes are traceable and repeatable.
+Next: [Triggers](08_triggers.md) explains code invoked automatically by data changes.

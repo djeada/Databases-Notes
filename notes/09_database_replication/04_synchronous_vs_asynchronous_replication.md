@@ -1,129 +1,51 @@
-## Synchronous and Asynchronous Replication
+# Synchronous and Asynchronous Replication
 
-Replication is an important concept in database systems, involving the copying of data from one database server, known as the primary, to one or more other servers called replicas. This process enhances data availability, fault tolerance, and load balancing across the system. Understanding the two main replication strategies—synchronous and asynchronous replication—is crucial for designing robust and efficient database architectures.
+The distinction is what a commit waits for. **Synchronous replication** waits for a configured replica acknowledgment. **Asynchronous replication** can acknowledge a local commit before replicas have caught up.
 
-### Replication Strategies
+## Follow one transaction
 
-At its core, replication ensures that data is consistently available across multiple servers. The key difference between synchronous and asynchronous replication lies in how and when data changes are propagated from the primary server to the replicas.
-
-#### Synchronous Replication
-
-In synchronous replication, every write operation on the primary database is immediately propagated to the replicas. The primary server waits for acknowledgments from all replicas before confirming the transaction to the client. This means that data is consistent across all servers at any given moment.
-
-**How it works:**
-
-1. A client sends a write request to the primary server.
-2. The primary server writes the data and sends the changes to all replicas.
-3. Each replica writes the data and sends an acknowledgment back to the primary server.
-4. Once all acknowledgments are received, the primary server confirms the transaction to the client.
-
-```
-Client
-  |
-  | (1) Write Request
-  v
-+--------------------+
-|   Primary Server   |
-+---------+----------+
-          |
-          | (2) Send Data to Replicas
-          v
-+---------+----------+       +---------+----------+
-|    Replica 1       |       |    Replica 2       |
-+---------+----------+       +---------+----------+
-          | (3) Ack                    | (3) Ack
-          +-----------+----------------+
-                      |
-             (4) Confirm Transaction
-                      |
-                      v
-        Transaction Confirmed to Client
-
+```text
+Synchronous:  local commit work --> required replica acknowledgment --> client success
+Asynchronous: local commit work --> client success
+                         \-------> replicas receive and apply changes independently
 ```
 
-| **Advantages**                                                                             | **Disadvantages**                                                                    |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| Ensures strong data consistency across all servers                                         | Increases latency because the primary server waits for acknowledgments from replicas |
-| Minimizes the risk of data loss since data is committed on all servers before confirmation | May impact performance, especially in environments with high network latency         |
-| Simplifies failover processes because replicas are always up-to-date                       | Scalability can be limited due to the overhead of maintaining synchronization        |
+Transmission can overlap transaction processing. Asynchronous replication does not require sending every change only after commit; it means replica progress is not required for the client acknowledgment.
 
-#### Asynchronous Replication
+## An acknowledgment has a specific meaning
 
-Asynchronous replication allows the primary server to confirm transactions without waiting for replicas to acknowledge the data writes. Data changes are sent to replicas after the transaction has been committed on the primary server, which means there may be a delay before replicas are updated.
+Depending on the engine and settings, it can mean that a replica has received, durably flushed, or applied the transaction. The primary may wait for one replica, a chosen set, or a quorum, rather than every replica.
 
-**How it works:**
+Receiving or flushing a log record is different from making it visible to a query. A synchronous commit does not automatically make every replica read fresh. Check the acknowledgment level and route reads accordingly.
 
-1. A client sends a write request to the primary server.
-2. The primary server writes the data and immediately confirms the transaction to the client.
-3. The primary server queues the data changes for replication.
-4. Replicas receive the data changes asynchronously and update their data.
+## Compare the trade-offs
 
-```
-Client
-  |
-  | (1) Write Request
-  v
-+--------------------+
-|   Primary Server   |
-+---------+----------+
-          | (2) Immediate ACK to Client
-          |
-          | (3) Send Data to Replicas
-          v
-+---------+----------+       +---------+----------+
-|    Replica 1       |       |    Replica 2       |
-+---------+----------+       +---------+----------+
-          | (4) ACK                    | (4) ACK
-          +-----------+----------------+
-                      |
-             [Replication Complete]
-```
+| Concern | Synchronous | Asynchronous |
+| --- | --- | --- |
+| Commit latency | Includes required replica progress and network delay. | Does not wait for replica progress. |
+| Replica failure | Can block commits if the acknowledgment requirement cannot be met. | Primary commits can continue while replicas lag. |
+| Primary loss | Required durable replicas can protect acknowledged commits, subject to the failure model and promotion choice. | An acknowledged commit may be absent from the promoted replica. |
+| Reads from replicas | Freshness depends on replay and read-routing guarantees. | Stale reads are expected while replicas lag. |
+| Failover | Still needs leader selection, fencing, and a safe promotion policy. | Also needs an explicit decision about possible lost transactions. |
 
-| **Advantages**                                                                                 | **Disadvantages**                                                         |
-| ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Reduces latency since the primary server doesn't wait for replicas                             | Potential for data inconsistency between the primary and replicas         |
-| Improves performance and throughput on the primary server                                      | Risk of data loss if the primary server fails before replication occurs   |
-| More scalable in environments with high network latency or geographically distributed replicas | More complex failover procedures may be required to ensure data integrity |
+Neither mode guarantees survival of every possible failure. Losing all durable copies, promoting an unsuitable replica, or allowing two writable primaries can invalidate assumptions.
 
-### Choosing Between Synchronous and Asynchronous Replication
+## PostgreSQL example
 
-Selecting the appropriate replication strategy depends on the specific needs of your application and infrastructure.
+PostgreSQL's `synchronous_standby_names` identifies the acknowledgment requirement. Its `synchronous_commit` settings distinguish acknowledgment levels, including remote flush and remote apply. `remote_apply` waits for the synchronous standby to replay the commit, which is useful when visibility there matters. See [PostgreSQL synchronous replication](https://www.postgresql.org/docs/current/warm-standby.html#SYNCHRONOUS-REPLICATION).
 
-| **Category**                 | **Synchronous Replication**                                                                                        | **Asynchronous Replication**                                                                                                            |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Data Consistency**         | Strong—writes are confirmed only once all replicas have committed, ensuring identical data across nodes.           | Eventual—primary confirms writes immediately; replicas catch up afterward, so briefly divergent states are possible.                    |
-| **Latency Impact**           | Higher—each transaction waits for replica acknowledgments, adding round-trip delays.                               | Lower—primary does not wait, so transactions complete as soon as local commit is done.                                                  |
-| **Throughput & Performance** | Moderate—overall throughput can suffer under high-load or high-latency conditions due to synchronization overhead. | High—primary server can handle more transactions per second without waiting on replicas.                                                |
-| **Scalability**              | Limited—scaling to many or geographically distant replicas exacerbates latency and coordination costs.             | Excellent—replicas can be added anywhere without significantly affecting primary performance.                                           |
-| **Failover Complexity**      | Simple—since replicas are up-to-date, promoting one to primary is straightforward.                                 | Complex—need to detect and reconcile any unreplicated transactions; risk of data loss on failover.                                      |
-| **Risk of Data Loss**        | Minimal—as long as a majority (or all, depending on quorum) of replicas acknowledge, data is safe.                 | Present—writes acknowledged by primary may not yet exist on replicas if a sudden failure occurs.                                        |
-| **Typical Use Cases**        | ● Financial transaction systems<br>● Order-entry platforms<br>● Catalog updates requiring atomicity                | ● Global content distribution<br>● Analytics or logging pipelines<br>● High-performance web applications where slight lag is acceptable |
-| **Best Network Conditions**  | Low-latency, high-bandwidth links (e.g., within the same data center or region).                                   | Variable or high-latency networks (e.g., cross-continent, multi-cloud or edge deployments).                                             |
+These settings are different from enabling replication in the first place. Verify the actual synchronous standby status and expected behavior when a standby disconnects.
 
-### Best Practices
+## Define the recovery requirements
 
-Implementing replication effectively requires careful planning and consideration of several factors.
+A **recovery point objective (RPO)** states how much data loss is acceptable. A **recovery time objective (RTO)** states how long service recovery may take. Choose a replication and failover policy against both requirements, then test primary failure, replica lag, and network interruption.
 
-**Application Requirements:**
+Monitor received, flushed, and replayed positions where available. A lag duration by itself can conceal a large pending data volume or an idle workload.
 
-- Assess the criticality of data consistency versus performance needs.
-- Determine acceptable levels of latency and potential data loss.
-- Plan for failure scenarios and how the system should respond.
+Replication is not a backup: accidental deletion and corruption can reach replicas. Keep independently recoverable backups and test restoration.
 
-**Monitoring and Maintenance:**
+## Related notes
 
-- Regularly monitor replication status and lag times.
-- Set up alerting mechanisms for replication failures or significant delays.
-- Perform routine testing of failover procedures.
-
-**Optimizing Network Infrastructure:**
-
-- Ensure reliable, high-speed network connections between servers.
-- Use network optimization techniques to reduce latency.
-- Consider network security measures to protect data during replication.
-
-**Data Safety Measures:**
-
-- Maintain regular backups, even when using replication.
-- Implement transaction logging to assist with recovery if needed.
-- Periodically validate data consistency between the primary and replicas.
+- [Primary and standby replication](02_master_standby_replication.md)
+- [CAP theorem](../06_distributed_databases/06_cap_theorem.md)
+- [Backup and recovery](../11_security_best_practices/01_backup_and_recovery_strategies.md)

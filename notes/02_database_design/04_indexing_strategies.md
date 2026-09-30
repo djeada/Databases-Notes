@@ -1,314 +1,83 @@
-## Database Indexing Strategies
+# Indexing Strategies: Design for a Specific Query
 
-Database indexing is like adding bookmarks to a large textbook; it helps you quickly find the information you need without flipping through every page. In the world of databases, indexes significantly speed up data retrieval operations, making your applications faster and more efficient. However, indexing also requires careful planning to balance performance gains with potential costs in storage and maintenance.
+An **index** is an additional structure that helps the database find selected rows. It is comparable to a book's index: look up a topic, find its location, and then read the relevant pages. The database still has to retrieve and return the answer.
 
-After reading the material, you should be able to answer the following questions:
+Assume you know tables and basic `SELECT` queries. The [SQL introduction](../03_sql/01_intro_to_sql.md) provides that starting point.
 
-1. What is database indexing, and how does it differ from a full table scan in terms of data retrieval efficiency?
-2. What factors should be considered when selecting columns to index, such as query patterns, column selectivity, and balancing read and write operations?
-3. What are the different types of indexes (e.g., B-Tree, Hash, Bitmap, Full-Text, Spatial), and what are their specific use cases and strengths?
-4. How can creating simple and composite indexes impact query performance, and what are the best practices for implementing them in SQL?
-5. What are the best practices for maintaining indexes, including rebuilding, reorganizing, and regularly reviewing index performance to ensure optimal database efficiency?
+## Begin with the question the application asks
 
-### What Is Database Indexing?
-
-At its core, database indexing involves creating a data structure that improves the speed of data retrieval. Without indexes, a database might have to scan every row in a table to find the relevant data—a process known as a full table scan. Indexes act as guides, pointing the database engine directly to the locations of the desired data.
-
-Imagine a phone book without any order; finding a person's number would require checking each entry one by one. By organizing the entries alphabetically, you can jump directly to the correct section. Similarly, indexes organize data in a way that makes searching much more efficient.
-
-#### How Indexes Work
-
-An index is typically implemented using a data structure like a B-tree or a hash table, which allows for rapid searching, insertion, and deletion of data. Here's a simple diagram to illustrate the concept:
-
-```
-+-------------------------------------------+
-|                Table                      |
-+-------------------------------------------+
-| ID | Name     | Age | Email               |
-|----|----------|-----|---------------------|
-| 1  | Alice    | 30  | alice@example.com   |
-| 2  | Bob      | 25  | bob@example.com     |
-| 3  | Charlie  | 35  | charlie@example.com |
-| 4  | Diana    | 28  | diana@example.com   |
-|... | ...      | ... | ...                 |
-+-------------------------------------------+
-
-+-----------------------+
-|         Index         |
-+-----------------------+
-| Key (Age)| Record ID  |
-|----------|------------|
-|    25    |     2      |
-|    28    |     4      |
-|    30    |     1      |
-|    35    |     3      |
-|   ...    |    ...     |
-+-----------------------+
-```
-
-In this example, the index on the "Age" column allows the database to quickly locate records based on age without scanning the entire table.
-
-### Selecting Columns to Index
-
-Choosing the right columns to index is crucial. Indexing every column is neither practical nor efficient, as indexes consume additional storage space and can slow down write operations. The goal is to identify columns that will benefit most from indexing.
-
-#### Analyzing Query Patterns
-
-Start by examining the queries your application runs most frequently. Look for columns used in:
-
-- **WHERE clauses** are applied to columns often used for filtering data.  
-- **JOIN conditions** involve columns that connect tables in queries.  
-- **ORDER BY clauses** sort query results based on specific columns.  
-- **GROUP BY clauses** organize data into groups using particular columns.  
-
-For instance, if you often query for users based on their email addresses, indexing the "Email" column would be beneficial.
-
-#### Considering Column Selectivity
-
-Column selectivity refers to the uniqueness of the data in a column. High selectivity means the column has many unique values, which makes indexing more effective. Indexing columns with low selectivity, like boolean flags, might not provide significant performance improvements.
-
-#### Balancing Read and Write Operations
-
-If your database experiences heavy read operations, indexing can greatly improve performance. However, if write operations (INSERT, UPDATE, DELETE) are more frequent, excessive indexing can slow down the system, as each write operation may require updating multiple indexes.
-
-### Types of Indexes
-
-Different types of indexes are available, each suited to specific use cases. Understanding these types helps you choose the most appropriate one for your needs.
-
-#### B-Tree Indexes
-
-B-Tree indexes are the default and most commonly used type. They are balanced tree structures that maintain sorted data, allowing for efficient retrieval of records based on exact matches and range queries.
-
-**Use Cases:**
-
-- Exact matches (e.g., `WHERE Age = 30`)
-- Range queries (e.g., `WHERE Age BETWEEN 25 AND 35`)
-
-#### Hash Indexes
-
-Hash indexes use a hash function to map keys to locations. They are efficient for exact match queries but not suitable for range queries.
-
-**Use Cases:**
-
-- Exact matches (e.g., `WHERE Email = 'alice@example.com'`)
-- Not suitable for range queries (e.g., `WHERE Age > 25`)
-
-#### Bitmap Indexes
-
-Bitmap indexes are ideal for columns with a limited number of distinct values (low cardinality), such as gender or status flags.
-
-**Use Cases:**
-
-- Columns with low cardinality
-- Efficient for counting and existence queries
-
-#### Full-Text Indexes
-
-Full-text indexes are specialized for text-searching capabilities, allowing for complex queries on large text fields.
-
-**Use Cases:**
-
-- Searching within articles, descriptions, or any large text fields
-- Supporting queries like `CONTAINS`, `MATCH`, or `AGAINST`
-
-#### Spatial Indexes
-
-Spatial indexes are designed for geometric data types and are used in applications involving location data.
-
-**Use Cases:**
-
-- Queries involving geographical data
-- Efficient for proximity searches
-
-### Implementing Indexes
-
-Creating indexes involves using specific SQL commands tailored to your database management system (DBMS). Let's look at how to create different types of indexes and understand their impact.
-
-#### Creating a Simple Index
-
-To create an index on the "Email" column of a "Users" table:
+A customer opens an order-history page. The query looks for that customer's recent orders:
 
 ```sql
-CREATE INDEX idx_users_email ON Users (Email);
+SELECT order_id, order_date
+FROM orders
+WHERE customer_id = 1
+ORDER BY order_date, order_id;
 ```
 
-This command tells the database to build an index named `idx_users_email` on the "Email" column, speeding up queries that filter by email.
+Without a suitable index, the engine may examine the orders table to find matching rows. With millions of orders and only a few belonging to this customer, avoiding that work can matter. With three rows, a scan may be simpler and faster.
 
-#### Creating a Composite Index
+The **optimizer** is the part of the DBMS that chooses an execution strategy. Declaring an index makes another strategy possible; it does not force the engine to use it.
 
-Composite indexes involve multiple columns and are useful when queries filter on more than one column. For example:
+## Start with one useful index
+
+For customer lookup:
 
 ```sql
-CREATE INDEX idx_users_last_first ON Users (LastName, FirstName);
+CREATE INDEX idx_orders_customer ON orders (customer_id);
 ```
 
-This index optimizes queries that search for users by both their last and first names.
+The index organizes entries by customer ID and lets the engine locate that customer's orders. It may still need to sort the matching rows by date.
 
-#### Using Full-Text Indexes
-
-For text-heavy columns, a full-text index enhances search capabilities:
+For customer lookup with the requested order, consider:
 
 ```sql
-CREATE FULLTEXT INDEX idx_articles_content ON Articles (Content);
+CREATE INDEX idx_orders_customer_date
+ON orders (customer_id, order_date, order_id);
 ```
 
-This allows for efficient text searches within the "Content" column, enabling features like natural language search.
+This is a **composite index**: one index containing several columns, ordered by customer first, date within that customer, and order ID within that date. Choose this alternative when it fits the workload; do not keep both examples automatically.
 
-#### Impact on Queries
+## Column order changes the access path
 
-After creating indexes, queries that utilize them will show improved performance. For example, searching for a user by email:
+Imagine an address book sorted first by country and then by surname. It is easy to find Smiths within one country, but all Smiths across countries are scattered.
 
-```sql
-SELECT * FROM Users WHERE Email = 'alice@example.com';
-```
+Similarly, `(customer_id, order_date)` and `(order_date, customer_id)` are different indexes. The first fits one customer's date range; the second may fit all orders in a date range. Engine-specific optimizations can help with other patterns, but the order is still a design decision.
 
-This query will execute faster because the database uses the index to locate the record directly.
+## Match the amount of data requested
 
-### Monitoring Index Performance
+A query returning one email match may benefit greatly from an index. A query returning almost every customer may benefit little: it still needs to retrieve almost every row.
 
-Indexes can degrade over time due to fragmentation and changes in data distribution. Regular monitoring helps maintain optimal performance.
+**Selectivity** describes how much a condition narrows the data. Look at how many rows the actual predicate matches rather than assuming a column is useful because it has an index. A boolean status may still be valuable in a partial index for a rare status.
 
-#### Checking Index Usage
+## Other index choices, after the basics
 
-Most DBMSs provide tools to check how indexes are used. For example, in MySQL, you can use:
+| Choice | What it does | Question to ask |
+| --- | --- | --- |
+| Unique index or constraint | Prevents duplicate key values. | Is uniqueness a business rule or only a search need? |
+| Covering index | Contains the values needed by a particular query. | Does avoiding extra table access justify the larger index? |
+| Partial or filtered index | Indexes a subset of rows when supported. | Can the engine establish that the query needs only that subset? |
+| Expression index | Indexes a calculation such as a lowercased email. | Does the query use the corresponding expression? |
 
-```sql
-SHOW INDEX FROM Users;
-```
+These are engine-dependent options. The basic point is to match the access path to the repeated query, not to accumulate every available index type.
 
-This command displays information about the indexes on the "Users" table.
+## Every extra index has a write cost
 
-#### Analyzing Query Execution Plans
+When an order is inserted, the database may need to insert its index entries too. Updating an indexed customer or date can require index maintenance. More indexes use more storage and memory and can increase write work.
 
-Execution plans show how the database executes a query, including whether it uses an index. In PostgreSQL, you can use:
+A primary or unique constraint may already have a supporting index. Check the existing definitions before adding another identical one. A foreign-key declaration does not universally create an index on the referencing columns.
 
-```sql
-EXPLAIN ANALYZE SELECT * FROM Users WHERE Email = 'alice@example.com';
-```
+## Verify with a plan and a representative workload
 
-This provides detailed information about the query execution, helping you understand if indexes are utilized effectively.
+An **execution plan** shows how a query will or did access data. Use the chosen engine's plan tools to check rows examined, sorting, estimates, and elapsed time. Some analysis commands execute the query, so understand the tool before applying it to a write.
 
-### Maintaining Indexes
+Compare the read improvement with insertion and update costs. Test customers with a few orders and customers with many; one convenient test value can hide a different workload.
 
-Just like maintaining a car ensures it runs smoothly, maintaining indexes keeps your database performance optimal.
+## Check your understanding
 
-#### Rebuilding Indexes
+1. Why might a scan be reasonable for the three-row introductory example?
+2. How is an index on `(customer_id, order_date)` different from the reverse order?
+3. Why would an index help one email lookup more than a query returning every customer?
+4. What work does an extra index add to an order insert?
 
-Over time, indexes can become fragmented, which slows down data retrieval. Rebuilding an index defragments it, improving performance.
-
-In SQL Server:
-
-```sql
-ALTER INDEX idx_users_email ON Users REBUILD;
-```
-
-#### Reorganizing Indexes
-
-Reorganizing is a lighter operation compared to rebuilding and is used when fragmentation is low.
-
-```sql
-ALTER INDEX idx_users_email ON Users REORGANIZE;
-```
-
-#### Scheduling Maintenance
-
-Plan maintenance activities during off-peak hours to minimize the impact on users. Regular maintenance schedules help prevent performance issues before they affect your application.
-
-### Optimizing Index Strategies
-
-An effective indexing strategy considers the specific needs of your application and adapts over time.
-
-#### Regularly Reviewing Indexes
-
-Data patterns and query frequencies change over time. Regularly review your indexes to ensure they still align with your application's needs.
-
-- Remove indexes that are no longer beneficial.
-- Modify indexes to better suit current query patterns.
-
-#### Balancing Costs and Benefits
-
-Remember that indexes consume resources:
-
-- They require additional **disk space** for storage.  
-- Frequently accessed indexes may reside in **memory**.  
-- Maintaining indexes adds extra overhead, which can reduce **write performance**.
-
-### Best Practices for Indexing
-
-Following best practices helps you get the most out of indexing while avoiding common pitfalls.
-
-#### Index Selectively
-
-Only index columns that are frequently used in queries. Unnecessary indexes waste resources and can degrade performance.
-
-#### Avoid Overlapping Indexes
-
-Having multiple indexes that serve similar purposes is inefficient. Consolidate indexes where possible.
-
-#### Use Covering Indexes
-
-A covering index includes all the columns needed to satisfy a query, eliminating the need to access the table. For example:
-
-```sql
-CREATE INDEX idx_users_email_name ON Users (Email, Name);
-```
-
-This index can satisfy queries that select both "Email" and "Name" without accessing the main table.
-
-#### Be Mindful of Index Order
-
-In composite indexes, the order of columns matters. Place the most selective columns first to maximize efficiency.
-
-#### Test Before Implementing
-
-Before adding or modifying indexes in a production environment, test the changes in a development environment to assess their impact.
-
-#### Monitor Continuously
-
-Use monitoring tools and logs to keep an eye on database performance, adjusting your indexing strategy as needed.
-
-### Practical Examples
-
-Let's explore some practical scenarios to solidify our understanding.
-
-#### Example 1: Speeding Up User Login
-
-A web application experiences slow login times due to a large "Users" table. Users are authenticated using their email and password.
-
-**Solution:**
-
-Create an index on the "Email" column to speed up the lookup.
-
-```sql
-CREATE INDEX idx_users_email ON Users (Email);
-```
-
-This index allows the database to quickly find the user record based on the email provided during login.
-
-#### Example 2: Improving Product Searches
-
-An e-commerce site allows users to search products by category and price range. The "Products" table has columns "Category", "Price", and "Name".
-
-**Solution:**
-
-Create a composite index on "Category" and "Price".
-
-```sql
-CREATE INDEX idx_products_category_price ON Products (Category, Price);
-```
-
-This index optimizes queries that filter products by category and price range, improving search performance.
-
-#### Example 3: Optimizing Reports
-
-A reporting tool generates monthly sales summaries using the "Sales" table, which includes "Date" and "Amount" columns.
-
-**Solution:**
-
-Create an index on the "Date" column to speed up date-range queries.
-
-```sql
-CREATE INDEX idx_sales_date ON Sales (Date);
-```
-
-This index helps the database efficiently retrieve records within specific date ranges, making report generation faster.
+[Database Indexing](../05_storage_and_indexing/05_indexing.md) explains the storage structures and engine-specific maintenance. Continue with [data integrity](05_data_integrity.md) to separate finding data quickly from enforcing its rules.

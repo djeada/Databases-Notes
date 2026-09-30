@@ -1,12 +1,12 @@
-## Indexing Strategies
+# Indexing Strategies
 
-Indexes play a crucial role in enhancing database query performance by allowing quick data retrieval without scanning every row in a table. Different indexing strategies are suited for various use cases and data types. Let's explore four common indexing strategies: **B-tree**, **Bitmap**, **Hash**, and **Full-Text** indexes. We'll delve into how they work, when to use them, and provide examples to illustrate their implementation.
+Index access methods suit different operations. This note compares B-tree, bitmap, hash, and full-text indexes using named engines. For composite index design, covering queries, and maintenance, see [Database Indexing](../05_storage_and_indexing/05_indexing.md).
 
-### B-tree Indexing Strategy
+## B-tree Indexing Strategy
 
-B-tree (Balanced Tree) indexes are one of the most widely used indexing methods in databases. They maintain sorted data in a tree-like structure, which allows for efficient insertion, deletion, and lookup operations.
+B-tree-family indexes are one of the most widely used indexing methods in databases. They maintain sorted data in a tree-like structure, which allows for efficient insertion, deletion, and lookup operations.
 
-#### Understanding B-tree Indexes
+### Understanding B-tree Indexes
 
 Imagine a library where books are organized alphabetically by title. Finding a book doesn't require scanning every single one; instead, you can quickly navigate to the section with the first letter, then to the specific book. B-tree indexes work similarly by keeping data sorted and balanced, ensuring that operations can be performed in logarithmic time.
 
@@ -27,11 +27,11 @@ In this diagram:
 - The tree is balanced, meaning all leaf nodes are at the same level.
 - Searching for a value involves traversing from the root to a leaf node, making decisions at each node.
 
-#### When to Use B-tree Indexes
+### When to Use B-tree Indexes
 
 B-tree indexes are ideal for columns where you frequently perform range queries, sorting, or need fast access to individual records based on a key. They are the default index type in many databases because of their versatility.
 
-#### Example in PostgreSQL
+### Example in PostgreSQL
 
 Suppose you have a `customers` table with a `last_name` column, and you often search for customers by their last name or need to list them in alphabetical order.
 
@@ -41,21 +41,21 @@ Creating a B-tree index on the `last_name` column:
 CREATE INDEX idx_customers_last_name ON customers(last_name);
 ```
 
-By doing this, queries like the following will execute more efficiently:
+The optimizer can use this index for queries such as the following; it may still choose a scan when many rows match:
 
 ```sql
 SELECT * FROM customers WHERE last_name = 'Smith';
 ```
 
-#### How B-tree Indexes Improve Performance
+### How B-tree Indexes Improve Performance
 
 Without an index, the database would perform a full table scan to find all customers with the last name 'Smith'. With the B-tree index, it can quickly locate the matching entries without scanning unnecessary rows.
 
-### Bitmap Indexing Strategy
+## Bitmap Indexing Strategy
 
 Bitmap indexes are designed for columns with a limited number of distinct values, known as low cardinality. They use bit arrays (bitmaps) to represent the presence or absence of a value, allowing for fast logical operations.
 
-#### Understanding Bitmap Indexes
+### Understanding Bitmap Indexes
 
 Consider a table that records survey responses, with a `gender` column that can be 'Male', 'Female', or 'Other'. A bitmap index creates a separate bitmap for each distinct value:
 
@@ -72,11 +72,11 @@ Row IDs: 1 2 3 4 5 6 7 8 9
 - A '1' indicates the presence of the value in that row; a '0' indicates absence.
 - Logical operations (AND, OR) can be performed quickly across bitmaps.
 
-#### When to Use Bitmap Indexes
+### When to Use Bitmap Indexes
 
 Bitmap indexes are particularly effective in data warehousing environments where queries often involve multiple conditions on low-cardinality columns. They excel at combining conditions using logical operations.
 
-#### Example in Oracle Database
+### Example in Oracle Database
 
 Suppose you have a `sales` table with a `region` column that has a small set of possible values ('North', 'South', 'East', 'West').
 
@@ -92,16 +92,16 @@ This index speeds up queries like:
 SELECT COUNT(*) FROM sales WHERE region = 'North' AND product_category = 'Electronics';
 ```
 
-#### Advantages and Considerations
+### Advantages and Considerations
 
 - **Advantages**: Efficient for complex queries involving multiple low-cardinality columns; reduced storage space due to bitmap compression.
 - **Considerations**: Not suitable for columns with high cardinality; bitmap indexes can cause contention issues in environments with frequent updates.
 
-### Hash Indexing Strategy
+## Hash Indexing Strategy
 
 Hash indexes use a hash function to map values to a location in a hash table, enabling fast retrieval for equality comparisons.
 
-#### Understanding Hash Indexes
+### Understanding Hash Indexes
 
 Imagine a library where each book is assigned a unique code generated by a hash function based on the book's title. When you want to find a book, you input the title into the hash function and go directly to the location where it's stored.
 
@@ -119,11 +119,11 @@ Values:
 - The hash function computes a location for each value.
 - Lookup is performed by computing the hash of the search value and accessing the corresponding location.
 
-#### When to Use Hash Indexes
+### When to Use Hash Indexes
 
-Hash indexes are suitable for columns where you frequently perform equality searches, such as primary keys or unique identifiers. They are not suitable for range queries or sorting because the hash function does not preserve order.
+Hash indexes support equality searches. PostgreSQL hash indexes cannot enforce uniqueness; primary-key and unique constraints normally use B-tree indexes. They are not suitable for range queries or sorting because the hash function does not preserve order.
 
-#### Example in PostgreSQL
+### Example in PostgreSQL
 
 Suppose you have a `users` table with a `username` column that you want to index for fast lookup.
 
@@ -139,16 +139,16 @@ Querying with the index:
 SELECT * FROM users WHERE username = 'johndoe';
 ```
 
-#### Limitations
+### Limitations
 
 - **No Range Queries**: Cannot efficiently handle queries like `username > 'j'`.
 - **Collision Handling**: Hash functions can produce the same hash for different inputs, requiring collision resolution.
 
-### Full-Text Indexing Strategy
+## Full-Text Indexing Strategy
 
 Full-text indexes are designed to handle complex searches within large text fields, such as searching for specific words or phrases in documents.
 
-#### Understanding Full-Text Indexes
+### Understanding Full-Text Indexes
 
 Consider a search engine that indexes the content of web pages to allow users to search for specific terms. Full-text indexing involves creating an inverted index that maps words to the documents they appear in.
 
@@ -165,11 +165,11 @@ Word-to-Document Mapping:
 - Each word is linked to the documents containing it.
 - Searching for documents containing 'Database' and 'Index' involves finding the intersection of their lists.
 
-#### When to Use Full-Text Indexes
+### When to Use Full-Text Indexes
 
 Full-text indexes are ideal for columns containing large amounts of text where you need to perform searches based on words or phrases, such as product descriptions, articles, or comments.
 
-#### Example in PostgreSQL
+### Example in PostgreSQL
 
 Suppose you have an `articles` table with a `content` column containing the text of each article.
 
@@ -187,35 +187,35 @@ SELECT title FROM articles WHERE to_tsvector('english', content) @@ to_tsquery('
 
 This query finds articles that contain both 'database' and 'indexing'.
 
-#### Features and Benefits
+### Features and Benefits
 
 - **Advanced Search Capabilities**: Supports stemming, ranking, and phrase searching.
 - **Performance**: Significantly improves the speed of text searches compared to scanning entire text fields.
 
-### Best Practices for Indexing
+## Best Practices for Indexing
 
 Effective indexing improves query performance while managing resource costs.
 
-#### Analyze Query Patterns
+### Analyze Query Patterns
 
 - Applications performing equality searches benefit from hash indexes, which provide fast lookups for exact matches.
 - Queries involving range conditions or sorting operations are well-suited to B-tree indexes, which support ordered data access.
 - Columns with low cardinality may perform better with bitmap indexes, especially in cases involving multiple conditions.
 - Text fields requiring search functionality can use full-text indexes for optimized searching.
 
-#### Monitor and Maintain Indexes
+### Monitor and Maintain Indexes
 
 - Fragmentation over time reduces performance, making it useful to rebuild indexes periodically.
 - Keeping database statistics updated is important for the query optimizer to make informed decisions.
 - Excessive indexing should be avoided, as it can degrade performance of write-intensive operations such as INSERT, UPDATE, and DELETE.
 
-#### Balance Performance and Resources
+### Balance Performance and Resources
 
 - Indexing should focus on columns that are frequently queried to avoid unnecessary overhead.
 - Queries filtering on multiple columns simultaneously can benefit from composite indexes.
 - Storage costs should be evaluated, particularly for large datasets, to balance performance benefits against space requirements.
 
-#### Testing and Iteration
+### Testing and Iteration
 
 - Developing indexes in a controlled environment allows for testing their impact on query performance without affecting production systems.
 - Query execution can be analyzed using EXPLAIN plans to ensure indexes are being utilized effectively.
