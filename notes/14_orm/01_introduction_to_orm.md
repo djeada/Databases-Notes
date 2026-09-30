@@ -557,6 +557,9 @@ Before merging ORM code, ask:
 ## Related notes
 
 - [ORM tools and their trade-offs](02_popular_orm_tools.md)
+- [Schema migrations](03_schema_migrations.md)
+- [Relationship loading and query performance](04_relationship_loading_and_query_performance.md)
+- [Transactions, concurrency, and unit of work](05_transactions_concurrency_and_unit_of_work.md)
 - [Accessing a database in code](../08_database_performance/05_accessing_database_in_code.md)
 - [Transactions and ACID](../04_acid_properties_and_transactions/)
 - [SQL injection](../11_security_best_practices/06_sql_injection.md)
