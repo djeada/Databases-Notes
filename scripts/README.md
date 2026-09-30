@@ -304,6 +304,21 @@ pip install -r big_data/requirements.txt
   python big_data/spark_sql_demo.py
   ```
 
+- **big_data/parquet_lake_demo.py** - Writes a partitioned Parquet dataset with
+  DuckDB, shows the resulting lake-style directory layout, and queries one
+  partition directly.
+  ```bash
+  python big_data/parquet_lake_demo.py
+  ```
+
+- **big_data/kafka/docker-compose.yml** - Runs a single-node Kafka 4.3.1 broker
+  in KRaft mode for the streaming/CDC note.
+  ```bash
+  cd big_data/kafka
+  docker compose up -d
+  docker compose down
+  ```
+
 ## ORM
 
 Install the ORM demo dependency:
@@ -317,6 +332,18 @@ pip install -r orm/requirements.txt
   enables SQL logging so the generated statements are visible.
   ```bash
   python orm/sqlalchemy_demo.py
+  ```
+
+- **orm/n_plus_one_demo.py** - Counts SQL statements for lazy relationship
+  loading versus `selectinload()`, making the N+1 problem measurable.
+  ```bash
+  python orm/n_plus_one_demo.py
+  ```
+
+- **orm/optimistic_concurrency_demo.py** - Opens two sessions on the same
+  versioned row and shows SQLAlchemy rejecting a stale update.
+  ```bash
+  python orm/optimistic_concurrency_demo.py
   ```
 
 ## Cross-database utilities
