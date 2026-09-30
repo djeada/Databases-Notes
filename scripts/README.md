@@ -8,6 +8,11 @@ This directory groups database-specific demos under engine-specific folders:
 - `mongo/`
 - `neo4j/`
 - `sqlserver/`
+- `redis/`
+- `cassandra/`
+- `opensearch/`
+- `clickhouse/`
+- `cockroach/`
 - `big_data/`
 - `orm/`
 
@@ -74,6 +79,11 @@ scripts/
 ├── mongo/
 ├── neo4j/
 ├── sqlserver/
+├── redis/
+├── cassandra/
+├── opensearch/
+├── clickhouse/
+├── cockroach/
 ├── big_data/
 ├── orm/
 ├── diagrams/
@@ -279,6 +289,108 @@ passed to the container through stdin rather than the Docker command line.
 Results and SQL messages appear separately. Database changes and session state
 persist across executions because the connection remains open.
 
+## Redis
+
+Start a local Redis instance with AOF persistence enabled:
+
+```bash
+cd redis
+docker compose up -d
+docker exec -it redis-notes redis-cli
+```
+
+Run the sample command file:
+
+```bash
+cat demo.redis | docker exec -i redis-notes redis-cli
+```
+
+Stop it with `docker compose down`. Use `docker compose down -v` only when
+you also want to delete the demo volume.
+
+## Cassandra
+
+Start a single-node Cassandra 5.0 learning environment:
+
+```bash
+cd cassandra
+docker compose up -d
+docker logs -f cassandra-notes
+```
+
+After the node is ready, load the query-shaped CQL example:
+
+```bash
+docker exec -i cassandra-notes cqlsh < demo.cql
+```
+
+The demo uses replication factor 1 because it is intentionally single-node;
+production Cassandra should use a redundant topology and topology-aware
+replication.
+
+## OpenSearch
+
+Start a single-node OpenSearch 3 development cluster:
+
+```bash
+cd opensearch
+docker compose up -d
+curl http://localhost:9200
+```
+
+The demo disables the security plugin and is **only for local learning**. Run the
+index/mapping/full-text/aggregation example:
+
+```bash
+bash demo.sh
+```
+
+## ClickHouse
+
+Start a local ClickHouse server:
+
+```bash
+cd clickhouse
+docker compose up -d
+docker exec -it clickhouse-notes clickhouse-client
+```
+
+Load the MergeTree analytics demo:
+
+```bash
+docker exec -i clickhouse-notes \
+  clickhouse-client --multiquery < demo.sql
+```
+
+The script creates a partitioned/sorted event table, runs grouped analytics,
+and inspects active data parts.
+
+## CockroachDB
+
+Start a single-node CockroachDB development instance:
+
+```bash
+cd cockroach
+docker compose up -d
+```
+
+Open the SQL shell:
+
+```bash
+docker exec -it cockroach-notes \
+  cockroach sql --insecure --host=localhost:26257
+```
+
+Run the transaction demo:
+
+```bash
+docker exec -i cockroach-notes \
+  cockroach sql --insecure --host=localhost:26257 < demo.sql
+```
+
+The `--insecure` single-node setup is for learning only; it does not represent
+a production distributed SQL topology.
+
 ## Big Data
 
 These demos are local teaching examples for the final Big Data chapter. They keep
@@ -387,6 +499,7 @@ SQLite locking works.
 
 ## Contributing
 
-1. Put SQLite examples in `sqlite/`, MySQL examples in `mysql/`, PostgreSQL examples in `postgres/`, MongoDB examples in `mongo/`, Neo4j examples in `neo4j/`, and SQL Server utilities in `sqlserver/`.
+1. Put engine-specific examples in their matching folders (`sqlite/`, `mysql/`, `postgres/`, `mongo/`, `neo4j/`, `sqlserver/`, `redis/`, `cassandra/`, `opensearch/`, `clickhouse/`, or `cockroach/`).
 2. Keep engine-specific concurrency examples in the matching engine folder.
-3. Update this README when you add, move, or remove a script.
+3. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
+4. Update this README when you add, move, or remove a script.
