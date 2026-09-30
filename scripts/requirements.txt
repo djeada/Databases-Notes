@@ -17,3 +17,13 @@ neo4j>=5.0.0
 
 # Required for the SQL Server multiline console (scripts/sqlserver/sql_docker_console.py)
 prompt-toolkit>=3.0.0
+
+
+# Required for local analytical warehouse demo (scripts/big_data/warehouse_demo.py)
+duckdb>=1.0.0
+
+# Required for Spark SQL demo (scripts/big_data/spark_sql_demo.py)
+pyspark>=3.5.0
+
+# Required for ORM demo (scripts/orm/sqlalchemy_demo.py)
+SQLAlchemy>=2.0.0
