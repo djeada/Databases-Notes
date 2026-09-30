@@ -76,6 +76,10 @@ def main() -> None:
             titles = ", ".join(post.title for post in user.posts)
             print(f"{user.name}: {titles}")
 
+        # The SELECT above auto-begins a transaction in SQLAlchemy 2.x.
+        # End it before starting a new explicit transaction for the update.
+        session.commit()
+
         with session.begin():
             alice = session.scalar(select(User).where(User.name == "Alice"))
             if alice is None:
