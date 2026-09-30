@@ -1,362 +1,120 @@
-## Data Definition Language (DDL)
+# DDL: Define and Change the Database Structure
 
-Welcome to the world of Data Definition Language, or DDL for short. If you've ever wondered how databases are structured and how those structures are created and modified, you're in the right place. DDL is a subset of SQL (Structured Query Language) that focuses on defining and managing the schema of a database. Think of it as the blueprint for your database, where you lay out the design of tables, indexes, views, and other elements that store and organize your data.
+**Data Definition Language (DDL)** defines database objects. A table definition says which columns exist, what kinds of values they accept, and which rules apply. It is different from inserting the current rows into that table.
 
-### Understanding DDL and Its Purpose
+This note assumes you have worked through the [SQL introduction](01_intro_to_sql.md). Examples use SQLite unless another engine is named. The existing bookstore tables remain available.
 
-Imagine building a house—you need a plan that outlines where the rooms will be, how big they are, and how they're connected. Similarly, DDL provides the commands to create the "rooms" (tables) in your database, specify their "furniture" (columns and data types), and decide how everything is connected. It allows you to:
+## Read a table definition
 
-- **Create** new database structures.
-- **Alter** existing structures to adapt to changing requirements.
-- **Drop** structures that are no longer needed.
-- **Truncate** tables to remove data while keeping the structure intact.
-- **Rename** database objects to reflect new naming conventions or purposes.
-
-By mastering DDL, you gain control over the foundational aspects of your database, ensuring that your data is organized efficiently and effectively.
-
-### Key DDL Statements
-
-Let's dive into the main commands that make up DDL and see how they help you shape your database.
-
-#### Creating Tables with `CREATE TABLE`
-
-The `CREATE TABLE` statement is your starting point for adding new tables to your database. It defines the table's name, the columns it contains, their data types, and any constraints that enforce data integrity.
-
-**Example:**
-
-Suppose you want to create a table to store information about employees. Here's how you might do it:
+This creates a separate practice table:
 
 ```sql
-CREATE TABLE employees (
-    employee_id INT PRIMARY KEY,
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    date_of_birth DATE,
-    department_id INT
+CREATE TABLE suppliers (
+    supplier_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE
 );
 ```
 
-In this command, we're creating a table named `employees` with the following columns:
+Read each line as a declaration. `supplier_id` identifies a supplier. `name` is required text. Email is optional but subject to SQLite's unique-value rules when provided. An empty table now exists; no supplier row has been created yet.
 
-- The `employee_id` is an integer field that uniquely identifies each employee and is set as the primary key to ensure uniqueness.  
-- The `first_name` and `last_name` are text fields designed to store the employee's names, each with a character limit of 50.  
-- The `date_of_birth` is a date field used to record the birth date of the employee for reference.  
-- The `department_id` is an integer field that links the employee to a specific department, creating an association.  
+The **data type** describes the intended kind of value, such as integer or text. The **constraint** describes a rule, such as required or unique. Type behavior differs by engine: SQLite ordinary tables are more permissive than PostgreSQL tables.
 
-**Visualizing the Table Structure:**
+## Choose types from meaning
 
-```
-+-------------+------------+-----------+---------------+---------------+
-| employee_id | first_name | last_name | date_of_birth | department_id |
-+-------------+------------+-----------+---------------+---------------+
-|             |            |           |               |               |
-+-------------+------------+-----------+---------------+---------------+
-```
+| Fact | A possible representation | Reason |
+| --- | --- | --- |
+| Supplier identifier | Integer | A stable reference to a supplier. |
+| Name | Text | Words rather than numeric arithmetic. |
+| Quantity | Integer plus a positive check | A count of whole units. |
+| Price | Integer cents in this tutorial | Exact arithmetic in the chosen smallest currency unit. |
+| Date | ISO-formatted text in this SQLite tutorial | A consistent representation; the text type alone does not validate dates. |
 
-At this point, the table is empty, but it's ready to hold employee data.
+A phone number is usually text: leading zeros and a plus sign matter, and adding two phone numbers is meaningless. Choose types from the operations and rules needed, rather than from the appearance of one sample.
 
-#### Modifying Tables with `ALTER TABLE`
+## Give new rows a default
 
-As your database evolves, you might need to change the structure of your tables. The `ALTER TABLE` statement allows you to add, modify, or remove columns and constraints.
-
-**Example:**
-
-Let's say you realize you need to store each employee's email address. You can add a new column to the `employees` table like this:
+Add a country column with an explicit default for this exercise:
 
 ```sql
-ALTER TABLE employees
-ADD email VARCHAR(100);
+ALTER TABLE suppliers
+ADD COLUMN country_code TEXT NOT NULL DEFAULT 'DE';
 ```
 
-Now, the `employees` table includes the `email` column:
+`ALTER TABLE` changes the definition of an existing table. Omitting country on a later insert uses `DE`; existing rows also need a defined treatment during such changes. In a real migration, do not assign a country merely because a default makes the command convenient.
 
-```
-+-------------+------------+-----------+---------------+---------------+-------------------+
-| employee_id | first_name | last_name | date_of_birth | department_id | email             |
-+-------------+------------+-----------+---------------+---------------+-------------------+
-|             |            |           |               |               |                   |
-+-------------+------------+-----------+---------------+---------------+-------------------+
-```
-
-This new column can store up to 100 characters, accommodating most email addresses.
-
-#### Removing Tables with `DROP TABLE`
-
-When a table is no longer needed, you can remove it entirely using the `DROP TABLE` statement. This action deletes the table and all of its data permanently.
-
-**Example:**
-
-Suppose the `employees` table is obsolete, and you want to remove it:
+Add a row and inspect it:
 
 ```sql
-DROP TABLE employees;
+INSERT INTO suppliers (supplier_id, name, email)
+VALUES (1, 'Example Books', 'orders@example.com');
+
+SELECT supplier_id, name, country_code
+FROM suppliers;
 ```
 
-After executing this command, the `employees` table no longer exists in your database. Be cautious with `DROP TABLE`, as this action cannot be undone.
+The country is `DE`. Changing a column's default later does not generally rewrite all explicitly stored historical values.
 
-#### Deleting Data with `TRUNCATE TABLE`
+## Connect tables with a foreign key
 
-If you want to remove all data from a table but keep its structure for future use, `TRUNCATE TABLE` comes in handy. It's a quick way to delete all rows without dropping the table itself.
-
-**Example:**
-
-To empty the `employees` table:
+An order's customer is declared as:
 
 ```sql
-TRUNCATE TABLE employees;
+-- Declaration fragment, shown inside a table definition:
+customer_id INTEGER NOT NULL REFERENCES customers(customer_id)
 ```
 
-Before truncation, the table might look like this:
+`REFERENCES` says which existing identifier must match. It is not a join command. The DBMS checks validity during writes; a query must still request a join to display the customer's name.
 
-```
-+-------------+------------+-----------+---------------+---------------+
-| employee_id | first_name | last_name | date_of_birth | department_id |
-+-------------+------------+-----------+---------------+---------------+
-| 1           | Alice      | Smith     | 1985-04-12    | 101           |
-| 2           | Bob        | Johnson   | 1990-07-23    | 102           |
-+-------------+------------+-----------+---------------+---------------+
-```
+SQLite requires foreign-key enforcement to be enabled on each connection. Other engines have their own rules for adding and validating constraints on populated tables.
 
-After truncation, all the data is gone, but the table remains:
-
-```
-+-------------+------------+-----------+---------------+---------------+
-| employee_id | first_name | last_name | date_of_birth | department_id |
-+-------------+------------+-----------+---------------+---------------+
-|             |            |           |               |               |
-+-------------+------------+-----------+---------------+---------------+
-```
-
-This is useful when you need to reset a table's data without affecting its structure or relationships.
-
-#### Renaming Tables with `RENAME TABLE` or `ALTER TABLE`
-
-Changing the name of a table can be necessary when its purpose evolves or to adhere to new naming conventions. Depending on your database system, you can use `RENAME TABLE` or `ALTER TABLE` to accomplish this.
-
-**Example (Using `ALTER TABLE` in PostgreSQL):**
+## Add an access path
 
 ```sql
-ALTER TABLE employees RENAME TO staff;
+CREATE INDEX idx_orders_customer ON orders (customer_id);
 ```
 
-**Example (Using `RENAME TABLE` in MySQL):**
+An index helps some queries find rows. It does not add a new business record or change what an order means. It also consumes space and adds maintenance work during writes.
+
+Use [indexing strategies](../02_database_design/04_indexing_strategies.md) to decide whether an index supports a measured access pattern.
+
+## Remove data or remove the object?
+
+These operations have different scopes:
+
+| Operation | Meaning |
+| --- | --- |
+| `DELETE FROM suppliers;` | Remove the supplier rows; retain the table definition. |
+| `DROP TABLE suppliers;` | Remove the table object and its data. |
+| `TRUNCATE TABLE suppliers;` | Engine-specific whole-table removal; SQLite does not support this statement. |
+
+For this practice table, cleanup is:
 
 ```sql
-RENAME TABLE employees TO staff;
+DROP TABLE suppliers;
 ```
 
-After renaming, the table previously known as `employees` is now called `staff`:
+A real application migration should consider readers, writers, dependencies, and recoverability before dropping an object.
 
-```
-+-------------+------------+-----------+---------------+---------------+
-| employee_id | first_name | last_name | date_of_birth | department_id |
-+-------------+------------+-----------+---------------+---------------+
-|             |            |           |               |               |
-+-------------+------------+-----------+---------------+---------------+
-```
+## Why production changes need a migration
 
-This change updates the table's name in the database schema, but the structure and data remain the same.
+A **migration** is a controlled change from the current schema to a new one. Adding a required column to a table with existing rows raises a question: where will those existing values come from?
 
-### Practical Examples and Interpretations
+One approach is to add an optional column, fill its values with a **backfill**, update application writers, validate the data, and then require the value using the chosen engine's supported procedure. Large backfills and constraint checks can take time or block work.
 
-To deepen our understanding, let's explore some practical scenarios involving DDL statements and interpret the outcomes.
+The migration must describe the existing data, the new rule, how writers remain compatible during the transition, and how failures are handled. Merely showing a fresh `CREATE TABLE` does not explain changing a live system.
 
-#### Creating a Departments Table
+## Transaction behavior differs by engine
 
-Suppose we want to create a new table to store information about departments within a company:
+SQLite supports transactional schema changes with documented restrictions. PostgreSQL supports rollback for most DDL, while commands such as `CREATE DATABASE` cannot run inside a transaction block. MySQL DDL commonly causes implicit commits.
 
-```sql
-CREATE TABLE departments (
-    department_id INT PRIMARY KEY,
-    department_name VARCHAR(100),
-    manager_id INT
-);
-```
+An **implicit commit** means the engine commits without the application issuing `COMMIT` at that point. Therefore, do not assume a later rollback will undo every schema change and surrounding write in every engine.
 
-This command sets up a `departments` table with:
+## Check your understanding
 
-- The `department_id` serves as a unique identifier for each department, ensuring distinct identification in the database.  
-- The `department_name` represents the name assigned to each department for identification and reference.  
-- The `manager_id` corresponds to the ID of the manager responsible for overseeing the department's operations.  
+1. Why is a table empty immediately after `CREATE TABLE`?
+2. What does adding a default decide for omitted values, and what business assumption might it hide?
+3. How is deleting every row different from dropping the table?
+4. Why is adding a required column to existing data harder than defining it on a new empty table?
 
-**Table Structure:**
-
-```
-+---------------+------------------+------------+
-| department_id | department_name  | manager_id |
-+---------------+------------------+------------+
-|               |                  |            |
-+---------------+------------------+------------+
-```
-
-#### Altering the Departments Table
-
-Later, we decide to add the location of each department:
-
-```sql
-ALTER TABLE departments
-ADD location VARCHAR(50);
-```
-
-The `departments` table now includes a `location` column:
-
-```
-+---------------+------------------+------------+----------+
-| department_id | department_name  | manager_id | location |
-+---------------+------------------+------------+----------+
-|               |                  |            |          |
-+---------------+------------------+------------+----------+
-```
-
-#### Renaming a Column
-
-Perhaps the `manager_id` column needs a clearer name. We can rename it to `head_id`:
-
-**For MySQL:**
-
-```sql
-ALTER TABLE departments
-CHANGE manager_id head_id INT;
-```
-
-**For PostgreSQL:**
-
-```sql
-ALTER TABLE departments
-RENAME COLUMN manager_id TO head_id;
-```
-
-Now, the column reflects its new name:
-
-```
-+---------------+------------------+----------+----------+
-| department_id | department_name  | head_id  | location |
-+---------------+------------------+----------+----------+
-|               |                  |          |          |
-+---------------+------------------+----------+----------+
-```
-
-#### Dropping a Column
-
-If the `location` information is no longer needed, we can remove that column:
-
-```sql
-ALTER TABLE departments
-DROP COLUMN location;
-```
-
-The `departments` table reverts to:
-
-```
-+---------------+------------------+----------+
-| department_id | department_name  | head_id  |
-+---------------+------------------+----------+
-|               |                  |          |
-+---------------+------------------+----------+
-```
-
-#### Deleting the Departments Table
-
-If we decide to remove the `departments` table entirely:
-
-```sql
-DROP TABLE departments;
-```
-
-The table and all its data are permanently deleted from the database.
-
-### Understanding Constraints and Data Integrity
-
-DDL not only defines the structure of tables but also allows you to enforce rules to maintain data integrity. Constraints are conditions that the data must satisfy, ensuring accuracy and consistency.
-
-#### Common Types of Constraints
-
-- A **primary key** uniquely identifies each row in a database table and ensures no duplicate entries exist for the specified column(s).  
-- A **foreign key** establishes a relationship between two tables by referencing a primary key in another table, maintaining referential integrity.  
-- A **unique constraint** ensures that all values in a column or group of columns are distinct, preventing duplicate entries.  
-- A **not null constraint** ensures that a column cannot have NULL values, meaning every row must contain a valid entry for that column.  
-- A **check constraint** enforces a specified condition for values in a column, ensuring that data entered meets defined criteria.  
-- A **default constraint** provides a pre-defined value for a column when no explicit value is supplied during data insertion.  
-
-#### Adding Constraints During Table Creation
-
-When creating a table, you can define constraints directly:
-
-```sql
-CREATE TABLE projects (
-    project_id INT PRIMARY KEY,
-    project_name VARCHAR(100) NOT NULL,
-    start_date DATE,
-    end_date DATE,
-    budget DECIMAL(10, 2) CHECK (budget > 0),
-    manager_id INT,
-    FOREIGN KEY (manager_id) REFERENCES employees(employee_id)
-);
-```
-
-This `projects` table includes:
-
-- A `PRIMARY KEY` on `project_id`.
-- A `NOT NULL` constraint on `project_name` to ensure every project has a name.
-- A `CHECK` constraint on `budget` to ensure it's a positive number.
-- A `FOREIGN KEY` linking `manager_id` to the `employees` table.
-
-#### Altering Tables to Add Constraints
-
-You can also add constraints to an existing table:
-
-```sql
-ALTER TABLE employees
-ADD CONSTRAINT fk_department
-FOREIGN KEY (department_id)
-REFERENCES departments(department_id);
-```
-
-This adds a foreign key constraint to the `employees` table, linking `department_id` to the `departments` table.
-
-## Using DDL to Manage Indexes and Views
-
-Beyond tables, DDL commands also help you create and manage indexes and views, enhancing database performance and usability.
-
-#### Creating Indexes
-
-Indexes improve query performance by allowing the database to find data faster.
-
-```sql
-CREATE INDEX idx_last_name ON employees(last_name);
-```
-
-This command creates an index on the `last_name` column of the `employees` table, speeding up searches based on last names.
-
-#### Dropping Indexes
-
-If an index is no longer necessary, you can remove it:
-
-```sql
-DROP INDEX idx_last_name;
-```
-
-This deletes the index, potentially slowing down queries that relied on it but freeing up system resources.
-
-#### Creating Views
-
-A view is a virtual table based on a SELECT query. It simplifies complex queries and enhances security by restricting access to specific data.
-
-```sql
-CREATE VIEW employee_overview AS
-SELECT employee_id, first_name, last_name, department_name
-FROM employees
-JOIN departments ON employees.department_id = departments.department_id;
-```
-
-This view provides a simplified way to see employee information alongside their department names.
-
-#### Dropping Views
-
-To remove a view:
-
-```sql
-DROP VIEW employee_overview;
-```
-
-The view is deleted, but the underlying tables remain unaffected.
+Continue with [DML](03_data_manipulation_language_dml.md), which works with rows under these definitions.

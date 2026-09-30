@@ -1,16 +1,8 @@
-## Handling the Double-Booking Problem in Databases
+# Handling the Double-Booking Problem in Databases
 
 The double-booking problem is a common issue in database systems, particularly in applications like booking platforms, reservation systems, and inventory management. It occurs when multiple transactions simultaneously attempt to reserve or modify the same resource, leading to conflicts and inconsistencies. This can result in overbooked flights, double-sold tickets, or oversold inventory, causing significant problems for both businesses and customers.
 
-After reading the material, you should be able to answer the following questions:
-
-1. What is the double-booking problem in database systems, and in which types of applications is it commonly encountered?
-2. What are the primary causes of the double-booking problem, such as race conditions and inadequate locking mechanisms?
-3. How do shared and exclusive locks help prevent the double-booking problem, and what is the difference between them?
-4. What concurrency control strategies can be implemented to avoid double-booking, including proper locking, setting appropriate isolation levels, and using optimistic concurrency control?
-5. What are some best practices for designing transactions and managing locks to minimize the risk of double-booking in high-concurrency environments?
-
-### Understanding the Double-Booking Problem
+## Understanding the Double-Booking Problem
 
 At its core, the double-booking problem arises due to concurrent transactions accessing and modifying shared resources without proper synchronization. When two or more transactions read the same data and proceed to update it based on the initial value, they can inadvertently overwrite each other's changes.
 
@@ -29,34 +21,34 @@ T4                                      Book seat (available seats = -1)
 
 In this timeline:
 
-- At **T1**, Alice's transaction reads that there is **1 seat available**.
-- At **T2**, Bob's transaction also reads **1 seat available**.
-- At **T3**, Alice books the seat, updating the available seats to **0**.
-- At **T4**, Bob, unaware of Alice's booking, also books the seat, reducing the available seats to **-1**.
+- At T1, Alice's transaction reads that there is 1 seat available.
+- At T2, Bob's transaction also reads 1 seat available.
+- At T3, Alice books the seat, updating the available seats to 0.
+- At T4, Bob, unaware of Alice's booking, also books the seat, reducing the available seats to -1.
 
 This results in an overbooking situation where the system has allowed more bookings than available seats.
 
-### Causes of the Double-Booking Problem
+## Causes of the Double-Booking Problem
 
 Several factors contribute to the occurrence of double-booking in databases:
 
-- The presence of **race conditions** allows transactions to operate on the same data concurrently without proper synchronization, resulting in unpredictable and conflicting outcomes.  
-- **Inadequate locking mechanisms** fail to restrict access effectively, enabling multiple transactions to simultaneously read and write to the same resource, leading to inconsistencies.  
-- Utilizing **insufficient isolation levels**, such as read-uncommitted, permits undesirable phenomena like dirty reads and non-repeatable reads, increasing the likelihood of data conflicts.  
-- **Delayed writes** occur when transactions read data, perform computations, and then write back changes after a delay, potentially overwriting updates made by other transactions in the interim.  
+- The presence of race conditions allows transactions to operate on the same data concurrently without proper synchronization, resulting in unpredictable and conflicting outcomes.
+- **Inadequate locking mechanisms** fail to restrict access effectively, enabling multiple transactions to simultaneously read and write to the same resource, leading to inconsistencies.
+- Utilizing insufficient isolation levels, such as read-uncommitted, permits undesirable phenomena like dirty reads and non-repeatable reads, increasing the likelihood of data conflicts.
+- **Delayed writes** occur when transactions read data, perform computations, and then write back changes after a delay, potentially overwriting updates made by other transactions in the interim.
 
-### Preventing Double-Booking
+## Preventing Double-Booking
 
 Preventing double-booking is essential for systems where concurrent users compete for limited resources. By implementing proper locking strategies and transaction controls, you can ensure data integrity and provide a reliable user experience even under high concurrency.
 
-#### Use the Right Lock for the Situation
+### Use the Right Lock for the Situation
 
 Locks allow you to control how multiple transactions interact with the same data. Choosing the right lock type helps balance concurrency and safety: exclusive locks prevent other operations from interfering, while shared locks permit safe reads from multiple transactions.
 
 | Lock type             | What it does              | Works in                                       | Typical syntax                                                                                                                           | How to verify                                                                                                                                                                       |
 | --------------------- | ------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Exclusive / Write** | One writer, no readers.   | PostgreSQL, MySQL (InnoDB), SQL Server, Oracle | `SELECT … FOR UPDATE;`  (PG/MariaDB)<br>`SELECT … LOCK IN SHARE MODE;` (MySQL 8.0+)<br>`SELECT … WITH (UPDLOCK, HOLDLOCK);` (SQL Server) | Open two sessions. In session A run the locking `SELECT`. In session B run the same statement—observe it block (PG/SQL Server) or return instantly with an error (MySQL w/ NOWAIT). |
-| **Shared / Read**     | Many readers, no writers. | Same engines as above                          | `SELECT … FOR SHARE;` (PG)<br>`LOCK TABLE tbl IN SHARE MODE;` (MySQL)<br>`SELECT … WITH (HOLDLOCK);` (SQL Server)                        | Keep session A busy with `SELECT … FOR SHARE`, attempt an `UPDATE` in session B—update waits until session A commits.                                                               |
+| **Exclusive / Write** | Excludes conflicting lock holders; MVCC snapshot reads may continue.   | PostgreSQL, MySQL (InnoDB), SQL Server, Oracle | `SELECT … FOR UPDATE;`  (PG/MariaDB)<br>`SELECT … FOR UPDATE;` (MySQL InnoDB)<br>`SELECT … WITH (UPDLOCK, HOLDLOCK);` (SQL Server) | Open two sessions. In session A run the locking `SELECT`. In session B run the same statement—observe it block (PG/SQL Server) or fail when `NOWAIT` is explicitly requested. |
+| **Shared / Read**     | Many readers, no writers. | Same engines as above                          | `SELECT … FOR SHARE;` (PG)<br>`SELECT … FOR SHARE;` (MySQL InnoDB)<br>`SELECT … WITH (HOLDLOCK);` (SQL Server, lock-based reads)                        | Keep session A busy with `SELECT … FOR SHARE`, attempt an `UPDATE` in session B—update waits until session A commits.                                                               |
 
 > **Tip for PostgreSQL:** Inspect current locks with
 >
@@ -65,14 +57,14 @@ Locks allow you to control how multiple transactions interact with the same data
 > FROM pg_locks l JOIN pg_stat_activity a USING(pid);
 > ```
 
-#### Pick an Isolation Level You Can Live With
+### Pick an Isolation Level You Can Live With
 
 Isolation levels define how visible changes in one transaction are to others. Stricter levels prevent more anomalies but can reduce performance by increasing locking and blocking. Choose the level that meets your consistency needs without unnecessarily hindering throughput.
 
 | Level               | Guarantees                                                                                                                   | Supported by                                                                         | Set with                                           | Quick test                                                                                                                                                                                       |
 | ------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **SERIALIZABLE**    | No dirty, non-repeatable or phantom reads. Behaves as if transactions ran one-after-another.                                 | PostgreSQL, SQL Server, Oracle, MySQL 8.0 (but uses extra locks → lower concurrency) | `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;`    | In two sessions insert into the same over-booked seat; one will roll back with `SQLSTATE 40001` (PG) or `ERROR 1213 (MySQL)`.                                                                    |
-| **REPEATABLE READ** | Same row value every time you read it; phantoms still possible (unless engine adds gap locks, e.g. MySQL). Default in MySQL. | PostgreSQL, MySQL (InnoDB), MariaDB, SQL Server (`SNAPSHOT`)                         | `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;` | Read seat count twice in one Tx while another session inserts a new seat. In MySQL you won’t see new rows (gap locks); in PostgreSQL you will—so use explicit `SELECT … FOR KEY SHARE` to block. |
+| **SERIALIZABLE**    | No dirty, non-repeatable or phantom reads. Behaves as if transactions ran one-after-another.                                 | PostgreSQL, SQL Server, MySQL InnoDB; implementations differ | `SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;`    | Run a concurrent read-check-write workload; expect blocking or an abort. Duplicate inserts may instead fail on a unique constraint.                                                                    |
+| **REPEATABLE READ** | Prevents dirty and non-repeatable reads. PostgreSQL and InnoDB ordinary snapshot reads also prevent phantoms. Default in InnoDB. | PostgreSQL, MySQL InnoDB, MariaDB, SQL Server (`SNAPSHOT` is separate)                         | `SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;` | Repeat an ordinary count while another session inserts. PostgreSQL and InnoDB retain the snapshot; SQL Server Repeatable Read can see a phantom. `FOR KEY SHARE` does not protect an absent row. |
 
 *Verification script for MySQL*
 
@@ -87,12 +79,13 @@ START TRANSACTION;
 UPDATE seats SET user_id = 99 WHERE seat_id = 42;
 ```
 
-#### Optimistic Concurrency Control (OCC)
+### Optimistic Concurrency Control (OCC)
 
-When conflicts are rare, OCC lets you avoid heavy locking by using a version or timestamp column to detect concurrent updates. If a conflict is detected at commit time, the transaction retries, yielding higher throughput under low contention.
+When conflicts are rare, OCC lets you avoid heavy locking by using a version or timestamp column to detect concurrent updates. If a version-checked update affects zero rows, the application rolls back and retries, yielding higher throughput under low contention.
 
 ```sql
--- Works in: PostgreSQL, SQL Server (rowversion/timestamp), MySQL (generated col), Oracle
+-- Application-level SQL sketch: use a normal integer version column.
+-- :new_qty and :old_version are bound parameters, not SQL variables.
 BEGIN;
 SELECT quantity, version
 FROM inventory
@@ -104,7 +97,8 @@ UPDATE inventory
 SET quantity = :new_qty,
     version  = version + 1
 WHERE product_id = 101
-  AND version   = :old_version;      -- fails (0 rows) if someone changed it
+  AND version   = :old_version;      -- affects 0 rows if someone changed it
+-- Application: require one affected row; otherwise ROLLBACK and retry.
 COMMIT;
 ```
 
@@ -113,7 +107,7 @@ COMMIT;
 1. Run above block in two psql sessions simultaneously.
 2. One commit succeeds, the other sees `UPDATE 0`, signaling a retry.
 
-#### Pessimistic Lock First, Work Later
+### Pessimistic Lock First, Work Later
 
 Sometimes you need to lock resources immediately to prevent any concurrent modifications. This approach acquires an exclusive lock up front, ensuring that no one else can read or write the locked rows until you commit.
 
@@ -131,7 +125,7 @@ COMMIT;
 * **Where it hurts:** large report queries (locks too many rows & slows everyone).
 * **Verification:** Watch `sys.dm_tran_locks`; you’ll see an `X` lock on that row.
 
-#### Enforce Invariants with Constraints & Indexes
+### Enforce Invariants with Constraints & Indexes
 
 Constraints and indexes enforce business rules at the database level, preventing invalid or conflicting data regardless of application logic. They serve as a final safety net against double-booking and other anomalies.
 
@@ -141,7 +135,7 @@ Constraints and indexes enforce business rules at the database level, preventing
 | **Check constraint** to keep counters ≥ 0                       | PostgreSQL, SQL Server, Oracle, MySQL 8.0+   | `ALTER TABLE flights ADD CONSTRAINT chk_available_seats CHECK (available_seats >= 0);`    | Try manual `UPDATE flights SET available_seats = -1` ⇒ fails.                            |
 | **Partial / filtered unique index** to ignore cancelled tickets | PostgreSQL, SQL Server                       | `CREATE UNIQUE INDEX u_active_seat ON bookings(seat,flight_id) WHERE status='CONFIRMED';` | Insert two rows with `status='CONFIRMED'` ⇒ second insert fails.                         |
 
-#### Consistent Lock Ordering to Avoid Deadlocks
+### Consistent Lock Ordering to Avoid Deadlocks
 
 Deadlocks occur when transactions lock resources in different orders. By enforcing a global lock acquisition order in all your transactions, you eliminate the circular dependencies that lead to deadlocks.
 
@@ -149,11 +143,11 @@ Deadlocks occur when transactions lock resources in different orders. By enforci
 2. Code every transaction to follow that order.
 3. **Verify:** turn on deadlock logging (`log_lock_waits=on` in PostgreSQL) and run parallel stress tests; no deadlocks should appear.
 
-### Monitor & Tune Locking in Production
+## Monitor & Tune Locking in Production
 
 *Proactive, continuous monitoring is the cheapest insurance you can buy against “everything-is-stuck” incidents.  The goal is to notice lock contention **while it is still a warning sign**—long before users start calling, background jobs fall behind, or an outage page lights up.*
 
-#### Why you watch
+### Why you watch
 
 | What you’re looking for               | Why it matters                                                                                  | Typical symptom in the app                     |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------- |
@@ -162,7 +156,7 @@ Deadlocks occur when transactions lock resources in different orders. By enforci
 | **Deadlocks**                         | Proof the workload has crossed a concurrency threshold where simple waiting will never resolve. | Intermittent 400/500 errors, rolled-back work. |
 | **Changing hotspot objects**          | Which tables/rows/indexes get hotter over time?                                                 | Emerging scalability bottlenecks.              |
 
-#### Instant health-check queries  (engine specifics)
+### Instant health-check queries  (engine specifics)
 
 | Engine             | Handy views / commands                                                                                                    | What to keep on the big screen                                                             | Sample “grab-it-now” query                                                                                                                                                                             |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -172,7 +166,7 @@ Deadlocks occur when transactions lock resources in different orders. By enforci
 | **Oracle**         | `V$LOCK`, `V$SESSION`, `DBA_BLOCKERS`, `DBA_WAITERS`, `V$ASH`                                                             | • `BLOCKING_SESSION_STATUS = 'VALID'` count<br>• Session trees from `DBA_BLOCKERS`         | `SELECT s.sid, s.serial#, l.id1 AS resource1, l.id2 AS resource2, s.seconds_in_wait FROM v$session s JOIN v$lock l ON s.sid = l.sid WHERE l.block = 1;`                                                |
 > **Tip** Save each snippet in a “first-aid” script kit (one per engine) so on-call staff can paste-and-go.
 
-#### Alert thresholds that catch trouble early  (*tune for your SLA*)
+### Alert thresholds that catch trouble early  (*tune for your SLA*)
 
 | Symptom                           | OLTP starting point | Analytic/ETL starting point | How to alert                                    |
 | --------------------------------- | ------------------- | --------------------------- | ----------------------------------------------- |
@@ -183,7 +177,7 @@ Deadlocks occur when transactions lock resources in different orders. By enforci
 
 A good rule of thumb: **alert on a trend, not a single incident**—except for deadlocks, which deserve immediate attention because they roll back user work.
 
-#### When an alert fires—triage playbook
+### When an alert fires—triage playbook
 
 I. **Grab blocker details** (queries above) and write them to an incident doc.
 
@@ -206,7 +200,7 @@ IV. **Mitigate**
 * Re-order statements to access tables in a consistent order.
 * Consider optimistic isolation (PostgreSQL `READ COMMITTED` + `statement_timeout`, SQL Server `READ_COMMITTED_SNAPSHOT`, Oracle `FOR UPDATE SKIP LOCKED`).
 
-#### Automating the watch
+### Automating the watch
 
 | Layer                   | Tooling ideas                                                                                                                           | Notes & nice-to-haves                                                                                                                                         |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -214,20 +208,20 @@ IV. **Mitigate**
 | **Metrics/time-series** | Prometheus + Grafana, Datadog DBM, New Relic, AWS CloudWatch RDS metrics                                                                | Export `lock_wait_time`, `deadlocks_total`, `xact_age_seconds` as counters/gauges.  Grafana’s state-timeline panel is perfect for showing blockers over time. |
 | **Notification**        | PagerDuty, Opsgenie, Slack/Teams webhook                                                                                                | Include the SQL text & locks held so the first responder can act without shell access.                                                                        |
 
-#### Continuous improvement loop
+### Continuous improvement loop
 
 1. **Review weekly** the “top ten longest blockers” list.
 2. **Refactor** high-contended code paths (break up batch jobs, swap row for key-value store where feasible).
 3. **Tune thresholds** as usage grows—successful apps outgrow yesterday’s idea of “long”.
-4. **Educate developers**: share post-mortems, highlight how small design choices (e.g., “always write parent then child”) prevent deadlocks entirely.
+4. **Educate developers**: share post-mortems, highlight how small design choices (e.g., “always write parent then child”) reduce deadlock risk.
 
 > *“A lock issue once a quarter is a blameless learning opportunity.  The same lock issue every week is a monitoring failure.”*
 
-### Real-World Example: Ticket Booking System
+## Real-World Example: Ticket Booking System
 
 Below is a self-contained, “copy-paste-ready” walk-through you can run on your laptop to **see the double-booking bug happen, then fix it, and finally prove the fix works**.
 
-####  Stack & prerequisites
+###  Stack & prerequisites
 
 | Layer                       | Why we pick it                                                                    | Other options                                                                                                   |
 | --------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -245,7 +239,7 @@ Below is a self-contained, “copy-paste-ready” walk-through you can run on yo
 
 The same SQL works, almost verbatim, on the other databases listed above (the locking keywords differ slightly—see § 5).
 
-#### Build a miniature ticket system
+### Build a miniature ticket system
 
 ```sql
 -- file: setup.sql
@@ -265,7 +259,7 @@ psql -U postgres -f setup.sql
 
 We start with **exactly one ticket** left, which is the classic “last-seat” problem.
 
-#### Reproduce the double-booking bug
+### Reproduce the double-booking bug
 
 Create `race_demo.py`:
 
@@ -328,7 +322,7 @@ After race, tickets_left = -1        <-- Over-sale!
 
 Both threads decremented the same row because they **read before each other updated**, demonstrating a real-world overbooking.
 
-#### Prevent it (pessimistic locking)
+### Prevent it (pessimistic locking)
 
 Patch the critical section with `SELECT … FOR UPDATE`:
 
@@ -361,11 +355,11 @@ After race, tickets_left = 0         <-- Correct
 
 Why it works:
 
-* `FOR UPDATE` grabs an **exclusive row-level lock**.
+* `FOR UPDATE` grabs an exclusive row-level lock.
 * While User 1 holds it, User 2 blocks until the lock is released.
-* Once User 2 enters, the row value is **already updated**, so it sees `0` and aborts its purchase path.
+* Once User 2 enters, the row value is already updated, so it sees `0` and aborts its purchase path.
 
-#### At a glance: equivalents in other engines
+### At a glance: equivalents in other engines
 
 | Engine         | Pessimistic lock syntax                                              | Notes                                                               |
 | -------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------- |
@@ -376,7 +370,7 @@ Why it works:
 | MongoDB        | Use a **transaction** plus an `$inc` with `$cond` or `findAndModify` | Replica sets/sharded clusters only.                                 |
 | Redis          | `EVAL` Lua script implementing `GET tickets; DECR ticket` atomically | Single-threaded nature keeps atomicity.                             |
 
-#### Alternative: optimistic locking
+### Alternative: optimistic locking
 
 If you dislike blocking, add a **version column**:
 
@@ -405,7 +399,7 @@ III. Check `cursor.rowcount`:
 
 Works everywhere a single `UPDATE` can match on the old version.
 
-#### Quick checklist for your project
+### Quick checklist for your project
 
 I. **Pick your strategy**
 
@@ -420,3 +414,10 @@ IV. Add **monitoring**: alert if `tickets_left` ever < 0 or if conflicts exceed 
 
 V. Unit-test with **concurrency harness** (exactly like `race_demo.py`) in CI.
 
+## Review questions
+
+1. What is the double-booking problem in database systems, and in which types of applications is it commonly encountered?
+2. What are the primary causes of the double-booking problem, such as race conditions and inadequate locking mechanisms?
+3. How do shared and exclusive locks help prevent the double-booking problem, and what is the difference between them?
+4. What concurrency control strategies can be implemented to avoid double-booking, including proper locking, setting appropriate isolation levels, and using optimistic concurrency control?
+5. What are some best practices for designing transactions and managing locks to minimize the risk of double-booking in high-concurrency environments?

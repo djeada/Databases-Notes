@@ -1,22 +1,14 @@
-## Querying NoSQL Databases
+# Querying NoSQL Databases
 
 Querying NoSQL databases requires a different approach compared to relational databases due to their diverse data models and storage mechanisms. This guide focuses on MongoDB, a popular NoSQL database, and explores how to query data effectively using its powerful query language.
 
-After reading the material, you should be able to answer the following questions:
+## Introduction to MongoDB
 
-1. How does MongoDB's document model differ from traditional relational databases, and what advantages does it offer for schema design?
-2. What are the key differences between basic queries (like `find`, `countDocuments`, and `distinct`) and advanced queries (such as aggregation, text search, and geospatial queries) in MongoDB?
-3. How do indexing strategies in MongoDB, including single field, compound, multikey, text, and geospatial indexes, enhance query performance?
-4. What is the purpose of the `explain()` method in MongoDB, and how can it be used to analyze and optimize query execution plans?
-5. In what scenarios would you choose to use specific types of indexes (e.g., text indexes for search functionality or geospatial indexes for location-based queries) in MongoDB?
+### Data Model
 
-### Introduction to MongoDB
-
-#### Data Model
-
-- MongoDB stores data in **documents**, which are JSON-like objects capable of containing nested documents and arrays.
-- Each document is stored within a **collection**, analogous to a table in relational databases.
-- The document model allows for complex data structures and offers **flexibility** in schema design.
+- MongoDB stores data in documents, which are JSON-like objects capable of containing nested documents and arrays.
+- Each document is stored within a collection, analogous to a table in relational databases.
+- The document model allows for complex data structures and offers flexibility in schema design.
 
 **Example Document:**
 
@@ -41,10 +33,10 @@ After reading the material, you should be able to answer the following questions
 }
 ```
 
-#### Query Language
+### Query Language
 
-- MongoDB uses a JSON-like syntax for queries, making it intuitive for developers familiar with **JSON**.
-- The query language provides a rich set of **operators** for filtering, projection, sorting, and aggregation.
+- MongoDB uses a JSON-like syntax for queries, making it intuitive for developers familiar with JSON.
+- The query language provides a rich set of operators for filtering, projection, sorting, and aggregation.
 
 **Examples of Query Operators:**
 
@@ -53,11 +45,11 @@ After reading the material, you should be able to answer the following questions
 - `$in`, `$nin`: In, Not In
 - `$and`, `$or`, `$not`, `$nor`: Logical Operators
 
-### Basic Queries
+## Basic Queries
 
-#### Find
+### Find
 
-- The `find` method retrieves documents from a collection that match specified **filter** criteria.
+- The `find` method retrieves documents from a collection that match specified filter criteria.
 - The syntax for `find` is `db.collection.find(query, projection)`, where `query` specifies selection criteria and `projection` determines the fields to include or exclude.
 
 **Example: Retrieve all users aged 25**
@@ -106,9 +98,9 @@ db.users.find(
 { "name" : "Carol", "email" : "carol@example.com" }
 ```
 
-#### Count
+### Count
 
-- The `count` method returns the **number** of documents that match a query.
+- The `count` method returns the number of documents that match a query.
 - The syntax for `count` is `db.collection.countDocuments(query)`.
 
 **Example: Count the number of users aged 25**
@@ -125,9 +117,9 @@ db.users.countDocuments({ age: 25 })
 2
 ```
 
-#### Distinct
+### Distinct
 
-- The `distinct` method finds the unique **values** for a specified field across a collection.
+- The `distinct` method finds the unique values for a specified field across a collection.
 - The syntax for `distinct` is `db.collection.distinct(field, query)`.
 
 **Example: Get a list of unique cities where users aged 25 live**
@@ -144,11 +136,11 @@ db.users.distinct("city", { age: 25 })
 [ "New York", "Chicago" ]
 ```
 
-### Advanced Queries
+## Advanced Queries
 
-#### Aggregation
+### Aggregation
 
-- Aggregation operations process data records and return **computed** results.
+- Aggregation operations process data records and return computed results.
 - MongoDB's aggregation framework provides an efficient way to perform data analysis using a pipeline of stages.
 
 **Syntax:**
@@ -202,7 +194,7 @@ db.users.aggregate([
 { "_id" : "Chicago", "averageAge" : 25 }
 ```
 
-#### Text Search
+### Text Search
 
 MongoDB supports text search through **text indexes**, allowing you to perform search operations on string content.
 
@@ -276,9 +268,9 @@ db.articles.find({ $text: { $search: "NoSQL -MongoDB" } })
 { "_id" : 2, "title" : "NoSQL Databases", "content" : "NoSQL databases are non-relational." }
 ```
 
-#### Geospatial Queries
+### Geospatial Queries
 
-- MongoDB provides powerful geospatial indexing and querying capabilities for **location-based** data.
+- MongoDB provides powerful geospatial indexing and querying capabilities for location-based data.
 
 **Storing Location Data:**
 
@@ -359,15 +351,15 @@ Assuming that the Empire State Building is within 1,000 meters of Times Square:
 { "_id" : 3, "name" : "Empire State Building", "location" : { "type" : "Point", "coordinates" : [ -73.9857, 40.7484 ] } }
 ```
 
-- The `$near` operator finds documents near a specified **point**.
+- The `$near` operator finds documents near a specified point.
 - The `$geometry` field defines the point with coordinates.
 - The `$maxDistance` sets the maximum distance from the point in meters.
 
-### Indexing in MongoDB
+## Indexing in MongoDB
 
-#### Creating Indexes
+### Creating Indexes
 
-- Indexes support efficient query execution by limiting the number of documents that MongoDB needs to **examine**.
+- Indexes support efficient query execution by limiting the number of documents that MongoDB needs to examine.
 - The syntax for creating an index is `db.collection.createIndex(keys, options)`, where `keys` specifies the field or fields to index.
 
 **Example: Create an index on the `age` field**
@@ -386,7 +378,7 @@ Indexes can be created on multiple fields, known as compound indexes.
  db.users.createIndex({ age: 1, city: 1 })
  ```
 
-### Types of Indexes
+## Types of Indexes
 
 - **Single Field Indexes**: Indexes on a single field improve query performance on that field.
 - **Compound Indexes**: Indexes on multiple fields support queries that sort or filter on multiple fields.
@@ -394,7 +386,7 @@ Indexes can be created on multiple fields, known as compound indexes.
 - **Text Indexes**: Indexes that enable text search functionality over string content.
 - **Geospatial Indexes**: Indexes that support geospatial queries for location data.
 
-### Index Usage
+## Index Usage
 
 Use the `explain()` method to understand how MongoDB executes a query and whether it utilizes an **index**.
 
@@ -403,7 +395,7 @@ db.users.find({ age: 25 }).explain("executionStats")
 ```
 
 - Analyze the output to check for `"stage": "IXSCAN"` to confirm index usage.
-- Check `"nReturned"` and `"totalKeysExamined"` for insights into query **performance**.
+- Check `"nReturned"` and `"totalKeysExamined"` for insights into query performance.
 
 **Monitoring Indexes:**
 
@@ -421,3 +413,10 @@ Remove unnecessary indexes to optimize performance and reduce storage **overhead
 db.users.dropIndex("age_1")
 ```
 
+## Review questions
+
+1. How does MongoDB's document model differ from traditional relational databases, and what advantages does it offer for schema design?
+2. What are the key differences between basic queries (like `find`, `countDocuments`, and `distinct`) and advanced queries (such as aggregation, text search, and geospatial queries) in MongoDB?
+3. How do indexing strategies in MongoDB, including single field, compound, multikey, text, and geospatial indexes, enhance query performance?
+4. What is the purpose of the `explain()` method in MongoDB, and how can it be used to analyze and optimize query execution plans?
+5. In what scenarios would you choose to use specific types of indexes (e.g., text indexes for search functionality or geospatial indexes for location-based queries) in MongoDB?

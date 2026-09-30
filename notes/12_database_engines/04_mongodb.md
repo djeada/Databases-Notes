@@ -431,4 +431,3 @@ Visualizing MongoDB's architecture can help in understanding how its components 
 - **Mongos Router**: Routes queries from the client to the appropriate shard.
 - **Shards**: Each shard holds a portion of the data, determined by the shard key.
 - **Config Servers**: Store metadata and configuration for the cluster.
-

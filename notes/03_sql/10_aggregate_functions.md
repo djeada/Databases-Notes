@@ -1,16 +1,12 @@
-## Aggregate Functions in SQL
+# Aggregate Functions in SQL
 
-Aggregate functions in SQL are powerful tools that allow you to perform calculations on a set of values to return a single scalar value. They are commonly used with the `GROUP BY` clause to group rows that share a common attribute and then perform calculations on each group. Aggregate functions are essential for data analysis, reporting, and generating insights from your data.
+An **aggregate** calculates one result from several rows. `SUM` adds values, `COUNT` counts them, and `AVG` calculates their average. Without grouping, one aggregate can summarize the whole input. With `GROUP BY`, it summarizes each group separately.
 
-After reading the material, you should be able to answer the following questions:
+For example, the bookstore's order items become one total per order when grouped by `order_id`. In this chapter, a separate employee dataset makes grouped salary calculations and missing values easy to inspect. Read [joins and subqueries](06_joins_subqueries_and_views.md) first.
 
-1. What are aggregate functions in SQL, and how are they typically used with the `GROUP BY` clause?
-2. How does the `COUNT` function work, and what is the difference between `COUNT(*)` and `COUNT(column)`?
-3. In what scenarios would you use the `SUM`, `AVG`, `MIN`, and `MAX` functions, and how do they operate on data?
-4. What is the purpose of the `HAVING` clause, and how does it differ from the `WHERE` clause when filtering aggregated data?
-5. How do window functions differ from aggregate functions, and what are some practical applications of window functions in SQL?
+Work through `COUNT`, `SUM`, and `AVG` before combining them with joins and `HAVING`. `WHERE` filters input rows; `HAVING` filters the resulting groups. The final window-function example prepares for the next chapter.
 
-### Common Aggregate Functions
+## Common Aggregate Functions
 
 Here are the most commonly used aggregate functions in SQL:
 
@@ -20,9 +16,33 @@ Here are the most commonly used aggregate functions in SQL:
 - The `MIN` function identifies the smallest value in a dataset, including numeric, string, and date types.
 - The `MAX` function returns the largest value in a dataset, similar to `MIN`, and supports numeric, string, and date types.
 
-### Setting Up Example Tables
+## Setting Up Example Tables
 
-Suppose we have two tables: `Employees` and `Departments`.
+Run this setup once in a **fresh SQLite database**. It is separate from the bookstore database. Continue using this same database through the chapter; the null-value section explicitly adds one more employee.
+
+```sql
+CREATE TABLE Departments (
+    DepartmentID INTEGER PRIMARY KEY,
+    DepartmentName TEXT NOT NULL
+);
+CREATE TABLE Employees (
+    EmployeeID INTEGER PRIMARY KEY,
+    FirstName TEXT NOT NULL,
+    LastName TEXT NOT NULL,
+    DepartmentID INTEGER NOT NULL REFERENCES Departments(DepartmentID),
+    Salary REAL
+);
+INSERT INTO Departments VALUES
+    (1, 'Human Resources'), (2, 'Engineering'), (3, 'Marketing');
+INSERT INTO Employees VALUES
+    (1, 'John', 'Doe', 1, 60000),
+    (2, 'Jane', 'Smith', 1, 65000),
+    (3, 'Mike', 'Johnson', 2, 70000),
+    (4, 'Emily', 'Davis', 2, 72000),
+    (5, 'David', 'Wilson', 3, 55000);
+```
+
+`REAL` keeps the arithmetic simple for this demonstration; production money fields need an intentional exact representation and rounding policy. The initial tables contain:
 
 **Employees Table**
 
@@ -42,11 +62,11 @@ Suppose we have two tables: `Employees` and `Departments`.
 | 2            | Engineering         |
 | 3            | Marketing           |
 
-### COUNT Function
+## COUNT Function
 
 The `COUNT` function returns the number of rows that match a specified condition.
 
-#### Example: Counting Total Employees
+### Example: Counting Total Employees
 
 ```sql
 SELECT COUNT(*) AS TotalEmployees
@@ -59,7 +79,7 @@ FROM Employees;
 |----------------|
 | 5              |
 
-#### Example: Counting Employees per Department
+### Example: Counting Employees per Department
 
 ```sql
 SELECT DepartmentID, COUNT(*) AS NumberOfEmployees
@@ -78,11 +98,11 @@ GROUP BY DepartmentID;
 - The `GROUP BY` clause groups the rows by `DepartmentID`.
 - The `COUNT(*)` function counts the number of employees in each department.
 
-### SUM Function
+## SUM Function
 
 The `SUM` function adds up all the values in a numeric column.
 
-#### Example: Calculating Total Salary Expenditure
+### Example: Calculating Total Salary Expenditure
 
 ```sql
 SELECT SUM(Salary) AS TotalSalary
@@ -95,7 +115,7 @@ FROM Employees;
 |-------------|
 | 322000      |
 
-#### Example: Calculating Total Salary per Department
+### Example: Calculating Total Salary per Department
 
 ```sql
 SELECT DepartmentID, SUM(Salary) AS TotalSalary
@@ -113,11 +133,11 @@ GROUP BY DepartmentID;
 
 The `SUM(Salary)` function calculates the total salary for each department.
 
-### AVG Function
+## AVG Function
 
 The `AVG` function calculates the average value of a numeric column.
 
-#### Example: Calculating Average Salary
+### Example: Calculating Average Salary
 
 ```sql
 SELECT AVG(Salary) AS AverageSalary
@@ -130,7 +150,7 @@ FROM Employees;
 |---------------|
 | 64400         |
 
-#### Example: Calculating Average Salary per Department
+### Example: Calculating Average Salary per Department
 
 ```sql
 SELECT DepartmentID, AVG(Salary) AS AverageSalary
@@ -148,11 +168,11 @@ GROUP BY DepartmentID;
 
 The `AVG(Salary)` function computes the average salary for each department.
 
-### MIN and MAX Functions
+## MIN and MAX Functions
 
 The `MIN` and `MAX` functions return the smallest and largest values in a set, respectively.
 
-#### Example: Finding Minimum and Maximum Salaries
+### Example: Finding Minimum and Maximum Salaries
 
 ```sql
 SELECT MIN(Salary) AS MinimumSalary, MAX(Salary) AS MaximumSalary
@@ -165,7 +185,7 @@ FROM Employees;
 |---------------|---------------|
 | 55000         | 72000         |
 
-#### Example: Finding Minimum and Maximum Salaries per Department
+### Example: Finding Minimum and Maximum Salaries per Department
 
 ```sql
 SELECT DepartmentID, MIN(Salary) AS MinimumSalary, MAX(Salary) AS MaximumSalary
@@ -183,11 +203,11 @@ GROUP BY DepartmentID;
 
 The `MIN(Salary)` and `MAX(Salary)` functions find the lowest and highest salaries in each department.
 
-### GROUP BY Clause
+## GROUP BY Clause
 
 The `GROUP BY` clause is used with aggregate functions to group the result set by one or more columns.
 
-#### Example: Counting Employees by Department Name
+### Example: Counting Employees by Department Name
 
 To make the results more readable, let's join the `Employees` and `Departments` tables.
 
@@ -209,11 +229,11 @@ GROUP BY d.DepartmentName;
 - The `JOIN` clause combines the `Employees` and `Departments` tables.
 - The `GROUP BY` clause groups the results by `DepartmentName`.
 
-### HAVING Clause
+## HAVING Clause
 
 The `HAVING` clause is used to filter groups based on a condition, similar to how the `WHERE` clause filters rows.
 
-#### Example: Departments with More Than One Employee
+### Example: Departments with More Than One Employee
 
 ```sql
 SELECT DepartmentID, COUNT(*) AS NumberOfEmployees
@@ -231,11 +251,11 @@ HAVING COUNT(*) > 1;
 
 The `HAVING` clause filters groups where the count of employees is greater than one.
 
-### Combining Aggregate Functions
+## Combining Aggregate Functions
 
 You can use multiple aggregate functions in a single query to get comprehensive insights.
 
-#### Example: Employee Statistics per Department
+### Example: Employee Statistics per Department
 
 ```sql
 SELECT
@@ -260,21 +280,25 @@ GROUP BY d.DepartmentName;
 
 The query provides a comprehensive overview of salary statistics for each department.
 
-### Dealing with NULL Values
+## Dealing with NULL Values
 
 Aggregate functions generally ignore `NULL` values except for the `COUNT(*)` function.
 
-#### Example: Impact of NULL on Aggregate Functions
+### Example: Impact of NULL on Aggregate Functions
 
-Suppose we have an additional employee with a `NULL` salary.
+Now add an employee whose salary is unknown. Run this insert once before the remaining examples:
 
-**Updated Employees Table**
+```sql
+INSERT INTO Employees VALUES (6, 'Susan', 'Miller', 1, NULL);
+```
+
+**The additional row**
 
 | EmployeeID | FirstName | LastName | DepartmentID | Salary  |
 |------------|-----------|----------|--------------|---------|
 | 6          | Susan     | Miller   | 1            | NULL    |
 
-#### Query: Calculating Average Salary with NULL Values
+### Query: Calculating Average Salary with NULL Values
 
 ```sql
 SELECT DepartmentID, AVG(Salary) AS AverageSalary
@@ -293,11 +317,11 @@ GROUP BY DepartmentID;
 - The `AVG` function ignores the `NULL` salary for Susan Miller.
 - The average salary for department 1 remains the same.
 
-### Using DISTINCT with Aggregate Functions
+## Using DISTINCT with Aggregate Functions
 
 The `DISTINCT` keyword can be used inside aggregate functions to consider only unique values.
 
-#### Example: Counting Unique Salaries
+### Example: Counting Unique Salaries
 
 ```sql
 SELECT COUNT(DISTINCT Salary) AS UniqueSalaries
@@ -312,11 +336,11 @@ FROM Employees;
 
 The `COUNT(DISTINCT Salary)` function counts the number of unique salary values, excluding `NULL`.
 
-### Aggregate Functions with Subqueries
+## Aggregate Functions with Subqueries
 
 Aggregate functions can be used in subqueries to compare individual rows to aggregate values.
 
-#### Example: Employees Earning Above Average Salary
+### Example: Employees Earning Above Average Salary
 
 ```sql
 SELECT FirstName, LastName, Salary
@@ -331,17 +355,18 @@ WHERE Salary > (
 
 | FirstName | LastName | Salary |
 |-----------|----------|--------|
+| Jane      | Smith    | 65000  |
 | Mike      | Johnson  | 70000  |
 | Emily     | Davis    | 72000  |
 
 - The subquery calculates the average salary.
 - The outer query selects employees whose salary is greater than this average.
 
-### Window Functions (Analytic Functions)
+## Window Functions (Analytic Functions)
 
 In addition to aggregate functions, SQL supports window functions that perform calculations across a set of rows related to the current row.
 
-#### Example: Calculating Running Total of Salaries
+### Example: Calculating Running Total of Salaries
 
 ```sql
 SELECT
@@ -349,7 +374,7 @@ SELECT
     FirstName,
     LastName,
     Salary,
-    SUM(Salary) OVER (ORDER BY EmployeeID) AS RunningTotal
+    SUM(Salary) OVER (ORDER BY EmployeeID ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal
 FROM Employees;
 ```
 
@@ -362,15 +387,23 @@ FROM Employees;
 | 3          | Mike      | Johnson  | 70000  | 195000       |
 | 4          | Emily     | Davis    | 72000  | 267000       |
 | 5          | David     | Wilson   | 55000  | 322000       |
-| 6          | Susan     | Miller   | NULL   | NULL         |
+| 6          | Susan     | Miller   | NULL   | 322000       |
 
 - The `SUM(Salary) OVER (ORDER BY EmployeeID)` calculates a running total of salaries.
-- `NULL` values are handled according to the window function's rules.
+- `SUM` ignores Susan’s null salary, so the running total remains 322000.
 
-### Practical Tips for Using Aggregate Functions
+## Practical Tips for Using Aggregate Functions
 
 - Assign meaningful aliases to aggregate results to improve the readability of the output.
 - Apply the `WHERE` clause to filter rows before performing aggregation, ensuring only relevant data is included in calculations.
 - Be mindful that most aggregate functions (e.g., `SUM`, `AVG`) ignore `NULL` values, which might lead to unexpected results.
 - Limit the number of columns in the `GROUP BY` clause to only those essential for your analysis, as excessive grouping can increase query complexity and runtime.
 - Use the `HAVING` clause to filter groups after aggregation, allowing conditions based on aggregated results.
+
+## Review questions
+
+1. What are aggregate functions in SQL, and how are they typically used with the `GROUP BY` clause?
+2. How does the `COUNT` function work, and what is the difference between `COUNT(*)` and `COUNT(column)`?
+3. In what scenarios would you use the `SUM`, `AVG`, `MIN`, and `MAX` functions, and how do they operate on data?
+4. What is the purpose of the `HAVING` clause, and how does it differ from the `WHERE` clause when filtering aggregated data?
+5. How do window functions differ from aggregate functions, and what are some practical applications of window functions in SQL?

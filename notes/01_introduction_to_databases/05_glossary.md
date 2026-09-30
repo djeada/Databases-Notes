@@ -1,67 +1,145 @@
-## Glossary of Database and SQL Terms
+# Database Glossary
 
-1. **Database**: A collection of organized data for easy access, management, and updating.
-2. **Table**: A structure with rows and columns for storing data in a database.
-3. **Row (Record)**: A single entry in a table with data.
-4. **Column (Field)**: A category of data within a table.
-5. **Primary Key**: A unique identifier for each row in a table.
-6. **Foreign Key**: A key that connects one table to another by referring to the primary key of the other table.
-7. **Index**: A tool that speeds up data retrieval in a database.
-8. **Query**: A request to access or modify data in a database.
-9. **SQL (Structured Query Language)**: A language for working with relational databases.
-10. **SELECT**: An SQL command for getting data from a table.
-11. **INSERT**: An SQL command for adding new data to a table.
-12. **UPDATE**: An SQL command for changing existing data in a table.
-13. **DELETE**: An SQL command for removing data from a table.
-14. **JOIN**: An SQL operation that combines data from multiple tables based on shared columns.
-15. **WHERE**: An SQL keyword for filtering data based on specific conditions.
-16. **GROUP BY**: An SQL keyword for grouping rows with the same values in specified columns.
-17. **ORDER BY**: An SQL keyword for sorting results based on certain columns.
-18. **Schema**: The structure of a database, including tables, columns, and relationships.
-19. **ACID (Atomicity, Consistency, Isolation, Durability)**: Features that ensure database transactions are reliable.
-20. **RDBMS (Relational Database Management System)**: A system for managing relational databases using SQL.
-21. **Constraint**: A rule for table columns to keep data accurate and consistent.
-22. **UNIQUE**: A constraint that makes sure all values in a column are different.
-23. **NOT NULL**: A constraint that requires a column to have a value.
-24. **Check**: A constraint that forces all column values to meet a certain condition.
-25. **Index**: A database object that improves the speed of data retrieval within a table.
-26. **View**: A virtual table created from the results of an SQL query.
-27. **Alias**: A temporary name given to a table or column in an SQL query for easier reference.
-28. **TRANSACTION**: A group of SQL operations executed as a single task.
-29. **COMMIT**: An SQL command for saving changes made by a transaction.
-30. **ROLLBACK**: An SQL command for undoing changes made by a transaction.
-31. **TRIGGER**: A stored procedure that runs automatically when an event (INSERT, UPDATE, DELETE) occurs in a table.
-32. **Stored procedure**: A saved set of SQL statements in a database.
-33. **Function**: A set of SQL statements with a name, input parameters, actions, and a result.
-34. **Normalization**: A method for organizing data in a database to reduce redundancy and improve data integrity.
-35. **Denormalization**: A process of adding redundant data to a database to speed up query performance.
-36. **DDL (Data Definition Language)**: A part of SQL for creating and modifying database objects like tables and indexes.
-37. **DML (Data Manipulation Language)**: A part of SQL for working with data in a database, including SELECT, INSERT, UPDATE, and DELETE.
-38. **DCL (Data Control Language)**: A part of SQL for managing user access and permissions, such as GRANT and REVOKE.
-39. **TCL (Transaction Control Language)**: A part of SQL for handling transactions, including COMMIT and ROLLBACK.
-40. **NULL**: A special marker in SQL that indicates a data value is missing or unknown in the database.
-41. **NoSQL**: A class of non-relational databases designed for handling various types of data, often providing better scalability and flexibility than traditional relational databases.
-42. **CAP Theorem**: A principle stating that it is impossible for a distributed data store to simultaneously provide consistency, availability, and partition tolerance.
-43. **Sharding**: The process of splitting a large database into smaller, more manageable pieces, often improving performance and scalability.
-44. **Partitioning**: The practice of dividing a table into smaller, more manageable pieces based on a specific column or set of columns.
-45. **Replication**: The process of copying and maintaining the same data on multiple database nodes to increase availability and fault tolerance.
-46. **BASE (Basically Available, Soft State, Eventual Consistency)**: A set of attributes that describe the behavior of some distributed systems, providing a more relaxed approach to consistency compared to ACID properties.
-47. **Graph Database**: A type of NoSQL database that stores data as nodes and edges in a graph, optimized for querying and traversing relationships between data points.
-48. **Amazon RDS**: A managed relational database service provided by Amazon Web Services (AWS), offering support for multiple database engines, including MySQL, PostgreSQL, and Oracle.
-49. **Amazon DynamoDB**: A managed NoSQL database service provided by AWS, designed for high availability, scalability, and low latency.
-50. **Amazon Aurora**: A managed relational database service provided by AWS, offering compatibility with MySQL and PostgreSQL and improved performance, availability, and scalability.
-51. **Caching**: Temporary storage of query results or intermediate data to speed up subsequent query executions.
-52. **Horizontal Scaling**: The practice of adding more nodes to a system to handle increased workload, often used in distributed systems to improve performance and availability.
-53. **Vertical Scaling**: The practice of adding more resources, such as CPU or memory, to a single node to handle increased workload.
-54. **In-Memory Database**: A type of database that stores data in the main memory instead of on disk, providing faster data access and processing times.
-55. **SQL Injection**: A security vulnerability that occurs when an attacker is able to insert malicious SQL code into a query, potentially compromising the database or exposing sensitive data.
-56. **ETL (Extract, Transform, Load)**: A process used to collect, clean, and move data from one or more sources to a data warehouse or another data store.
-57. **OLTP (Online Transaction Processing)**: A class of systems designed for managing transactional workloads, such as inserting, updating, and deleting records.
-58. **OLAP (Online Analytical Processing)**: A class of systems designed for managing analytical workloads, such as complex queries and aggregations.
-59. **Data Warehousing**: A large-scale data storage solution optimized for storing, managing, and analyzing large amounts of historical data from various sources.
-60. **Big Data**: A term referring to the massive volume, variety, and velocity of data generated by modern applications and devices, often requiring specialized tools and techniques for processing and analysis.
-61. **Hadoop**: An open-source framework for distributed storage and processing of large datasets using the MapReduce programming model.
-62. **MapReduce**: A programming model for processing and generating large data sets in parallel across a distributed computing environment.
-63. **Apache Spark**: An open-source distributed data processing engine designed for high-performance, large-scale data processing and machine learning tasks.
-64. **Apache Cassandra**: A highly scalable, distributed NoSQL database designed for handling large amounts of data across many nodes, providing high availability and fault tolerance.
-65. **Elasticsearch**: An open-source, distributed search and analytics engine built on Apache Lucene, used for indexing and searching large volumes of data.
+Use this page as a reference when a term interrupts your reading. You do not need to memorize it before starting SQL. The groups follow the learning path: data, queries, transactions, storage, distributed systems, and analytics.
+
+## Data and structure
+
+| Term | Plain-language meaning and example |
+|---|---|
+| Database | An organized collection of data, such as the bookstore's customers and orders |
+| DBMS | Database management system: software that stores, queries, and manages the database; SQLite is one example |
+| Relational database / RDBMS | A database based on relations, represented as tables; an RDBMS is the software managing it |
+| Table | A named collection of rows with defined columns, such as `customers` |
+| Row / record | One entry, such as Alice's customer record |
+| Column / field | One named attribute, such as `email`; SQL client columns also describe query results |
+| Data type | A description of permitted values and operations, such as an integer or date; enforcement differs by engine |
+| Schema | The database's structural definitions; in some engines, also a named namespace containing objects |
+| Primary key | The chosen identifier for each row, such as `customer_id`; it may contain multiple columns |
+| Foreign key | A constraint requiring a reference to match an eligible key in another or the same table, except for permitted nulls |
+| Composite key | A key made from multiple columns, such as `(order_id, line_number)` |
+| Constraint | A declared rule the database checks, such as requiring a distinct email |
+| `UNIQUE` | Rejects duplicate key values; the treatment of null values depends on the engine and options |
+| `NOT NULL` | Requires a value to be present; an empty string is still a value |
+| `CHECK` | Rejects rows when its expression is false; an unknown result caused by nulls generally passes |
+| `NULL` | A marker for a missing or unknown value, distinct from zero and an empty string |
+| Cardinality | In modeling, how many entities can be related, such as one customer to many orders; in query planning, an estimated or actual row count |
+| Normalization | Organizing tables around their dependencies to avoid repeated facts and update anomalies |
+| Denormalization | Deliberately storing derived or repeated information, often to reduce measured read costs; copies need maintenance |
+
+For examples, see [data models](04_data_models.md), [normalization](../02_database_design/02_normalization.md), and [data integrity](../02_database_design/05_data_integrity.md).
+
+## SQL and queries
+
+| Term | Plain-language meaning and example |
+|---|---|
+| SQL | Structured Query Language: a language for querying and managing relational data |
+| Dialect | An engine's particular SQL syntax and behavior; SQLite and PostgreSQL differ |
+| Query | A request for information; “SQL statement” also includes commands that change data or structure |
+| `SELECT` | Produces a result from expressions, tables, or other query inputs |
+| `INSERT` / `UPDATE` / `DELETE` | Add rows, change rows, or remove rows |
+| `WHERE` | Keeps rows for which its condition is true |
+| `ORDER BY` | Specifies result ordering; without it, do not depend on row order |
+| `JOIN` | Combines rows from inputs according to a condition or, for a cross join, every pairing |
+| Alias | A name used in a query, such as `c` for `customers` |
+| Subquery | A query inside another statement, such as a query calculating an average for a filter |
+| Aggregate | A calculation over multiple rows, such as `SUM(quantity)` |
+| `GROUP BY` | Forms groups of rows so aggregates can be calculated for each group |
+| Window function | Calculates across related rows while retaining individual result rows, such as a running total |
+| View | A named query that can be used like a table; an ordinary view does not store a separate result snapshot |
+| Materialized view | A stored query result maintained or refreshed according to the engine and configuration |
+| Stored procedure | A named routine invoked to perform database work; available syntax and capabilities vary |
+| Function | A routine that computes a result; SQL functions vary in supported inputs, results, and effects |
+| Trigger | Database logic invoked by specified events, such as inserting a row |
+| Bound parameter | A value passed separately from SQL text through a driver's placeholder mechanism |
+| SQL injection | Untrusted input changes SQL structure because it was assembled into executable query text |
+| DDL / DML / DCL / TCL | Common labels for defining objects, working with rows, controlling access, and controlling transactions |
+
+Start with the runnable [SQL introduction](../03_sql/01_intro_to_sql.md). For injection prevention, see [SQL injection](../11_security_best_practices/06_sql_injection.md).
+
+## Transactions and concurrency
+
+| Term | Plain-language meaning and example |
+|---|---|
+| Transaction | Database operations grouped into a unit that can commit or roll back |
+| Commit / rollback | Accept a transaction's changes / discard its changes |
+| Savepoint | A marker allowing rollback of part of a transaction without committing the rest |
+| Autocommit | A connection mode that normally gives each statement its own transaction; driver behavior matters |
+| ACID | Atomicity, consistency, isolation, and durability: four distinct transaction guarantees |
+| Atomicity | Transactional changes are committed together or rolled back together |
+| Consistency, in ACID | Correct transactions preserve the application's required data rules |
+| Isolation | Guarantees about how overlapping transactions interact and what they can observe |
+| Durability | Acknowledged commits survive failures within the configured storage and recovery guarantees |
+| Concurrency | Operations overlap in time |
+| Lock | Coordination that prevents conflicting operations on a resource |
+| Deadlock | Transactions wait on resources held by one another in a cycle; the engine usually aborts one to make progress |
+| MVCC | Multi-version concurrency control: readers can use appropriate versions of data while other transactions change it |
+| Snapshot | A view of data at a defined point or visibility boundary; its lifetime depends on the engine and isolation level |
+| Serializable | Successful transactions have an outcome equivalent to some serial execution order; failures can require retries |
+| Invariant | A condition that must remain true, such as stock never becoming negative |
+
+See [transactions](../04_acid_properties_and_transactions/01_transactions_intro.md) before [concurrency control](../07_concurrency_control/01_shared_vs_exclusive_locks.md).
+
+## Storage and performance
+
+| Term | Plain-language meaning and example |
+|---|---|
+| Index | An extra access structure that can reduce lookup work; maintaining it also costs space and writes |
+| Query plan | The engine's chosen operations for executing a query, such as a scan followed by a sort |
+| Scan | Read rows or entries and test them, rather than locating only specific matches |
+| Selectivity | How much of the input a condition matches; a filter matching few rows is often called highly selective |
+| Page | A chunk used to organize database storage and memory management |
+| Buffer pool / page cache | Memory holding database pages so they can be reused without another engine storage read |
+| Cache | A reusable copy of data or results; different cache layers have different freshness rules |
+| WAL | Write-ahead log: recovery information persisted before corresponding data-page changes |
+| Checkpoint | An engine-specific recovery progress boundary, often coordinated with flushing data |
+| Row-oriented storage | Keeps a record's fields together, commonly suited to short record operations |
+| Column-oriented storage | Keeps values of the same column together, commonly suited to broad analytical scans |
+| In-memory database | Keeps its main working data in memory; persistence and recovery are separate design choices |
+| Vertical scaling | Increase the resources of a machine, such as memory or CPU |
+| Horizontal scaling | Add machines; useful work must still be distributed among them |
+
+See [row and column storage](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md), [pages](../05_storage_and_indexing/04_database_pages.md), and [indexing](../05_storage_and_indexing/05_indexing.md).
+
+## Distribution and database models
+
+| Term | Plain-language meaning and example |
+|---|---|
+| Node | A machine or participating process in a distributed system |
+| Partitioning | Divide a dataset into subsets, such as orders grouped by month |
+| Sharding | Distribute horizontal subsets across nodes and route operations to the owning shard |
+| Shard key | The value used to choose a shard, such as a customer identifier |
+| Replication | Maintain copies of data by transferring changes between nodes |
+| Primary / replica | A node accepting writes / a node maintaining a copy, in a common single-writer design |
+| Replication lag | A replica has not yet received or applied the latest changes |
+| Failover | Transfer a failed node's serving or writing role to another node |
+| Network partition | A communication break that prevents some nodes from reaching others |
+| CAP | During a network partition, a distributed read/write service cannot guarantee both linearizability and a successful response to every request at a non-failing node |
+| Linearizability | Operations appear to take effect at a single point between invocation and completion, respecting real-time order |
+| Eventual consistency | If updates stop and communication recovers, replicas are expected to converge |
+| BASE | An informal description of some systems favoring availability and eventual convergence; it is not a precise universal alternative to ACID |
+| NoSQL | An umbrella label for models such as document, key-value, wide-column, and graph; guarantees depend on the product |
+| Document database | Stores records as documents with fields and potentially nested values |
+| Key-value store | Retrieves a value primarily by its associated key |
+| Wide-column database | Organizes data around partition and clustering keys for defined access patterns; distinct from columnar analytical storage |
+| Graph database | Represents entities and connections for relationship traversal |
+
+See [database types](02_types_of_databases.md) and [distributed databases](../06_distributed_databases/01_distributed_database_systems.md).
+
+## Analytics, operations, and tools
+
+| Term | Plain-language meaning and example |
+|---|---|
+| OLTP | Online transaction processing: many short operational reads and writes |
+| OLAP | Online analytical processing: reports and calculations over many records |
+| Data warehouse | An analytical store combining data for reporting, often with historical records |
+| ETL / ELT | Extract-transform-load / extract-load-transform: different placements of transformation in a data pipeline |
+| Big data | Data whose scale, rate, or complexity motivates specialized storage or processing; no universal size threshold |
+| Hadoop / HDFS | A distributed data-processing ecosystem / its distributed filesystem |
+| MapReduce | A computation model that maps input records and combines grouped intermediate results |
+| Spark | A distributed processing engine with SQL and other interfaces |
+| ORM | Object-relational mapper: translates between application objects and relational database operations |
+| Backup | A preserved copy intended for later restoration, rather than only ongoing replication |
+| RPO / RTO | Recovery point objective: acceptable data-loss window / recovery time objective: acceptable time to restore service |
+| Migration | A controlled change to schema or data between application versions or systems |
+
+Product names are introduced in the [engine chapters](../../README.md#12-database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.

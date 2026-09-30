@@ -1,224 +1,99 @@
-## Data Models
+# Data Models: Turn a Business Description into a Structure
 
-Data models are essential frameworks that define how data is stored, organized, and manipulated within a database system. They provide a structured approach to handling data, enabling us to represent real-world entities and relationships effectively. Understanding different data models helps in choosing the right database architecture for specific application needs.
+A **data model** describes what facts exist, how they relate, and which rules apply. Before writing SQL, make the model explicit. Otherwise, decisions such as whether an order can contain several books become accidental consequences of a table layout.
 
-### Types of Data Models
+We will use the same bookstore as the introductory notes. The business says: “a customer places an order containing one or more products.”
 
-Let's explore some of the most common data models and see how they structure data differently.
+## Name the things you need to remember
 
-#### Hierarchical Model
+An **entity** is a kind of thing the system tracks. An **attribute** is a fact about it.
 
-The hierarchical model organizes data in a tree-like structure, resembling an organizational chart or a family tree. Each record (node) has a single parent but can have multiple children, forming a parent-child relationship.
+| Entity | Example | Attributes |
+| --- | --- | --- |
+| Customer | Alice | Customer ID, name, email |
+| Product | A particular book edition | Product ID, title, current price |
+| Order | Purchase 101 | Order ID, customer, order date |
 
-Imagine an organization's structure:
+Do not confuse an entity type with one instance. `Customer` describes the kind of record; Alice is one customer instance.
 
-```
-Company
-│
-├── Human Resources
-│   ├── Recruitment Team
-│   └── Employee Relations
-└── Engineering
-    ├── Software Development
-    └── Quality Assurance
-```
+## Describe relationships in both directions
 
-In this model:
+Ask both questions: how many orders can a customer place, and how many customers can place one order?
 
-- In a hierarchical structure, **each department has a single parent**, meaning it reports to only one higher-level entity for clarity and accountability.  
-- A **parent department can have multiple children**, allowing it to oversee and manage several subordinate departments effectively.  
+- One customer can place many orders.
+- Each order belongs to one customer in this model.
 
-The hierarchical model is straightforward and efficient for representing data with a clear hierarchy, such as file systems or organizational structures. However, it can be restrictive when modeling complex relationships that don't fit into a strict hierarchy.
+That is **one-to-many**. The number of records permitted on each side is called the relationship's **cardinality**.
 
-#### Network Model
+Now compare orders and products:
 
-The network model expands on the hierarchical model by allowing records to have multiple parent and child records, creating a web-like structure. This model is adept at representing many-to-many relationships.
+- One order can contain many products.
+- One product can appear in many orders.
 
-Consider a university course enrollment system:
+That is **many-to-many**. Quantity and the price charged are facts about a product *in a particular order*, rather than facts about the customer or the product alone.
 
-```
-[Student A]──enrolled in──[Course 101]
-   │                         │
-   └──enrolled in──[Course 102]──enrolled by──[Student B]
-```
+Whether a relationship is required also matters. A customer might exist before placing an order, while an order must have a customer in this design.
 
-Here:
+## Add the missing relationship entity
 
-- In the network model, entities can have **multiple parents and children**, such as students enrolling in multiple courses and courses having multiple students.  
-- The model offers **flexibility**, efficiently managing and representing complex relationships between interconnected data points.
+Introduce an **order item**: one line in an order describing a product purchase.
 
-While more flexible than the hierarchical model, the network model can become complicated to navigate and manage, especially as the number of relationships grows.
-
-#### Relational Model
-
-The relational model represents data using tables (relations) composed of rows (records) and columns (attributes). Relationships between tables are established through keys—primary keys uniquely identify records within a table, and foreign keys link records across tables.
-
-Example of a customer orders database:
-
-**Customers Table:**
-
-| CustomerID | Name   | Email             |
-|------------|--------|-------------------|
-| 1          | Alice  | alice@example.com |
-| 2          | Bob    | bob@example.com   |
-
-**Orders Table:**
-
-| OrderID | CustomerID | Product   | Quantity |
-|---------|------------|-----------|----------|
-| 101     | 1          | Laptop    | 1        |
-| 102     | 2          | Smartphone| 2        |
-
-In this model:
-
-- In the relational model, **data is organized into tables**, each with a defined schema to structure the information.  
-- **Relationships between tables** are established, such as the `CustomerID` in the Orders table linking to the Customers table to maintain data integrity.  
-- **Structured Query Language (SQL)** is the standard tool used for querying, updating, and managing data within relational databases.
-
-The relational model is widely used due to its simplicity, flexibility, and strong theoretical foundation. It's ideal for applications requiring complex queries and transactions.
-
-#### Entity-Relationship Model (ER Model)
-
-The ER model is a high-level conceptual data model that defines data entities, their attributes, and the relationships between them. It's often used in the database design phase to visualize and plan the database structure.
-
-Example of a library system:
-
-```
-[Book]────written by────[Author]
-  │                       │
-has ISBN                has AuthorID
-  │                       │
-[Publisher]──publishes──[Book]
+```text
+Customer 1 ---- many Order
+Order    1 ---- many OrderItem
+Product  1 ---- many OrderItem
 ```
 
-Components:
+The line records `quantity` and `unit_price_at_purchase`. Recording the purchase price matters because changing a product's current price should not change what an earlier order charged.
 
-- In an entity-relationship model, **entities represent objects or concepts**, such as Book, Author, or Publisher, that the database will manage.  
-- **Attributes define the properties** of entities, such as ISBN for a Book or AuthorID for an Author, to provide detailed information.  
-- **Relationships illustrate associations** between entities, such as a Book being "written by" an Author or a Publisher "publishing" a Book, to depict connections.
+## Move from a conceptual to a logical model
 
-The ER model helps in understanding the data requirements and designing a relational database that accurately reflects the real-world scenario.
+A **conceptual model** explains the business without committing to SQL types. “Customers place orders” belongs here. An entity-relationship (ER) diagram draws these entities and relationships.
 
-#### Object-Oriented Model
+A **logical relational model** chooses tables, identifiers, and references:
 
-The object-oriented model integrates object-oriented programming principles with database technology. Data is stored as objects, similar to how data and methods are encapsulated in programming languages like Java or C++.
-
-Imagine a multimedia content database:
-
-```
-Class: MediaContent
-│
-├── Class: Image extends MediaContent
-│   ├── Attributes: resolution, format
-│   └── Methods: display(), edit()
-├── Class: Video extends MediaContent
-│   ├── Attributes: length, codec
-│   └── Methods: play(), pause()
+```text
+customers(customer_id, name, email)
+products(product_id, title, current_price)
+orders(order_id, customer_id, order_date)
+order_items(order_id, line_number, product_id, quantity, unit_price_at_purchase)
 ```
 
-Features:
+The primary key of `order_items` is `(order_id, line_number)`: the pair identifies a line. Line number 1 can exist in several different orders. The full pair cannot repeat.
 
-- In the object-oriented model, **objects are instances of classes**, encapsulating both data and the behaviors associated with that data.  
-- **Inheritance allows classes** to derive properties and methods from parent classes, promoting code reusability and organization.  
-- **Encapsulation combines data and methods**, ensuring that related functionalities are bundled together for clarity and modularity.
+Foreign keys connect `orders.customer_id` to a customer, and each order item to its order and product. In SQL, these declarations enforce that the referenced records exist; they do not automatically fetch related records for a query.
 
-This model is effective for applications that deal with complex data types and relationships, such as computer-aided design (CAD) systems or content management platforms.
+## Inspect actual rows
 
-#### Document Model
+| order_id | line_number | product_id | quantity | unit_price_at_purchase |
+| --- | --- | --- | --- | --- |
+| 101 | 1 | 10 | 2 | 15.00 |
+| 101 | 2 | 20 | 1 | 25.00 |
+| 102 | 1 | 10 | 1 | 15.00 |
 
-The document model stores data as documents, typically in formats like JSON or XML. Each document contains semi-structured data, and the schema can vary between documents, offering flexibility.
+Order 101 contains two lines and three units in total. Its amount is `2 × 15.00 + 1 × 25.00 = 55.00`. Product 10 occurs in both orders, without copying its title into every line.
 
-Example of user profiles:
+Ask whether the model permits repeated products in separate lines, returns, discounts, and tax. The answers may require extra attributes or entities. A diagram is a proposal that must be checked against real workflows.
 
-```
-Document 1:
-{
-  "userID": "user123",
-  "name": "Alice",
-  "email": "alice@example.com",
-  "preferences": {
-    "language": "English",
-    "notifications": true
-  }
-}
+## Choose the physical design later
 
-Document 2:
-{
-  "userID": "user456",
-  "name": "Bob",
-  "email": "bob@example.com",
-  "age": 30
-}
-```
+A **physical model** chooses engine-specific types, indexes, partitioning, and storage options. For example, an index on `orders.customer_id` may help order-history queries.
 
-Characteristics:
+This is a different decision from “an order belongs to a customer.” Keeping the distinction allows you to improve storage access without changing the business meaning of an order.
 
-- The **flexible schema in the document model** allows documents to have varying structures, accommodating diverse data types and formats.  
-- **Nested data is supported**, enabling the use of embedded documents and arrays to represent complex relationships within a single document.  
-- The model offers **ease of use**, aligning naturally with modern programming practices and allowing developers to work seamlessly with JSON or similar formats.
+## Other ways to represent the same domain
 
-The document model is ideal for applications where data structures may evolve over time, such as content management systems or real-time analytics platforms.
+Tables are one logical representation. A document model might embed order lines inside an order document. A graph model might represent customers and products as nodes connected by purchase relationships.
 
-#### Column-Family Model
+A tree is a good model for a single-parent category hierarchy, but a product belonging to several categories does not naturally fit one strict parent path. The historical network database model used navigable record relationships; it is not simply another name for a modern graph database.
 
-The column-family model organizes data into rows and columns, but unlike the relational model, columns are grouped into families, and each row can have a different set of columns.
+The [database-types note](02_types_of_databases.md) compares these approaches. The business rules still need to be explained whichever representation you choose.
 
-Example with time-series data:
+## Check your understanding
 
-```
-Row Key: "user123"
-Column Family: "login_activity"
-  - "2021-01-01": "Logged in from IP 192.168.1.1"
-  - "2021-01-02": "Logged in from IP 192.168.1.2"
+1. Why does the bookstore need an order-items entity?
+2. Why is purchase price different from current product price?
+3. Can `(101, 1)` and `(102, 1)` both be valid order-item keys?
+4. Which decision is conceptual, which is logical, and which is physical: an order needs a customer, the customer ID is a foreign key, and an index supports customer lookup?
 
-Column Family: "purchase_history"
-  - "order_101": "Laptop"
-  - "order_102": "Headphones"
-```
-
-Highlights:
-
-- In the column-family model, **dynamic columns enable rows** to have varying numbers of columns, providing flexibility in data representation.  
-- The model is designed for **high scalability**, making it ideal for distributed storage across multiple servers.  
-- It is **efficient for managing large datasets**, making it well-suited for big data applications requiring high performance and capacity.  
-
-This model excels in handling large volumes of data with high write and read throughput, such as logging systems or real-time analytics.
-
-#### Graph Model
-
-The graph model represents data as nodes (entities) and edges (relationships), with properties to store additional information. It's designed to handle data where relationships are as important as the data itself.
-
-Example of a social network:
-
-```
-[User: Alice]
-  │
-friends with
-  │
-[User: Bob]
-  │
-likes
-  │
-[Post: "Graph Databases 101"]
-```
-
-Features:
-
-- In the graph model, **nodes represent entities**, such as users, posts, or comments, serving as the core components of the structure.  
-- **Edges define the relationships** between nodes, such as "friends with" or "likes," illustrating how entities are connected.  
-- **Properties are attributes** assigned to nodes and edges, providing additional information like usernames, timestamps, or relationship weights.  
-
-The graph model is powerful for applications that require traversing complex relationships, such as recommendation engines, fraud detection systems, or network topologies.
-
-### Choosing the Right Data Model
-
-Selecting an appropriate data model depends on various factors, including the nature of the data, the relationships between data entities, performance requirements, and scalability considerations.
-
-- The **hierarchical model** is most effective for organizing data that follows a clear, single-parent hierarchy, making it suitable for tree-like structures.  
-- For **complex many-to-many relationships**, the network model is well-suited, providing flexibility in representing interconnected data.  
-- The **relational model** is ideal for managing structured data with well-defined relationships, especially when complex queries are required.  
-- During the database design phase, the **entity-relationship model** is highly useful for conceptualizing and planning the structure of the database.  
-- Applications with **complex data and behaviors** closely aligned with object-oriented programming benefit from the object-oriented model.  
-- The **document model** is a great choice for semi-structured data and situations where schemas need to be flexible and adaptable over time.  
-- For **large-scale distributed data storage**, the column-family model excels by efficiently handling high volumes of data across multiple systems.  
-- When working with data that involves **intricate and interconnected relationships**, the graph model is particularly well-suited, enabling efficient traversal and analysis.
+Continue with [requirements analysis](../02_database_design/01_requirements_analysis.md) to discover these rules before committing to a schema. Use the [glossary](05_glossary.md) when a term is unfamiliar.

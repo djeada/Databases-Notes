@@ -1,290 +1,64 @@
-## Data Control Language (DCL)
+# DCL: Decide Who May Access the Data
 
-Welcome back to our journey through SQL! Today, we're diving into the world of Data Control Language, or DCL for short. If you've ever wondered how databases manage permissions and keep data secure, DCL is the key. Think of it as the security guard of your database, controlling who can access or modify data and ensuring that only authorized users can perform certain actions.
+**Data Control Language (DCL)** manages database privileges through statements such as `GRANT` and `REVOKE`. A **privilege** is permission to perform a particular operation on a particular resource.
 
-### Understanding DCL and Its Purpose
+The bookstore might need an application that creates orders and a reporting job that only reads them. They should not necessarily have the same permissions.
 
-At its core, Data Control Language consists of commands that allow you to manage access rights and permissions for your database objects, such as tables, views, and procedures. This is crucial for maintaining data integrity and security, especially in environments where multiple users or applications interact with the database.
+## Identity is different from permission
 
-The primary DCL commands are:
+**Authentication** answers “who is connecting?” **Authorization** answers “what may this identity do?” Successfully logging in does not mean that every table or operation should be available.
 
-- The **GRANT** statement is used to provide specific privileges to users or roles, enabling controlled access to database resources.  
-- The **REVOKE** statement is used to withdraw previously granted privileges from users or roles, restricting access as needed.  
+A **role** is a named database identity or collection of privileges, depending on the engine. Assigning privileges to a role can avoid repeating the same grants for every reporting user.
 
-By using these commands, you can control who can read data, insert new records, update existing information, or even create and modify database structures.
+The commands in this note use **PostgreSQL**, where roles can have login ability or serve as privilege groups. SQLite has no equivalent built-in `GRANT`/`REVOKE` user system; its access is managed by the application and operating-system file permissions.
 
-### Roles in Database Management Systems
+## Grant a narrowly defined reading role
 
-Before we delve into the specifics of granting and revoking permissions, it's important to understand the concept of roles in database management systems (DBMS). Roles are like job titles in a company—they define a set of responsibilities and permissions that can be assigned to users. This makes managing permissions more efficient, as you can grant or revoke privileges for a group of users all at once.
-
-#### Types of Roles
-
-There are generally two types of roles in a DBMS:
-
-1. **Predefined roles** are built-in roles provided by the DBMS with preset permissions, making permission management easier by offering commonly used privilege sets. For instance, PostgreSQL includes roles like `SUPERUSER` and `CREATEROLE` by default.  
-2. **Custom roles** are user-defined roles created to address specific organizational or application needs. For example, a `data_entry` role can be set up to allow adding or updating records without permitting data deletion or table structure modifications.  
-
-### Creating Roles
-
-Creating roles allows you to define sets of permissions that can be easily assigned to users. To create a role, you use the `CREATE ROLE` statement.
+Assume a PostgreSQL database named `bookstore`, a schema named `public`, and a `public.orders` table. A **schema** here is a namespace grouping objects inside the database. Run administrative commands only through an account permitted to issue these grants.
 
 ```sql
-CREATE ROLE role_name;
+CREATE ROLE report_reader;
+GRANT CONNECT ON DATABASE bookstore TO report_reader;
+GRANT USAGE ON SCHEMA public TO report_reader;
+GRANT SELECT ON TABLE public.orders TO report_reader;
 ```
 
-**Example:**
-
-Let's say we want to create a role for data entry clerks who will be responsible for inserting and updating records in the `employees` table.
+The separate privileges have separate purposes: connect to this database, refer to objects in this schema, and read this table. The example role is a group without login ability; an existing reporting login must be granted membership to use it.
 
 ```sql
-CREATE ROLE data_entry;
+-- Assume reporting_login is an existing login role.
+GRANT report_reader TO reporting_login;
 ```
 
-With this command, we've created a new role named `data_entry`. It's like setting up a new job title within our database security system.
+No insert, update, or delete privilege is granted by these statements. However, the login may obtain additional privileges through other roles, ownership, or privileges granted to `PUBLIC`. PostgreSQL `PUBLIC` means all roles; it is different from the `public` schema.
 
-### Granting Privileges with GRANT
-
-Now that we have a role, we need to assign it the appropriate permissions. The `GRANT` command lets us specify which actions the role can perform on which database objects.
-
-### Granting Privileges to Roles
-
-To grant privileges to a role, you use the following syntax:
+## Revoke a grant and understand the remaining paths
 
 ```sql
-GRANT privilege_list
-ON object_name
-TO role_name;
+REVOKE SELECT ON TABLE public.orders FROM report_reader;
 ```
 
-**Example:**
+This removes that grant from that role. It is not an absolute ban: another applicable grant or ownership may still permit reading. To audit access, inspect all relevant roles and privilege sources.
 
-Continuing with our `data_entry` role, let's grant it the ability to insert new records and update existing ones in the `employees` table.
+Grants on existing tables also do not automatically establish the policy for every future table. Default privileges are a separate engine-specific mechanism controlled by the role creating those objects.
 
-```sql
-GRANT INSERT, UPDATE
-ON employees
-TO data_entry;
-```
+## Database privileges are not the whole application policy
 
-**What's Happening Here:**
+The database connection may be shared by many bookstore customers through one application identity. Giving that identity access to orders does not mean every customer should see every order.
 
-- The **privileges granted** include `INSERT` and `UPDATE` permissions, allowing data entry and modification.  
-- The **object affected** is the `employees` table, where these privileges will apply.  
-- The **role receiving privileges** is `data_entry`, which will gain the ability to perform the specified operations on the table.  
+The application must check whose order is being requested, or use a suitable database row-level policy. A **row-level policy** governs which rows may be accessed, rather than only whether the table as a whole can be queried. Its design must account for how authenticated customer identity reaches the database.
 
-Now, the `data_entry` role has the necessary permissions to perform data entry tasks on the `employees` table.
+## Use least privilege
 
-#### Granting Roles to Users
+**Least privilege** means granting only the access needed for a job. A reporting process usually does not need schema modification. A checkout application generally should not use the database administrator's identity.
 
-After defining a role and assigning it privileges, the next step is to assign the role to specific users. This way, any user with the `data_entry` role will inherit its permissions.
+Separate migration credentials from routine application credentials. A migration changes tables; normal checkout uses the already defined tables. Keeping those jobs separate reduces the authority available to an unintended query or compromised application.
 
-```sql
-GRANT role_name
-TO username;
-```
+## Check your understanding
 
-**Example:**
+1. How are authentication and authorization different?
+2. Why does reading a PostgreSQL table involve more than a `SELECT` grant alone?
+3. Why might revoking one role's grant leave a user's access intact?
+4. Why does a shared application connection still need a customer-level access policy?
 
-Suppose we have a user named `user1` who needs to perform data entry tasks.
-
-```sql
-GRANT data_entry
-TO user1;
-```
-
-**Explanation:**
-
-- The **role granted** is `data_entry`, which provides specific permissions or capabilities predefined for the role.  
-- The **user receiving the role** is `user1`, enabling them to inherit the permissions associated with the `data_entry` role.
-
-Now, `user1` has the permissions associated with the `data_entry` role and can insert and update records in the `employees` table.
-
-### Revoking Privileges with REVOKE
-
-Sometimes, you may need to remove permissions from a user or role. The `REVOKE` command allows you to do just that.
-
-#### Revoking Privileges from Users or Roles
-
-The syntax for revoking privileges is similar to granting them:
-
-```sql
-REVOKE privilege_list
-ON object_name
-FROM user_or_role;
-```
-
-**Example:**
-
-Let's say we want to remove the `INSERT` and `UPDATE` permissions from `user1` on the `employees` table.
-
-```sql
-REVOKE INSERT, UPDATE
-ON employees
-FROM user1;
-```
-
-**Interpretation:**
-
-- The **privileges revoked** are `INSERT` and `UPDATE`, removing the ability to add or modify data.  
-- The **object affected** is the `employees` table, where these permissions are being withdrawn.  
-- The **user losing privileges** is `user1`, restricting their access to perform these operations on the table.
-
-After executing this command, `user1` will no longer be able to insert or update records in the `employees` table.
-
-**Note:** If `user1` received these privileges through the `data_entry` role, revoking directly from `user1` might not be sufficient. In that case, you might need to revoke the role itself:
-
-```sql
-REVOKE data_entry
-FROM user1;
-```
-
-This command removes the `data_entry` role from `user1`, revoking all associated privileges.
-
-### Managing Roles
-
-Roles are not static; you might need to modify them or remove them as your organization's needs change.
-
-#### Altering Roles
-
-To change the attributes of an existing role, you use the `ALTER ROLE` statement.
-
-```sql
-ALTER ROLE role_name
-[WITH OPTION];
-```
-
-**Example:**
-
-Suppose we want to allow the `data_entry` role to create new tables. We can alter the role to include this permission.
-
-```sql
-ALTER ROLE data_entry
-WITH CREATEDB;
-```
-
-Now, anyone assigned the `data_entry` role can create new databases. Be cautious with such powerful permissions!
-
-#### Dropping Roles
-
-When a role is no longer needed, you can remove it using the `DROP ROLE` statement.
-
-```sql
-DROP ROLE role_name;
-```
-
-**Example:**
-
-If we decide the `data_entry` role is obsolete:
-
-```sql
-DROP ROLE data_entry;
-```
-
-This command deletes the `data_entry` role from the database. Before dropping a role, ensure that no users depend on it, or reassign their permissions accordingly.
-
-### When to Create Roles
-
-Creating roles is a best practice for managing permissions efficiently, especially in larger systems with multiple users.
-
-- Assigning permissions to roles instead of directly to users enhances security by minimizing inconsistencies and simplifying the auditing of access rights.  
-- Roles simplify permission management by grouping permissions; updates to a role automatically apply to all users assigned to it.  
-- Creating roles tailored to specific departments or functions, such as `finance`, `hr`, or `data_entry`, supports duty segregation and ensures adherence to the principle of least privilege.  
-
-### Best Practices for Using DCL
-
-To ensure your database remains secure and well-organized, consider the following best practices:
-
-#### Principle of Least Privilege
-
-Always grant the minimal set of permissions required for a user or role to perform their tasks. This reduces the risk of unauthorized data access or accidental data modification.
-
-**Example:**
-
-If a user only needs to read data from the `employees` table, grant them only `SELECT` permission:
-
-```sql
-GRANT SELECT
-ON employees
-TO user_readonly;
-```
-
-#### Clear Role Naming Conventions
-
-Use descriptive and consistent names for your roles. This makes it easier to understand what permissions each role includes and simplifies management.
-
-**Examples:**
-
-- `data_entry`
-- `report_viewer`
-- `admin_readonly`
-
-#### Regular Audits
-
-Periodically review your roles and permissions to ensure they still align with your organization's needs and security policies. Remove any unnecessary roles or privileges to minimize security risks.
-
-**Audit Checklist:**
-
-- List all roles and their associated permissions.
-- Verify that each role is assigned to the correct users.
-- Check for any redundant or conflicting permissions.
-
-### Putting It All Together: A Practical Scenario
-
-Let's walk through a practical example to see how DCL commands are used in a real-world context.
-
-**Scenario:**
-
-Your company has hired a team of interns who need to view employee data but should not be able to modify it. We'll create a role for them, assign the necessary permissions, and grant the role to the interns.
-
-#### Step 1: Create a Role
-
-Create a role named `intern_viewer`:
-
-```sql
-CREATE ROLE intern_viewer;
-```
-
-#### Step 2: Grant Permissions to the Role
-
-Grant `SELECT` permission on the `employees` table to `intern_viewer`:
-
-```sql
-GRANT SELECT
-ON employees
-TO intern_viewer;
-```
-
-Now, the `intern_viewer` role can read data from the `employees` table but cannot modify it.
-
-#### Step 3: Assign the Role to Users
-
-Assuming the interns are represented by users `intern1` and `intern2`:
-
-```sql
-GRANT intern_viewer
-TO intern1, intern2;
-```
-
-Both `intern1` and `intern2` now have read-only access to the `employees` table.
-
-#### Step 4: Verify Permissions
-
-It's good practice to verify that the permissions are correctly set.
-
-**As `intern1`, attempt to read data:**
-
-```sql
-SELECT * FROM employees;
-```
-
-This should succeed.
-
-**Attempt to modify data:**
-
-```sql
-UPDATE employees
-SET first_name = 'Test'
-WHERE employee_id = 1;
-```
-
-This should fail with a permission error, confirming that `intern1` cannot modify data.
+Continue with [transaction control](05_transaction_control_language_tcl.md) to decide which authorized changes must succeed together.

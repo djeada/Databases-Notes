@@ -1,537 +1,173 @@
-## Joins, Subqueries, and Views in SQL
+# Joins, Subqueries, and Views
 
-Welcome to the fascinating world of SQL, where we can manipulate and retrieve data from relational databases using powerful tools like joins, subqueries, and views. These concepts are essential for anyone looking to master SQL and database management. Let's dive in and explore each of these techniques in detail, with examples to solidify your understanding.
+The bookstore's tables separate customers, orders, products, and order lines. A query puts the relevant facts together without permanently copying them. This note explains three tools: a **join** combines matching rows, a **subquery** uses another query inside a statement, and a **view** names a reusable query.
 
-### Joins: Combining Data from Multiple Tables
+Use a fresh copy of the SQLite [introductory setup](01_intro_to_sql.md). In particular, Alice has two orders, Bob has one, and Carol has none. If you committed extra orders during the transaction exercises, reset the sample before comparing these results.
 
-In relational databases, data is often spread across multiple tables to reduce redundancy and improve organization. However, there are times when we need to combine this data to get a complete picture. This is where **joins** come into play.
-
-#### Understanding Joins
-
-A **join** is an SQL operation that allows you to combine rows from two or more tables based on a related column between them. Think of joins as a way to connect tables "horizontally," bringing together related data to answer complex queries.
-
-There are several types of joins:
-
-- An **INNER JOIN** returns rows only when there is a matching value in both joined tables, excluding unmatched rows.  
-- A **LEFT JOIN** (or **LEFT OUTER JOIN**) includes all rows from the left table and the matched rows from the right table, with NULLs for non-matching right-side rows.  
-- A **RIGHT JOIN** (or **RIGHT OUTER JOIN**) includes all rows from the right table and the matched rows from the left table, with NULLs for non-matching left-side rows.  
-- A **FULL JOIN** (or **FULL OUTER JOIN**) combines rows from both tables, including all matched and unmatched rows, filling in NULLs where no match exists.  
-
-Let's explore each type with examples.
-
-#### Setting Up Example Tables
-
-We'll use two tables for our examples: `Employees` and `Departments`.
-
-**Employees Table**
-
-| EmployeeID | LastName | DepartmentID |
-|------------|----------|--------------|
-| 1          | Smith    | 1            |
-| 2          | Johnson  | 1            |
-| 3          | Brown    | 2            |
-| 4          | Taylor   | NULL         |
-
-**Departments Table**
-
-| DepartmentID | DepartmentName           |
-|--------------|--------------------------|
-| 1            | Human Resources          |
-| 2            | Information Technology   |
-| 3            | Finance                  |
-
-#### INNER JOIN
-
-An **INNER JOIN** returns rows when there is a match in both tables. It's like finding the intersection of the two tables.
-
-**SQL Query**
+## An inner join returns matching pairs
 
 ```sql
-SELECT e.LastName, d.DepartmentName
-FROM Employees AS e
-INNER JOIN Departments AS d
-ON e.DepartmentID = d.DepartmentID;
+SELECT c.name, o.order_id
+FROM customers AS c
+INNER JOIN orders AS o ON o.customer_id = c.customer_id
+ORDER BY o.order_id;
 ```
 
-**Result**
+| name | order_id |
+| --- | --- |
+| Alice | 101 |
+| Alice | 102 |
+| Bob | 103 |
 
-| LastName | DepartmentName        |
-|----------|-----------------------|
-| Smith    | Human Resources       |
-| Johnson  | Human Resources       |
-| Brown    | Information Technology|
+Start with Alice's customer row. The `ON` condition finds two orders with her customer ID, so the result contains two pairs. Bob matches once; Carol does not match.
 
-**Explanation**
+`INNER JOIN` can be written as `JOIN`. `c` and `o` are aliases, short query names for the tables. `c.name` means the name column from the customer side.
 
-- Only employees with a `DepartmentID` that matches an entry in the `Departments` table are returned.
-- Employee Taylor is excluded because their `DepartmentID` is `NULL`.
+## A left join keeps the unmatched left rows
 
-#### LEFT JOIN (LEFT OUTER JOIN)
-
-A **LEFT JOIN** returns all rows from the left table and matched rows from the right table. If there is no match, `NULL` values are returned for columns from the right table.
-
-**SQL Query**
+Suppose the report needs every customer, including those who have not bought anything:
 
 ```sql
-SELECT e.LastName, d.DepartmentName
-FROM Employees AS e
-LEFT JOIN Departments AS d
-ON e.DepartmentID = d.DepartmentID;
+SELECT c.name, o.order_id
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+ORDER BY c.customer_id, o.order_id;
 ```
 
-**Result**
+| name | order_id |
+| --- | --- |
+| Alice | 101 |
+| Alice | 102 |
+| Bob | 103 |
+| Carol | NULL |
 
-| LastName | DepartmentName        |
-|----------|-----------------------|
-| Smith    | Human Resources       |
-| Johnson  | Human Resources       |
-| Brown    | Information Technology|
-| Taylor   | NULL                  |
+Carol's row is retained. Since there is no order to supply right-side values, those values are `NULL` in the query result. The join did not create an empty order in the database.
 
-**Explanation**
+“Left” refers to the table written before the join. Reversing the table positions changes which unmatched rows are preserved.
 
-- All employees are returned.
-- For Taylor, who doesn't have a `DepartmentID`, the `DepartmentName` is `NULL`.
+## Put a filter where its meaning belongs
 
-#### RIGHT JOIN (RIGHT OUTER JOIN)
-
-A **RIGHT JOIN** returns all rows from the right table and matched rows from the left table. If there is no match, `NULL` values are returned for columns from the left table.
-
-**SQL Query**
+To keep every customer but attach only open orders, include that condition in the matching rule:
 
 ```sql
-SELECT e.LastName, d.DepartmentName
-FROM Employees AS e
-RIGHT JOIN Departments AS d
-ON e.DepartmentID = d.DepartmentID;
+SELECT c.name, o.order_id
+FROM customers AS c
+LEFT JOIN orders AS o
+    ON o.customer_id = c.customer_id AND o.status = 'open'
+ORDER BY c.customer_id;
 ```
 
-**Result**
+The result is Alice with order 102, Bob with null, and Carol with null.
 
-| LastName | DepartmentName        |
-|----------|-----------------------|
-| Smith    | Human Resources       |
-| Johnson  | Human Resources       |
-| Brown    | Information Technology|
-| NULL     | Finance               |
+If instead you write `WHERE o.status = 'open'`, the filter applies to the joined result. Bob and Carol have null on the order side, so they do not pass that condition and disappear. This is a frequent cause of a left join behaving like an inner join.
 
-**Explanation**
+## A join can multiply rows
 
-- All departments are returned.
-- For the Finance department, there is no matching employee, so `LastName` is `NULL`.
-
-#### FULL JOIN (FULL OUTER JOIN)
-
-A **FULL JOIN** returns all rows when there is a match in one of the tables. If there is no match, `NULL` values are returned for the missing columns.
-
-**Note**: Not all SQL implementations support `FULL JOIN`. In systems that don't, you can simulate it using a `UNION` of `LEFT JOIN` and `RIGHT JOIN`.
-
-**SQL Query**
+Joining order 101 to its items returns two rows because the order has two lines. Joining each line to its product supplies the title:
 
 ```sql
-SELECT e.LastName, d.DepartmentName
-FROM Employees AS e
-FULL OUTER JOIN Departments AS d
-ON e.DepartmentID = d.DepartmentID;
+SELECT i.line_number, p.title, i.quantity, i.unit_price_cents
+FROM order_items AS i
+JOIN products AS p ON p.product_id = i.product_id
+WHERE i.order_id = 101
+ORDER BY i.line_number;
 ```
 
-**Result**
+| line_number | title | quantity | unit_price_cents |
+| --- | --- | --- | --- |
+| 1 | Database Basics | 2 | 1500 |
+| 2 | SQL Practice | 1 | 2500 |
 
-| LastName | DepartmentName        |
-|----------|-----------------------|
-| Smith    | Human Resources       |
-| Johnson  | Human Resources       |
-| Brown    | Information Technology|
-| Taylor   | NULL                  |
-| NULL     | Finance               |
+That multiplication is correct here. But summing an order-level value after joining it to multiple lines can count that value several times. Decide what one input row represents before aggregating.
 
-**Explanation**
+## Aggregate a left join carefully
 
-- All employees and all departments are included.
-- `Taylor` has no department (`DepartmentName` is `NULL`).
-- The Finance department has no employees (`LastName` is `NULL`).
-
-#### Cross Join
-
-A **CROSS JOIN** returns the Cartesian product of the two tables, combining each row from the first table with every row from the second table.
-
-**SQL Query**
+Count orders for every customer:
 
 ```sql
-SELECT e.LastName, d.DepartmentName
-FROM Employees AS e
-CROSS JOIN Departments AS d;
+SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+GROUP BY c.customer_id, c.name
+ORDER BY c.customer_id;
 ```
 
-**Result**
+The counts are Alice = 2, Bob = 1, Carol = 0. `COUNT(o.order_id)` ignores the null order ID in Carol's unmatched result row. `COUNT(*)` would count that preserved row and report one for Carol.
 
-This query would return 12 rows (4 employees × 3 departments), combining every employee with every department.
+Use `WHERE` to filter input rows and `HAVING` to filter aggregate groups. For example, `HAVING COUNT(o.order_id) >= 2` keeps only Alice after the groups have been calculated.
 
-#### Visualizing Joins
+## Use a scalar subquery for one calculated value
 
-SQL joins are powerful tools for combining data from two or more tables based on a related column. To better understand joins, let’s explore them visually and explain how they work.
-
-##### Inner Join
-
-An **Inner Join** retrieves only the rows that have matching values in both tables. For instance, if you have an `Employees` table with a `DepartmentID` column and a `Departments` table with the same column, an inner join will return only those employees who are associated with an existing department. Any rows in the `Employees` table without a matching `DepartmentID` in the `Departments` table (and vice versa) are excluded.
-
-```
-+-----------+         +--------------+
-| Employees |         | Departments  |
-+-----------+         +--------------+
-     |                         |
-     | Matching DepartmentID   |
-     +-------------------------+
-             |
-             v
-+-------------------------------+
-|     Resulting Rows            |
-| (Employees with matching Dept)|
-+-------------------------------+
-```
-
-This join is useful when you’re interested solely in records with complete data from both sides. For example, to find employees who belong to a known department, you would use an inner join.
-
-##### Left Join
-
-A **Left Join** (or Left Outer Join) retrieves all rows from the left table (e.g., `Employees`) and the matching rows from the right table (e.g., `Departments`). If there’s no matching row in the right table, the result still includes the left table’s row, but with `NULL` values for the right table’s columns.
-
-```
-+-----------+         +--------------+
-| Employees |         | Departments  |
-+-----------+         +--------------+
-     |                         |
-     | Left table (all rows)   |
-     +-------------------------+
-             |
-             v
-+-------------------------------+
-|     Resulting Rows            |
-| (All Employees, with Dept info|
-|  where available)             |
-+-------------------------------+
-```
-
-For example, suppose you want a list of all employees, even those who are not currently assigned to a department. A left join ensures that even employees without a `DepartmentID` in the `Departments` table are included, with `NULL` filling in the missing department details.
-
-##### Right Join
-
-A **Right Join** (or Right Outer Join) retrieves all rows from the right table (e.g., `Departments`) and the matching rows from the left table (e.g., `Employees`). If there’s no matching row in the left table, the result includes the right table’s row with `NULL` values for the left table’s columns.
-
-```
-+-----------+         +--------------+
-| Employees |         | Departments  |
-+-----------+         +--------------+
-     |                         |
-     | Right table (all rows)  |
-     +-------------------------+
-             |
-             v
-+-------------------------------+
-|     Resulting Rows            |
-| (All Departments, with Emp info|
-|  where available)             |
-+-------------------------------+
-```
-
-This join is helpful when you want a list of all departments, regardless of whether they currently have any employees assigned to them. For instance, a right join can reveal departments with no staff.
-
-##### Full Outer Join
-
-A **Full Outer Join** retrieves all rows from both tables, combining matching rows where they exist. If a row in one table doesn’t have a match in the other, the result still includes it, with `NULL` values filling in the missing data from the unmatched table.
-
-For example, a full outer join would provide a comprehensive view of all employees and all departments, including:
-
-- Employees without departments (`NULL` in the department-related columns).
-- Departments without employees (`NULL` in the employee-related columns).
-
-```
-+-----------+         +--------------+
-| Employees |         | Departments  |
-+-----------+         +--------------+
-     |                         |
-     | All rows from both      |
-     +-------------------------+
-             |
-             v
-+-------------------------------+
-|     Resulting Rows            |
-| (All Employees and Departments|
-|  with matching where possible)|
-+-------------------------------+
-```
-
-This join is ideal for scenarios where you want a complete overview of both datasets, even when some relationships are missing.
-
-### Subqueries: Queries within Queries
-
-Subqueries allow you to nest one query inside another, enabling you to perform complex data retrieval in a structured and organized way.
-
-#### Understanding Subqueries
-
-Subqueries can be used in various parts of an SQL statement:
-
-- In the `SELECT` clause to compute a value.
-- In the `FROM` clause as a table.
-- In the `WHERE` clause to filter results based on dynamic criteria.
-
-There are two main types:
-
-- **Non-correlated subqueries** are independent of the outer query and can be executed separately, as they do not reference columns from the outer query.   
-- **Correlated subqueries** depend on the outer query, referencing its columns and evaluating row by row, which can impact performance due to multiple executions.    
-
-##### Example Tables
-
-We'll use the following tables:
-
-**Employees Table**
-
-| EmployeeID | LastName | Salary |
-|------------|----------|--------|
-| 1          | Smith    | 3000   |
-| 2          | Johnson  | 3500   |
-| 3          | Brown    | 2700   |
-| 4          | Taylor   | 4200   |
-
-**Departments Table**
-
-| DepartmentID | DepartmentName     |
-|--------------|--------------------|
-| 1            | Human Resources    |
-| 2            | Information Technology|
-| 3            | Finance            |
-
-**DepartmentEmployees Table**
-
-| DepartmentID | EmployeeID |
-|--------------|------------|
-| 1            | 1          |
-| 1            | 2          |
-| 2            | 3          |
-| 3            | 4          |
-
-#### Non-correlated Subquery Example
-
-**Goal**: Find employees who earn more than the average salary.
-
-**SQL Query**
+A **scalar** result is one value. This query compares each product with the average current price:
 
 ```sql
-SELECT EmployeeID, LastName, Salary
-FROM Employees
-WHERE Salary > (SELECT AVG(Salary) FROM Employees);
+SELECT title, price_cents
+FROM products
+WHERE price_cents > (SELECT AVG(price_cents) FROM products)
+ORDER BY product_id;
 ```
 
-**Explanation**
+The inner query calculates approximately 1933.33 cents. Only SQL Practice, at 2500 cents, is above it. `AVG` combines the input prices into one result, which the outer condition uses.
 
-- The subquery `(SELECT AVG(Salary) FROM Employees)` calculates the average salary.
-- The outer query selects employees with a salary greater than this average.
+The optimizer decides how to execute the statement. A nested query is not a guarantee that the engine physically runs it once in exactly the way the syntax is written.
 
-**Result**
-
-| EmployeeID | LastName | Salary |
-|------------|----------|--------|
-| 2          | Johnson  | 3500   |
-| 4          | Taylor   | 4200   |
-
-#### Correlated Subquery Example
-
-**Goal**: Find employees who earn more than the average salary in their department.
-
-**SQL Query**
+## Use EXISTS when you need to know whether a match exists
 
 ```sql
-SELECT e.EmployeeID, e.LastName, e.Salary, d.DepartmentName
-FROM Employees AS e
-JOIN DepartmentEmployees AS de ON e.EmployeeID = de.EmployeeID
-JOIN Departments AS d ON de.DepartmentID = d.DepartmentID
-WHERE e.Salary > (
-    SELECT AVG(e2.Salary)
-    FROM Employees AS e2
-    JOIN DepartmentEmployees AS de2 ON e2.EmployeeID = de2.EmployeeID
-    WHERE de2.DepartmentID = de.DepartmentID
-);
-```
-
-**Explanation**
-
-- The subquery calculates the average salary for the employee's department.
-- The outer query selects employees whose salary is above this average.
-- This is a correlated subquery because it depends on the `DepartmentID` from the outer query.
-
-**Result**
-
-| EmployeeID | LastName | Salary | DepartmentName     |
-|------------|----------|--------|--------------------|
-| 2          | Johnson  | 3500   | Human Resources    |
-| 4          | Taylor   | 4200   | Finance            |
-
-#### Subquery in SELECT Clause
-
-**Goal**: Display each employee's salary and the average salary across all employees.
-
-**SQL Query**
-
-```sql
-SELECT
-    EmployeeID,
-    LastName,
-    Salary,
-    (SELECT AVG(Salary) FROM Employees) AS AverageSalary
-FROM Employees;
-```
-
-**Result**
-
-| EmployeeID | LastName | Salary | AverageSalary |
-|------------|----------|--------|---------------|
-| 1          | Smith    | 3000   | 3350          |
-| 2          | Johnson  | 3500   | 3350          |
-| 3          | Brown    | 2700   | 3350          |
-| 4          | Taylor   | 4200   | 3350          |
-
-#### Using EXISTS with Subqueries
-
-**Goal**: Find departments that have employees.
-
-**SQL Query**
-
-```sql
-SELECT DepartmentName
-FROM Departments AS d
+SELECT c.customer_id, c.name
+FROM customers AS c
 WHERE EXISTS (
     SELECT 1
-    FROM DepartmentEmployees AS de
-    WHERE de.DepartmentID = d.DepartmentID
-);
-```
-
-**Explanation**
-
-- The `EXISTS` clause checks if the subquery returns any rows.
-- If it does, the department is included in the result.
-
-**Result**
-
-| DepartmentName        |
-|-----------------------|
-| Human Resources       |
-| Information Technology|
-| Finance               |
-
-#### Common Table Expressions (CTEs)
-
-CTEs are similar to subqueries but are defined before the main query using the `WITH` keyword, providing better readability.
-
-**Example**
-
-```sql
-WITH DepartmentSalaries AS (
-    SELECT de.DepartmentID, AVG(e.Salary) AS AvgSalary
-    FROM Employees AS e
-    JOIN DepartmentEmployees AS de ON e.EmployeeID = de.EmployeeID
-    GROUP BY de.DepartmentID
+    FROM orders AS o
+    WHERE o.customer_id = c.customer_id
 )
-SELECT d.DepartmentName, ds.AvgSalary
-FROM Departments AS d
-JOIN DepartmentSalaries AS ds ON d.DepartmentID = ds.DepartmentID;
+ORDER BY c.customer_id;
 ```
 
-**Result**
+The result contains Alice and Bob once each. `EXISTS` asks whether the inner query has any matching row; it does not return every matching order.
 
-| DepartmentName        | AvgSalary |
-|-----------------------|-----------|
-| Human Resources       | 3250      |
-| Information Technology| 2700      |
-| Finance               | 4200      |
+This is a **correlated subquery** because it refers to the outer row through `c.customer_id`. For finding customers with no orders, use the same query with `NOT EXISTS`; the result is Carol.
 
-### Views: Creating Virtual Tables
+`SELECT 1` supplies an arbitrary value because existence, rather than the selected contents, is what matters. An optimizer can transform the query, so correlation does not prove a fixed number of physical executions.
 
-A **view** is a virtual table that is based on the result set of an SQL query. Views simplify complex queries, enhance security by limiting data access, and can improve performance in certain situations.
+## Other joins, once matching is clear
 
-#### Creating a View
+A **right join** preserves unmatched rows from the right side. It can usually be expressed as a left join with table positions exchanged. A **full outer join** preserves unmatched rows from both sides. Support depends on engine and version.
 
-**Goal**: Create a view that shows employee details along with their department names.
+A **cross join** produces every pair: three customers crossed with three products produces nine result rows. It is useful when every combination is intended, and a warning sign when a matching condition was accidentally omitted.
 
-**SQL Query**
+A **self-join** uses the same table more than once with different aliases. For example, comparing products with other products is still a join between two sets of rows, even though both sets come from one table.
+
+## Name a reusable query with a view
+
+Create an ordinary view for totals:
 
 ```sql
-CREATE VIEW EmployeeDetails AS
-SELECT e.EmployeeID, e.LastName, e.Salary, d.DepartmentName
-FROM Employees AS e
-JOIN DepartmentEmployees AS de ON e.EmployeeID = de.EmployeeID
-JOIN Departments AS d ON de.DepartmentID = d.DepartmentID;
+CREATE VIEW order_totals AS
+SELECT order_id, SUM(quantity * unit_price_cents) AS total_cents
+FROM order_items
+GROUP BY order_id;
 ```
 
-**Explanation**
-
-- The view `EmployeeDetails` encapsulates the join logic.
-- Users can query `EmployeeDetails` as if it were a table.
-
-### Querying a View
-
-**SQL Query**
+Query it like a table:
 
 ```sql
-SELECT * FROM EmployeeDetails
-WHERE Salary > 3000;
+SELECT order_id, total_cents
+FROM order_totals
+WHERE total_cents > 5000
+ORDER BY order_id;
 ```
 
-**Result**
+Only order 101 appears, with 5500 cents. The view stores the query definition, not a separately refreshed copy of the totals. Changing a base row affects what a later query sees under its transaction's visibility rules.
 
-| EmployeeID | LastName | Salary | DepartmentName     |
-|------------|----------|--------|--------------------|
-| 2          | Johnson  | 3500   | Human Resources    |
-| 4          | Taylor   | 4200   | Finance            |
+A **materialized view** stores results too and needs an engine-specific maintenance strategy. Whether an ordinary view can be updated also depends on its definition and the engine; an aggregate view should not be treated as a universally writable table.
 
-#### Advantages of Using Views
+## Check your understanding
 
-- Complex queries can be simplified for end-users.
-- Restrict access to specific data by exposing only certain columns or rows.
-- Centralize query logic; changes in the underlying tables require updates only in the view.
+1. Why does Alice appear twice in the inner join?
+2. Where should the open-status condition go if Carol must remain in the report?
+3. Why is `COUNT(o.order_id)` different from `COUNT(*)` after the left join?
+4. Why might `EXISTS` be clearer than a join when you only want customers with an order?
+5. Does creating `order_totals` store an independent snapshot of the totals?
 
-#### Updating a View
-
-If you need to modify a view, you can use `CREATE OR REPLACE VIEW`.
-
-**SQL Query**
-
-```sql
-CREATE OR REPLACE VIEW EmployeeDetails AS
-SELECT e.EmployeeID, e.LastName, e.Salary, d.DepartmentName, de.DepartmentID
-FROM Employees AS e
-JOIN DepartmentEmployees AS de ON e.EmployeeID = de.EmployeeID
-JOIN Departments AS d ON de.DepartmentID = d.DepartmentID;
-```
-
-The view now includes the `DepartmentID` column.
-
-#### Deleting a View
-
-To remove a view from the database:
-
-```sql
-DROP VIEW EmployeeDetails;
-```
-
-**Note**: Deleting a view does not affect the underlying data.
-
-#### Updatable Views
-
-Some databases allow views to be updatable, meaning you can perform `INSERT`, `UPDATE`, or `DELETE` operations on the view, which then affect the underlying tables. Certain conditions must be met:
-
-- The view must reference exactly one table.
-- The view must include all NOT NULL columns without default values.
-- The view must not contain GROUP BY, HAVING, or DISTINCT clauses.
-
-**Example**
-
-Assuming our view meets the criteria:
-
-```sql
-UPDATE EmployeeDetails
-SET Salary = Salary * 1.05
-WHERE EmployeeID = 3;
-```
-
-This would increase Brown's salary by 5% in the `Employees` table.
+Continue with [stored procedures and functions](07_stored_procedures_and_functions.md) for reusable database logic. [Aggregate functions](10_aggregate_functions.md) and [window functions](11_window_functions.md) develop reporting calculations.

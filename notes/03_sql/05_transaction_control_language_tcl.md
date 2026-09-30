@@ -1,246 +1,126 @@
-## Transaction Control Language (TCL)
+# Transactions: Make Related Changes Succeed Together
 
-In the world of databases, maintaining data integrity and consistency is crucial, especially when multiple operations are involved. Imagine you're at a bank's ATM, transferring money from your savings to your checking account. You wouldn't want the system to deduct the amount from your savings without adding it to your checking due to some error, right? This is where Transaction Control Language (TCL) comes into play, ensuring that all related operations either complete successfully together or fail without affecting the database's consistency.
+A checkout involves more than one write. The bookstore must record an order, record its lines, and reduce stock. If an application stops between those operations, a partially recorded purchase can be misleading.
 
-### Understanding Transactions
+A **transaction** groups database work. `COMMIT` accepts its transactional changes; `ROLLBACK` undoes them. This all-or-nothing property is called **atomicity**. It protects the group, but the application must still decide which statements belong together and when the workflow has failed.
 
-A transaction is a sequence of one or more SQL statements that are executed as a single unit of work. The primary goal is to ensure that either all operations within the transaction are completed successfully or none are, preserving the database's integrity.
+Use the SQLite bookstore from the [SQL introduction](01_intro_to_sql.md). Keep one connection open for each transaction example.
 
-#### The ACID Properties
+## Follow a successful purchase
 
-Transactions adhere to the ACID properties:
-
-- **Atomicity** ensures that all operations within a transaction are completed as a single unit; if any operation fails, the entire transaction is aborted and no changes are applied.  
-- **Consistency** guarantees that a transaction transitions the database from one valid state to another while adhering to all defined integrity constraints and rules.  
-- **Isolation** ensures that transactions executing concurrently do not interfere with each other, preserving the correctness of operations.  
-- **Durability** ensures that once a transaction is committed, its changes are permanently recorded and persist even in the event of a system failure.
-
-### TCL Commands
-
-TCL provides several commands to manage transactions effectively:
-
-- `BEGIN TRANSACTION`
-- `COMMIT`
-- `ROLLBACK`
-- `SAVEPOINT`
-- `ROLLBACK TO SAVEPOINT`
-
-Let's delve into each of these commands with examples to understand how they work.
-
-#### BEGIN TRANSACTION
-
-Starting a transaction is like saying to the database, "I'm about to perform several operations that should be treated as a single, indivisible unit."
+For this single-session exercise, assume product 10 exists with five units in stock and order 104 is unused:
 
 ```sql
-BEGIN TRANSACTION;
-```
+BEGIN;
 
-After this command, all subsequent operations are part of the transaction until it's either committed or rolled back.
+UPDATE products
+SET stock = stock - 1
+WHERE product_id = 10 AND stock > 0;
 
-#### COMMIT
+-- In an application, require exactly one affected row before continuing.
+INSERT INTO orders (order_id, customer_id, order_date)
+VALUES (104, 2, '2025-01-13');
 
-The `COMMIT` command saves all changes made during the transaction to the database permanently.
-
-**Example Scenario:**
-
-Suppose we have an `employees` table and want to increase the salary of all employees in department 1 by 10%.
-
-**Employees Table Before:**
-
-| employee_id | department_id | salary |
-|-------------|---------------|--------|
-| 1           | 1             | 1000   |
-| 2           | 1             | 1200   |
-| 3           | 2             | 1500   |
-
-**SQL Commands:**
-
-```sql
-BEGIN TRANSACTION;
-
-UPDATE employees
-SET salary = salary * 1.10
-WHERE department_id = 1;
+INSERT INTO order_items
+    (order_id, line_number, product_id, quantity, unit_price_cents)
+VALUES (104, 1, 10, 1, 1500);
 
 COMMIT;
 ```
 
-**Employees Table After:**
+After commit, product 10 has four units, and Bob has a new order containing one book. The order uses the default `open` status.
 
-| employee_id | department_id | salary |
-|-------------|---------------|--------|
-| 1           | 1             | 1100   |
-| 2           | 1             | 1320   |
-| 3           | 2             | 1500   |
+The affected-row check is essential. If no unit was deducted, blindly inserting an order would violate the purchase workflow even though each insert could be valid SQL. A database transaction does not automatically interpret a zero-row update as a failure.
 
-**Interpretation:**
+The example uses a known sample purchase price. A real checkout also needs a policy for selecting and validating the price while concurrent changes occur.
 
-- The transaction starts.
-- Salaries for department 1 employees are updated.
-- `COMMIT` saves these changes permanently.
+## Follow a rollback
 
-#### ROLLBACK
-
-If something goes wrong during a transaction, you can undo all changes made within it using `ROLLBACK`.
-
-**Example Scenario:**
-
-We attempt the same salary update but realize there's a mistake before committing.
+This exercise deliberately does not keep its change:
 
 ```sql
-BEGIN TRANSACTION;
+BEGIN;
+UPDATE products SET stock = stock + 10 WHERE product_id = 20;
+SELECT stock FROM products WHERE product_id = 20;
+ROLLBACK;
+SELECT stock FROM products WHERE product_id = 20;
+```
 
-UPDATE employees
-SET salary = salary * 1.10
-WHERE department_id = 1;
+The first select sees 18; the second sees the original eight. A transaction reads its own changes before committing them. Rollback does not undo commits made by unrelated transactions.
 
--- Oops! Realized we should only increase by 5%
+## Handle the failure explicitly
+
+An application should start the transaction, perform the steps and required checks, then commit only when all succeed. On a relevant error or invalid result, it should roll back.
+
+This Python function demonstrates the affected-row check with the same SQLite schema. `conn` is an existing connection with the sample tables and foreign-key checks enabled. Call it when no other transaction is open; the connection context commits on normal exit and rolls back if an exception leaves the block.
+
+```python
+import sqlite3
+
+def buy_one(conn, order_id, customer_id, product_id, price_cents):
+    with conn:
+        changed = conn.execute(
+            "UPDATE products SET stock = stock - 1 "
+            "WHERE product_id = ? AND stock > 0",
+            (product_id,),
+        ).rowcount
+        if changed != 1:
+            raise ValueError("Product missing or out of stock")
+
+        conn.execute(
+            "INSERT INTO orders (order_id, customer_id, order_date) "
+            "VALUES (?, ?, ?)",
+            (order_id, customer_id, "2025-01-13"),
+        )
+        conn.execute(
+            "INSERT INTO order_items "
+            "(order_id, line_number, product_id, quantity, unit_price_cents) "
+            "VALUES (?, 1, ?, 1, ?)",
+            (order_id, product_id, price_cents),
+        )
+```
+
+The `?` markers are **bound parameters**: the driver sends the supplied values separately from SQL structure. They avoid building SQL by inserting arbitrary strings.
+
+If a customer ID is invalid or the order ID already exists, an insert raises an error. The context then rolls back the earlier stock decrement too. The function assumes the caller has already established the permitted purchase price; trusting an arbitrary client-supplied amount would be a different correctness problem.
+
+## Savepoints: undo a part of the work
+
+A **savepoint** marks a position inside a transaction. Rolling back to it undoes work after that position while retaining earlier work:
+
+```sql
+BEGIN;
+UPDATE products SET stock = stock + 1 WHERE product_id = 10;
+
+SAVEPOINT optional_change;
+UPDATE products SET price_cents = 2000 WHERE product_id = 10;
+ROLLBACK TO optional_change;
+RELEASE optional_change;
+
+-- The stock increment remains; the price change was undone.
+-- Roll back the exercise so the sample stays unchanged.
 ROLLBACK;
 ```
 
-**Employees Table After Rollback:**
+A savepoint is not an independently durable commit. If the outer transaction rolls back, its earlier changes are undone too.
 
-| employee_id | department_id | salary |
-|-------------|---------------|--------|
-| 1           | 1             | 1000   |
-| 2           | 1             | 1200   |
-| 3           | 2             | 1500   |
+## Autocommit and connection state
 
-**Interpretation:**
+**Autocommit** means statements are committed without an explicit multi-statement transaction around them, according to the engine and driver's rules. Drivers can also open transactions implicitly.
 
-- The transaction starts.
-- Salaries are updated incorrectly.
-- `ROLLBACK` undoes the changes, restoring the original salaries.
+Know which behavior your connection uses. Starting a transaction on one connection and doing the next write on another does not create one shared transaction. Returning an unfinished transaction to a connection pool can also surprise the next borrower.
 
-#### SAVEPOINT
+## Atomicity does not mean complete isolation
 
-A savepoint allows you to set a point within a transaction to which you can later roll back, without affecting the entire transaction.
+Two buyers can both read “one copy remains.” A transaction does not automatically make every read-and-later-write pattern safe against that race. Use conditional updates, constraints, locking, or suitable isolation to protect the relevant decision.
 
-**Example Scenario:**
+A transaction also does not undo an email or remote payment already sent. External effects need their own coordination or retry-safe design.
 
-We decide to update salaries in two departments but want the option to undo the second update without losing the first.
+## Check your understanding
 
-```sql
-BEGIN TRANSACTION;
+1. Which changes belong in the same checkout transaction?
+2. Why does a zero-row decrement need an application check?
+3. What happens to stock if an order insert fails in `buy_one`?
+4. Can a savepoint preserve a change after the outer transaction rolls back?
 
-UPDATE employees
-SET salary = salary * 1.10
-WHERE department_id = 1;
-
-SAVEPOINT dept1_updated;
-
-UPDATE employees
-SET salary = salary * 1.05
-WHERE department_id = 2;
-```
-
-**Employees Table After Updates:**
-
-| employee_id | department_id | salary |
-|-------------|---------------|--------|
-| 1           | 1             | 1100   |
-| 2           | 1             | 1320   |
-| 3           | 2             | 1575   |
-
-**Interpretation:**
-
-- Salaries in department 1 are increased by 10%.
-- A savepoint named `dept1_updated` is created.
-- Salaries in department 2 are increased by 5%.
-
-#### ROLLBACK TO SAVEPOINT
-
-If we decide to undo the changes made after a savepoint, we can roll back to it.
-
-```sql
-ROLLBACK TO dept1_updated;
-
-COMMIT;
-```
-
-**Employees Table After Rollback to Savepoint and Commit:**
-
-| employee_id | department_id | salary |
-|-------------|---------------|--------|
-| 1           | 1             | 1100   |
-| 2           | 1             | 1320   |
-| 3           | 2             | 1500   |
-
-**Interpretation:**
-
-- Changes made after `dept1_updated` are undone.
-- The salary increase for department 2 is rolled back.
-- `COMMIT` saves the salary increase for department 1.
-
-#### Full Transaction Flow
-
-Here's the entire process in one go:
-
-```sql
-BEGIN TRANSACTION;
-
-UPDATE employees
-SET salary = salary * 1.10
-WHERE department_id = 1;
-
-SAVEPOINT dept1_updated;
-
-UPDATE employees
-SET salary = salary * 1.05
-WHERE department_id = 2;
-
--- Decide to undo the last update
-ROLLBACK TO dept1_updated;
-
-COMMIT;
-```
-
-### Transactions in Real Life
-
-Transactions are essential in scenarios where multiple operations need to be treated atomically.
-
-#### Banking Example
-
-Imagine transferring $500 from Account A to Account B.
-
-```sql
-BEGIN TRANSACTION;
-
-UPDATE accounts
-SET balance = balance - 500
-WHERE account_id = 'A';
-
-UPDATE accounts
-SET balance = balance + 500
-WHERE account_id = 'B';
-
-COMMIT;
-```
-
-If any part of this transaction fails (e.g., insufficient funds in Account A), a `ROLLBACK` ensures neither account balance is changed, maintaining financial integrity.
-
-### Rollback Capabilities Across Databases
-
-Different databases handle transactions in slightly different ways. Here's a comparison:
-
-| Feature                  | PostgreSQL | MySQL         | Oracle        | SQL Server    |
-|--------------------------|------------|---------------|---------------|---------------|
-| Transactions             | Yes        | Yes           | Yes           | Yes           |
-| Rollback Support         | Yes        | Yes           | Yes           | Yes           |
-| Savepoints               | Yes        | Yes           | Yes           | Yes           |
-| DML Rollback             | Yes        | Yes           | Yes           | Yes           |
-| DDL Rollback             | Limited    | Limited       | No            | Limited       |
-| Autocommit Default       | Off        | On            | Off           | On            |
-| Isolation Levels         | Multiple   | Multiple      | Multiple      | Multiple      |
-
-- Data Manipulation Language (DML) statements such as `INSERT`, `UPDATE`, and `DELETE` can be rolled back in all databases, ensuring changes are not finalized unless explicitly committed.  
-- Support for rolling back Data Definition Language (DDL) statements like `CREATE`, `ALTER`, and `DROP` varies between databases, as some do not permit rolling back these operations.  
-- Autocommit behavior in databases such as MySQL and SQL Server automatically commits changes unless a transaction is explicitly initiated, requiring careful handling to avoid unintended permanent changes.
- 
-### Best Practices for Using Transactions
-
-- Transactions group related operations to ensure all changes are either committed together or rolled back as a unit.  
-- Keeping transactions short minimizes resource locks and helps maintain system performance.  
-- Error handling should include a `ROLLBACK` mechanism to revert changes in case of failures during the transaction.  
-- Savepoints can be used effectively in complex transactions to allow partial rollbacks, but they may introduce additional overhead.  
-- Understanding and selecting the appropriate isolation level helps balance the trade-off between performance and data integrity.
+Continue with [joins and views](06_joins_subqueries_and_views.md) for richer reads. The [ACID introduction](../04_acid_properties_and_transactions/01_transactions_intro.md) explains the broader transaction guarantees.

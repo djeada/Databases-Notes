@@ -1,8 +1,8 @@
-## Master-Standby Replication
+# Master-Standby Replication
 
 Master-Standby replication is a widely adopted database replication topology where a primary database server, known as the master, replicates data to one or more secondary servers called standbys. This setup enhances data availability, fault tolerance, and load balancing within a database system. Standby servers can handle read-only queries and, in case of a master server failure, can be promoted to become the new master, ensuring continuous operation.
 
-### Understanding the Architecture
+## Understanding the Architecture
 
 To visualize how Master-Standby replication works, consider the following diagram:
 
@@ -34,7 +34,7 @@ To visualize how Master-Standby replication works, consider the following diagra
 
 In this architecture, the master server handles all write operations, such as inserts, updates, and deletes. The standby servers continuously receive data changes from the master to stay synchronized and can serve read-only queries, offloading read traffic from the master. This arrangement not only improves performance but also provides a failover mechanism in case the master server becomes unavailable.
 
-### The Purpose of Master-Standby Replication
+## The Purpose of Master-Standby Replication
 
 Master-Standby replication serves several essential purposes in database systems:
 
@@ -43,7 +43,7 @@ Master-Standby replication serves several essential purposes in database systems
 3. Regular maintenance tasks, such as backups or software updates, can be performed on the master or standby servers without significant downtime. Standby servers can be updated one at a time, providing continuous service to users.
 4. As demand on the database grows, additional standby servers can be added to handle increased read traffic. This horizontal scaling is a cost-effective way to enhance system capacity without overhauling the existing infrastructure.
 
-### Advantages
+## Advantages
 
 Implementing Master-Standby replication offers several benefits:
 
@@ -52,16 +52,16 @@ Implementing Master-Standby replication offers several benefits:
 - The ability to promote a standby server to master simplifies the failover process, minimizing service interruptions and ensuring business continuity.
 - Continuous replication ensures that data remains consistent across all servers, maintaining data integrity throughout the system.
 
-### Challenges
+## Challenges
 
 Despite its advantages, Master-Standby replication presents some challenges:
 
-- Standby servers may not always be perfectly synchronized with the master, leading to potential stale reads. This **lag** can be problematic for applications requiring real-time data.
-- Promoting a standby to master requires careful **coordination** to prevent data inconsistencies. Automated failover mechanisms need to be thoroughly tested to ensure reliability.
-- Since only the master handles write operations, applications with heavy write loads may face scalability issues. The master server can become a **bottleneck** if not properly managed.
+- Standby servers may not always be perfectly synchronized with the master, leading to potential stale reads. This lag can be problematic for applications requiring real-time data.
+- Promoting a standby to master requires careful coordination to prevent data inconsistencies. Automated failover mechanisms need to be thoroughly tested to ensure reliability.
+- Since only the master handles write operations, applications with heavy write loads may face scalability issues. The master server can become a bottleneck if not properly managed.
 - Setting up and managing replication involves intricate configurations and ongoing monitoring. Administrators need to be skilled in replication technologies to maintain the system effectively.
 
-### Implementing in PostgreSQL
+## Implementing in PostgreSQL
 
 PostgreSQL offers built-in support for streaming replication, making it a suitable choice for implementing Master-Standby replication. Below is a practical example of how to set up this replication using PostgreSQL.
 
@@ -88,7 +88,7 @@ Topology:
 > **Legend** – We will call the nodes **Node-1 (master)**, **Node-2 (replica-1)** and **Node-3 (replica-2)** throughout.
 > Keep the diagram handy: configuration snippets below reference the IPs exactly as shown.
 
-#### Prerequisites
+### Prerequisites
 
 - **Three PostgreSQL instances installed** (same major version) on *10.0.0.10*, *10.0.0.11*, *10.0.0.12*.
 - **Network reachability** – TCP 5432 open bidirectionally (replicas must also talk *back* to the master for `pg_basebackup`).
@@ -96,7 +96,7 @@ Topology:
 - **Adequate resources** – WAL can spike; leave at least 30 % free disk on the master.
 - **Linux tuning (recommended)** – increase `vm.swappiness = 1`, set `kernel.shmmax` ≥ shared\_buffers, etc.
 
-#### Configuring Node-1 (Master)
+### Configuring Node-1 (Master)
 
 Before setting up physical replication, you need to prepare the primary server (Node-1) by adjusting its configuration to enable write-ahead logging (WAL) streaming and accept connections from standby servers. This section walks you through the required changes to PostgreSQL's configuration files and the creation of a replication role.
 
@@ -147,7 +147,7 @@ After updating configuration files and creating the role, reload or restart Post
 sudo systemctl restart postgresql
 ```
 
-#### Configuring Node-2 and Node-3 (Replicas)
+### Configuring Node-2 and Node-3 (Replicas)
 
 Once the master is prepared, each standby (Node-2 and Node-3) needs to be bootstrapped from a base backup and configured to stream WAL. You will perform the same steps on both replicas, adjusting only the connection details as needed.
 
@@ -197,7 +197,7 @@ With configuration in place, start PostgreSQL on the standby to begin streaming 
 sudo systemctl start postgresql
 ```
 
-#### Verifying Replication
+### Verifying Replication
 
 After configuring both master and standbys, you should verify that WAL streaming is active and data changes propagate as expected. This section covers querying replication status and performing a simple functional test.
 
@@ -225,7 +225,7 @@ INSERT INTO replication_test (data) VALUES ('Hello replicas');
 SELECT * FROM replication_test;  -- should return 1 row almost instantly
 ```
 
-#### Performing a Fail-over
+### Performing a Fail-over
 
 In a production environment, you need a plan for promoting a standby to master when the primary fails. This section outlines a manual fail-over process, though automation tools can streamline detection and promotion.
 
@@ -247,7 +247,7 @@ III. **Redirect applications** to the new master (10.0.0.11).
 
 IV. **Re-configure the old master** (once repaired) as a replica: wipe its data dir, repeat the “Replica” steps, giving it a new slot (`node1_as_replica_slot`).
 
-#### Optional: Replication Slots (Highly Recommended)
+### Optional: Replication Slots (Highly Recommended)
 
 Replication slots ensure that WAL segments needed by a standby are retained on the master until they have been safely replayed. This prevents standbys from falling too far behind and losing data.
 
@@ -264,9 +264,9 @@ Then, on each replica’s `postgresql.conf`, match the slot:
 primary_slot_name = 'node2_slot'   # or node3_slot accordingly
 ```
 
-Slots guarantee that WAL remains available until every replica has replayed it—preventing the dreaded “requested WAL segment has already been removed”.
+A physical replication slot retains WAL needed by its consumer, subject to configured retention limits and slot validity. Retention tracks reported progress, not a guarantee that every replica has replayed every record. Monitor retained WAL: a stalled consumer can exhaust primary storage.
 
-#### Extra Hardening & Performance Tweaks
+### Extra Hardening & Performance Tweaks
 
 Beyond basic replication, additional configuration can improve resilience, disaster recovery capabilities, and performance. Consider these settings as part of a hardened, high-availability setup:
 

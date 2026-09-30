@@ -1,208 +1,100 @@
-## Data Integrity and Constraints
+# Data Integrity: Put the Rules in the Database
 
-Data integrity is a fundamental concept in database design and management that ensures the accuracy, consistency, and reliability of the data stored within a database. Think of it as the foundation of a building; without a strong foundation, the entire structure is at risk. Similarly, without data integrity, any insights or decisions based on the database could be flawed.
+**Data integrity** means the stored data satisfies the rules the system relies on. A **constraint** is a rule declared in a table's definition so the database can check it whenever relevant data changes.
 
-Imagine a library catalog where book entries lack a valid ISBN, loans aren’t tied to registered patrons, or publication dates accept impossible values. In such a system, volumes could be shelved in the wrong section because their categories are mistyped, borrowed books might never be marked as checked out, and fines could be calculated on phantom loans. By enforcing constraints—unique ISBNs, foreign keys linking loans to patrons, and checks on dates—you keep every record accurate and consistent, preventing misplaced books, billing errors, and frustrated patrons.
+For the bookstore, an order should reference a real customer, a quantity should be positive, and a customer email should not duplicate another required email. The application can explain these rules to users, while database constraints protect them across different writers.
 
-```
-BROKEN SYSTEM                                 ENFORCED CONSTRAINTS
-────────────────                              ────────────────────
+## Translate plain-language rules into declarations
 
-   [ Books ]                                    [ Books ]
-+-------------+                              +-------------+
-| BookID      |                              | BookID  (PK)|
-| Title       |                              | Title       |
-| ISBN        |  <– missing uniqueness       | ISBN   (UQ) |
-| AuthorID    |                              | AuthorID FK |
-+------+------+                              +------+------+         
-       |                                           │
-       v                                           v
-   [ Loans ]                                     [ Loans ]
-+-------------+                              +-------------+
-| LoanID      |                              | LoanID  (PK)|
-| BookID      | <– orphaned reference        | BookID  FK  |
-| PatronID    |  (points to nothing)         | PatronID FK |
-| LoanDate    |                              | LoanDate    |
-+------+------+                              +------+------+      
-       |                                           │
-       v                                           v
-  [ Patrons ]                                   [ Patrons ]
-+-------------+                              +-------------+
-| PatronID    |                              | PatronID  PK|
-| Name        |                              | Name        |
-| Email       |                              | Email       |
-+-------------+                              +-------------+
+| Requirement | Database declaration | What it checks |
+| --- | --- | --- |
+| Each customer has an identifier. | `PRIMARY KEY` | The identifier is unique and required, with engine-specific legacy exceptions. |
+| Every customer supplies an email. | `NOT NULL` | The value is not the SQL missing-value marker. |
+| Required emails cannot repeat. | `UNIQUE` with `NOT NULL` | Another row cannot store the same email under the chosen comparison rules. |
+| An order points to a customer. | `FOREIGN KEY` | Referencing values match an eligible referenced key. |
+| Quantity is positive. | `CHECK (quantity > 0)` with `NOT NULL` | The supplied number is greater than zero. |
 
-COMMON ISSUES:  
-• Duplicate ISBNs → ambiguous look-ups  
-• Orphan loans → books never marked returned  
-• Invalid dates → negative or future loan dates
-```
+A **primary key** identifies the row. A **foreign key** validates a reference. Neither declaration automatically verifies that a customer name is correctly spelled or an email belongs to that person.
 
-### Understanding Data Integrity
+## Run a small example
 
-Data integrity involves a set of processes and constraints that protect data from being corrupted or becoming invalid. It ensures that the data remains accurate and consistent throughout its lifecycle, from creation to deletion.
+Use a fresh SQLite database for these statements. Prices are stored as integer cents, so `1500` means 15.00 in the chosen currency.
 
-#### Types of Data Integrity
+```sql
+PRAGMA foreign_keys = ON;
 
-1. *Entity Integrity* guarantees that each table possesses a primary key—never empty and always distinct—so every record can be identified without ambiguity.
-2. *Referential Integrity* safeguards the coherence between tables by employing foreign keys, thereby ensuring that linked rows truly correspond to one another.
-3. *Domain Integrity* imposes rules on individual columns, limiting entries to acceptable data types, patterns, or numerical bounds to prevent invalid values.
-4. *User-Defined Integrity* captures bespoke business logic and bespoke constraints, embedding organizational policies directly into the data model.
+CREATE TABLE customers (
+    customer_id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE
+);
 
-### Implementing Data Integrity with Constraints
+CREATE TABLE products (
+    product_id INTEGER PRIMARY KEY,
+    title TEXT NOT NULL,
+    price_cents INTEGER NOT NULL CHECK (price_cents >= 0),
+    stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0)
+);
 
-Constraints are rules applied to database tables and columns that enforce data integrity. They prevent invalid data from being entered into the database, ensuring that the data adheres to the defined rules and relationships.
+CREATE TABLE orders (
+    order_id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(customer_id)
+);
 
-#### Common Types of Constraints
-
-* The *Primary Key Constraint* acts as a table’s fingerprint, uniquely identifying each row so that no two records can ever be the same.
-* With the *Foreign Key Constraint*, any value you enter must correspond to an existing record in another table, preserving your database’s referential integrity.
-* By applying a *Unique Constraint* to a column (or set of columns), you ensure that each value stored there is one-of-a-kind and duplicates are prevented.
-* When you declare a *Not Null Constraint* on a field, you’re insisting that every record provide a value for that column—no omissions allowed.
-* A *Check Constraint* serves as a gatekeeper, verifying that every entry meets a specified condition (for example, ensuring an age is at least 18).
-* If you’d like a column to fall back on a predefined value whenever you don’t supply one, the *Default Constraint* steps in and populates it automatically.
-
-### Examples of Data Integrity and Constraints
-
-Let's explore how constraints help maintain data integrity through some practical examples.
-
-#### Entity Integrity with Primary Keys
-
-Consider a `Customers` table that stores customer information:
-
-| CustomerID (PK) | Name   | Email             |
-|-----------------|--------|-------------------|
-| 1               | Alice  | alice@example.com |
-| 2               | Bob    | bob@example.com   |
-| 3               | Carol  | carol@example.com |
-
-Here, `CustomerID` serves as the primary key:
-
-- It uniquely identifies each customer.
-- It cannot be null.
-- No two customers can have the same `CustomerID`.
-
-This ensures that every customer record is distinct and can be reliably referenced.
-
-#### Referential Integrity with Foreign Keys
-
-Suppose we have an `Orders` table that records customer orders:
-
-| OrderID (PK) | CustomerID (FK) | OrderDate  | TotalAmount |
-|--------------|-----------------|------------|-------------|
-| 1001         | 1               | 2023-10-01 | $250.00     |
-| 1002         | 2               | 2023-10-02 | $150.00     |
-| 1003         | 4               | 2023-10-03 | $300.00     |
-
-To maintain referential integrity:
-
-- `CustomerID` in `Orders` is a foreign key referencing `CustomerID` in `Customers`.
-- This ensures that every order is associated with an existing customer.
-
-In the example above, `CustomerID` 4 does not exist in the `Customers` table, which would violate referential integrity. By enforcing a foreign key constraint, the database would prevent this inconsistency.
-
-#### Domain Integrity with Data Types and Check Constraints
-
-Consider a `Products` table:
-
-| ProductID (PK) | Name       | Price  |
-|----------------|------------|--------|
-| 501            | Laptop     | $1200  |
-| 502            | Smartphone | $800   |
-| 503            | Headphones | -$50   |
-
-Here, the `Price` for `Headphones` is negative, which doesn't make sense.
-
-To enforce domain integrity:
-
-- Set the data type of `Price` to a positive decimal.
-- Apply a `CHECK` constraint to ensure `Price` is greater than zero.
-
-By doing so, the database will reject any attempt to insert or update a product with a negative price.
-
-#### User-Defined Integrity with Business Rules
-
-Imagine a `Salaries` table:
-
-| EmployeeID (PK) | Salary |
-|-----------------|--------|
-| 1001            | $5000  |
-| 1002            | $7000  |
-| 1003            | $15000 |
-
-Suppose company policy states that no employee can have a salary exceeding $10,000.
-
-To enforce this business rule:
-
-- Implement a `CHECK` constraint on the `Salary` column to ensure it does not exceed $10,000.
-- Alternatively, use triggers or application logic for more complex validations.
-
-This prevents violations of company policies directly at the database level.
-
-### Balancing Data Integrity and Performance
-
-While constraints are essential for maintaining data integrity, they can impact database performance, especially during bulk data operations.
-
-#### Considerations:
-
-- **Performance Impact**: Extensive constraints can slow down data insertion and updates due to additional checks.
-- **Strategic Application**: Apply constraints where the risk of data corruption is highest.
-- **Optimizing Queries**: Use indexing and query optimization techniques to mitigate performance issues.
-
-For example, if you have a large `Transactions` table that logs every action, applying too many constraints might hinder performance. In such cases, you might enforce certain validations at the application level instead.
-
-### Error Handling and User Feedback
-
-Effective error handling ensures that users are informed when their actions violate data integrity constraints.
-
-#### Strategies:
-
-- Providing **clear error messages** ensures that users can easily understand the issue and know how to correct it.  
-- Validating **input data** at the application level helps prevent invalid or malicious entries from ever reaching the database.  
-- Ensuring **consistent handling** of errors across all applications interacting with the database simplifies troubleshooting and maintenance.  
-
-For instance, if a user tries to register with an email that already exists, the application should notify them that the email is taken, rather than showing a generic database error.
-
-### Monitoring and Maintaining Data Integrity
-
-Ensuring data integrity is an ongoing process.
-
-#### Actions:
-
-- Conducting **regular audits** helps identify and address anomalies, such as duplicate records or invalid data, ensuring data remains accurate and reliable.  
-- Establishing **data cleaning** processes ensures that corrupt or incorrect data is corrected or removed to maintain consistency and usability.  
-- Implementing a robust **backup and recovery** strategy ensures that data can be restored promptly in the event of corruption or loss.  
-
-Imagine discovering that multiple entries for the same customer exist due to a data import error. Regular audits can help detect and resolve such issues promptly.
-
-### Best Practices for Data Integrity
-
-1. Defining **clear constraints** at the database level ensures that data rules are consistently enforced and helps maintain accuracy.  
-2. Using **transactions** for related operations guarantees that either all changes are successfully applied, or none are, preserving consistency.  
-3. Standardizing **data entry** through tools like input masks or dropdown menus minimizes user errors and ensures uniformity.  
-4. Educating **users** who interact with the database fosters better understanding and adherence to data integrity practices.  
-5. Maintaining **documented policies** for data integrity rules and constraints provides a reference to ensure consistent implementation and compliance.  
-
-### Visualizing Data Integrity Relationships
-
-Here's a simple diagram illustrating how tables relate through keys:
-
-```
-+----------------+          +----------------+
-|    Customers   |          |     Orders     |
-+----------------+          +----------------+
-| CustomerID PK  |<---------| CustomerID FK  |
-| Name           |          | OrderID PK     |
-| Email          |          | OrderDate      |
-+----------------+          | TotalAmount    |
-                            +----------------+
+INSERT INTO customers VALUES (1, 'Alice', 'alice@example.com');
+INSERT INTO products (product_id, title, price_cents)
+VALUES (10, 'Database Basics', 1500);
+INSERT INTO orders VALUES (101, 1);
 ```
 
-- **PK**: Primary Key
-- **FK**: Foreign Key
+The product insert omits `stock`, so its **default** supplies zero. A default is a value used when an input is omitted; it is not validation of arbitrary supplied input.
 
-This diagram shows:
+## Try invalid writes separately
 
-- The `CustomerID` in the `Orders` table references the `CustomerID` in the `Customers` table.
-- The relationship ensures that every order is linked to a valid customer, maintaining referential integrity.
+Run each attempt on its own. Each should fail under the constraints above:
+
+```sql
+-- A duplicate required email.
+INSERT INTO customers VALUES (2, 'Bob', 'alice@example.com');
+```
+
+```sql
+-- A negative price.
+INSERT INTO products VALUES (20, 'SQL Practice', -100, 5);
+```
+
+```sql
+-- Customer 99 does not exist.
+INSERT INTO orders VALUES (102, 99);
+```
+
+The failure message identifies the violated rule. A rejected statement is different from a completed application workflow: transaction error handling depends on the engine, so explicitly decide whether to retry or roll back the surrounding work.
+
+## Missing is not the same as empty
+
+`NULL` is SQL's marker for a missing or unknown value. An empty string, zero, and `NULL` are different values in many engines. A `NOT NULL` text column can still contain an empty string unless another rule prevents it.
+
+A `CHECK` rejects an expression that evaluates to false. If the expression is unknown because of `NULL`, it generally passes. That is why required positive quantities need both `NOT NULL` and `CHECK (quantity > 0)`.
+
+Also consider the chosen type's behavior. SQLite's ordinary type declarations are permissive; stricter type validation needs an appropriate strict-table or application validation design. Constraints do not turn every SQLite type declaration into PostgreSQL-style type enforcement.
+
+## Decide what deletion means
+
+If Alice has orders, what should happen when someone deletes her customer row? Possible policies include rejecting the deletion, deleting dependent orders, or retaining orders with an appropriate anonymization workflow.
+
+An `ON DELETE` action expresses a reference policy where supported. `CASCADE` means related rows are deleted automatically; it should be selected because those rows are meant to disappear, not simply to silence a foreign-key error.
+
+## Know which rules need more than one row
+
+“Stock must not be negative” is a row rule. “Every completed order must have at least one item” involves several records and a workflow. “Do not sell the last copy twice” involves concurrent transactions.
+
+Use constraints where they express the rule, and transaction/concurrency logic for the remaining requirements. A pre-insert application check can race: two clients may both pass it before either inserts. A database uniqueness rule closes that particular gap.
+
+## Check your understanding
+
+1. Why is a required unique email declared with both `NOT NULL` and `UNIQUE`?
+2. What stock value does the valid product insert produce?
+3. Why does a foreign key not prove that an order contains at least one item?
+4. Should deleting a customer automatically delete their financial history? Explain the policy your application needs.
+
+Continue with the [SQL introduction](../03_sql/01_intro_to_sql.md) to practice querying and changing these structures.
