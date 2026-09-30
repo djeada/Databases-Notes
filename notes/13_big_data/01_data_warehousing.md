@@ -373,3 +373,6 @@ Start with the smallest architecture that meets the workload. Distributed system
 - [Materialized views](../08_database_performance/04_materialized_views.md)
 - [Hadoop and HDFS](02_hadoop_and_hdfs.md)
 - [Spark SQL](03_spark_sql.md)
+- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
+- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
+- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
