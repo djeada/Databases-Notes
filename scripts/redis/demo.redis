@@ -1,0 +1,9 @@
+SET session:abc123 "user=42" EX 3600
+HSET user:42 name "Alice" plan "pro" country "DE"
+INCR page:home:views
+ZADD leaderboard 1200 alice 1500 bob 1325 carol
+XADD orders * order_id 1001 amount 49.90
+GET session:abc123
+HGETALL user:42
+ZREVRANGE leaderboard 0 2 WITHSCORES
+XRANGE orders - +

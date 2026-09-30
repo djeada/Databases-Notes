@@ -8,6 +8,13 @@ This directory groups database-specific demos under engine-specific folders:
 - `mongo/`
 - `neo4j/`
 - `sqlserver/`
+- `redis/`
+- `cassandra/`
+- `opensearch/`
+- `clickhouse/`
+- `cockroach/`
+- `big_data/`
+- `orm/`
 
 Examples that clearly belong to one engine now live in that engine's folder,
 including the former concurrency demos.
@@ -72,6 +79,13 @@ scripts/
 ├── mongo/
 ├── neo4j/
 ├── sqlserver/
+├── redis/
+├── cassandra/
+├── opensearch/
+├── clickhouse/
+├── cockroach/
+├── big_data/
+├── orm/
 ├── diagrams/
 ├── generating_query_strings/
 ├── setup/
@@ -275,6 +289,175 @@ passed to the container through stdin rather than the Docker command line.
 Results and SQL messages appear separately. Database changes and session state
 persist across executions because the connection remains open.
 
+## Redis
+
+Start a local Redis instance with AOF persistence enabled:
+
+```bash
+cd redis
+docker compose up -d
+docker exec -it redis-notes redis-cli
+```
+
+Run the sample command file:
+
+```bash
+cat demo.redis | docker exec -i redis-notes redis-cli
+```
+
+Stop it with `docker compose down`. Use `docker compose down -v` only when
+you also want to delete the demo volume.
+
+## Cassandra
+
+Start a single-node Cassandra 5.0 learning environment:
+
+```bash
+cd cassandra
+docker compose up -d
+docker logs -f cassandra-notes
+```
+
+After the node is ready, load the query-shaped CQL example:
+
+```bash
+docker exec -i cassandra-notes cqlsh < demo.cql
+```
+
+The demo uses replication factor 1 because it is intentionally single-node;
+production Cassandra should use a redundant topology and topology-aware
+replication.
+
+## OpenSearch
+
+Start a single-node OpenSearch 3 development cluster:
+
+```bash
+cd opensearch
+docker compose up -d
+curl http://localhost:9200
+```
+
+The demo disables the security plugin and is **only for local learning**. Run the
+index/mapping/full-text/aggregation example:
+
+```bash
+bash demo.sh
+```
+
+## ClickHouse
+
+Start a local ClickHouse server:
+
+```bash
+cd clickhouse
+docker compose up -d
+docker exec -it clickhouse-notes clickhouse-client
+```
+
+Load the MergeTree analytics demo:
+
+```bash
+docker exec -i clickhouse-notes \
+  clickhouse-client --multiquery < demo.sql
+```
+
+The script creates a partitioned/sorted event table, runs grouped analytics,
+and inspects active data parts.
+
+## CockroachDB
+
+Start a single-node CockroachDB development instance:
+
+```bash
+cd cockroach
+docker compose up -d
+```
+
+Open the SQL shell:
+
+```bash
+docker exec -it cockroach-notes \
+  cockroach sql --insecure --host=localhost:26257
+```
+
+Run the transaction demo:
+
+```bash
+docker exec -i cockroach-notes \
+  cockroach sql --insecure --host=localhost:26257 < demo.sql
+```
+
+The `--insecure` single-node setup is for learning only; it does not represent
+a production distributed SQL topology.
+
+## Big Data
+
+These demos are local teaching examples for the final Big Data chapter. They keep
+the data small so the execution model is visible without requiring a cluster.
+
+Install their optional dependencies:
+
+```bash
+pip install -r big_data/requirements.txt
+```
+
+- **big_data/warehouse_demo.py** - Builds a small star schema in DuckDB and runs
+  an analytical aggregation.
+  ```bash
+  python big_data/warehouse_demo.py
+  ```
+
+- **big_data/spark_sql_demo.py** - Starts Spark in local mode, runs SQL over a
+  DataFrame, prints the execution plan, writes Parquet, and reads it back.
+  A compatible Java runtime is required.
+  ```bash
+  java -version
+  python big_data/spark_sql_demo.py
+  ```
+
+- **big_data/parquet_lake_demo.py** - Writes a partitioned Parquet dataset with
+  DuckDB, shows the resulting lake-style directory layout, and queries one
+  partition directly.
+  ```bash
+  python big_data/parquet_lake_demo.py
+  ```
+
+- **big_data/kafka/docker-compose.yml** - Runs a single-node Kafka 4.3.1 broker
+  in KRaft mode for the streaming/CDC note.
+  ```bash
+  cd big_data/kafka
+  docker compose up -d
+  docker compose down
+  ```
+
+## ORM
+
+Install the ORM demo dependency:
+
+```bash
+pip install -r orm/requirements.txt
+```
+
+- **orm/sqlalchemy_demo.py** - Maps users and posts with SQLAlchemy 2.x, runs a
+  transaction, demonstrates select-in relationship loading, updates a row, and
+  enables SQL logging so the generated statements are visible.
+  ```bash
+  python orm/sqlalchemy_demo.py
+  ```
+
+- **orm/n_plus_one_demo.py** - Counts SQL statements for lazy relationship
+  loading versus `selectinload()`, making the N+1 problem measurable.
+  ```bash
+  python orm/n_plus_one_demo.py
+  ```
+
+- **orm/optimistic_concurrency_demo.py** - Opens two sessions on the same
+  versioned row and shows SQLAlchemy rejecting a stale update.
+  ```bash
+  python orm/optimistic_concurrency_demo.py
+  ```
+
 ## Cross-database utilities
 
 - **generating_query_strings/\*.py**  
@@ -316,6 +499,7 @@ SQLite locking works.
 
 ## Contributing
 
-1. Put SQLite examples in `sqlite/`, MySQL examples in `mysql/`, PostgreSQL examples in `postgres/`, MongoDB examples in `mongo/`, Neo4j examples in `neo4j/`, and SQL Server utilities in `sqlserver/`.
+1. Put engine-specific examples in their matching folders (`sqlite/`, `mysql/`, `postgres/`, `mongo/`, `neo4j/`, `sqlserver/`, `redis/`, `cassandra/`, `opensearch/`, `clickhouse/`, or `cockroach/`).
 2. Keep engine-specific concurrency examples in the matching engine folder.
-3. Update this README when you add, move, or remove a script.
+3. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
+4. Update this README when you add, move, or remove a script.

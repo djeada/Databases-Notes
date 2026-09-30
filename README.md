@@ -154,22 +154,34 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [MySQL](notes/12_database_engines/02_mysql.md) — Popular open-source RDBMS.
 - [PostgreSQL](notes/12_database_engines/03_postgresql.md) — Advanced open-source database system.
 - [MongoDB](notes/12_database_engines/04_mongodb.md) — Document-oriented NoSQL database.
-- [Neo4j](notes/12_database_engines/05_neo4j.md) — Leading graph database platform.
-- [AWS Database Services](notes/12_database_engines/06_aws_services.md) — Cloud database offerings from AWS.
-- [Choosing a Database](notes/12_database_engines/07_choosing_database.md) — Selection criteria and decision factors.
-
-- [GCP Database Services](notes/12_database_engines/08_gcp_services.md) — Database and analytics services on Google Cloud.
+- [Neo4j](notes/12_database_engines/05_neo4j.md) — Property-graph database and Cypher query model.
+- [AWS Database Services](notes/12_database_engines/06_aws_services.md) — Choosing managed database services on AWS.
+- [Choosing a Database](notes/12_database_engines/07_choosing_database.md) — Selection criteria, workload patterns, scaling, availability, and cost.
+- [GCP Database Services](notes/12_database_engines/08_gcp_services.md) — Choosing managed database services on Google Cloud.
+- [Microsoft SQL Server](notes/12_database_engines/09_sql_server.md) — SQL Server setup, T-SQL, indexing, concurrency, columnstore, HA, and Microsoft ecosystem use.
+- [Redis](notes/12_database_engines/10_redis.md) — In-memory data structures, caching, TTLs, persistence, replication, and clustering.
+- [Apache Cassandra](notes/12_database_engines/11_cassandra.md) — Wide-column modeling, partition keys, tunable consistency, replication, and LSM storage.
+- [OpenSearch and Elasticsearch](notes/12_database_engines/12_elasticsearch_and_opensearch.md) — Full-text search, mappings, analyzers, shards, replicas, and search-engine architecture.
+- [ClickHouse](notes/12_database_engines/13_clickhouse.md) — Columnar OLAP, MergeTree design, sorting keys, partitions, and real-time analytics.
+- [Distributed SQL](notes/12_database_engines/14_distributed_sql.md) — Consensus, distributed transactions, ranges, multi-region placement, and CockroachDB examples.
+- [Azure Database Services](notes/12_database_engines/15_azure_services.md) — Choosing Azure SQL, PostgreSQL, MySQL, Cosmos DB, Managed Redis, and related services.
 
 ### 13. Big Data and Data Warehousing
 
 - [Data Warehousing](notes/13_big_data/01_data_warehousing.md) — Architectures for large-scale analytics.
 - [Hadoop & HDFS](notes/13_big_data/02_hadoop_and_hdfs.md) — Distributed file system for big data.
 - [Spark SQL](notes/13_big_data/03_spark_sql.md) — Large-scale data processing with SQL.
+- [Data Lakes and Lakehouses](notes/13_big_data/04_data_lakes_and_lakehouses.md) — Object storage, Parquet, table formats, catalogs, snapshots, and lakehouse trade-offs.
+- [Streaming, Kafka, and CDC](notes/13_big_data/05_streaming_kafka_and_cdc.md) — Event logs, partitions, consumer groups, delivery semantics, CDC, and the outbox pattern.
+- [Data Pipelines, Orchestration, and Data Quality](notes/13_big_data/06_data_pipelines_orchestration_and_quality.md) — DAGs, retries, backfills, dbt, lineage, quality tests, and production pipeline design.
 
 ### 14. Object-Relational Mapping (ORM)
 
 - [ORM Introduction](notes/14_orm/01_introduction_to_orm.md) — Bridging OOP and relational databases.
-- [Popular ORM Tools](notes/14_orm/02_popular_orm_tools.md) — Hibernate, Entity Framework, SQLAlchemy.
+- [Popular ORM Tools](notes/14_orm/02_popular_orm_tools.md) — Hibernate, Entity Framework, SQLAlchemy, Django ORM, Prisma, and related approaches.
+- [Schema Migrations](notes/14_orm/03_schema_migrations.md) — Alembic-style migrations, expand-and-contract deployments, backfills, and production safety.
+- [Relationship Loading and Query Performance](notes/14_orm/04_relationship_loading_and_query_performance.md) — N+1 queries, eager loading, projections, pagination, generated SQL, and execution plans.
+- [Transactions, Concurrency, and Unit of Work](notes/14_orm/05_transactions_concurrency_and_unit_of_work.md) — Flush/commit semantics, optimistic and pessimistic locking, retries, and concurrency-safe writes.
 
 ## Exercises and demonstrations
 

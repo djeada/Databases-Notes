@@ -65,5 +65,6 @@ For exam revision, a large reporting warehouse suggests BigQuery; conventional m
 
 - [Choosing a database](07_choosing_database.md)
 - [AWS database services](06_aws_services.md)
+- [Azure database services](15_azure_services.md)
 - [Data warehousing](../13_big_data/01_data_warehousing.md)
 - [Partitioning and sharding](../06_distributed_databases/04_partitioning_vs_sharding.md)
