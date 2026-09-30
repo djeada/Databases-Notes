@@ -76,6 +76,116 @@ COMMIT;
 
 Other engines use different transaction-start and isolation-setting syntax. Use the dialect's documented order of operations.
 
+## Reproduce a changed read with two PostgreSQL sessions
+
+Use two terminals connected to the **same PostgreSQL database**. Run setup once, outside the scheduled transactions:
+
+```sql
+-- PostgreSQL; setup once
+CREATE TABLE isolation_inventory (
+    product_id INTEGER PRIMARY KEY,
+    stock INTEGER NOT NULL CHECK (stock >= 0)
+);
+INSERT INTO isolation_inventory VALUES (10, 5);
+```
+
+Run these steps in the listed order, alternating terminals. Each table cell is one command sequence for the named session:
+
+| Step | Session A | Session B |
+| --- | --- | --- |
+| 1 | `BEGIN ISOLATION LEVEL READ COMMITTED;` | |
+| 2 | `SELECT stock FROM isolation_inventory WHERE product_id = 10;` → 5 | |
+| 3 | | `BEGIN; UPDATE isolation_inventory SET stock = 4 WHERE product_id = 10; COMMIT;` |
+| 4 | `SELECT stock FROM isolation_inventory WHERE product_id = 10;` → 4 | |
+| 5 | `COMMIT;` | |
+
+The second read sees B's committed update. This is a non-repeatable read, permitted at Read Committed. If A reads while B's update is still uncommitted, A's ordinary select sees the older committed version instead; PostgreSQL does not expose a dirty read.
+
+Reset stock to 5 in a session with no active transaction. Repeat the schedule with A starting `BEGIN ISOLATION LEVEL REPEATABLE READ;`. Its reads return 5 and 5 even though B commits 4. After A commits, a fresh query sees 4. A's old snapshot does not roll back B or prevent B from changing that row.
+
+## A phantom concerns a matching set
+
+Use another independent PostgreSQL setup:
+
+```sql
+-- PostgreSQL; setup once
+CREATE TABLE isolation_open_orders (
+    order_id INTEGER PRIMARY KEY,
+    status TEXT NOT NULL
+);
+INSERT INTO isolation_open_orders VALUES (101, 'open');
+```
+
+At Read Committed, A begins and queries `SELECT order_id FROM isolation_open_orders WHERE status = 'open' ORDER BY order_id;`, obtaining 101. B inserts `(102, 'open')` and commits. A repeats the same query and obtains 101 and 102. The changed matching set is a phantom.
+
+In PostgreSQL Repeatable Read, A's stable snapshot prevents this particular phantom. The SQL standard's minimum Repeatable Read definition is weaker, so this observation must not be generalized to every database's implementation. SQL Server Repeatable Read and Serializable differ in their protection of ranges where new rows could appear.
+
+## Watch a stale calculation lose a decrement
+
+Reset `isolation_inventory.stock` to 5. At Read Committed, both clients can read 5 and independently calculate 4. A writes the literal value 4 and commits; B subsequently writes its already calculated literal value 4 and commits. The final stock is 4 even though the clients intended two sales. The writes can be individually locked while the overall workflow still loses one change.
+
+For this single-row rule, keep arithmetic and availability inside the write:
+
+```sql
+-- PostgreSQL; each checkout uses its own connection
+BEGIN;
+UPDATE isolation_inventory
+SET stock = stock - 1
+WHERE product_id = 10 AND stock > 0
+RETURNING stock;
+-- Application checks that one row was returned before inserting its order.
+COMMIT;
+```
+
+At PostgreSQL Read Committed, a competing updater waits when necessary and rechecks the condition on the updated row. Two successful decrements from 5 produce 3, rather than both storing a stale 4. From stock 1, one checkout can obtain the unit and the other gets no qualifying row after the first commits. At stronger isolation levels, the competing operation can instead fail and need a complete retry.
+
+The statement protects this stock rule. It does not reserve a credit-card charge or validate a separate predicate over several products. Use a rule-specific test rather than assuming one conditional update proves the whole checkout correct.
+
+## Write skew changes different rows and breaks one shared rule
+
+Two doctors provide a useful cross-row example. The invariant is “at least one doctor remains on call.” Run this PostgreSQL setup once:
+
+```sql
+-- PostgreSQL
+CREATE TABLE isolation_on_call (
+    doctor_id INTEGER PRIMARY KEY,
+    on_call BOOLEAN NOT NULL
+);
+INSERT INTO isolation_on_call VALUES (1, TRUE), (2, TRUE);
+```
+
+At Repeatable Read, follow this schedule:
+
+| Step | Session A | Session B |
+| --- | --- | --- |
+| 1 | `BEGIN ISOLATION LEVEL REPEATABLE READ;` | `BEGIN ISOLATION LEVEL REPEATABLE READ;` |
+| 2 | `SELECT COUNT(*) FROM isolation_on_call WHERE on_call;` → 2 | |
+| 3 | | `SELECT COUNT(*) FROM isolation_on_call WHERE on_call;` → 2 |
+| 4 | `UPDATE isolation_on_call SET on_call = FALSE WHERE doctor_id = 1;` | |
+| 5 | | `UPDATE isolation_on_call SET on_call = FALSE WHERE doctor_id = 2;` |
+| 6 | `COMMIT;` | |
+| 7 | | `COMMIT;` |
+
+Both transactions saw another doctor available. They updated different rows, so neither needed to overwrite the other's row. Both can commit, leaving zero doctors on call. Stable reads have preserved each transaction's snapshot while allowing a combined result that no correct serial execution of this rule would produce.
+
+To repeat at Serializable, first reset both rows to true outside any active transaction. Use the same schedule with both transactions started at Serializable. PostgreSQL detects the dangerous dependency pattern and aborts a transaction; failure may be reported during a write or commit. Roll back a failed transaction before reusing its connection. Do not depend on a particular session always being the victim.
+
+Retry the entire failed operation. On a fresh state after the other transaction commits, the count is one, so the doctor's application must refuse to go off call. Serializable does not rewrite incorrect application logic: if the application ignores that count, a serial execution can still violate the rule.
+
+## Protect the shared decision, not just each doctor's row
+
+Another design locks one shared coordination row for the duty roster before reading and changing its doctors. All writers must acquire that same lock, then validate the invariant under the appropriate snapshot rules. Locking only the current doctor's row would not coordinate decisions made about the other doctor.
+
+Serializable avoids making the application manually identify every such dependency, but introduces retry requirements and can add overhead. A uniqueness constraint is often simpler for “one booking per seat,” while a conditional update fits “reserve one unit from this row.” Choose the narrow mechanism that actually expresses and protects the workflow's invariant.
+
+## SQLite has its own concurrency model
+
+SQLite normally isolates separate connections and serializes writes. WAL mode permits readers to retain a snapshot while another connection writes. A reader trying to upgrade an obsolete WAL snapshot into a writer can get `SQLITE_BUSY_SNAPSHOT`; it should finish the old transaction and retry against current state. A busy timeout helps some lock waits, but does not make an obsolete snapshot valid.
+
+Shared-cache connections with `read_uncommitted` enabled are a special case; do not use that exception to describe ordinary SQLite reads. PostgreSQL, InnoDB, and SQL Server have different snapshot and locking rules. Record the engine, level, session schedule, and final invariant when testing concurrency.
+
+References: [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html), [PostgreSQL explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html), and [SQLite isolation](https://www.sqlite.org/isolation.html).
+
 ## References
 
 - [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html)

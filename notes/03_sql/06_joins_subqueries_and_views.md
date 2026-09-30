@@ -162,6 +162,159 @@ Only order 101 appears, with 5500 cents. The view stores the query definition, n
 
 A **materialized view** stores results too and needs an engine-specific maintenance strategy. Whether an ordinary view can be updated also depends on its definition and the engine; an aggregate view should not be treated as a universally writable table.
 
+## See both unmatched sides with a full join
+
+A reconciliation report often asks which identifiers occur in either of two sources. These independent tables keep the example small:
+
+```sql
+CREATE TABLE join_expected (item_id INTEGER PRIMARY KEY, label TEXT NOT NULL);
+CREATE TABLE join_received (item_id INTEGER PRIMARY KEY, label TEXT NOT NULL);
+INSERT INTO join_expected VALUES (1, 'first'), (2, 'second');
+INSERT INTO join_received VALUES (2, 'second'), (3, 'third');
+
+SELECT e.item_id AS expected_id, r.item_id AS received_id
+FROM join_expected AS e
+FULL OUTER JOIN join_received AS r ON r.item_id = e.item_id
+ORDER BY COALESCE(e.item_id, r.item_id);
+```
+
+The pairs are `(1, NULL)`, `(2, 2)`, and `(NULL, 3)`. Item 1 is missing from the received source, item 2 matches, and item 3 was not expected. A full join preserves unmatched rows from both sides. SQLite supports right and full joins starting with 3.39.0; use a newer shell for this exercise. PostgreSQL also supports them, while MySQL does not provide this full-join syntax.
+
+A right join preserves the table written on the right:
+
+```sql
+SELECT e.item_id AS expected_id, r.item_id AS received_id
+FROM join_expected AS e
+RIGHT JOIN join_received AS r ON r.item_id = e.item_id
+ORDER BY r.item_id;
+```
+
+It returns `(2, 2)` and `(NULL, 3)`. Rewriting it as `join_received LEFT JOIN join_expected` preserves the same source and is often easier to read. Prefer an explicit `ON` condition to a natural join: a future column with a shared name can silently change what `NATURAL JOIN` matches.
+
+## Cross joins generate combinations; self joins compare rows
+
+A cross join has no matching condition. It is useful when the question really is “every customer with every product,” such as generating a recommendation candidate set:
+
+```sql
+SELECT c.name, p.title
+FROM customers AS c
+CROSS JOIN products AS p
+ORDER BY c.customer_id, p.product_id;
+```
+
+Three customers times three products gives nine rows, including Carol with all three books. Filtering recommendations requires further rules; this query alone recommends nothing intelligently. On large tables, the product of their row counts can become very large.
+
+A self join uses the same table twice under different aliases. To compare each cheaper book with each more expensive book:
+
+```sql
+SELECT cheaper.product_id AS cheaper_id,
+       dearer.product_id AS dearer_id
+FROM products AS cheaper
+JOIN products AS dearer ON cheaper.price_cents < dearer.price_cents
+ORDER BY cheaper.product_id, dearer.product_id;
+```
+
+The pairs are `(10, 20)`, `(10, 30)`, and `(30, 20)`. These aliases represent different candidate rows of the same base table. The strict inequality excludes equal-price pairs and a product compared with itself. An employee-to-manager relationship is another self-join use: join one employee's `manager_id` to another employee's ID.
+
+## A correlated subquery refers to the current outer row
+
+This report calculates an order count for each customer:
+
+```sql
+SELECT c.name,
+       (SELECT COUNT(*)
+        FROM orders AS o
+        WHERE o.customer_id = c.customer_id) AS order_count
+FROM customers AS c
+ORDER BY c.customer_id;
+```
+
+The results are Alice 2, Bob 1, and Carol 0. The inner query refers to `c.customer_id`, so it is **correlated** with the outer query. That describes its meaning, not a guarantee that the engine executes it as a literal application-style loop. The optimizer may choose an efficient equivalent plan.
+
+A scalar subquery must obey the engine's rules for returning one value. Do not select an arbitrary matching order ID and assume it chooses the newest. Use a complete ordering with a limit, or a proper aggregate, according to the question. If many per-customer summaries are needed, grouping orders once and joining those summaries can also make the query clearer.
+
+## Avoid null surprises in an anti-match
+
+Suppose an external blocklist has a missing identifier:
+
+```sql
+CREATE TABLE join_blocked_customers (customer_id INTEGER);
+INSERT INTO join_blocked_customers VALUES (2), (NULL);
+
+SELECT customer_id
+FROM customers
+WHERE customer_id NOT IN (SELECT customer_id FROM join_blocked_customers)
+ORDER BY customer_id;
+```
+
+The result is empty. For IDs 1 and 3, the comparisons include an unknown comparison with null, so `NOT IN` does not become true. This is not the intended “all customers except Bob.” Express the match being excluded instead:
+
+```sql
+SELECT c.customer_id
+FROM customers AS c
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM join_blocked_customers AS b
+    WHERE b.customer_id = c.customer_id
+)
+ORDER BY c.customer_id;
+```
+
+This returns 1 and 3. `NOT EXISTS` asks whether a matching row exists; the unrelated null row does not match a known customer ID. If the schema prohibits null IDs, `NOT IN` can also be valid. Understanding the input's nullability is part of choosing the expression.
+
+## Group before joining another one-to-many relationship
+
+A customer can have many orders and many support tickets. Joining both detail tables directly can pair every order with every ticket, inflating counts. Here is a separate ticket table:
+
+```sql
+CREATE TABLE join_support_tickets (
+    ticket_id INTEGER PRIMARY KEY,
+    customer_id INTEGER NOT NULL REFERENCES customers(customer_id)
+);
+INSERT INTO join_support_tickets VALUES (1, 1), (2, 1), (3, 2);
+
+WITH order_counts AS (
+    SELECT customer_id, COUNT(*) AS order_count
+    FROM orders GROUP BY customer_id
+), ticket_counts AS (
+    SELECT customer_id, COUNT(*) AS ticket_count
+    FROM join_support_tickets GROUP BY customer_id
+)
+SELECT c.name,
+       COALESCE(o.order_count, 0) AS order_count,
+       COALESCE(t.ticket_count, 0) AS ticket_count
+FROM customers AS c
+LEFT JOIN order_counts AS o ON o.customer_id = c.customer_id
+LEFT JOIN ticket_counts AS t ON t.customer_id = c.customer_id
+ORDER BY c.customer_id;
+```
+
+Alice has 2 orders and 2 tickets, Bob 1 and 1, Carol 0 and 0. Each CTE has at most one row per customer, so the final joins preserve that report's grain. Adding `DISTINCT` to a multiplied result is not a general repair: it can discard genuinely separate rows or leave a duplicated monetary sum.
+
+## A view has a definition, dependencies, and a write policy
+
+The existing order-total view is a saved calculation, not stored totals. When order lines change, a later query through the view reflects the underlying rows visible to that query. A materialized view is different: its stored results need the engine's refresh or maintenance mechanism.
+
+SQLite views are read-only unless `INSTEAD OF` triggers supply write behavior. PostgreSQL can automatically update certain simple views. An independent PostgreSQL example illustrates keeping changes inside the view's condition:
+
+```sql
+-- PostgreSQL
+CREATE TABLE join_pg_stock (
+    product_id INTEGER PRIMARY KEY,
+    stock INTEGER NOT NULL CHECK (stock >= 0)
+);
+INSERT INTO join_pg_stock VALUES (10, 5), (30, 0);
+CREATE VIEW join_pg_available AS
+SELECT product_id, stock FROM join_pg_stock WHERE stock > 0
+WITH LOCAL CHECK OPTION;
+UPDATE join_pg_available SET stock = 4 WHERE product_id = 10;
+SELECT product_id, stock FROM join_pg_stock ORDER BY product_id;
+```
+
+The base table contains `(10, 4)` and `(30, 0)`. Through this view, setting product 10 to zero would violate its check option and fail; the row would no longer satisfy `stock > 0`. The base table's own check still permits zero. A view can present a restricted interface, but table privileges must also be designed if users should be unable to bypass that interface.
+
+References: [SQLite SELECT and join support](https://www.sqlite.org/lang_select.html), [SQLite 3.39.0](https://www.sqlite.org/releaselog/3_39_0.html), and [PostgreSQL CREATE VIEW](https://www.postgresql.org/docs/current/sql-createview.html).
+
 ## Check your understanding
 
 1. Why does Alice appear twice in the inner join?

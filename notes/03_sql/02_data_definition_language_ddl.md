@@ -110,6 +110,132 @@ SQLite supports transactional schema changes with documented restrictions. Postg
 
 An **implicit commit** means the engine commits without the application issuing `COMMIT` at that point. Therefore, do not assume a later rollback will undo every schema change and surrounding write in every engine.
 
+## Inspect the schema before changing it
+
+SQLite stores the definitions of tables, indexes, views, and triggers in `sqlite_schema`. Use it to check what exists rather than guessing from an application model:
+
+```sql
+SELECT name, type
+FROM sqlite_schema
+WHERE name IN ('orders', 'order_items', 'idx_orders_customer')
+ORDER BY type, name;
+
+PRAGMA table_info(order_items);
+PRAGMA foreign_key_list(order_items);
+PRAGMA index_list(order_items);
+```
+
+The first result contains the customer index and the two tables. The pragmas show column declarations, references to orders and products, and indexes on order lines. `table_info` includes the column's type, nullability, default, and position in a primary key. These are definitions, not a list of the rows currently stored.
+
+PostgreSQL and MySQL expose much of this metadata through `information_schema`; SQL Server also has `sys` catalog views. Their schemas are not identical, so use the catalog intended for the engine you are inspecting.
+
+## Rehearse a small migration from old data to new data
+
+Use a separate table so this exercise does not change the bookstore:
+
+```sql
+CREATE TABLE ddl_contacts (
+    contact_id INTEGER PRIMARY KEY,
+    full_name TEXT NOT NULL
+);
+INSERT INTO ddl_contacts VALUES (1, 'Alice Smith'), (2, 'Bob Jones');
+
+BEGIN;
+ALTER TABLE ddl_contacts ADD COLUMN display_name TEXT;
+UPDATE ddl_contacts SET display_name = full_name;
+SELECT contact_id, display_name FROM ddl_contacts ORDER BY contact_id;
+COMMIT;
+```
+
+The result is Alice Smith and Bob Jones under the new column. The migration has three responsibilities: introduce a place to store the new value, supply values for existing rows, and decide when the application starts reading or writing that place. A backfill alone does not keep future writes synchronized. If old application versions still write only `full_name`, the migration plan must handle those writers too.
+
+For a rename rather than a new fact, modern SQLite supports:
+
+```sql
+ALTER TABLE ddl_contacts RENAME COLUMN full_name TO legal_name;
+ALTER TABLE ddl_contacts RENAME TO ddl_customer_contacts;
+SELECT contact_id, legal_name, display_name
+FROM ddl_customer_contacts
+ORDER BY contact_id;
+```
+
+Both names still contain the original values. Renaming preserves the fact; it changes how code refers to it. Update application queries and examine views, triggers, reports, and migration tooling that depend on the old name.
+
+SQLite added `RENAME COLUMN` in 3.25.0 and `DROP COLUMN` in 3.35.0. Dropping a column can fail when constraints or dependent objects still require it. Check the deployed version and dependencies before selecting a migration command. Older or more complex SQLite changes may require the documented create-copy-drop-rename procedure, preserving indexes, triggers, and foreign keys explicitly.
+
+## Rebuild a table to strengthen a rule
+
+The new contact names are all populated. SQLite 3.53.0 added `ALTER TABLE ... ALTER COLUMN ... SET NOT NULL`. For older supported SQLite versions, or a more extensive definition change, create the intended definition and copy validated data into it. The following exercise uses that broadly compatible rebuild procedure. This practice table has no incoming foreign keys or dependent views:
+
+```sql
+BEGIN;
+CREATE TABLE ddl_contacts_required (
+    contact_id INTEGER PRIMARY KEY,
+    legal_name TEXT NOT NULL,
+    display_name TEXT NOT NULL
+);
+INSERT INTO ddl_contacts_required (contact_id, legal_name, display_name)
+SELECT contact_id, legal_name, display_name
+FROM ddl_customer_contacts;
+DROP TABLE ddl_customer_contacts;
+ALTER TABLE ddl_contacts_required RENAME TO ddl_customer_contacts;
+COMMIT;
+
+SELECT contact_id, display_name
+FROM ddl_customer_contacts
+ORDER BY contact_id;
+```
+
+The two contacts survive. If the copy encounters a null display name, the `NOT NULL` constraint rejects it; the client should roll back the transaction. In a real schema, this shortened example is insufficient when other tables reference the rebuilt table. Use SQLite's full documented procedure and run `PRAGMA foreign_key_check` afterward.
+
+In PostgreSQL, changing nullability can instead use `ALTER TABLE ... ALTER COLUMN ... SET NOT NULL`. The shorter command still needs a valid population and may need locking or a validation strategy on a large table. Syntax convenience does not remove the migration's data obligations.
+
+## Create a view and remove only its access path
+
+A **view** stores a query definition. An **index** stores an access structure. Neither is a new customer or order:
+
+```sql
+CREATE VIEW ddl_available_products AS
+SELECT product_id, title, price_cents
+FROM products
+WHERE stock > 0;
+
+SELECT title FROM ddl_available_products ORDER BY product_id;
+
+CREATE INDEX ddl_products_by_price ON products (price_cents);
+DROP INDEX ddl_products_by_price;
+DROP VIEW ddl_available_products;
+```
+
+The view returns Database Basics and SQL Practice. Dropping the index leaves every product intact. Dropping the view removes the saved query, also leaving the products intact. Dependency rules differ: an engine may refuse to drop a referenced object or offer a cascading drop. Read the dependency list before accepting a cascade.
+
+## Treat defaults, checks, and unique constraints as separate rules
+
+A default supplies a value when a column is omitted. It does not prohibit other values. A check tests values in a row. A unique constraint compares values across rows. These mechanisms solve different problems:
+
+```sql
+CREATE TABLE ddl_delivery_methods (
+    method_id INTEGER PRIMARY KEY,
+    code TEXT NOT NULL UNIQUE,
+    fee_cents INTEGER NOT NULL DEFAULT 0 CHECK (fee_cents >= 0)
+);
+INSERT INTO ddl_delivery_methods (method_id, code)
+VALUES (1, 'pickup');
+SELECT code, fee_cents FROM ddl_delivery_methods;
+```
+
+The result is `pickup, 0`. A negative explicit fee would fail the check; repeating `pickup` would fail uniqueness. Without `NOT NULL`, a check such as `fee_cents >= 0` would not by itself reject a null, because SQL checks accept an unknown result. A definition should express both presence and validity when the requirement needs both.
+
+Use stable keys for relationships. A display name can change or be shared; a primary key must still identify one row. An autogenerated key alone does not enforce a separate business rule such as “one delivery method per code,” which is why this table has both a primary key and a unique code.
+
+## Plan changes around readers and writers
+
+A migration that rewrites a large table or builds an index can consume disk, generate transaction logs, and hold locks. PostgreSQL's `CREATE INDEX CONCURRENTLY` reduces some blocking but has its own restrictions and failure cleanup; it cannot run inside a transaction block. MySQL's supported online DDL operations depend on the operation and engine. Do not translate “online” into “no effect on live traffic.”
+
+For a required field, a common sequence is: add a compatible optional field, deploy writers, backfill old rows in controlled batches, verify completeness, then enforce the requirement. Keep the invariant explicit at each step. If restoring the previous application would no longer understand the new schema, an application rollback and a database rollback are different recovery plans.
+
+References: [SQLite ALTER TABLE](https://www.sqlite.org/lang_altertable.html), [SQLite schema table](https://www.sqlite.org/schematab.html), and [PostgreSQL CREATE INDEX](https://www.postgresql.org/docs/current/sql-createindex.html).
+
 ## Check your understanding
 
 1. Why is a table empty immediately after `CREATE TABLE`?

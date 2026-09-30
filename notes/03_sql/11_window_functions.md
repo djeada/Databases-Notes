@@ -27,6 +27,8 @@ Here are some of the most commonly used window functions in SQL:
 Run this setup once in a **fresh SQLite database** with window-function support. Continue using this database throughout the chapter; the null-value section adds sale 11 explicitly.
 
 ```sql
+PRAGMA foreign_keys = ON;
+
 CREATE TABLE Products (
     ProductID INTEGER PRIMARY KEY,
     ProductName TEXT NOT NULL,
@@ -655,6 +657,97 @@ ORDER BY
 
 - This query calculates the percentage change in `Quantity` compared to the previous sale for each `ProductID`.
 - Useful for identifying trends, growth, or decline in sales over time.
+
+## See ties change a running total
+
+An independent three-row example makes frame differences visible without changing Sales:
+
+```sql
+WITH tied_sales(sale_id, amount) AS (
+    VALUES (1, 100), (2, 100), (3, 200)
+)
+SELECT sale_id, amount,
+       ROW_NUMBER() OVER (ORDER BY amount, sale_id) AS row_number,
+       RANK() OVER (ORDER BY amount) AS rank_with_gaps,
+       DENSE_RANK() OVER (ORDER BY amount) AS dense_rank,
+       SUM(amount) OVER (
+           ORDER BY amount
+           RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) AS peer_total,
+       SUM(amount) OVER (
+           ORDER BY amount, sale_id
+           ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+       ) AS row_total
+FROM tied_sales
+ORDER BY amount, sale_id;
+```
+
+| sale_id | amount | row_number | rank_with_gaps | dense_rank | peer_total | row_total |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | 100 | 1 | 1 | 1 | 200 | 100 |
+| 2 | 100 | 2 | 1 | 1 | 200 | 200 |
+| 3 | 200 | 3 | 3 | 2 | 400 | 400 |
+
+Both 100-valued rows are peers under `ORDER BY amount`. The range frame includes that whole peer group at its current boundary, so its first displayed total is already 200. The rows frame has a unique order and advances one row at a time. Adding `sale_id` to the ranking order would also break the tie, making those ranks different. Use tie-breaking only where it matches the desired meaning.
+
+The outer `ORDER BY` controls presentation. The orders inside `OVER` control calculations. A result may display newest-first while computing a cumulative total oldest-first; make both choices explicit.
+
+## Ask what “last” means for LAST_VALUE
+
+The default ordered frame commonly ends at the current row's peer group, rather than the end of the partition. That can make `LAST_VALUE` look unexpectedly like the current value:
+
+```sql
+WITH sample_values(id, amount) AS (VALUES (1, 100), (2, 150), (3, 200))
+SELECT id,
+       LAST_VALUE(amount) OVER (ORDER BY id) AS last_in_default_frame,
+       LAST_VALUE(amount) OVER (
+           ORDER BY id
+           ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+       ) AS last_in_partition
+FROM sample_values
+ORDER BY id;
+```
+
+The default-frame values are 100, 150, 200. The full-partition values are 200, 200, 200. `UNBOUNDED FOLLOWING` is necessary when the desired answer lies after the current row. `LAG` and `LEAD` have different offset semantics and should not be explained as though they simply aggregate the same frame.
+
+## A time interval is different from a fixed number of rows
+
+Three recent sale rows might cover three minutes or three months. For a time-based report, use the engine's supported time-range syntax. This **PostgreSQL** example is independent of the SQLite Sales table:
+
+```sql
+-- PostgreSQL
+WITH dated_sales(sale_id, sold_at, quantity) AS (
+    VALUES
+        (1, TIMESTAMP '2025-01-01 12:00:00', 10),
+        (2, TIMESTAMP '2025-01-03 12:00:00', 20),
+        (3, TIMESTAMP '2025-01-10 12:00:00', 30)
+)
+SELECT sale_id,
+       AVG(quantity) OVER (
+           ORDER BY sold_at
+           RANGE BETWEEN INTERVAL '7 days' PRECEDING AND CURRENT ROW
+       ) AS seven_day_average,
+       AVG(quantity) OVER (
+           ORDER BY sold_at, sale_id
+           ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+       ) AS three_row_average
+FROM dated_sales
+ORDER BY sale_id;
+```
+
+The averages are `(10, 10)`, `(15, 15)`, and `(25, 20)`. On January 10, the seven-day range includes January 3 at the boundary and January 10, excluding January 1. The three-row frame includes all three sales. Neither calculates an average per calendar day including days with no sales: that requires generating or joining a calendar and deciding how empty days contribute.
+
+An offset range frame in PostgreSQL requires a single ordering expression. Its timestamp interval does not use the same spelling as SQLite's numeric `RANGE` offsets. For SQLite, a suitable numeric time expression such as `julianday(...)` can be used with a deliberately chosen numeric-day offset; do not paste PostgreSQL's interval literal into it.
+
+## Build the partition at the right stage
+
+Window functions operate on the rows supplied by the query after its relevant filtering and grouping. If `WHERE` removes cancelled orders, a later windowed total excludes them too. If `GROUP BY` produces one row per month, a window can calculate a running total across those monthly summaries. It is not operating on the original order lines at that stage.
+
+To display only the top ranked rows, calculate ranks in a CTE or subquery, then filter the rank outside it. Filtering input rows before ranking answers a different question. For “latest sale for each product,” rank by date descending and sale ID descending so same-date ties have a defined winner. For “all sales tied for greatest amount,” use a tie-preserving rank instead.
+
+Window calculations may require sorting and buffering partitions. Multiple incompatible orders can require additional work, and a full-partition last value may need rows beyond the current one. An index can help some plans, but it does not guarantee that every window runs without a sort. Inspect plans with representative data and keep long analytical queries' transaction and memory requirements in view.
+
+References: [SQLite window frames](https://www.sqlite.org/windowfunctions.html) and [PostgreSQL window syntax](https://www.postgresql.org/docs/current/sql-expressions.html#SYNTAX-WINDOW-FUNCTIONS).
 
 ## Review questions
 

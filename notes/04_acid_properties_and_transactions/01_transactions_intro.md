@@ -58,6 +58,101 @@ In **autocommit** mode, each statement normally has its own transaction. That is
 
 A lost connection during commit creates a different problem: the server may have committed even though the client never received confirmation. A retry needs a stable operation identifier or another way to recognize an already accepted checkout. Retrying blindly can duplicate work.
 
+## Inspect the accepted operation, not just the last statement
+
+Continue immediately after the checkout above. Verify both its stock change and its recorded line:
+
+```sql
+SELECT product_id, stock FROM products WHERE product_id = 10;
+SELECT o.order_id, o.customer_id, o.status,
+       i.product_id, i.quantity, i.unit_price_cents
+FROM orders AS o
+JOIN order_items AS i ON i.order_id = o.order_id
+WHERE o.order_id = 104;
+```
+
+The stock result is `(10, 4)`. The order result is `(104, 2, open, 10, 1, 1500)`. Its `open` status comes from the default, not from a hidden transaction property. The purchase price is recorded on the line so a later catalog price change does not rewrite what Bob agreed to pay.
+
+This is still a deliberately small checkout. It does not charge a card, calculate tax, reserve a named copy, or record a complete stock ledger. A transaction's boundary should correspond to the operation actually implemented, and its success response should describe only that operation's guarantees.
+
+## Contrast one transaction with separate autocommitted changes
+
+Use a separate table to observe state without affecting the checkout:
+
+```sql
+CREATE TABLE tx_demo_steps (
+    step_id INTEGER PRIMARY KEY,
+    description TEXT NOT NULL
+);
+
+INSERT INTO tx_demo_steps VALUES (1, 'first independently accepted step');
+BEGIN;
+INSERT INTO tx_demo_steps VALUES (2, 'second step, still pending');
+SELECT step_id FROM tx_demo_steps ORDER BY step_id;
+ROLLBACK;
+SELECT step_id FROM tx_demo_steps ORDER BY step_id;
+```
+
+In a SQLite shell with no enclosing transaction, the initial insert commits as its own statement. Inside the explicit transaction, the first query sees steps 1 and 2. After rollback, only step 1 remains. Rollback undoes the pending transaction; it cannot undo an earlier independent commit merely because the commands were part of the same script.
+
+A driver might implicitly begin a transaction for that first insert. Before reproducing the shell behavior through Python, commit the setup and initial insert, or configure explicit transaction handling. A script is a sequence of commands, while a transaction is a database boundary. They are not synonyms.
+
+## Follow the transaction's states
+
+A useful conceptual lifecycle is:
+
+```text
+No active transaction
+        |
+      BEGIN
+        |
+  Active: read, validate, write
+        |                  |
+    all work succeeds     failure or cancellation
+        |                  |
+      COMMIT             ROLLBACK
+        |                  |
+  accepted changes       discarded changes
+```
+
+During the active phase, the connection can read its own writes. Other connections' visibility depends on isolation. A failed statement may leave the transaction active in SQLite or leave it in an aborted state in PostgreSQL. In either case, the client must determine whether to recover to a savepoint or roll back the whole business operation.
+
+The diagram omits the uncertain client outcome when a connection disappears during commit. The server may have accepted the transaction before the connection failed. Durable operation IDs allow the client to query that accepted state instead of treating silence as proof of failure.
+
+## Read-only work can also need a transaction
+
+Suppose a financial report reads order totals and then reads payment totals. If those two statements use different snapshots, a concurrent payment can appear in one part of the report and not the other. A read-only transaction can make the intended snapshot policy explicit.
+
+This independent **PostgreSQL** exercise creates a tiny ledger:
+
+```sql
+-- PostgreSQL
+CREATE TABLE tx_report_ledger (
+    entry_id INTEGER PRIMARY KEY,
+    amount_cents BIGINT NOT NULL
+);
+INSERT INTO tx_report_ledger VALUES (1, 5500), (2, 5000);
+
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY;
+SELECT COUNT(*) AS entry_count FROM tx_report_ledger;
+SELECT SUM(amount_cents) AS total_cents FROM tx_report_ledger;
+COMMIT;
+```
+
+The initial results are 2 and 10500. PostgreSQL Repeatable Read uses one snapshot established by the first relevant statement, so both reads use the same committed view even if another session inserts a row between them. Read Committed would ordinarily take a new snapshot for the second statement. A stable snapshot does not automatically validate every cross-row business invariant; the isolation note explains write skew.
+
+Long-running reports also have costs. Their snapshots can keep older row versions needed for visibility, and they can contend with maintenance or schema changes. Choose a clear consistency requirement rather than leaving a transaction open while a user reads the report on screen.
+
+## Separate business operations from database statements
+
+One transfer may require several statements, while one bulk update may affect thousands of rows. Transaction size is therefore not measured solely by statement count. Estimate the rows touched, locks held, log volume, and expected duration.
+
+For a batch import, committing each valid record separately allows partial progress but creates a partial result on failure. One large transaction supplies all-or-nothing acceptance but can use substantial resources. Batches provide another contract: each batch is atomic, and the import tracks which batches were accepted. Explain that contract to users and give retries a way to avoid duplicating accepted records.
+
+PostgreSQL and InnoDB support transactional table updates. Some MySQL storage engines do not supply the same rollback guarantee, and DDL can implicitly commit. SQLite's file-based deployment supplies real transactions but coordinates writes differently from a server with row-level locking. “This program uses SQL” is not enough to establish its transaction semantics.
+
+Continue through each ACID property by asking what could go wrong in this exact checkout: a partial write, an invalid state, an overlapping buyer, or a crash after acknowledgment.
+
 ## Check your understanding
 
 1. Why does the stock update belong in the same transaction as the order insert?

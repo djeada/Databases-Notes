@@ -57,6 +57,33 @@ This function also returns zero for an identifier with no items. That policy doe
 
 PostgreSQL functions can return scalars or sets and can do more than arithmetic. Their allowed effects and declarations matter; do not assume every function is pure or evaluated just once. See the official [function documentation](https://www.postgresql.org/docs/current/sql-createfunction.html).
 
+## Return a table when the result contains several rows
+
+Continue with the PostgreSQL `routine_order_items` setup. A table-returning function can expose a report with an input threshold:
+
+```sql
+-- PostgreSQL
+CREATE FUNCTION bookstore_large_orders(p_min_cents BIGINT)
+RETURNS TABLE (order_id INTEGER, total_cents BIGINT)
+LANGUAGE SQL
+STABLE
+AS $$
+    SELECT i.order_id,
+           SUM(i.quantity * i.unit_price_cents::BIGINT)::BIGINT
+    FROM routine_order_items AS i
+    GROUP BY i.order_id
+    HAVING SUM(i.quantity * i.unit_price_cents::BIGINT) >= p_min_cents;
+$$;
+
+SELECT order_id, total_cents
+FROM bookstore_large_orders(5000)
+ORDER BY order_id;
+```
+
+The result is order 101 with 5500 cents. The function belongs in `FROM` because it supplies rows. The scalar total function belongs in an expression because it supplies one value. PostgreSQL's sum over `BIGINT` returns `NUMERIC`, so this function explicitly converts its total to the declared output type. A total beyond `BIGINT` range would fail; choose a numeric contract if that range is insufficient.
+
+`STABLE` tells PostgreSQL that the function's result can depend on reads but will not modify the database and has stability within a statement under its documented snapshot rules. It is not a cache that keeps yesterday's report forever. `IMMUTABLE` would be inappropriate for a total that changes when table data changes.
+
 ## Define and call a procedure
 
 A procedure is invoked to perform an operation rather than used as an expression in a `SELECT`. This example creates another independent practice table:
@@ -90,6 +117,35 @@ Calling it again changes nothing. The procedure also silently does nothing for a
 
 This routine changes status only. It is not a complete cancellation workflow: it does not handle refunds or restock items. Keep the operation's name and contract specific enough for callers to understand what it guarantees.
 
+## Make the cancellation contract report a rejected operation
+
+The original procedure silently ignores a completed or missing order. A PL/pgSQL procedure can make that outcome explicit. Order 102 is already cancelled from the earlier exercise, so add an open order for this one:
+
+```sql
+-- PostgreSQL
+INSERT INTO routine_orders VALUES (104, 'open');
+
+CREATE PROCEDURE cancel_open_order_checked(p_order_id INTEGER)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE routine_orders
+    SET status = 'cancelled'
+    WHERE order_id = p_order_id AND status = 'open';
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Order % is missing or is not open', p_order_id;
+    END IF;
+END;
+$$;
+
+CALL cancel_open_order_checked(104);
+SELECT order_id, status FROM routine_orders WHERE order_id = 104;
+```
+
+The row is `104, cancelled`. `FOUND` records whether the preceding update affected a row. Calling this checked procedure again raises an exception. Its contract treats an already cancelled order as an error; another workflow could intentionally report “already cancelled” as a successful idempotent outcome. Decide that policy before naming the interface.
+
+Run the failing call separately. If it occurs inside a transaction, recover with rollback before continuing. PL/pgSQL's `BEGIN ... END` groups procedural statements; it does not commit the update on its own. The caller can still roll back a successful call.
+
 ## A routine is not a transaction boundary by itself
 
 Calling a routine happens within database transaction rules. These examples do not contain an internal `COMMIT`; callers can group their calls with other statements using a transaction.
@@ -103,6 +159,71 @@ A routine can centralize behavior used by several applications and reduce networ
 Do not assume a routine is faster because it is “precompiled.” Planning and plan reuse depend on the engine, language, and query. A routine still needs suitable indexes and efficient SQL.
 
 Privileges also require an explicit design. PostgreSQL normally runs a routine with the caller's privileges (`SECURITY INVOKER`). `SECURITY DEFINER` uses the owner's privileges and needs careful control of object resolution and access. Merely moving a query into a routine does not automatically bypass table permissions or prevent injection in dynamically assembled SQL.
+
+## See how SQL Server expresses an output parameter
+
+The original idea of a stored routine also appears in SQL Server, but its syntax differs substantially. This **standalone SQL Server** example uses T-SQL; `GO` is a batch separator interpreted by clients such as SSMS and `sqlcmd`, not a SQL statement sent through every driver:
+
+```sql
+-- SQL Server; run in SSMS or sqlcmd
+CREATE TABLE dbo.RoutineCustomers (
+    CustomerId INT IDENTITY(1, 1) PRIMARY KEY,
+    CustomerName NVARCHAR(100) NOT NULL
+);
+GO
+CREATE PROCEDURE dbo.AddRoutineCustomer
+    @CustomerName NVARCHAR(100),
+    @NewCustomerId INT OUTPUT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    INSERT INTO dbo.RoutineCustomers (CustomerName)
+    VALUES (@CustomerName);
+    SET @NewCustomerId = CONVERT(INT, SCOPE_IDENTITY());
+END;
+GO
+DECLARE @CreatedId INT;
+EXEC dbo.AddRoutineCustomer
+    @CustomerName = N'Dana',
+    @NewCustomerId = @CreatedId OUTPUT;
+SELECT CustomerId, CustomerName
+FROM dbo.RoutineCustomers
+WHERE CustomerId = @CreatedId;
+GO
+```
+
+In this fresh table the result is customer 1, Dana. An output parameter returns a value separately from a result set. Both the definition and the call mark it `OUTPUT`. `SCOPE_IDENTITY()` retrieves the identity generated in the current scope; using a global or session-wide “latest ID” without understanding triggers and other inserts can retrieve the wrong value.
+
+Identity values can have gaps. A failed or rolled-back insert does not make an identity sequence a gapless receipt-number service. Use a dedicated, correctly coordinated numbering process if a business rule requires gapless document numbers.
+
+## Choose the interface by the caller's needs
+
+| Interface | Typical call | Suitable result |
+| --- | --- | --- |
+| View | `SELECT ... FROM view_name` | A reusable query without input parameters. |
+| Scalar function | `SELECT function_name(argument)` | One value used in an expression. |
+| Table-returning function | `SELECT ... FROM function_name(argument)` | A parameterized relation. |
+| Procedure | PostgreSQL `CALL`, SQL Server `EXEC` | An explicitly invoked operation with its engine's output mechanisms. |
+
+SQL Server also has scalar functions and inline or multi-statement table-valued functions. Their optimizer behavior and restrictions differ; a multi-statement function should not be assumed to optimize like a view. PostgreSQL procedures can have output parameters and can sometimes control transactions, but only in documented call contexts. A function that is part of a surrounding SQL statement cannot independently commit the caller's transaction.
+
+## Version routines as part of the schema
+
+PostgreSQL identifies overloaded functions by their name and input argument types. Two functions can share a name while accepting different types. Dropping one requires identifying the intended signature:
+
+```sql
+-- PostgreSQL; cleanup after the exercises
+DROP FUNCTION bookstore_large_orders(BIGINT);
+DROP PROCEDURE cancel_open_order_checked(INTEGER);
+```
+
+`CREATE OR REPLACE FUNCTION` can update a compatible body, but it cannot arbitrarily change the existing function's return type. Changing an interface may require a new routine and a migration of its callers. Deployment order matters if a new application expects a routine the database has not received yet.
+
+Keep object resolution explicit, especially with `SECURITY DEFINER`. An attacker-controlled object found through an unsafe `search_path` can change privileged behavior. Review execute grants as well as table grants, because PostgreSQL grants routine execution to `PUBLIC` by default unless changed. Parameterization is still necessary for any dynamic SQL; a routine that concatenates input into SQL can be injectable.
+
+Choose routines when centralizing the behavior helps multiple clients or gives a clear database interface. Keep test cases for valid inputs, missing rows, permission failures, and rollback. Moving complex business code into a database does not eliminate its maintenance cost.
+
+References: [PostgreSQL function volatility](https://www.postgresql.org/docs/current/xfunc-volatility.html), [SQL Server CREATE PROCEDURE](https://learn.microsoft.com/en-us/sql/t-sql/statements/create-procedure-transact-sql), and [SQL Server SCOPE_IDENTITY](https://learn.microsoft.com/en-us/sql/t-sql/functions/scope-identity-transact-sql).
 
 ## Check your understanding
 
