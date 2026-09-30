@@ -449,5 +449,8 @@ When a Spark SQL job is slow:
 
 - [Data warehousing](01_data_warehousing.md)
 - [Hadoop and HDFS](02_hadoop_and_hdfs.md)
+- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
+- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
+- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
 - [Aggregate functions](../03_sql/10_aggregate_functions.md)
 - [Window functions](../03_sql/11_window_functions.md)
