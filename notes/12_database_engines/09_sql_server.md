@@ -139,7 +139,7 @@ From `scripts/`:
 
 ```bash
 python3 -m pip install prompt-toolkit
-python3 sqlserver/sql_docker_console.py
+python3 sqlserver/sql_docker_console.py --container sqlserver-notes
 ```
 
 See [`scripts/README.md`](../../scripts/README.md) for usage.
