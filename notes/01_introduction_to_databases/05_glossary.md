@@ -2,6 +2,14 @@
 
 Use this page as a reference when a term interrupts your reading. You do not need to memorize it before starting SQL. The groups follow the learning path: data, queries, transactions, storage, distributed systems, and analytics.
 
+## Use a term in a concrete example
+
+In `orders.customer_id`, **table** means the collection named `orders`, **column** means the field named `customer_id`, and **value** means a particular identifier such as `1`. The **schema** declares that this field is required and references an existing customer. A **row** is one order containing that value alongside its identifier and date.
+
+A **primary key** identifies the order itself. A **foreign key** checks its customer reference. A **join** uses the matching values to assemble a result. An **index** offers a way to find matching rows with less search work. These are four different mechanisms, even when they involve the same identifier.
+
+If a term remains unclear, use the examples in the [introduction](01_databases_intro.md), [technology comparisons](02_types_of_databases.md), [DBMS walkthrough](03_database_management_systems_dbms_.md), or [modeling exercise](04_data_models.md). The tables below are a lookup aid, not a replacement for those explanations.
+
 ## Data and structure
 
 | Term | Plain-language meaning and example |
@@ -23,6 +31,12 @@ Use this page as a reference when a term interrupts your reading. You do not nee
 | `CHECK` | Rejects rows when its expression is false; an unknown result caused by nulls generally passes |
 | `NULL` | A marker for a missing or unknown value, distinct from zero and an empty string |
 | Cardinality | In modeling, how many entities can be related, such as one customer to many orders; in query planning, an estimated or actual row count |
+| Entity / instance | A type of tracked thing / one occurrence; Customer is a type and Alice is an instance |
+| Attribute | A named fact about an entity, such as its email address |
+| Optionality | Whether a relationship is required; a customer can exist with zero orders |
+| ER model | Entity-relationship model: a conceptual description of entities, attributes, and relationships |
+| Conceptual / logical / physical model | Business meaning / representation in a chosen model / engine-specific types, indexes, and storage |
+| Junction table | A table representing pairings in a many-to-many relationship, such as suppliers and products |
 | Normalization | Organizing tables around their dependencies to avoid repeated facts and update anomalies |
 | Denormalization | Deliberately storing derived or repeated information, often to reduce measured read costs; copies need maintenance |
 
@@ -50,6 +64,10 @@ For examples, see [data models](04_data_models.md), [normalization](../02_databa
 | Stored procedure | A named routine invoked to perform database work; available syntax and capabilities vary |
 | Function | A routine that computes a result; SQL functions vary in supported inputs, results, and effects |
 | Trigger | Database logic invoked by specified events, such as inserting a row |
+| Driver / client | A library providing database access / a program that sends database requests |
+| Connection | A database session or access handle; related transaction work must use the intended connection |
+| Catalog | Engine-maintained metadata describing database objects |
+| Optimizer / executor | Components that choose a query strategy / perform its operations |
 | Bound parameter | A value passed separately from SQL text through a driver's placeholder mechanism |
 | SQL injection | Untrusted input changes SQL structure because it was assembled into executable query text |
 | DDL / DML / DCL / TCL | Common labels for defining objects, working with rows, controlling access, and controlling transactions |
@@ -117,11 +135,26 @@ See [row and column storage](../05_storage_and_indexing/02_row_based_vs_column_b
 | Linearizability | Operations appear to take effect at a single point between invocation and completion, respecting real-time order |
 | Eventual consistency | If updates stop and communication recovers, replicas are expected to converge |
 | BASE | An informal description of some systems favoring availability and eventual convergence; it is not a precise universal alternative to ACID |
+| NewSQL / distributed SQL | Informal label / architecture emphasizing relational SQL and transactions with distributed implementation; CockroachDB and Spanner are examples |
 | NoSQL | An umbrella label for models such as document, key-value, wide-column, and graph; guarantees depend on the product |
+| Hierarchical model | Records organized through parent–child structure, as with segments in IBM IMS |
+| Network model | Historical record navigation through named owner/member sets, associated with IDMS |
+| Object database / OODBMS | Stores persistent object state and identity through an object model; ObjectDB is an example |
+| JPA / JPQL | Jakarta Persistence API for Java persistence / its object-oriented query language; the backend can be an ORM-based relational system or an object database |
 | Document database | Stores records as documents with fields and potentially nested values |
+| BSON | MongoDB's binary document representation with JSON-like structures and additional data types |
+| Collection | A group of documents in MongoDB, analogous in some uses to a table but with different rules |
+| Embedding / referencing | Store related values inside a document / store an identifier referring to another record |
 | Key-value store | Retrieves a value primarily by its associated key |
 | Wide-column database | Organizes data around partition and clustering keys for defined access patterns; distinct from columnar analytical storage |
+| Keyspace | Cassandra namespace with replication configuration |
+| Partition key / clustering key | In Cassandra, fields identifying a data group / fields identifying and ordering records within that group |
+| Column family / qualifier | In HBase, a declared group of columns / the name of one field within that group |
 | Graph database | Represents entities and connections for relationship traversal |
+| Node / edge / property | Graph entity / connection between entities / a value on an entity or connection |
+| Cypher | Neo4j's graph-pattern query language |
+| TTL | Time to live: the configured lifetime of an entry; Redis can expire a session key after a chosen interval |
+| Eviction | Removal of cached entries to make room, distinct from expiry due to age |
 
 See [database types](02_types_of_databases.md) and [distributed databases](../06_distributed_databases/01_distributed_database_systems.md).
 
@@ -143,3 +176,72 @@ See [database types](02_types_of_databases.md) and [distributed databases](../06
 | Migration | A controlled change to schema or data between application versions or systems |
 
 Product names are introduced in the [engine chapters](../../README.md#12-database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
+
+
+## Work through missing values instead of memorizing the definition
+
+Run this standalone SQLite example in a fresh database:
+
+```sql
+CREATE TABLE glossary_contacts (
+    contact_id INTEGER PRIMARY KEY,
+    phone TEXT
+);
+INSERT INTO glossary_contacts VALUES (1, '555-0100'), (2, NULL), (3, '');
+
+SELECT COUNT(*) AS rows,
+       COUNT(phone) AS supplied_phone_values
+FROM glossary_contacts;
+```
+
+| rows | supplied_phone_values |
+|---|---|
+| 3 | 2 |
+
+`COUNT(*)` counts every row. `COUNT(phone)` counts non-null phone values, so the empty string counts while `NULL` does not. A non-null value is not automatically a usable phone number.
+
+```sql
+SELECT contact_id
+FROM glossary_contacts
+WHERE phone IS NULL
+ORDER BY contact_id;
+```
+
+This returns contact 2. `IS NULL` tests the missing-value marker; `phone = NULL` does not provide the same test because ordinary comparison with null produces an unknown result. Contact 3 has a present but empty string.
+
+## Technology names and their roles
+
+A product name tells you which implementation to investigate; it does not stand in for a model definition or a performance guarantee.
+
+| Technology | Meaning and concrete context |
+|---|---|
+| SQLite | Embedded relational engine; the first chapter creates tables through its shell and Python interface |
+| PostgreSQL | Client-server relational engine; the DBMS note creates a database, examines plans, and exports a practice database |
+| MySQL / SQL Server / Oracle Database | Other relational engines with their own dialects, storage, drivers, and operational tools |
+| MongoDB | Document DBMS; the types note inserts catalog documents and queries a nested language field |
+| Couchbase | Provides key-addressed document storage and SQL++ querying; its API differs from MongoDB's |
+| Redis | Key-addressed structures with expiration and persistence options; the chapter demonstrates sessions and carts |
+| Apache Cassandra | Distributed wide-column DBMS with query-oriented partitions; the chapter creates an events table in CQL |
+| HBase / Bigtable | Wide-column systems with keyed rows and column families; do not treat them as identical to Cassandra |
+| Neo4j | Property-graph DBMS; the chapter creates follows/likes relationships and queries them in Cypher |
+| IBM IMS / IDMS | Hierarchical / network-model technologies; the modeling note distinguishes their native structures from relational illustrations |
+| ObjectDB | Object-oriented database for Java persistence; the modeling note defines and queries an entity |
+| DuckDB / ClickHouse | Analytical SQL engines with columnar storage; storage layout is separate from whether SQL is supported |
+| CockroachDB / Google Spanner | Distributed SQL examples; the DBMS chapter connects their coordination mechanisms to a credit-transfer transaction |
+| Amazon RDS | Managed relational database service; the selected engine still determines SQL and many behaviors |
+| Amazon Aurora | Managed relational technology with MySQL-compatible and PostgreSQL-compatible editions |
+| Amazon DynamoDB | Managed key-value/document service with table keys and supported secondary access paths |
+| Amazon DocumentDB | Managed document database with a MongoDB-compatible interface; compatibility must be checked for the features used |
+| Amazon Neptune | Managed graph database family; its interfaces and capabilities are distinct from Neo4j's deployment |
+| Elasticsearch | Search and analytics engine using indexes to retrieve and aggregate matching documents; distinct from a relational table index |
+| Hadoop / Spark | Distributed storage/processing ecosystem / processing engine; covered in the Big Data chapter |
+
+The [Couchbase document guide](https://docs.couchbase.com/go-sdk/current/concept-docs/documents.html) explains its key/document distinction. AWS's [database decision guide](https://docs.aws.amazon.com/decision-guides/latest/decision-guides/databases-on-aws-how-to-choose.html) identifies the cloud-service families; the repository's [engine chapters](../../README.md#12-database-engines) develop them further.
+
+## Check your understanding
+
+1. Why are a key, a constraint, a join, and an index not interchangeable terms?
+2. Which glossary example shows that an empty string differs from null?
+3. What is the difference between a document model and the MongoDB product?
+4. Why does a Java persistence API not tell you whether the backend is relational?
+5. Which term describes entry age, and which describes removal for memory pressure?
