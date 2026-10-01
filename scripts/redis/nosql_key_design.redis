@@ -1,0 +1,15 @@
+SET session:abc123 "user=42" EX 3600
+TTL session:abc123
+
+HSET cart:user:42 currency EUR item:DB-101 1 item:DB-205 2
+HGETALL cart:user:42
+
+SET idempotency:checkout:req-7 "order-1001" NX EX 86400
+GET idempotency:checkout:req-7
+
+INCR rate:user:42:20261001T15
+EXPIRE rate:user:42:20261001T15 3600
+GET rate:user:42:20261001T15
+
+ZADD leaderboard:2026 1200 alice 1500 bob 1325 carol
+ZREVRANGE leaderboard:2026 0 2 WITHSCORES

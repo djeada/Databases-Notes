@@ -237,6 +237,14 @@ concurrency lessons directly in the same folder.
   python mongo/null_vs_missing_fields.py
   ```
 
+- **mongo/nosql_document_modeling.py**  
+  Builds product and order documents, demonstrates embedded line-item snapshots,
+  and shows that historical purchase price does not change when the current
+  product price changes.
+  ```bash
+  python mongo/nosql_document_modeling.py
+  ```
+
 ## Neo4j
 
 - **neo4j/merge_full_pattern_duplicates_nodes.py**  
@@ -251,6 +259,13 @@ concurrency lessons directly in the same folder.
   `DETACH DELETE` removes the node and its edges together.
   ```bash
   python neo4j/detach_delete_vs_delete.py
+  ```
+
+- **neo4j/nosql_traversal_demo.py**  
+  Creates a small customer/book recommendation graph and runs a two-hop
+  `FOLLOWS -> LIKES` traversal.
+  ```bash
+  python neo4j/nosql_traversal_demo.py
   ```
 
 ## SQL Server
@@ -307,6 +322,15 @@ Run the sample command file:
 cat demo.redis | docker exec -i redis-notes redis-cli
 ```
 
+Run the NoSQL key-design exercise:
+
+```bash
+cat nosql_key_design.redis | docker exec -i redis-notes redis-cli
+```
+
+It demonstrates namespaced keys, TTL, a cart hash, an idempotency key, an atomic
+rate counter, and a sorted-set leaderboard.
+
 Stop it with `docker compose down`. Use `docker compose down -v` only when
 you also want to delete the demo volume.
 
@@ -325,6 +349,15 @@ After the node is ready, load the query-shaped CQL example:
 ```bash
 docker exec -i cassandra-notes cqlsh < demo.cql
 ```
+
+Load the NoSQL time-bucketing exercise:
+
+```bash
+docker exec -i cassandra-notes cqlsh < nosql_bucketed_events.cql
+```
+
+The additional table uses `(customer_id, bucket_month)` as the partition key
+so one customer's event history does not grow in a single unbounded partition.
 
 The demo uses replication factor 1 because it is intentionally single-node;
 production Cassandra should use a redundant topology and topology-aware

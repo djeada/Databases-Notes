@@ -1,422 +1,617 @@
-# Querying NoSQL Databases
+# Querying NoSQL Databases: Query Shape Follows the Data Model
 
-Querying NoSQL databases requires a different approach compared to relational databases due to their diverse data models and storage mechanisms. This guide focuses on MongoDB, a popular NoSQL database, and explores how to query data effectively using its powerful query language.
+There is no universal NoSQL query language. A document database, key-value store, wide-column database, and graph database expose different query shapes because they organize data differently.
 
-## Introduction to MongoDB
+This note uses four concrete technologies already covered elsewhere in the repository:
 
-### Data Model
+- MongoDB for documents,
+- Redis for key/value and data structures,
+- Cassandra for wide-column query-first tables,
+- Neo4j for graphs.
 
-- MongoDB stores data in documents, which are JSON-like objects capable of containing nested documents and arrays.
-- Each document is stored within a collection, analogous to a table in relational databases.
-- The document model allows for complex data structures and offers flexibility in schema design.
+The goal is not to memorize syntax. It is to see how the **same business question changes when the data model changes**.
 
-**Example Document:**
+## One question, four models
+
+Suppose a bookstore needs several operations:
+
+1. load a product and its descriptive fields,
+2. load a shopping cart by user ID,
+3. read one customer's recent events,
+4. traverse from a customer through followed customers to books they like.
+
+Those operations naturally map to different query shapes.
+
+```text
+document    -> filter documents by fields
+key-value   -> compute key, then fetch/update value
+wide-column -> supply partition key, then range within partition
+graph       -> match/traverse relationship pattern
+```
+
+A relational database may still solve all four well enough. Specialized systems are useful when the workload justifies them.
+
+## MongoDB: query documents by fields
+
+Example product document:
 
 ```json
 {
-  "_id": ObjectId("507f1f77bcf86cd799439011"),
-  "name": "John Doe",
-  "age": 30,
-  "email": "john.doe@example.com",
-  "addresses": [
-    {
-      "street": "123 Main St",
-      "city": "Anytown",
-      "zip": "12345"
-    },
-    {
-      "street": "456 Elm St",
-      "city": "Othertown",
-      "zip": "67890"
+  "_id": "book-101",
+  "title": "Database Systems",
+  "price_cents": 4990,
+  "tags": ["database", "systems"],
+  "publisher": {
+    "name": "Example Press",
+    "country": "DE"
+  }
+}
+```
+
+Exact lookup:
+
+```javascript
+db.products.findOne({ _id: "book-101" })
+```
+
+Filter by nested field:
+
+```javascript
+db.products.find({
+  "publisher.country": "DE"
+})
+```
+
+Array membership:
+
+```javascript
+db.products.find({
+  tags: "database"
+})
+```
+
+MongoDB query syntax expresses predicates over document fields and arrays.
+
+## Projection
+
+Return only required fields:
+
+```javascript
+db.products.find(
+  { tags: "database" },
+  { title: 1, price_cents: 1 }
+)
+```
+
+Projection reduces network transfer and deserialization.
+
+## Comparison operators
+
+```javascript
+db.products.find({
+  price_cents: { $gte: 3000, $lt: 6000 }
+})
+```
+
+Common operators include equality, range, membership, and logical combinations.
+
+The exact index should follow the real filter/sort pattern.
+
+## Compound filters
+
+```javascript
+db.orders.find({
+  customer_id: "customer-42",
+  status: "open",
+  placed_at: {
+    $gte: ISODate("2026-10-01T00:00:00Z")
+  }
+})
+```
+
+This query suggests an index beginning with fields used for equality and range/sort according to the measured workload.
+
+## Sorting and limiting
+
+```javascript
+db.orders.find({
+  customer_id: "customer-42"
+})
+.sort({ placed_at: -1 })
+.limit(20)
+```
+
+A compound index such as:
+
+```javascript
+{ customer_id: 1, placed_at: -1 }
+```
+
+can support the access pattern.
+
+Verify with `explain()`.
+
+## Explain
+
+```javascript
+db.orders.find({
+  customer_id: "customer-42"
+})
+.sort({ placed_at: -1 })
+.explain("executionStats")
+```
+
+Inspect:
+
+- documents returned,
+- keys examined,
+- documents examined,
+- chosen index/scan stage.
+
+Do not treat an index name alone as proof of efficiency.
+
+## Aggregation pipeline
+
+MongoDB aggregation processes documents through stages.
+
+Example:
+
+```javascript
+db.orders.aggregate([
+  {
+    $match: {
+      status: "paid"
     }
+  },
+  {
+    $group: {
+      _id: "$customer_id",
+      orders: { $sum: 1 },
+      revenue_cents: { $sum: "$total_cents" }
+    }
+  },
+  {
+    $sort: {
+      revenue_cents: -1
+    }
+  }
+])
+```
+
+Conceptually:
+
+```text
+documents
+   |
+   v
+$match
+   |
+   v
+$group
+   |
+   v
+$sort
+```
+
+Aggregation pipelines are powerful, but broad analytical scans may belong in an analytical system when volume/workload requires it.
+
+## Embedded arrays
+
+Suppose an order embeds items:
+
+```json
+{
+  "_id": "order-1001",
+  "items": [
+    {"product_id": "book-101", "quantity": 1},
+    {"product_id": "book-205", "quantity": 2}
   ]
 }
 ```
 
-### Query Language
-
-- MongoDB uses a JSON-like syntax for queries, making it intuitive for developers familiar with JSON.
-- The query language provides a rich set of operators for filtering, projection, sorting, and aggregation.
-
-**Examples of Query Operators:**
-
-- `$eq`, `$ne`: Equal, Not Equal
-- `$gt`, `$gte`, `$lt`, `$lte`: Greater Than, Greater Than or Equal, Less Than, Less Than or Equal
-- `$in`, `$nin`: In, Not In
-- `$and`, `$or`, `$not`, `$nor`: Logical Operators
-
-## Basic Queries
-
-### Find
-
-- The `find` method retrieves documents from a collection that match specified filter criteria.
-- The syntax for `find` is `db.collection.find(query, projection)`, where `query` specifies selection criteria and `projection` determines the fields to include or exclude.
-
-**Example: Retrieve all users aged 25**
-
-**Sample Data in `users` Collection:**
-
-Suppose we have the following documents in our `users` collection:
+Find orders containing a product:
 
 ```javascript
-db.users.insertMany([
-  { _id: 1, name: "Alice", age: 25, email: "alice@example.com", city: "New York" },
-  { _id: 2, name: "Bob", age: 30, email: "bob@example.com", city: "Los Angeles" },
-  { _id: 3, name: "Carol", age: 25, email: "carol@example.com", city: "Chicago" },
-  { _id: 4, name: "Dave", age: 28, email: "dave@example.com", city: "New York" }
-])
-```
-
-**Code:**
-
-```javascript
-db.users.find({ age: 25 })
-```
-
-**Result:**
-
-```javascript
-{ "_id" : 1, "name" : "Alice", "age" : 25, "email" : "alice@example.com", "city" : "New York" }
-{ "_id" : 3, "name" : "Carol", "age" : 25, "email" : "carol@example.com", "city" : "Chicago" }
-```
-
-**Example with Projection: Retrieve users aged 25, but only show their names and emails**
-
-**Code:**
-
-```javascript
-db.users.find(
-  { age: 25 },
-  { name: 1, email: 1, _id: 0 }
-)
-```
-
-**Result:**
-
-```javascript
-{ "name" : "Alice", "email" : "alice@example.com" }
-{ "name" : "Carol", "email" : "carol@example.com" }
-```
-
-### Count
-
-- The `count` method returns the number of documents that match a query.
-- The syntax for `count` is `db.collection.countDocuments(query)`.
-
-**Example: Count the number of users aged 25**
-
-**Code:**
-
-```javascript
-db.users.countDocuments({ age: 25 })
-```
-
-**Result:**
-
-```
-2
-```
-
-### Distinct
-
-- The `distinct` method finds the unique values for a specified field across a collection.
-- The syntax for `distinct` is `db.collection.distinct(field, query)`.
-
-**Example: Get a list of unique cities where users aged 25 live**
-
-**Code:**
-
-```javascript
-db.users.distinct("city", { age: 25 })
-```
-
-**Result:**
-
-```javascript
-[ "New York", "Chicago" ]
-```
-
-## Advanced Queries
-
-### Aggregation
-
-- Aggregation operations process data records and return computed results.
-- MongoDB's aggregation framework provides an efficient way to perform data analysis using a pipeline of stages.
-
-**Syntax:**
-
-```javascript
-db.collection.aggregate(pipeline, options)
-```
-
-- The `pipeline` is an array of stages that process and transform the data.
-
-**Example: Group users by city and count the number of users in each city**
-
-**Sample Data:**
-
-Using the same `users` collection as before.
-
-**Code:**
-
-```javascript
-db.users.aggregate([
-  { $group: { _id: "$city", count: { $sum: 1 } } }
-])
-```
-
-**Result:**
-
-```javascript
-{ "_id" : "New York", "count" : 2 }
-{ "_id" : "Los Angeles", "count" : 1 }
-{ "_id" : "Chicago", "count" : 1 }
-```
-
-- The `$group` stage groups documents by the specified `_id` expression.
-- The `$sum: 1` increments the count by 1 for each document in the group.
-
-**Example: Calculate the average age of users in each city**
-
-**Code:**
-
-```javascript
-db.users.aggregate([
-  { $group: { _id: "$city", averageAge: { $avg: "$age" } } }
-])
-```
-
-**Result:**
-
-```javascript
-{ "_id" : "New York", "averageAge" : 26.5 }
-{ "_id" : "Los Angeles", "averageAge" : 30 }
-{ "_id" : "Chicago", "averageAge" : 25 }
-```
-
-### Text Search
-
-MongoDB supports text search through **text indexes**, allowing you to perform search operations on string content.
-
-**Sample Data in `articles` Collection:**
-
-```javascript
-db.articles.insertMany([
-  { _id: 1, title: "Introduction to MongoDB", content: "MongoDB is a NoSQL database." },
-  { _id: 2, title: "NoSQL Databases", content: "NoSQL databases are non-relational." },
-  { _id: 3, title: "Relational Databases", content: "SQL databases are relational." },
-  { _id: 4, title: "Advantages of NoSQL", content: "NoSQL databases like MongoDB are scalable." }
-])
-```
-
-**Creating a Text Index:**
-
-```javascript
-db.articles.createIndex({ content: "text" })
-```
-
-The syntax for text search is `db.collection.find({ $text: { $search: searchString } })`.
-
-**Example: Find articles that contain the word "NoSQL"**
-
-**Code:**
-
-```javascript
-db.articles.find({ $text: { $search: "NoSQL" } })
-```
-
-**Result:**
-
-```javascript
-{ "_id" : 1, "title" : "Introduction to MongoDB", "content" : "MongoDB is a NoSQL database." }
-{ "_id" : 2, "title" : "NoSQL Databases", "content" : "NoSQL databases are non-relational." }
-{ "_id" : 4, "title" : "Advantages of NoSQL", "content" : "NoSQL databases like MongoDB are scalable." }
-```
-
-**Advanced Text Search:**
-
-For **phrase** search, enclose the phrase in double quotes.
-
-**Example: Find articles containing the phrase "NoSQL databases"**
-
-**Code:**
-
-```javascript
-db.articles.find({ $text: { $search: "\"NoSQL databases\"" } })
-```
-
-**Result:**
-
-```javascript
-{ "_id" : 2, "title" : "NoSQL Databases", "content" : "NoSQL databases are non-relational." }
-{ "_id" : 4, "title" : "Advantages of NoSQL", "content" : "NoSQL databases like MongoDB are scalable." }
-```
-
-To **exclude** terms, use a minus sign before the word.
-
-**Example: Find articles that contain "NoSQL" but not "MongoDB"**
-
-**Code:**
-
-```javascript
-db.articles.find({ $text: { $search: "NoSQL -MongoDB" } })
-```
-
-**Result:**
-
-```javascript
-{ "_id" : 2, "title" : "NoSQL Databases", "content" : "NoSQL databases are non-relational." }
-```
-
-### Geospatial Queries
-
-- MongoDB provides powerful geospatial indexing and querying capabilities for location-based data.
-
-**Storing Location Data:**
-
-**Sample Data in `places` Collection:**
-
-```javascript
-db.places.insertMany([
-  {
-    _id: 1,
-    name: "Central Park",
-    location: {
-      type: "Point",
-      coordinates: [-73.9667, 40.78]
-    }
-  },
-  {
-    _id: 2,
-    name: "Times Square",
-    location: {
-      type: "Point",
-      coordinates: [-73.9855, 40.7580]
-    }
-  },
-  {
-    _id: 3,
-    name: "Empire State Building",
-    location: {
-      type: "Point",
-      coordinates: [-73.9857, 40.7484]
-    }
-  }
-])
-```
-
-**Creating a 2dsphere Index:**
-
-```javascript
-db.places.createIndex({ location: "2dsphere" })
-```
-
-The syntax for geospatial queries is:
-
-```javascript
-db.collection.find({
-  location: {
-    $near: {
-      $geometry: point,
-      $maxDistance: distance
-    }
-  }
+db.orders.find({
+  "items.product_id": "book-101"
 })
 ```
 
-**Example: Find places within 1,000 meters of Times Square**
+An array index can support the access pattern, with write/index-size cost.
 
-**Code:**
+## Missing versus null
 
-```javascript
-db.places.find({
-  location: {
-    $near: {
-      $geometry: {
-        type: "Point",
-        coordinates: [-73.9855, 40.7580]
-      },
-      $maxDistance: 1000  // distance in meters
-    }
-  }
-})
+Document queries may distinguish a missing field from an explicit null.
+
+The repository includes:
+
+[`scripts/mongo/null_vs_missing_fields.py`](../../scripts/mongo/null_vs_missing_fields.py)
+
+Run it against the local MongoDB setup to observe the difference.
+
+## Replacement versus partial update
+
+MongoDB provides both whole-document replacement and operator-based updates.
+
+Repository demo:
+
+[`scripts/mongo/replace_one_vs_update_one.py`](../../scripts/mongo/replace_one_vs_update_one.py)
+
+A replacement can remove fields not included in the new document. `$set` updates selected paths.
+
+## Document-modeling demo
+
+The NoSQL chapter adds:
+
+[`scripts/mongo/nosql_document_modeling.py`](../../scripts/mongo/nosql_document_modeling.py)
+
+It demonstrates an embedded order aggregate and shows that a historical purchase price remains unchanged after the current product price changes.
+
+Run:
+
+```bash
+cd scripts
+bash setup/start_mongo.sh
+cd ..
+python scripts/mongo/nosql_document_modeling.py
 ```
 
-**Result:**
+## Redis: compute the key first
 
-Assuming that the Empire State Building is within 1,000 meters of Times Square:
+A key-value query often begins in application code:
 
-```javascript
-{ "_id" : 2, "name" : "Times Square", "location" : { "type" : "Point", "coordinates" : [ -73.9855, 40.758 ] } }
-{ "_id" : 3, "name" : "Empire State Building", "location" : { "type" : "Point", "coordinates" : [ -73.9857, 40.7484 ] } }
+```text
+user ID = 42
+key = cart:user:42
 ```
 
-- The `$near` operator finds documents near a specified point.
-- The `$geometry` field defines the point with coordinates.
-- The `$maxDistance` sets the maximum distance from the point in meters.
+Then:
 
-## Indexing in MongoDB
-
-### Creating Indexes
-
-- Indexes support efficient query execution by limiting the number of documents that MongoDB needs to examine.
-- The syntax for creating an index is `db.collection.createIndex(keys, options)`, where `keys` specifies the field or fields to index.
-
-**Example: Create an index on the `age` field**
-
-```javascript
-db.users.createIndex({ age: 1 })
+```text
+HGETALL cart:user:42
 ```
 
-Use `1` for ascending order and `-1` for **descending** order.
+Unlike MongoDB, the normal operation is not:
 
-**Compound Indexes:**
+> search every cart document where customer_id = 42.
 
-Indexes can be created on multiple fields, known as compound indexes.
+The key already encodes the lookup.
 
- ```javascript
- db.users.createIndex({ age: 1, city: 1 })
- ```
+## Direct key lookup
 
-## Types of Indexes
-
-- **Single Field Indexes**: Indexes on a single field improve query performance on that field.
-- **Compound Indexes**: Indexes on multiple fields support queries that sort or filter on multiple fields.
-- **Multikey Indexes**: Indexes on array fields enable efficient querying of documents with array data.
-- **Text Indexes**: Indexes that enable text search functionality over string content.
-- **Geospatial Indexes**: Indexes that support geospatial queries for location data.
-
-## Index Usage
-
-Use the `explain()` method to understand how MongoDB executes a query and whether it utilizes an **index**.
-
-```javascript
-db.users.find({ age: 25 }).explain("executionStats")
+```text
+GET session:abc123
 ```
 
-- Analyze the output to check for `"stage": "IXSCAN"` to confirm index usage.
-- Check `"nReturned"` and `"totalKeysExamined"` for insights into query performance.
+This is the natural key-value access pattern.
 
-**Monitoring Indexes:**
+If an application repeatedly scans values to find matching properties, the model probably needs another maintained index or a different database.
 
-Use `db.collection.getIndexes()` to list all indexes on a collection.
+## Atomic update
 
-```javascript
-db.users.getIndexes()
+```text
+INCR page:home:views
 ```
 
-**Dropping Indexes:**
+A server-side atomic command avoids application read-modify-write races.
 
-Remove unnecessary indexes to optimize performance and reduce storage **overhead**.
+## Set membership
 
-```javascript
-db.users.dropIndex("age_1")
+```text
+SISMEMBER team:7:members 42
 ```
 
-## Review questions
+or:
 
-1. How does MongoDB's document model differ from traditional relational databases, and what advantages does it offer for schema design?
-2. What are the key differences between basic queries (like `find`, `countDocuments`, and `distinct`) and advanced queries (such as aggregation, text search, and geospatial queries) in MongoDB?
-3. How do indexing strategies in MongoDB, including single field, compound, multikey, text, and geospatial indexes, enhance query performance?
-4. What is the purpose of the `explain()` method in MongoDB, and how can it be used to analyze and optimize query execution plans?
-5. In what scenarios would you choose to use specific types of indexes (e.g., text indexes for search functionality or geospatial indexes for location-based queries) in MongoDB?
+```text
+SMEMBERS team:7:members
+```
+
+The data structure is part of the query model.
+
+## Sorted-set ranking
+
+```text
+ZREVRANGE leaderboard:2026 0 9 WITHSCORES
+```
+
+The store can answer rank-oriented queries because the value is modeled as a sorted set.
+
+## TTL
+
+```text
+SET session:abc123 "user=42" EX 3600
+```
+
+Expiration is part of the operation.
+
+Query:
+
+```text
+TTL session:abc123
+```
+
+## Redis NoSQL exercise
+
+Run:
+
+```bash
+cd scripts/redis
+docker compose up -d
+cat nosql_key_design.redis | docker exec -i redis-notes redis-cli
+```
+
+The file demonstrates namespaced keys, TTL, a cart hash, idempotency state, an atomic rate counter, and a sorted-set leaderboard.
+
+## Cassandra: query the partition you designed
+
+Wide-column querying is intentionally constrained by primary-key shape.
+
+Table:
+
+```sql
+CREATE TABLE events_by_customer_month (
+    customer_id text,
+    bucket_month text,
+    event_time timestamp,
+    event_id uuid,
+    event_type text,
+    payload text,
+    PRIMARY KEY (
+        (customer_id, bucket_month),
+        event_time,
+        event_id
+    )
+) WITH CLUSTERING ORDER BY (event_time DESC);
+```
+
+Natural query:
+
+```sql
+SELECT *
+FROM events_by_customer_month
+WHERE customer_id = 'customer-42'
+  AND bucket_month = '2026-10'
+LIMIT 50;
+```
+
+The full partition key is known.
+
+## Clustering range
+
+Because `event_time` is a clustering column:
+
+```sql
+SELECT *
+FROM events_by_customer_month
+WHERE customer_id = 'customer-42'
+  AND bucket_month = '2026-10'
+  AND event_time >= '2026-10-01T00:00:00Z'
+  AND event_time <  '2026-10-02T00:00:00Z';
+```
+
+This is query-first modeling: the table was built for that operation.
+
+## Why arbitrary filtering is different
+
+A request such as:
+
+```text
+find every event in the cluster whose payload contains "database"
+```
+
+does not match the partition model.
+
+A search engine, analytical system, dedicated query table, or supported secondary indexing feature may be more appropriate.
+
+## Cassandra NoSQL exercise
+
+Start Cassandra and load the bucketed table:
+
+```bash
+cd scripts/cassandra
+docker compose up -d
+docker exec -i cassandra-notes cqlsh < nosql_bucketed_events.cql
+```
+
+The demo shows the same customer's September and October events in separate partitions.
+
+## Neo4j: query a relationship pattern
+
+Graph query:
+
+```cypher
+MATCH (:Customer {customer_id: 42})
+      -[:FOLLOWS]->(:Customer)
+      -[:LIKES]->(book:Book)
+RETURN DISTINCT book.book_id, book.title
+ORDER BY book.book_id;
+```
+
+The query expresses a path rather than joins assembled from foreign-key tables.
+
+## Start-node lookup matters
+
+A graph traversal usually begins from a selective node:
+
+```text
+Customer.customer_id = 42
+```
+
+Use an index/uniqueness constraint for stable identifiers where appropriate.
+
+Then the engine follows relationships.
+
+## Variable-depth path
+
+```cypher
+MATCH p =
+  (:Customer {customer_id: 42})
+  -[:FOLLOWS*1..3]->
+  (:Customer)
+RETURN p;
+```
+
+Always consider fan-out. A small depth in a high-degree graph can visit many candidates.
+
+## Neo4j NoSQL exercise
+
+Run:
+
+```bash
+cd scripts
+bash setup/start_neo4j.sh
+cd ..
+python scripts/neo4j/nosql_traversal_demo.py
+```
+
+It creates a small recommendation graph and executes the two-hop traversal.
+
+## Same requirement, different query
+
+Requirement:
+
+> Retrieve the state for customer 42.
+
+Possible representations:
+
+### Document
+
+```javascript
+db.customers.findOne({ _id: "customer-42" })
+```
+
+### Key-value
+
+```text
+GET customer:42
+```
+
+### Wide-column
+
+```sql
+SELECT *
+FROM customer_state
+WHERE customer_id = 'customer-42';
+```
+
+### Graph
+
+```cypher
+MATCH (c:Customer {customer_id: 42})
+RETURN c;
+```
+
+The syntax differs, but the deeper difference is how the store expects data to be addressed and what surrounding operations are cheap.
+
+## Cross-entity query
+
+Requirement:
+
+> List every customer who bought product DB-101 last year and currently follows an author of that product.
+
+This combines:
+
+- historical orders,
+- product relationships,
+- current social/author graph.
+
+Trying to make one specialized NoSQL model perfect for every part may be worse than using:
+
+- a transactional source,
+- an analytical projection,
+- a graph projection.
+
+This is where polyglot persistence can emerge from actual requirements.
+
+## Pagination
+
+Every model needs pagination appropriate to its access pattern.
+
+Avoid deep offset pagination when the database has to skip enormous result sets.
+
+Prefer stable cursors/keysets when supported:
+
+```text
+last_seen_time
+last_seen_id
+```
+
+For Cassandra-style partitions, clustering-key continuation is natural.
+
+For graphs, paginate final result sets rather than unbounded path expansion.
+
+## Parameterization and injection
+
+NoSQL query APIs can also be abused if applications build executable query structures directly from untrusted input.
+
+Defenses include:
+
+- use typed driver APIs,
+- do not accept arbitrary operators/query documents,
+- allowlist dynamic field/sort choices,
+- validate IDs and limits,
+- use least-privilege database credentials.
+
+"No SQL text" does not mean "no injection risk."
+
+## Query plans and profiling
+
+Use each engine's tools:
+
+- MongoDB `explain()`,
+- Redis latency/command metrics,
+- Cassandra tracing/metrics cautiously,
+- Neo4j `EXPLAIN` / `PROFILE`.
+
+The goal is always the same:
+
+1. determine how much data/work the operation touches,
+2. compare that to the intended access pattern,
+3. remove unnecessary fan-out/scans.
+
+## Do not compare syntax alone
+
+A short query is not automatically fast.
+
+For example:
+
+```text
+GET key
+```
+
+is cheap because the key is known.
+
+A MongoDB filter can be cheap with the right index.
+
+A Cassandra query can be cheap because it targets one partition.
+
+A Cypher pattern can be cheap when it begins from one indexed node and traverses bounded relationships.
+
+Performance comes from alignment between model, physical layout, and access pattern.
+
+## Query-design checklist
+
+For each query:
+
+1. What identity/partition/start node is known?
+2. How many records/keys/edges can it touch?
+3. What ordering is required?
+4. What index or data structure supports it?
+5. Can the result grow without bound?
+6. What projection/fields are actually needed?
+7. What consistency/freshness is required?
+8. How is pagination handled?
+9. Can untrusted input alter query structure?
+10. What planner/metrics prove the operation is efficient?
+
+## Related notes
+
+- [NoSQL introduction](01_nosql_databases_intro.md)
+- [Types of NoSQL databases](02_types_of_nosql_databases.md)
+- [CRUD in SQL vs NoSQL](04_crud_in_sql_vs_nosql.md)
+- [Document modeling](05_document_modeling.md)
+- [Key-value modeling](06_key_value_modeling.md)
+- [Wide-column modeling](07_wide_column_modeling.md)
+- [Graph modeling](08_graph_modeling.md)
+- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)

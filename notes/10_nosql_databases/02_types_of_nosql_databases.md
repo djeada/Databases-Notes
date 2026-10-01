@@ -1,6 +1,6 @@
 # Types of NoSQL Databases
 
-NoSQL databases are categorized based on their data models, each addressing different requirements and use cases by providing unique advantages in handling specific kinds of data and workloads. Unlike traditional relational databases, NoSQL databases offer flexibility, scalability, and performance benefits tailored to modern application needs.
+NoSQL databases are commonly grouped by data model: key-value, document, wide-column, and graph. These categories describe how data is represented and accessed; they do **not** by themselves guarantee horizontal scalability, eventual consistency, low latency, or schema flexibility. Those properties depend on the specific product, deployment, indexes, workload, and consistency settings.
 
 The main types of NoSQL databases are:
 
@@ -15,7 +15,7 @@ Key-value stores manage data as a collection of key-value pairs, where the key i
 
 - The data model uses simple key-value pairs, where each key is unique within the dataset.
 - Performance is characterized by simple and fast data access, enabling rapid retrieval and storage operations.
-- Key-value stores are highly scalable and distributed, allowing seamless expansion across multiple servers or nodes without significant performance degradation.
+- Many key-value systems can distribute keys across nodes, but scaling behavior depends on key distribution, hot keys, replication, network cost, and the implementation.
 - Operations are optimized for read and write operations, making them ideal for scenarios requiring high-throughput and low-latency access.
 - The simplicity of the key-value model reduces the complexity of data management, making it easier to implement and maintain.
 
@@ -275,9 +275,20 @@ NoSQL databases offer a range of characteristics that make them suitable for mod
 - They are designed for horizontal scalability, allowing the system to scale out across multiple servers or nodes, accommodating growing data volumes and increasing traffic without significant performance degradation.
 - NoSQL systems achieve high availability through built-in replication and fault tolerance mechanisms, with data often replicated across multiple nodes or data centers to ensure minimal downtime and data loss in case of failures.
 - They utilize a distributed architecture that partitions and distributes data across multiple nodes or servers, enhancing performance, reliability, and scalability by balancing the load and minimizing bottlenecks.
-- NoSQL databases often provide eventual consistency, prioritizing availability and partition tolerance over immediate consistency, ensuring that all replicas will eventually converge to the same state, which is suitable for applications where real-time consistency is not critical.
+- Replication and consistency guarantees vary by product. Some NoSQL systems expose eventual or tunable consistency, while others provide strongly consistent or transactional operations for defined scopes.
 - They optimize for specific workloads, such as read-heavy, write-heavy, or mixed operations, ensuring efficient data processing and retrieval tailored to application needs.
 - NoSQL databases support a variety of data models (key-value, document, column-family, graph), allowing developers to choose the most appropriate model based on the application's requirements and data characteristics.
 - They provide developer-friendly APIs, often supporting multiple programming languages and offering features like RESTful interfaces, making integration and development easier.
 - NoSQL systems are typically cost-effective, leveraging commodity hardware and open-source technologies, reducing infrastructure costs and providing scalable solutions without the need for expensive proprietary systems.
 - They benefit from an active community and extensive ecosystems, offering a wealth of tools, libraries, and resources that facilitate development, deployment, and management of NoSQL databases.
+
+
+## Focused modeling notes
+
+The model categories above become useful only when connected to concrete access patterns:
+
+- [Document modeling](05_document_modeling.md) — embedding, references, bounded aggregates, schema evolution.
+- [Key-value modeling](06_key_value_modeling.md) — key design, TTL, caching, atomic operations, hotspots.
+- [Wide-column modeling](07_wide_column_modeling.md) — query-first tables, partition keys, bucketing, denormalization.
+- [Graph modeling](08_graph_modeling.md) — nodes, relationships, traversal depth, supernodes, projections.
+- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md) — guarantees that are separate from the data model.

@@ -2,11 +2,13 @@
 
 Comparing common CRUD operations in SQL (relational databases) and MongoDB (a NoSQL document store) provides valuable insights into the differences between relational and non-relational databases. Understanding these differences is crucial for developers and database administrators when designing and implementing data storage solutions tailored to specific application requirements.
 
+> **Scope:** this page compares a conventional relational table model with MongoDB's document model. It is not a comparison between every SQL database and every NoSQL system. Redis, Cassandra, and Neo4j expose different data models and operations; see the multi-model [querying guide](03_querying_nosql_databases.md).
+
 ## Overview
 
 - **CRUD** stands for Create, Read, Update, and Delete, which are the four basic operations for data manipulation. These operations form the foundation of interacting with databases, enabling users to manage and manipulate data effectively.
-- In SQL (Structured Query Language) databases, data is organized in tables with fixed schemas. This means that each table has a predefined structure, and all records within the table adhere to this structure. This rigidity ensures data integrity and consistency, making SQL databases ideal for applications requiring complex transactions and reliable data consistency.
-- **MongoDB**, on the other hand, is a NoSQL (Not Only SQL) document store that stores data in flexible, JSON-like documents. This flexibility allows for varying structures within the same collection, enabling developers to iterate quickly and handle unstructured or semi-structured data more efficiently. MongoDB is well-suited for applications that require scalability and rapid development cycles.
+- In a relational database, data is organized into tables with declared columns, types, and constraints. Schema changes are explicit, while modern relational engines can also support JSON and other flexible data types. Integrity and transaction guarantees depend on the schema, engine, and transaction design rather than on SQL syntax alone.
+- **MongoDB** stores BSON documents that can contain nested objects and arrays. Documents in one collection can vary in shape, although applications commonly impose a schema and MongoDB can enforce validation rules. Its suitability depends on document access patterns, indexes, transaction requirements, and operational constraints.
 
 ## CRUD Operations Comparison
 
@@ -289,3 +291,13 @@ XVI. SQL databases frequently carry out *partitioning* strategies to handle vast
 - What are the SQL and MongoDB syntax and methods for performing Create, Read, Update, and Delete operations?
 - What are the differences between performing CRUD operations in SQL and MongoDB, particularly regarding schema flexibility and data relationships?
 - When should you choose a SQL database over MongoDB, and vice versa, based on application requirements and data integrity needs?
+
+
+## Related modeling notes
+
+- [Querying NoSQL databases](03_querying_nosql_databases.md)
+- [Document modeling](05_document_modeling.md)
+- [Key-value modeling](06_key_value_modeling.md)
+- [Wide-column modeling](07_wide_column_modeling.md)
+- [Graph modeling](08_graph_modeling.md)
+- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)

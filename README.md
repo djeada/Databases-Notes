@@ -133,10 +133,16 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ### 10. NoSQL Databases
 
-- [NoSQL Introduction](notes/10_nosql_databases/01_nosql_databases_intro.md) — Non-relational database concepts.
-- [NoSQL Types](notes/10_nosql_databases/02_types_of_nosql_databases.md) — Key-value, document, column, graph stores.
-- [Querying NoSQL](notes/10_nosql_databases/03_querying_nosql_databases.md) — Query techniques for non-relational DBs.
-- [CRUD: SQL vs NoSQL](notes/10_nosql_databases/04_crud_in_sql_vs_nosql.md) — Comparing operations across paradigms.
+- [NoSQL Introduction](notes/10_nosql_databases/01_nosql_databases_intro.md) — Choose models from access patterns rather than the NoSQL label.
+- [NoSQL Types](notes/10_nosql_databases/02_types_of_nosql_databases.md) — Key-value, document, wide-column, and graph model overview.
+- [Querying NoSQL](notes/10_nosql_databases/03_querying_nosql_databases.md) — Compare MongoDB, Redis, Cassandra, and Neo4j query shapes with runnable examples.
+- [CRUD: SQL vs NoSQL](notes/10_nosql_databases/04_crud_in_sql_vs_nosql.md) — Compare relational CRUD with MongoDB document operations.
+- [Document Modeling](notes/10_nosql_databases/05_document_modeling.md) — Embedding vs references, bounded aggregates, schema evolution, indexes, and concurrency.
+- [Key-Value Modeling](notes/10_nosql_databases/06_key_value_modeling.md) — Key design, TTLs, caching, atomic commands, idempotency, and hotspots.
+- [Wide-Column Modeling](notes/10_nosql_databases/07_wide_column_modeling.md) — Query-first tables, partition keys, clustering, bucketing, denormalization, and tombstones.
+- [Graph Modeling](notes/10_nosql_databases/08_graph_modeling.md) — Nodes, relationships, path traversal, supernodes, graph projections, and Cypher.
+- [Consistency, Transactions & Replication](notes/10_nosql_databases/09_consistency_transactions_and_replication.md) — Atomicity boundaries, replication, quorums, conflicts, retries, and multi-region trade-offs.
+- [Operating NoSQL & Polyglot Persistence](notes/10_nosql_databases/10_operating_nosql_and_polyglot_persistence.md) — Source-of-truth design, CDC/projections, backups, capacity, observability, and operational ownership.
 
 ### 11. Database Security and Best Practices
 

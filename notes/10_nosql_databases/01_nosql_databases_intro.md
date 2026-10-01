@@ -83,4 +83,4 @@ Use representative data and skew. Examine the difficult case as well as the happ
 3. Why does an embedded current customer name create a different maintenance problem from a historical billing name?
 4. Which guarantees remain undecided after choosing a document database?
 
-Next: [types of NoSQL databases](02_types_of_nosql_databases.md), then [querying NoSQL](03_querying_nosql_databases.md) and [CRUD comparisons](04_crud_in_sql_vs_nosql.md).
+Continue with [types of NoSQL databases](02_types_of_nosql_databases.md) and the multi-model [querying guide](03_querying_nosql_databases.md). Then go deeper into [document](05_document_modeling.md), [key-value](06_key_value_modeling.md), [wide-column](07_wide_column_modeling.md), and [graph](08_graph_modeling.md) modeling before reviewing [consistency and replication](09_consistency_transactions_and_replication.md) and [production/polyglot operation](10_operating_nosql_and_polyglot_persistence.md).
