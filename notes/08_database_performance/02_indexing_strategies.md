@@ -205,7 +205,7 @@ Effective indexing improves query performance while managing resource costs.
 
 ### Monitor and Maintain Indexes
 
-- Fragmentation over time reduces performance, making it useful to rebuild indexes periodically.
+- Index maintenance is engine- and workload-specific. Rebuild or reorganize an index only when measured bloat, corruption, page-layout behavior, or vendor guidance justifies it; routine rebuilds can create substantial I/O and locking without improving the workload.
 - Keeping database statistics updated is important for the query optimizer to make informed decisions.
 - Excessive indexing should be avoided, as it can degrade performance of write-intensive operations such as INSERT, UPDATE, and DELETE.
 
@@ -220,3 +220,31 @@ Effective indexing improves query performance while managing resource costs.
 - Developing indexes in a controlled environment allows for testing their impact on query performance without affecting production systems.
 - Query execution can be analyzed using EXPLAIN plans to ensure indexes are being utilized effectively.
 - Continuous monitoring after deployment helps identify any unexpected impacts, enabling further adjustments as needed.
+
+
+## Performance cost of an index
+
+An index moves work rather than making it disappear.
+
+~~~text
+faster matching reads
+        vs
+more storage + more write maintenance
+~~~
+
+Every INSERT may need new index entries. Updating an indexed column may require index maintenance, and extra indexes consume cache space. Measure both read savings and write cost.
+
+The repository includes a runnable local demonstration:
+
+~~~bash
+python scripts/performance/sqlite_index_write_cost_demo.py
+~~~
+
+It inserts the same synthetic workload into a minimally indexed SQLite database and one with several secondary indexes, then compares local elapsed time and file size. The exact numbers are machine-specific; the lesson is that each index has ongoing cost.
+
+## Related notes
+
+- [Execution plans, statistics, and cardinality](07_execution_plans_statistics_and_cardinality.md)
+- [Write performance, vacuum, and bloat](12_write_performance_vacuum_and_bloat.md)
+- [Query optimization](01_query_optimization_techniques.md)
+- [Database indexing internals](../05_storage_and_indexing/05_indexing.md)
