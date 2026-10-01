@@ -8,6 +8,38 @@ Database security encompasses a comprehensive set of measures designed to protec
 - Integrity involves maintaining the accuracy, consistency, and trustworthiness of data throughout its lifecycle to prevent corruption or unauthorized modifications.
 - Availability guarantees that authorized users have reliable and timely access to data and database services whenever needed, ensuring operational continuity.
 
+## Security control map
+
+Database security is easier to reason about as layers:
+
+```text
+identity
+  │
+  ▼
+authentication
+  │
+  ▼
+authorization / least privilege
+  │
+  ▼
+network + TLS
+  │
+  ▼
+database configuration / hardening
+  │
+  ▼
+encryption + secret management
+  │
+  ▼
+auditing + monitoring
+  │
+  ▼
+backup + incident recovery
+```
+
+This note gives the broad overview. The later focused notes turn each layer into
+concrete PostgreSQL examples, operational checklists, and failure scenarios.
+
 ## Authentication
 
 Authentication is the process of verifying the identity of a user or system before granting access to resources. Effective authentication mechanisms are the first line of defense against unauthorized access and are crucial for maintaining database security.
@@ -343,3 +375,14 @@ V. Establishing an Incident Response Plan
 - A detailed preparation plan outlines clear steps for responding to security incidents to minimize downtime and damage.
 - Defining roles and responsibilities ensures team members know their tasks and decision-making authority during an incident.
 - Effective communication protocols include internal and external strategies to address stakeholders, customers, and authorities efficiently.
+
+
+## Related focused notes
+
+- [Identity, authentication, and access control](08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
+- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
+- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [SQL injection](06_sql_injection.md)
+- [Backup and recovery](01_backup_and_recovery_strategies.md)
