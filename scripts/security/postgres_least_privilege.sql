@@ -2,10 +2,41 @@
 
 DROP SCHEMA IF EXISTS security_demo CASCADE;
 
-DROP ROLE IF EXISTS security_demo_reader_login;
-DROP ROLE IF EXISTS security_demo_writer_login;
-DROP ROLE IF EXISTS security_demo_read;
-DROP ROLE IF EXISTS security_demo_write;
+DO $
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM pg_roles
+        WHERE rolname = 'security_demo_reader_login'
+    ) THEN
+        EXECUTE 'DROP OWNED BY security_demo_reader_login';
+        EXECUTE 'DROP ROLE security_demo_reader_login';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM pg_roles
+        WHERE rolname = 'security_demo_writer_login'
+    ) THEN
+        EXECUTE 'DROP OWNED BY security_demo_writer_login';
+        EXECUTE 'DROP ROLE security_demo_writer_login';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM pg_roles
+        WHERE rolname = 'security_demo_read'
+    ) THEN
+        EXECUTE 'DROP OWNED BY security_demo_read';
+        EXECUTE 'DROP ROLE security_demo_read';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1 FROM pg_roles
+        WHERE rolname = 'security_demo_write'
+    ) THEN
+        EXECUTE 'DROP OWNED BY security_demo_write';
+        EXECUTE 'DROP ROLE security_demo_write';
+    END IF;
+END;
+$;
 
 CREATE ROLE security_demo_read NOLOGIN;
 CREATE ROLE security_demo_write NOLOGIN;
