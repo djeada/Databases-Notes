@@ -140,13 +140,18 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ### 11. Database Security and Best Practices
 
-- [Backup & Recovery](notes/11_security_best_practices/01_backup_and_recovery_strategies.md) — Strategies for data protection.
-- [Database Security](notes/11_security_best_practices/02_database_security.md) — Protecting data integrity and access.
-- [Capacity Planning](notes/11_security_best_practices/03_capacity_planning.md) — Predicting and managing growth.
-- [Database Migration](notes/11_security_best_practices/04_database_migration.md) — Moving databases between environments.
-- [Performance Monitoring](notes/11_security_best_practices/05_performance_monitoring_and_tuning.md) — Observing and optimizing performance.
-- [SQL Injection](notes/11_security_best_practices/06_sql_injection.md) — Understanding and preventing SQL injection.
-- [Crash Recovery](notes/11_security_best_practices/07_crash_recovery_in_databases.md) — Database crash recovery mechanisms.
+- [Backup & Recovery](notes/11_security_best_practices/01_backup_and_recovery_strategies.md) — Backup types, RPO/RTO, point-in-time recovery, restore validation, and recovery planning.
+- [Database Security](notes/11_security_best_practices/02_database_security.md) — Defense-in-depth overview across identity, networks, data, monitoring, and operations.
+- [Capacity Planning](notes/11_security_best_practices/03_capacity_planning.md) — Workload growth, resource forecasting, headroom, scaling, and cost.
+- [Database Migration](notes/11_security_best_practices/04_database_migration.md) — Moving schemas/data safely with validation, synchronization, rollback, and decommissioning.
+- [Performance Monitoring & Tuning](notes/11_security_best_practices/05_performance_monitoring_and_tuning.md) — SLOs, query plans, waits, connections, indexes, storage, replication lag, and measured tuning.
+- [SQL Injection](notes/11_security_best_practices/06_sql_injection.md) — Parameter binding, safe dynamic SQL, ORM/raw-query pitfalls, testing, and least-privilege containment.
+- [Crash Recovery](notes/11_security_best_practices/07_crash_recovery_in_databases.md) — WAL/redo, checkpoints, recovery, and durability after process or host failure.
+- [Identity, Authentication & Access Control](notes/11_security_best_practices/08_identity_authentication_and_access_control.md) — Roles, least privilege, workload identities, RLS, service accounts, and privilege reviews.
+- [Encryption, Secrets & Key Management](notes/11_security_best_practices/09_encryption_secrets_and_key_management.md) — TLS, encryption at rest/in the application, password hashing, KMS, rotation, and secret injection.
+- [Auditing, Compliance & Data Governance](notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md) — Audit layers, data classification, retention, masking, log integrity, and governance evidence.
+- [Database Hardening & Patch Management](notes/11_security_best_practices/11_database_hardening_and_patch_management.md) — Network/host/container hardening, supported versions, patching, baselines, and resource limits.
+- [Incident Response & DR Drills](notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md) — Containment, evidence, failover versus restore, RPO/RTO, restore tests, tabletops, and game days.
 
 ### 12. Database Engines
 
