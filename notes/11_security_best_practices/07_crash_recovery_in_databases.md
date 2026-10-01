@@ -198,6 +198,35 @@ the database   | (Buffer Pool)   |
 - A checkpoint flushes the current in-memory state of data to disk and records this action in the WAL.
 - After a crash, the database replays committed transactions from the WAL and ignores uncommitted changes.
 
+## Crash recovery is not backup recovery
+
+Crash recovery normally uses local database mechanisms such as WAL/redo to make
+the existing database files consistent after an abrupt stop.
+
+Backup recovery handles a different class of failure:
+
+```text
+process/host crash
+    │
+    └──► WAL/redo crash recovery
+
+accidental delete / lost disk / corrupted environment
+    │
+    └──► backup + archived log recovery
+```
+
+Replication is different again: it improves availability, but can replicate a
+bad delete or corrupt application change.
+
+Production resilience therefore combines:
+
+- crash recovery,
+- replication/failover where required,
+- independent backups,
+- tested restores.
+
+See the incident/DR note for a runnable restore drill and failure exercises.
+
 ## Best Practices
 
 I. Find the right interval to minimize both I/O spikes and recovery time.
@@ -217,3 +246,10 @@ V. Validate recovery settings in staging environments to confirm that the databa
 - What is the role of checkpointing in the crash recovery process?
 - What are the main steps a database follows during crash recovery after a system restart?
 - What are the benefits and trade-offs associated with WAL-based recovery mechanisms?
+
+
+## Related notes
+
+- [Backup and recovery](01_backup_and_recovery_strategies.md)
+- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)
