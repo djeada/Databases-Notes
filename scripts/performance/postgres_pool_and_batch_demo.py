@@ -123,6 +123,9 @@ def measure_pool_checkouts(
             with connection.cursor() as cursor:
                 cursor.execute("SELECT 1")
                 cursor.fetchone()
+            # SELECT starts a transaction with psycopg2 defaults.
+            # End it before returning the session to the pool.
+            connection.rollback()
         finally:
             connection_pool.putconn(connection)
     return time.perf_counter() - started
