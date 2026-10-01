@@ -116,13 +116,18 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ### 8. Database Performance and Optimization
 
-- [Query Optimization](notes/08_database_performance/01_query_optimization_techniques.md) — Enhancing query efficiency.
-- [Indexing Strategies](notes/08_database_performance/02_indexing_strategies.md) — Using indexes for better performance.
-- [Database Caching](notes/08_database_performance/03_database_caching.md) — Improving retrieval times with cache.
-- [Materialized Views](notes/08_database_performance/04_materialized_views.md) — Precomputed views for faster access.
-- [Database Access in Code](notes/08_database_performance/05_accessing_database_in_code.md) — Best practices for application integration.
-
-- [Working with a Billion-Row Table](notes/08_database_performance/06_working_with_billion_row_table.md) — Planning storage, queries, and maintenance at scale.
+- [Query Optimization](notes/08_database_performance/01_query_optimization_techniques.md) — Diagnose and reduce unnecessary query work with measured plans.
+- [Indexing Strategies](notes/08_database_performance/02_indexing_strategies.md) — Choose index access methods while accounting for write and maintenance cost.
+- [Database Caching](notes/08_database_performance/03_database_caching.md) — Reuse application results with explicit freshness and invalidation.
+- [Materialized Views](notes/08_database_performance/04_materialized_views.md) — Precompute expensive reusable results with explicit refresh and staleness rules.
+- [Database Access in Code](notes/08_database_performance/05_accessing_database_in_code.md) — Efficient drivers, transactions, parameters, streaming, timeouts, and retries.
+- [Working with a Billion-Row Table](notes/08_database_performance/06_working_with_billion_row_table.md) — Workload-driven strategies for very large tables.
+- [Execution Plans, Statistics & Cardinality](notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md) — Read plans, diagnose estimate errors, skew, joins, sorts, and access paths.
+- [Connection Pooling, Batching & N+1](notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md) — Reduce setup and round-trip overhead while bounding concurrency.
+- [Pagination & Large Result Sets](notes/08_database_performance/09_pagination_and_large_result_sets.md) — Offset vs keyset pagination, projection, streaming, and stable cursors.
+- [Partitioning, Sharding & Data Locality](notes/08_database_performance/10_partitioning_sharding_and_data_locality.md) — Pruning, shard keys, hotspots, cross-shard work, and locality.
+- [Benchmarking, Load Testing & Capacity](notes/08_database_performance/11_benchmarking_load_testing_and_capacity.md) — Build representative workloads, find saturation, and plan headroom.
+- [Write Performance, Vacuum & Bloat](notes/08_database_performance/12_write_performance_vacuum_and_bloat.md) — Understand index write cost, MVCC cleanup, WAL, maintenance, and backfills.
 
 ### 9. Database Replication
 

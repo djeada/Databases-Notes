@@ -14,6 +14,7 @@ This directory groups database-specific demos under engine-specific folders:
 - `clickhouse/`
 - `cockroach/`
 - `security/`
+- `performance/`
 - `big_data/`
 - `orm/`
 
@@ -86,6 +87,7 @@ scripts/
 ├── clickhouse/
 ├── cockroach/
 ├── security/
+├── performance/
 ├── big_data/
 ├── orm/
 ├── diagrams/
@@ -426,6 +428,38 @@ docker exec -i cockroach-notes \
 The `--insecure` single-node setup is for learning only; it does not represent
 a production distributed SQL topology.
 
+## Performance
+
+The `performance/` examples use synthetic data and print local measurements.
+They are teaching exercises, **not** standardized cross-database benchmarks.
+
+- **performance/sqlite_query_plan_demo.py** - Creates a synthetic order table,
+  prints SQLite's plan before and after a composite index, and compares repeated
+  lookup time.
+  ```bash
+  python performance/sqlite_query_plan_demo.py
+  ```
+
+- **performance/sqlite_pagination_demo.py** - Compares a deep OFFSET page with
+  keyset continuation over the same indexed synthetic event table.
+  ```bash
+  python performance/sqlite_pagination_demo.py
+  ```
+
+- **performance/sqlite_index_write_cost_demo.py** - Inserts the same workload
+  into minimally indexed and multiply indexed SQLite databases, then reports
+  elapsed insert time and file size.
+  ```bash
+  python performance/sqlite_index_write_cost_demo.py
+  ```
+
+- **performance/postgres_pool_and_batch_demo.py** - Uses the local PostgreSQL
+  setup to compare repeated single-row execute calls with batched
+  `execute_values()`, and compares new connections with pooled checkout.
+  ```bash
+  python performance/postgres_pool_and_batch_demo.py
+  ```
+
 ## Security and Operations
 
 The `security/` examples use synthetic/local data and are designed for safe
@@ -596,5 +630,6 @@ SQLite locking works.
 1. Put engine-specific examples in their matching folders (`sqlite/`, `mysql/`, `postgres/`, `mongo/`, `neo4j/`, `sqlserver/`, `redis/`, `cassandra/`, `opensearch/`, `clickhouse/`, or `cockroach/`).
 2. Keep engine-specific concurrency examples in the matching engine folder.
 3. Use `security/` for cross-engine security and operational exercises.
-4. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
-5. Update this README when you add, move, or remove a script.
+4. Use `performance/` for cross-engine/local performance measurement exercises.
+5. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
+6. Update this README when you add, move, or remove a script.
