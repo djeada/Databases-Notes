@@ -46,24 +46,42 @@ Authentication is the process of verifying the identity of a user or system befo
 
 ### User Authentication
 
-#### Strong Password Policies
+#### Password Policy
 
-Implementing robust password policies helps protect against unauthorized access due to weak or compromised passwords.
+Password policy should prioritize resistance to guessing and credential reuse
+without forcing users into predictable patterns.
 
-- Enforcing complexity requirements ensures passwords include a mix of uppercase and lowercase letters, numbers, and special characters, enhancing resistance to attacks.
-- Setting a minimum password length, such as 12 characters, increases the difficulty of brute-force attacks, adding an additional layer of security.
-- Regular password expiration policies require users to change passwords periodically, such as every 60 or 90 days, to limit the time frame in which stolen credentials can be exploited.
-- Maintaining a password history prevents users from reusing old passwords, which can reduce the effectiveness of password rotation policies.
-- Implementing account lockout policies locks accounts after a defined number of failed login attempts, such as five, to mitigate the risk of automated brute-force attacks.
+For human users:
 
-**Example Configuration in PostgreSQL:**
+- Prefer long passwords or passphrases.
+- Reject commonly used or known-compromised passwords.
+- Allow password managers and paste.
+- Rate-limit failed authentication attempts.
+- Use MFA for higher-risk access.
+- Do not require arbitrary periodic password changes unless organizational
+  policy or evidence of compromise requires a change.
+- Avoid composition rules that merely force predictable uppercase/digit/symbol
+  substitutions.
+
+This matches the direction of the current
+[NIST SP 800-63B implementation guidance](https://pages.nist.gov/800-63-4-Implementation-Resources/faqs/).
+
+Service/database credentials are a different category. Prefer randomly generated
+secrets, short-lived workload credentials where supported, a secret manager,
+and tested rotation.
+
+PostgreSQL can set an expiry for a login when that is part of the credential
+lifecycle:
 
 ```sql
--- Create a role with a complex password and set an expiration date
-CREATE ROLE username WITH LOGIN PASSWORD 'C0mpl3xP@ssw0rd!' VALID UNTIL '2024-12-31';
+CREATE ROLE reporting_login
+WITH LOGIN
+PASSWORD 'local-demo-only'
+VALID UNTIL '2026-12-31 23:59:59+00';
 ```
 
-This command creates a new role with a strong password that expires on December 31, 2024.
+The example password is intentionally unsuitable for production. Production
+credentials should not be embedded in migration scripts or source code.
 
 ### Multi-Factor Authentication (MFA)
 
