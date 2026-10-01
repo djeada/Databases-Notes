@@ -25,8 +25,7 @@ LIMIT ? OFFSET ?
 KEYSET_QUERY = """
 SELECT event_id, created_bucket, payload
 FROM events
-WHERE created_bucket < ?
-   OR (created_bucket = ? AND event_id < ?)
+WHERE (created_bucket, event_id) < (?, ?)
 ORDER BY created_bucket DESC, event_id DESC
 LIMIT ?
 """
@@ -95,7 +94,6 @@ def main() -> None:
 
     offset_params = (PAGE_SIZE, OFFSET)
     keyset_params = (
-        cursor_bucket,
         cursor_bucket,
         cursor_event_id,
         PAGE_SIZE,
