@@ -95,3 +95,11 @@ Start with one frequently reused, expensive read whose staleness policy is clear
 5. Why can a cache outage overload a previously healthy database?
 
 Next: [materialized views](04_materialized_views.md) provide another way to reuse calculated results with explicit maintenance rules.
+
+
+## Related notes
+
+- [Materialized views](04_materialized_views.md)
+- [Connection pooling, batching, and N+1](08_connection_pooling_batching_and_n_plus_one.md)
+- [Key-value modeling and Redis cache patterns](../10_nosql_databases/06_key_value_modeling.md)
+- [Redis engine note](../12_database_engines/10_redis.md)
