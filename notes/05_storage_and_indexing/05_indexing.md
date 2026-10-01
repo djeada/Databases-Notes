@@ -2,6 +2,17 @@
 
 An index is an additional access path to data. It can reduce the rows and pages examined by a query, but it also consumes storage and must be maintained when indexed data changes. Start with the queries you need to support, then verify the resulting plans.
 
+This page is the **indexing overview**. The focused notes that follow go deeper into:
+
+- [B-tree internals and page splits](06_btree_internals_and_page_splits.md),
+- [composite index column order](07_composite_indexes_and_column_order.md),
+- [covering, partial, and expression indexes](08_covering_partial_and_expression_indexes.md),
+- [clustered indexes, heaps, and row locality](09_clustered_indexes_heap_tables_and_row_locality.md),
+- [specialized index structures](10_specialized_index_structures.md),
+- [maintenance, bloat, and online index operations](11_index_maintenance_bloat_and_online_operations.md).
+
+The performance chapter then shows how to validate these structures with [execution plans and cardinality estimates](../08_database_performance/07_execution_plans_statistics_and_cardinality.md).
+
 ## How a B-tree lookup works
 
 A B-tree-family index stores ordered keys in a balanced structure. Internal pages direct a search toward leaf pages; leaf entries identify rows or contain the rows themselves, depending on the engine.

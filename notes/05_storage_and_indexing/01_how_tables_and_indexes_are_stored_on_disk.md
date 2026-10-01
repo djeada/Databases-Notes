@@ -81,4 +81,4 @@ Deletes and updates do not always make file sizes shrink immediately. Engines ma
 4. Why does a warm cache change timing without changing the result?
 5. Why need a deleted row not immediately shrink a database file?
 
-Next: [row-oriented versus column-oriented storage](02_row_based_vs_column_based_databases.md), followed by [keys](03_primary_key_vs_secondary_key.md), [pages](04_database_pages.md), and [indexes](05_indexing.md).
+Next: [row-oriented versus column-oriented storage](02_row_based_vs_column_based_databases.md), followed by [keys](03_primary_key_vs_secondary_key.md), [pages](04_database_pages.md), and the [indexing overview](05_indexing.md). For physical index behavior, continue to [B-tree internals](06_btree_internals_and_page_splits.md) and [clustered versus heap storage](09_clustered_indexes_heap_tables_and_row_locality.md).

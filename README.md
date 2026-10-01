@@ -89,11 +89,17 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ### 5. Database Storage and Indexing
 
-- [Storage on Disk](notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) — How tables and indexes are physically stored.
-- [Row vs Column Storage](notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md) — Comparing storage formats and performance.
-- [Primary vs Secondary Keys](notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md) — Key types and their performance impact.
-- [Database Pages](notes/05_storage_and_indexing/04_database_pages.md) — How databases use pages for I/O operations.
-- [Indexing](notes/05_storage_and_indexing/05_indexing.md) — Index types and optimization strategies.
+- [Storage on Disk](notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) — How logical tables, indexes, pages, files, caches, and recovery logs reach storage.
+- [Row vs Column Storage](notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md) — Compare row-oriented transactional layouts with column-oriented analytical storage.
+- [Primary vs Secondary Keys](notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md) — Separate logical identification rules from physical access structures.
+- [Database Pages](notes/05_storage_and_indexing/04_database_pages.md) — Understand pages, buffer caches, row layout, free space, and I/O.
+- [Indexing Overview](notes/05_storage_and_indexing/05_indexing.md) — B-tree, composite, covering, partial, expression, specialized, and maintenance concepts.
+- [B-Tree Internals & Page Splits](notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md) — Tree levels, leaf pages, key width, insert patterns, fill factor, and page splits.
+- [Composite Indexes & Column Order](notes/05_storage_and_indexing/07_composite_indexes_and_column_order.md) — Leading prefixes, equality/range ordering, sorting, joins, and workload-driven column order.
+- [Covering, Partial & Expression Indexes](notes/05_storage_and_indexing/08_covering_partial_and_expression_indexes.md) — INCLUDE/index-only access, filtered subsets, function indexes, and combined designs.
+- [Clustered Indexes, Heaps & Row Locality](notes/05_storage_and_indexing/09_clustered_indexes_heap_tables_and_row_locality.md) — Compare PostgreSQL heaps, InnoDB clustering, SQL Server clustering, and SQLite WITHOUT ROWID.
+- [Specialized Index Structures](notes/05_storage_and_indexing/10_specialized_index_structures.md) — Hash, bitmap, inverted/GIN, GiST, SP-GiST, BRIN, spatial, and data-skipping structures.
+- [Index Maintenance, Bloat & Online Operations](notes/05_storage_and_indexing/11_index_maintenance_bloat_and_online_operations.md) — Index lifecycle, redundancy, concurrent builds/rebuilds, monitoring, and safe removal.
 
 ### 6. Distributed Databases
 

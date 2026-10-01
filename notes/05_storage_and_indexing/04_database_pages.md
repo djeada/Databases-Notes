@@ -66,4 +66,4 @@ For a beginner, understanding the access path is more useful than changing the p
 3. Why might a scan beat an index lookup for a query matching most rows?
 4. How can a commit be durable before all changed data pages are flushed?
 
-Next: [Indexing](05_indexing.md) builds a search structure from these storage units.
+Next: [Indexing](05_indexing.md) builds a search structure from these storage units. Then [B-tree internals](06_btree_internals_and_page_splits.md) shows how index pages split and remain balanced, while [clustered indexes and heaps](09_clustered_indexes_heap_tables_and_row_locality.md) shows where the table row lives relative to those pages.

@@ -15,6 +15,7 @@ This directory groups database-specific demos under engine-specific folders:
 - `cockroach/`
 - `security/`
 - `performance/`
+- `indexing/`
 - `big_data/`
 - `orm/`
 
@@ -88,6 +89,7 @@ scripts/
 ├── cockroach/
 ├── security/
 ├── performance/
+├── indexing/
 ├── big_data/
 ├── orm/
 ├── diagrams/
@@ -428,6 +430,70 @@ docker exec -i cockroach-notes \
 The `--insecure` single-node setup is for learning only; it does not represent
 a production distributed SQL topology.
 
+## Indexing
+
+The `indexing/` examples focus on physical index behavior and access-path
+design. SQLite examples are self-contained. PostgreSQL examples use the
+repository's existing `postgres-local` development container.
+
+- **indexing/sqlite_btree_growth_demo.py** - Compares database growth for a
+  narrow integer secondary index and a much wider text secondary index.
+  ```bash
+  python indexing/sqlite_btree_growth_demo.py
+  ```
+
+- **indexing/sqlite_composite_index_demo.py** - Shows how one composite index
+  behaves for a full leading prefix, the leading column alone, and a suffix-only
+  predicate.
+  ```bash
+  python indexing/sqlite_composite_index_demo.py
+  ```
+
+- **indexing/sqlite_covering_index_demo.py** - Prints plans before and after a
+  covering index contains all selected columns.
+  ```bash
+  python indexing/sqlite_covering_index_demo.py
+  ```
+
+- **indexing/sqlite_rowid_vs_without_rowid.py** - Compares equivalent composite
+  primary keys in an ordinary SQLite rowid table and a `WITHOUT ROWID` table.
+  ```bash
+  python indexing/sqlite_rowid_vs_without_rowid.py
+  ```
+
+Start PostgreSQL for the SQL exercises:
+
+```bash
+bash setup/start_postgres.sh
+```
+
+- **indexing/postgres_partial_expression_indexes.sql** - Builds a partial
+  covering index for open orders and an expression index on `lower(email)`,
+  then prints matching EXPLAIN plans.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < indexing/postgres_partial_expression_indexes.sql
+  ```
+
+- **indexing/postgres_brin_demo.sql** - Builds B-tree and BRIN indexes over a
+  physically ordered synthetic event table, compares index sizes, and prints
+  plans for a narrow time range.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < indexing/postgres_brin_demo.sql
+  ```
+
+- **indexing/postgres_index_inventory.sql** - Read-only inventory of user
+  indexes with size, scan count, primary/unique/valid flags, constraint
+  ownership, and index definitions.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < indexing/postgres_index_inventory.sql
+  ```
+
 ## Performance
 
 The `performance/` examples use synthetic data and print local measurements.
@@ -631,5 +697,6 @@ SQLite locking works.
 2. Keep engine-specific concurrency examples in the matching engine folder.
 3. Use `security/` for cross-engine security and operational exercises.
 4. Use `performance/` for cross-engine/local performance measurement exercises.
-5. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
-6. Update this README when you add, move, or remove a script.
+5. Use `indexing/` for storage/index access-path exercises.
+6. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
+7. Update this README when you add, move, or remove a script.
