@@ -8,30 +8,80 @@ Database security encompasses a comprehensive set of measures designed to protec
 - Integrity involves maintaining the accuracy, consistency, and trustworthiness of data throughout its lifecycle to prevent corruption or unauthorized modifications.
 - Availability guarantees that authorized users have reliable and timely access to data and database services whenever needed, ensuring operational continuity.
 
+## Security control map
+
+Database security is easier to reason about as layers:
+
+```text
+identity
+  │
+  ▼
+authentication
+  │
+  ▼
+authorization / least privilege
+  │
+  ▼
+network + TLS
+  │
+  ▼
+database configuration / hardening
+  │
+  ▼
+encryption + secret management
+  │
+  ▼
+auditing + monitoring
+  │
+  ▼
+backup + incident recovery
+```
+
+This note gives the broad overview. The later focused notes turn each layer into
+concrete PostgreSQL examples, operational checklists, and failure scenarios.
+
 ## Authentication
 
 Authentication is the process of verifying the identity of a user or system before granting access to resources. Effective authentication mechanisms are the first line of defense against unauthorized access and are crucial for maintaining database security.
 
 ### User Authentication
 
-#### Strong Password Policies
+#### Password Policy
 
-Implementing robust password policies helps protect against unauthorized access due to weak or compromised passwords.
+Password policy should prioritize resistance to guessing and credential reuse
+without forcing users into predictable patterns.
 
-- Enforcing complexity requirements ensures passwords include a mix of uppercase and lowercase letters, numbers, and special characters, enhancing resistance to attacks.
-- Setting a minimum password length, such as 12 characters, increases the difficulty of brute-force attacks, adding an additional layer of security.
-- Regular password expiration policies require users to change passwords periodically, such as every 60 or 90 days, to limit the time frame in which stolen credentials can be exploited.
-- Maintaining a password history prevents users from reusing old passwords, which can reduce the effectiveness of password rotation policies.
-- Implementing account lockout policies locks accounts after a defined number of failed login attempts, such as five, to mitigate the risk of automated brute-force attacks.
+For human users:
 
-**Example Configuration in PostgreSQL:**
+- Prefer long passwords or passphrases.
+- Reject commonly used or known-compromised passwords.
+- Allow password managers and paste.
+- Rate-limit failed authentication attempts.
+- Use MFA for higher-risk access.
+- Do not require arbitrary periodic password changes unless organizational
+  policy or evidence of compromise requires a change.
+- Avoid composition rules that merely force predictable uppercase/digit/symbol
+  substitutions.
+
+This matches the direction of the current
+[NIST SP 800-63B implementation guidance](https://pages.nist.gov/800-63-4-Implementation-Resources/faqs/).
+
+Service/database credentials are a different category. Prefer randomly generated
+secrets, short-lived workload credentials where supported, a secret manager,
+and tested rotation.
+
+PostgreSQL can set an expiry for a login when that is part of the credential
+lifecycle:
 
 ```sql
--- Create a role with a complex password and set an expiration date
-CREATE ROLE username WITH LOGIN PASSWORD 'C0mpl3xP@ssw0rd!' VALID UNTIL '2024-12-31';
+CREATE ROLE reporting_login
+WITH LOGIN
+PASSWORD 'local-demo-only'
+VALID UNTIL '2026-12-31 23:59:59+00';
 ```
 
-This command creates a new role with a strong password that expires on December 31, 2024.
+The example password is intentionally unsuitable for production. Production
+credentials should not be embedded in migration scripts or source code.
 
 ### Multi-Factor Authentication (MFA)
 
@@ -343,3 +393,14 @@ V. Establishing an Incident Response Plan
 - A detailed preparation plan outlines clear steps for responding to security incidents to minimize downtime and damage.
 - Defining roles and responsibilities ensures team members know their tasks and decision-making authority during an incident.
 - Effective communication protocols include internal and external strategies to address stakeholders, customers, and authorities efficiently.
+
+
+## Related focused notes
+
+- [Identity, authentication, and access control](08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
+- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
+- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [SQL injection](06_sql_injection.md)
+- [Backup and recovery](01_backup_and_recovery_strategies.md)

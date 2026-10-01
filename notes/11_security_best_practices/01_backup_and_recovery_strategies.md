@@ -254,6 +254,43 @@ Efficient backups require tools and technologies that minimize disruption to pro
 - MongoDB Ops Manager includes continuous backup and enables precise point-in-time recovery for MongoDB databases.
 - SQL Server Always On Availability Groups support high availability and real-time replication for Microsoft SQL Server deployments.
 
+## Runnable restore drill
+
+A backup should be judged by a successful restore, not only by a successful
+backup command.
+
+The repository includes a disposable PostgreSQL exercise:
+
+[`scripts/security/postgres_restore_drill.sh`](../../scripts/security/postgres_restore_drill.sh)
+
+After starting the local PostgreSQL container:
+
+```bash
+bash scripts/security/postgres_restore_drill.sh
+```
+
+The script creates a database named `security_restore_drill`, inserts known
+probe rows, takes a `pg_dump`, drops that disposable database, restores it,
+verifies the exact expected values, and cleans up.
+
+This demonstrates an important operational pattern:
+
+```text
+backup
+  │
+  ▼
+restore into known target
+  │
+  ▼
+validate data
+  │
+  ▼
+record recovery time/result
+```
+
+A production restore drill should additionally validate permissions,
+extensions, application connectivity, recovery point, and the measured RTO.
+
 ## Review questions
 
 - What are the primary objectives of effective backup and recovery strategies, and why are they important for database management?
@@ -261,3 +298,11 @@ Efficient backups require tools and technologies that minimize disruption to pro
 - What methods can be employed to minimize the impact of backup operations on production systems, and how do they work?
 - What are the recovery strategies, such as Point-in-Time Recovery and Continuous Data Protection, and in what scenarios are they most effectively used?
 - What best practices and tools should be implemented to ensure reliable, efficient, and secure backup and recovery processes?
+
+
+## Related notes
+
+- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [Crash recovery](07_crash_recovery_in_databases.md)
+- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)

@@ -381,3 +381,11 @@ Configure AWS Auto Scaling to maintain a desired performance level by adding or 
 - What methods and tools are used for capacity forecasting, including historical data analysis and benchmarking?
 - What are the essential steps in the capacity planning process, from workload characterization to implementation?
 - How do performance monitoring tools and cloud services support effective capacity planning and resource management?
+
+
+## Related notes
+
+- [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)
+- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
+- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [Choosing a database](../12_database_engines/07_choosing_database.md)
