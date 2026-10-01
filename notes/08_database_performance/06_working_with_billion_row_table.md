@@ -1,6 +1,8 @@
 # Working with Billion-Row Tables
 
-Managing tables that contain billions of rows presents unique challenges in terms of performance, scalability, and maintenance. As data volumes grow, it's essential to adopt effective strategies to handle such massive datasets efficiently. This guide explores the challenges associated with billion-row tables and provides techniques and best practices for working with them effectively.
+A billion rows is not a magic threshold at which one architecture becomes mandatory. A narrow, well-indexed billion-row table with selective queries can be easier to operate than a much smaller table with wide rows, poor access patterns, heavy churn, or global scans. Start from data size, row width, query shape, write rate, retention, and maintenance windows rather than row count alone.
+
+At this scale, the important question is **how much data each operation touches**. The design goal is to keep ordinary requests local and bounded while moving genuinely analytical scans to systems built for them.
 
 ## Challenges of Large Tables
 
@@ -9,8 +11,24 @@ Working with extremely large tables can lead to several issues:
 - Queries may run slowly, impacting how responsive your application feels.
 - As data volume grows, memory, CPU, and I/O usage increase, potentially overloading system resources and leading to performance bottlenecks.
 - Routine operations such as backups, indexing, and updates become progressively slower and more resource-intensive, complicating database management.
-- Traditional database systems often face limitations when attempting to scale horizontally, making it difficult to handle ever-expanding datasets effectively.
-- If your application requests more rows than its available RAM can process, it may run out of memory and crash, disrupting services and requiring manual intervention.
+- A single relational server eventually has finite CPU, memory, and storage bandwidth, but relational systems can also use partitioning, replicas, distributed SQL, or sharding. Choose distribution only after measuring which resource or workload requires it.
+- Returning or materializing unbounded result sets can exhaust application memory even when the database itself is healthy; pagination, streaming, and bulk-export APIs are essential.
+
+## Scale decision ladder
+
+Before adding distributed complexity, work through cheaper options:
+
+1. Verify the slow operation with an execution plan and representative parameters.
+2. Reduce rows and columns read.
+3. Add/adjust indexes only for demonstrated access patterns.
+4. Use keyset pagination and streaming for large result sets.
+5. Partition when pruning or lifecycle management justifies it.
+6. Archive cold data and precompute expensive repeated summaries.
+7. Add caching/read replicas when the consistency model permits it.
+8. Move broad analytics to OLAP/warehouse systems.
+9. Shard/distribute when one node cannot meet measured capacity requirements.
+
+Each step introduces new maintenance and correctness trade-offs.
 
 ## Techniques for Handling Billion-Row Tables
 
@@ -285,3 +303,13 @@ process_large_dataset.delay(data_chunk)
 - How do different indexing techniques, such as B-tree and bitmap indexes, enhance query performance in large datasets, and what are the best practices for their implementation?
 - What optimization methods, including query optimization and the use of materialized views, can be applied to efficiently manage and retrieve data from billion-row tables?
 - When should strategies like sharding, distributed caching, and utilizing big data technologies be implemented, and what benefits do they offer for handling massive datasets?
+
+
+## Related performance notes
+
+- [Execution plans, statistics, and cardinality](07_execution_plans_statistics_and_cardinality.md)
+- [Pagination and large result sets](09_pagination_and_large_result_sets.md)
+- [Partitioning, sharding, and data locality](10_partitioning_sharding_and_data_locality.md)
+- [Benchmarking, load testing, and capacity](11_benchmarking_load_testing_and_capacity.md)
+- [Write performance, vacuum, and bloat](12_write_performance_vacuum_and_bloat.md)
+- [Data warehousing](../13_big_data/01_data_warehousing.md)
