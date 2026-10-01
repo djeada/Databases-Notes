@@ -211,6 +211,25 @@ A structured approach is essential to manage the complexities and risks associat
 - Update documentation such as architecture diagrams, inventories, and system manuals to reflect the new environment.
 - Communicate with stakeholders, informing them that the old database has been officially retired.
 
+## Security checks during migration
+
+A migration temporarily creates unusual access paths and duplicate data, so it
+needs an explicit security review.
+
+Check:
+
+- migration credentials use only the privileges required,
+- source and destination connections use TLS where appropriate,
+- temporary dumps/staging buckets are encrypted and access-restricted,
+- CDC/replication credentials are dedicated and rotated after cutover,
+- sensitive data is not copied into uncontrolled test environments,
+- audit logging remains available during cutover,
+- the old environment is not decommissioned before rollback and retention
+  requirements are satisfied.
+
+A migration can otherwise create a temporary copy that is less protected than
+either the source or final destination.
+
 ## Review questions
 
 - What is database migration, and what are its primary objectives?
@@ -218,3 +237,11 @@ A structured approach is essential to manage the complexities and risks associat
 - What are the different database migration strategies (Big Bang, Parallel, Phased), and what are their respective advantages and disadvantages?
 - What are the essential steps in the database migration process, from assessment and planning to execution and post-migration activities?
 - What additional measures, such as backup and recovery planning, data validation, and rollback planning, are necessary to ensure a safe and successful database migration?
+
+
+## Related notes
+
+- [Identity and access control](08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
+- [Backup and recovery](01_backup_and_recovery_strategies.md)
