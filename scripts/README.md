@@ -13,6 +13,7 @@ This directory groups database-specific demos under engine-specific folders:
 - `opensearch/`
 - `clickhouse/`
 - `cockroach/`
+- `security/`
 - `big_data/`
 - `orm/`
 
@@ -84,6 +85,7 @@ scripts/
 ├── opensearch/
 ├── clickhouse/
 ├── cockroach/
+├── security/
 ├── big_data/
 ├── orm/
 ├── diagrams/
@@ -391,6 +393,65 @@ docker exec -i cockroach-notes \
 The `--insecure` single-node setup is for learning only; it does not represent
 a production distributed SQL topology.
 
+## Security and Operations
+
+The `security/` examples use synthetic/local data and are designed for safe
+practice. PostgreSQL examples target the repository's `postgres-local`
+development container created by:
+
+```bash
+cd scripts
+bash setup/start_postgres.sh
+cd ..
+```
+
+- **security/sql_injection_demo.py** - Uses an in-memory SQLite database to show
+  how string concatenation changes query structure and how parameter binding
+  prevents it.
+  ```bash
+  python scripts/security/sql_injection_demo.py
+  ```
+
+- **security/connect_with_env.py** - Reads `DATABASE_URL` from the environment,
+  connects to PostgreSQL, and deliberately avoids printing credentials.
+  ```bash
+  export DATABASE_URL='postgresql://demo:secret@127.0.0.1:5432/test'
+  python scripts/security/connect_with_env.py
+  ```
+
+- **security/postgres_least_privilege.sql** - Builds separate read/write group
+  roles and login roles, grants schema/table/sequence permissions, and displays
+  the resulting memberships and grants.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < scripts/security/postgres_least_privilege.sql
+  ```
+
+- **security/postgres_audit_trigger_demo.sql** - Creates a disposable audit
+  schema and captures UPDATE/DELETE old/new row images with a trigger.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < scripts/security/postgres_audit_trigger_demo.sql
+  ```
+
+- **security/postgres_health_check.sql** - Runs read-only inspection queries for
+  connections, long transactions, lock waits, database counters, table sizes,
+  and index usage.
+  ```bash
+  docker exec -i postgres-local \
+    psql -U demo -d test \
+    < scripts/security/postgres_health_check.sql
+  ```
+
+- **security/postgres_restore_drill.sh** - Creates a dedicated disposable
+  database, takes a `pg_dump`, destroys and restores that database, validates
+  the recovered values, and cleans up.
+  ```bash
+  bash scripts/security/postgres_restore_drill.sh
+  ```
+
 ## Big Data
 
 These demos are local teaching examples for the final Big Data chapter. They keep
@@ -501,5 +562,6 @@ SQLite locking works.
 
 1. Put engine-specific examples in their matching folders (`sqlite/`, `mysql/`, `postgres/`, `mongo/`, `neo4j/`, `sqlserver/`, `redis/`, `cassandra/`, `opensearch/`, `clickhouse/`, or `cockroach/`).
 2. Keep engine-specific concurrency examples in the matching engine folder.
-3. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
-4. Update this README when you add, move, or remove a script.
+3. Use `security/` for cross-engine security and operational exercises.
+4. Use `big_data/` and `orm/` for cross-engine chapter demonstrations.
+5. Update this README when you add, move, or remove a script.
