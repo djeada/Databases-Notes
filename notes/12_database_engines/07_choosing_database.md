@@ -684,7 +684,6 @@ Cost:
 - What are the storage, compute, network, backup, and support costs?
 - Will autoscaling help or create unpredictable bills?
 
-
 ## Related engine notes
 
 Use the focused engine notes when a workload category becomes a serious candidate:

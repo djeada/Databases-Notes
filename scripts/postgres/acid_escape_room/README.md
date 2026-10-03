@@ -13,7 +13,7 @@ of PostgreSQL violating a guarantee it made.
 > --yes` drops that schema. The included Compose stack uses a dedicated volume
 > and binds to loopback. Do not reuse it for real payments or bookings.
 
-## 1. Setup (from the repository root)
+## Setup (from the repository root)
 
 Requires Docker with Compose v2, Python 3.9+, and `psycopg2-binary` (already
 listed in `scripts/requirements.txt`). The dedicated `compose.yaml` uses
@@ -35,7 +35,7 @@ the subcommand. For safety, it refuses to make changes unless the current
 database is literally named `acid_lab`. Credentials are for loopback-only
 educational use, not production.
 
-## 2. Fill sample data
+## Fill sample data
 
 ```bash
 python scripts/postgres/acid_escape_room/lab.py seed --workers 8
@@ -48,7 +48,7 @@ index so the BAD consistency round can demonstrate the missing invariant.
 Re-running `seed` **destroys previous lab data**. If you want 12 concurrent
 clients instead, seed and run with `--workers 12` (supported: 2–16).
 
-## 3. Run all eight demonstrations
+## Run all eight demonstrations
 
 ```bash
 python scripts/postgres/acid_escape_room/lab.py run --property all --mode both --workers 8
@@ -94,7 +94,7 @@ verified; elsewhere exit code **0** is mandatory. The SERIALIZABLE round uses
 bounded retries with backoff and will fail rather than pretend progress if
 its retry budget is exhausted.
 
-## 4. Prove the good receipts survive a server restart
+## Prove the good receipts survive a server restart
 
 Run **both durability variants** last, or run all eight as above. Then:
 
@@ -113,7 +113,7 @@ stronger crash/power-loss promises. The runner displays actual settings and
 warns when `fsync` is off. Do not use `docker compose down -v` before this
 verification: it intentionally deletes the lab's database volume.
 
-## 5. Tests and cleanup
+## Tests and cleanup
 
 ```bash
 python -m unittest discover -s scripts/postgres/acid_escape_room/tests -v

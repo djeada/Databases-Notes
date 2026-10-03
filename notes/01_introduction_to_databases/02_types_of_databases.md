@@ -4,7 +4,7 @@ The first note used tables to connect customers and orders. Other databases repr
 
 This note compares database families through named technologies and concrete operations. Each executable example has its own setup. The SQL examples use SQLite unless another engine is named; MongoDB, Redis, Cassandra, and Neo4j examples require their respective services and clients. You can understand the comparisons without installing every product.
 
-## 1. Relational databases: combine independently stored facts
+## Relational databases: combine independently stored facts
 
 **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle Database** are relational DBMSs. They expose tables, keys, constraints, and SQL. Their deployment and storage details differ, but they can express relationships and calculations without forcing the application to fetch every record and combine it itself.
 
@@ -52,7 +52,7 @@ That flexibility does not make every query efficient. Large joins can read and s
 
 Use the relational model when operational facts have important relationships and integrity rules, or when several queries need to combine them in different ways. Choose an engine by its actual concurrency, operations, extension, and deployment requirements.
 
-## 2. Document databases: retrieve a record with nested detail
+## Document databases: retrieve a record with nested detail
 
 **MongoDB** stores BSON documents, a binary format supporting JSON-like structures and additional types. **CouchDB** is another document-oriented system, with a different API and replication design. **Couchbase** and **Amazon DocumentDB** are additional implementations with their own APIs and feature compatibility. A document can contain fields, nested objects, and arrays.
 
@@ -114,7 +114,7 @@ An order document can embed its bounded list of purchased lines because they are
 
 A flexible document structure still needs a schema contract. The application must understand missing fields and expected types, and the DBMS may enforce document validation. MongoDB also supports multi-document transactions in suitable deployments. “Document” does not automatically mean “no rules” or “no transactions.”
 
-## 3. Key-value databases: address a value directly
+## Key-value databases: address a value directly
 
 **Redis** provides commands over named keys and supports values such as strings, hashes, lists, and sets. A minimal key-value interaction starts with a key the application already knows. **DynamoDB** also offers key-based access, using table keys, attributes, and optional secondary indexes rather than Redis's command model. **Riak KV** is another key-value implementation with a different architecture and API.
 
@@ -149,7 +149,7 @@ Loading this one cart needs its key. Finding every cart containing product 10 is
 
 Redis commonly keeps working data in memory. Persistence options such as snapshots and an append-only file address recovery separately; expiration and eviction address entry lifetime and memory pressure. An entry can be unavailable for more than one reason. See [Redis persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/) for the recovery mechanisms.
 
-## 4. Wide-column databases: design partitions around known queries
+## Wide-column databases: design partitions around known queries
 
 **Apache Cassandra, HBase, and Google Cloud Bigtable** belong to the wide-column family, though their APIs and storage models differ. In Cassandra, a table has a declared schema, a partition key that places related records together, and clustering columns that order records inside a partition.
 
@@ -200,7 +200,7 @@ This is why Cassandra's [logical-modeling guide](https://cassandra.apache.org/do
 
 A wide-column database is not a columnar analytical database. The latter groups values by column for scans and compression, as the next section explains.
 
-## 5. Columnar analytical databases: scan the fields a report needs
+## Columnar analytical databases: scan the fields a report needs
 
 **ClickHouse** and **DuckDB** are examples of systems with columnar storage suited to analytical work. Instead of keeping only the logical row shape in mind, consider a report that sums one numeric column across millions of sales. A columnar layout can read the relevant column without reading every unrelated field of each record.
 
@@ -234,7 +234,7 @@ The analytical benefit comes from the storage and execution design, not from the
 
 A transactional store with frequent small updates and an analytical store scanning broad history have different workloads. DuckDB is commonly embedded for analytics; ClickHouse offers a different operational architecture. DuckDB's [architecture overview](https://www.duckdb.org/why_duckdb) and [FAQ](https://duckdb.org/faq) explain its in-process operation and columnar representation; ClickHouse describes its own [columnar design](https://clickhouse.com/resources/engineering/what-is-columnar-database). The [row-versus-column note](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md) explains the layout tradeoff.
 
-## 6. Graph databases: make traversal a first-class operation
+## Graph databases: make traversal a first-class operation
 
 **Neo4j** represents data as nodes, directed relationships, and properties. **Amazon Neptune** and **OrientDB** offer other graph capabilities; their interfaces and model combinations differ, so this example uses Neo4j explicitly. It uses **Cypher**, a language in which a pattern describes the relationships to match.
 
@@ -274,13 +274,13 @@ A graph model makes variable paths, neighborhoods, and relationship-specific pro
 
 High-degree nodes and broad path expansion can still produce expensive work. Identity constraints, starting-node indexes, path limits, and transaction behavior remain important. A graph model does not eliminate schema or integrity decisions.
 
-## 7. Historical and object-oriented families
+## Historical and object-oriented families
 
 The main operational examples above are not an exhaustive taxonomy. **IBM IMS** uses a hierarchical segment model, and **IDMS** is associated with the network model. **ObjectDB** persists Java objects through object-oriented APIs. These families matter when maintaining an existing system or evaluating a workload organized around their structures.
 
 The [data-models note](04_data_models.md) explains hierarchical, network, entity-relationship, and object-oriented structures with examples and distinguishes them from modern documents and graphs. Do not interpret “NoSQL” as a synonym for every non-relational historical system.
 
-## 8. Keep model, deployment, and workload separate
+## Keep model, deployment, and workload separate
 
 A product can fit several descriptions at once:
 
@@ -295,7 +295,7 @@ A product can fit several descriptions at once:
 
 “In-memory,” “distributed,” and “time-series” are not mutually exclusive alternatives to “relational.” PostgreSQL can use JSON fields, a graph can run on a server, and an analytical engine can be embedded. **NoSQL** groups several model families; it does not establish one universal transaction, scaling, or consistency guarantee.
 
-## 9. Choose using one complete workflow
+## Choose using one complete workflow
 
 For checkout, identify the reads, stock reservation, order writes, immediate confirmation, and failure cases together. Ask what must be atomic and what a retry can duplicate. For reporting, identify scan volume, required freshness, joins, and the cost of loading analytical data.
 

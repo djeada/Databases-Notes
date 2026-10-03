@@ -441,7 +441,7 @@ One database statement can replace millions of object updates.
 
 ## Questions to answer before choosing
 
-### 1. What language and framework are already in use?
+### What language and framework are already in use?
 
 Framework-native tooling usually reduces integration work.
 
@@ -451,7 +451,7 @@ Examples:
 - Rails -> Active Record is built into the framework.
 - Python service without Django -> SQLAlchemy is a common fit.
 
-### 2. What database features matter?
+### What database features matter?
 
 Check support for:
 - JSON types,
@@ -466,7 +466,7 @@ Check support for:
 
 "Supports PostgreSQL" does not mean every PostgreSQL feature is equally convenient.
 
-### 3. Can generated SQL be inspected?
+### Can generated SQL be inspected?
 
 A production team should be able to:
 - enable SQL logging,
@@ -477,7 +477,7 @@ A production team should be able to:
 
 An ORM that hides SQL too effectively can make incidents harder to debug.
 
-### 4. How are transactions expressed?
+### How are transactions expressed?
 
 Look for a clear pattern such as:
 
@@ -491,7 +491,7 @@ commit / rollback
 
 Avoid designs where transaction boundaries depend on accidental object access.
 
-### 5. How are relationships loaded?
+### How are relationships loaded?
 
 The tool should give explicit control over:
 - lazy loading,
@@ -499,7 +499,7 @@ The tool should give explicit control over:
 - select-in/split queries,
 - projection into only required fields.
 
-### 6. How are migrations handled?
+### How are migrations handled?
 
 Check:
 - generation,
@@ -509,7 +509,7 @@ Check:
 - data backfills,
 - zero-downtime compatibility.
 
-### 7. Can raw SQL be used safely?
+### Can raw SQL be used safely?
 
 A useful ORM should have an escape hatch for parameterized raw SQL and database-specific queries.
 

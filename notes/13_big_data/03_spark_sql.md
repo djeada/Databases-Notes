@@ -80,7 +80,7 @@ The choice between SQL and DataFrames is often about readability and team prefer
 The repository contains a complete example at
 [`scripts/big_data/spark_sql_demo.py`](../../scripts/big_data/spark_sql_demo.py).
 
-### 1. Check Java
+### Check Java
 
 PySpark needs a compatible Java runtime.
 
@@ -88,7 +88,7 @@ PySpark needs a compatible Java runtime.
 java -version
 ```
 
-### 2. Create an environment
+### Create an environment
 
 From the repository root:
 
@@ -98,7 +98,7 @@ source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.
 python -m pip install pyspark
 ```
 
-### 3. Run the script
+### Run the script
 
 ```bash
 python scripts/big_data/spark_sql_demo.py

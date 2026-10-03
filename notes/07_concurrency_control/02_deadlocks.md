@@ -24,7 +24,7 @@ The important idea is not merely that transactions are blocked.
 
 Ordinary blocking is expected in transactional databases. Deadlock is the special case where the blocking relationships form a cycle.
 
-# 1. Blocking is not the same thing as deadlock
+## Blocking is not the same thing as deadlock
 
 Suppose T1 updates an account:
 
@@ -88,7 +88,7 @@ T1 → T2 → T3 → T1
 
 This distinction matters operationally because a system may have substantial lock waits without having any deadlocks.
 
-# 2. A concrete deadlock: two bank transfers
+## A concrete deadlock: two bank transfers
 
 Consider:
 
@@ -181,7 +181,7 @@ That is a deadlock.
 
 This is the same fundamental pattern used by the original notes' account example, but the important part is understanding why waiting has become impossible to resolve normally.
 
-# 3. The wait-for graph
+## The wait-for graph
 
 A wait-for graph converts the lock situation into a graph of transaction dependencies.
 
@@ -237,7 +237,7 @@ Again, no participant can finish without another participant first making progre
 
 The original notes correctly identify a cycle in the wait-for graph as the essential detection idea.
 
-# 4. The four ingredients that make deadlock possible
+## The four ingredients that make deadlock possible
 
 The classic deadlock model describes four conditions that together make a deadlock possible.
 
@@ -284,7 +284,7 @@ provides circular wait.
 
 The DBMS therefore has to break the situation by aborting a transaction.
 
-# 5. Why the database cannot simply "let both continue"
+## Why the database cannot simply "let both continue"
 
 Suppose T1 currently has an uncommitted modification to account `1`.
 
@@ -309,7 +309,7 @@ allow the others to continue
 
 The rolled-back transaction is commonly called the deadlock victim.
 
-# 6. Deadlocks occur because transactions acquire resources incrementally
+## Deadlocks occur because transactions acquire resources incrementally
 
 Most transactions do not acquire every resource they need at the beginning.
 
@@ -339,7 +339,7 @@ This is also why Two-Phase Locking can guarantee conflict serializability and st
 
 Two transactions can both be obeying the growing phase of 2PL while each waits for another lock.
 
-# 7. Deadlocks are not limited to explicit `LOCK` statements
+## Deadlocks are not limited to explicit `LOCK` statements
 
 A common misconception is:
 
@@ -365,7 +365,7 @@ PostgreSQL explicitly documents that deadlocks can arise from ordinary row-level
 
 InnoDB likewise states that deadlocks can occur through ordinary statements such as `UPDATE` and `SELECT. .. FOR UPDATE`, including conflicts involving ranges of index records and gaps.
 
-# 8. The locked resource may not simply be "a row"
+## The locked resource may not simply be "a row"
 
 Real databases can deadlock on more than two obvious table rows.
 
@@ -393,7 +393,7 @@ The executed statement may have touched several indexes or additional internal r
 
 InnoDB explicitly warns that even inserts or deletes involving a single row can deadlock because the operation can lock multiple index records internally.
 
-# 9. Indexes are therefore part of deadlock behavior
+## Indexes are therefore part of deadlock behavior
 
 Consider:
 
@@ -439,7 +439,7 @@ It can also affect:
 concurrency behavior
 ```
 
-# 10. The most effective prevention technique: consistent lock ordering
+## The most effective prevention technique: consistent lock ordering
 
 Return to the two transfers.
 
@@ -505,7 +505,7 @@ Therefore there is no cycle.
 
 PostgreSQL explicitly recommends acquiring locks on multiple objects in a consistent order as its primary deadlock defense. MySQL gives the same recommendation for transactions that update multiple rows or tables.
 
-# 11. PostgreSQL implementation of ordered account locking
+## PostgreSQL implementation of ordered account locking
 
 A PostgreSQL transfer can deliberately acquire both row locks first:
 
@@ -559,7 +559,7 @@ It should still lock:
 
 The business direction and the lock acquisition order are separate concepts.
 
-# 12. Lock conversion can also contribute to deadlock
+## Lock conversion can also contribute to deadlock
 
 Deadlock does not always look like:
 
@@ -594,7 +594,7 @@ The precise behavior depends on the engine and lock modes, but the general lesso
 
 PostgreSQL therefore advises that, where practical, the first lock acquired on an object should be the most restrictive mode the transaction will need.
 
-# 13. Keeping transactions short reduces the window for cycles
+## Keeping transactions short reduces the window for cycles
 
 Consider:
 
@@ -630,7 +630,7 @@ Long transactions increase the period during which another transaction can form 
 
 The original notes correctly identify long transaction duration as a deadlock risk. PostgreSQL explicitly warns against leaving transactions open while waiting for user interaction, and MySQL recommends keeping transactions small and committing related changes promptly.
 
-# 14. PostgreSQL: what happens when a deadlock occurs
+## PostgreSQL: what happens when a deadlock occurs
 
 PostgreSQL automatically detects deadlocks.
 
@@ -658,7 +658,7 @@ deadlock_detected
 
 PostgreSQL's current documentation specifically identifies `40P01` as a deadlock failure that applications may retry.
 
-# 15. PostgreSQL does not continuously run expensive deadlock detection
+## PostgreSQL does not continuously run expensive deadlock detection
 
 PostgreSQL has a setting called:
 
@@ -694,7 +694,7 @@ lock timeout
 
 A perfectly legitimate lock wait may last longer than usual if no timeout terminates it.
 
-# 16. Debugging PostgreSQL lock contention
+## Debugging PostgreSQL lock contention
 
 PostgreSQL exposes:
 
@@ -749,7 +749,7 @@ Who is blocking it?
 
 For a deadlock that has already been resolved, the server log/error information is generally more useful because one participant has already been aborted and the cycle no longer exists.
 
-# 17. MySQL/InnoDB: automatic deadlock detection
+## MySQL/InnoDB: automatic deadlock detection
 
 InnoDB also automatically detects transaction deadlocks by default.
 
@@ -772,7 +772,7 @@ SQLSTATE: 40001
 
 MySQL's own error documentation explicitly tells the application to rerun all operations in the transaction after this error.
 
-# 18. How InnoDB chooses a victim
+## How InnoDB chooses a victim
 
 When deadlock detection is enabled, InnoDB attempts to choose a relatively small transaction to roll back.
 
@@ -798,7 +798,7 @@ Application correctness must never depend on:
 "our transaction will never be chosen."
 ```
 
-# 19. Debugging InnoDB deadlocks
+## Debugging InnoDB deadlocks
 
 One of the most useful MySQL commands is:
 
@@ -840,7 +840,7 @@ When enabled, all InnoDB user-transaction deadlocks are written to the MySQL err
 
 That makes it much easier to diagnose intermittent production deadlocks.
 
-# 20. MySQL deadlock versus lock-wait timeout
+## MySQL deadlock versus lock-wait timeout
 
 These are different errors.
 
@@ -866,7 +866,7 @@ lock wait timeout
 
 as identical failure modes.
 
-# 21. SQL Server: deadlock victim error 1205
+## SQL Server: deadlock victim error 1205
 
 SQL Server also detects deadlock cycles and selects a victim.
 
@@ -896,7 +896,7 @@ T1 ←──── deadlock ────→ T2
 
 The application should be prepared to retry the operation represented by the victim transaction.
 
-# 22. SQL Server allows deadlock priorities
+## SQL Server allows deadlock priorities
 
 SQL Server provides:
 
@@ -938,7 +938,7 @@ which transaction loses when one occurs
 
 That is very different from lock ordering, which attempts to eliminate the cycle in the first place.
 
-# 23. SQL Server deadlock graphs
+## SQL Server deadlock graphs
 
 SQL Server provides particularly rich deadlock diagnostics.
 
@@ -984,7 +984,7 @@ Microsoft recommends `xml_deadlock_report` rather than relying on the older SQL 
 
 This is a major practical advantage when diagnosing production incidents: you want the cycle, not merely the SQL statement that happened to receive error `1205`.
 
-# 24. Technology comparison
+## Technology comparison
 
 | Area | PostgreSQL | MySQL/InnoDB | SQL Server |
 |---|---|---|---|
@@ -999,7 +999,7 @@ This is a major practical advantage when diagnosing production incidents: you wa
 
 PostgreSQL documents automatic deadlock detection and consistent ordering as the primary defense. InnoDB documents automatic detection, victim rollback, and transaction retry. SQL Server documents automatic victim selection, error `1205`, and deadlock graph diagnostics through Extended Events.
 
-# 25. Prevention, detection, and timeout are three different strategies
+## Prevention, detection, and timeout are three different strategies
 
 These terms should not be mixed.
 
@@ -1033,7 +1033,7 @@ is a genuine deadlock even if it formed only milliseconds ago.
 
 A real deadlock detector can resolve it without waiting for a long general timeout.
 
-# 26. Timeouts do not fix deadlock design
+## Timeouts do not fix deadlock design
 
 Suppose transactions consistently do:
 
@@ -1073,7 +1073,7 @@ rather than:
 the primary concurrency-control design
 ```
 
-# 27. Isolation level and deadlocks: avoid simplistic rules
+## Isolation level and deadlocks: avoid simplistic rules
 
 The statement:
 
@@ -1121,7 +1121,7 @@ rather than simply:
 
 > "Which isolation level are we using? "
 
-# 28. Deadlock versus serialization failure
+## Deadlock versus serialization failure
 
 These are easy to confuse because both can cause a database to abort a transaction.
 
@@ -1153,7 +1153,7 @@ PostgreSQL recommends considering retries for both classes of failure.
 
 The retry pattern can look similar, but the reason for the abort is different.
 
-# 29. Deadlock versus livelock
+## Deadlock versus livelock
 
 A deadlock means:
 
@@ -1196,7 +1196,7 @@ rather than immediate infinite retry loops.
 
 The original notes correctly separate deadlock from livelock and connect aggressive retries with the latter.
 
-# 30. Retry the whole transaction
+## Retry the whole transaction
 
 Suppose a transaction does:
 
@@ -1250,7 +1250,7 @@ COMMIT
 
 MySQL explicitly says that a deadlock rolls back the entire InnoDB transaction and instructs applications to rerun the complete transaction. PostgreSQL likewise identifies deadlock failures as appropriate candidates for transaction retry.
 
-# 31. Example retry logic
+## Example retry logic
 
 Conceptually:
 
@@ -1290,7 +1290,7 @@ Backoff avoids immediately recreating exactly the same scheduling conflict.
 
 Random jitter helps prevent many failed transactions from waking simultaneously and colliding again.
 
-# 32. External side effects make retries dangerous
+## External side effects make retries dangerous
 
 Consider:
 
@@ -1347,7 +1347,7 @@ message to be sent
 
 atomically, while another component performs the external effect after commit.
 
-# 33. Do not solve frequent deadlocks only by adding more retries
+## Do not solve frequent deadlocks only by adding more retries
 
 An occasional deadlock in a highly concurrent transactional system is not automatically a database defect.
 
@@ -1385,7 +1385,7 @@ Retry is a resilience mechanism.
 
 It is not a substitute for fixing a deterministic circular acquisition pattern.
 
-# 34. How to analyze a production deadlock
+## How to analyze a production deadlock
 
 When a deadlock report is available, reconstruct the cycle.
 
@@ -1431,7 +1431,7 @@ Customer → Order
 
 The specific victim query is often merely where the cycle happened to become visible.
 
-# 35. A deadlock can involve different application services
+## A deadlock can involve different application services
 
 Imagine:
 
@@ -1474,7 +1474,7 @@ if they operate against the same transactional resources.
 
 A local convention inside one method is insufficient if another code path accesses the resources in reverse order.
 
-# 36. Application-level locks can deadlock too
+## Application-level locks can deadlock too
 
 PostgreSQL supports advisory locks, allowing the application to define logical resources that do not correspond directly to rows.
 
@@ -1516,7 +1516,7 @@ The cycle is still:
 T1 → T2 → T1
 ```
 
-# 37. Deadlocks outside databases
+## Deadlocks outside databases
 
 The same structure appears in multithreaded applications.
 
@@ -1561,7 +1561,7 @@ mutexes
 
 This connection is also present in the original notes' thread example.
 
-# 38. Practical strategy table
+## Practical strategy table
 
 | Problem observed | First thing to investigate |
 |---|---|
@@ -1578,7 +1578,7 @@ This connection is also present in the original notes' thread example.
 | Deadlocks after adding Serializable/range locking | Inspect range access and execution plans rather than assuming row-level conflicts |
 | Rare unavoidable deadlock | Correctly retry the full transaction |
 
-# 39. What each database gives you
+## What each database gives you
 
 | Database | Error/application signal | Main production diagnostic |
 |---|---|---|
@@ -1592,7 +1592,7 @@ InnoDB records detailed information about its latest detected deadlock and can l
 
 SQL Server's default `system_health` Extended Events session captures deadlock graphs, and Microsoft recommends the `xml_deadlock_report` event for deadlock analysis.
 
-# 40. Final mental model
+## Final mental model
 
 Do not memorize deadlock as merely:
 
@@ -1668,7 +1668,7 @@ It is:
 
 Once the cycle is reconstructed, the fix is usually much easier to see.
 
-# References
+## References
 
 The source notes provide the original wait-for-graph, lock-ordering, timeout, rollback, bank-transfer, and deadlock-versus-livelock structure.
 

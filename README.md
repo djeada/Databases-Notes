@@ -27,7 +27,7 @@ If you are new to databases, follow this route:
 5. [Storage](notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) and [concurrency](notes/07_concurrency_control/01_shared_vs_exclusive_locks.md): learn how reads, writes, and competing operations work underneath SQL.
 6. [Distributed databases](notes/06_distributed_databases/01_distributed_database_systems.md) and [replication](notes/09_database_replication/01_intro_to_replication.md): add machines only after understanding the new routing, timing, and failure questions.
 
-Then explore performance, security, engine choices, analytics, and ORMs according to your needs. The numbered contents are a reference map; you do not need to read every engine or cloud-service chapter before writing useful SQL.
+Then explore performance, security, engine choices, analytics, and ORMs according to your needs. Use the contents as a reference map; you do not need to read every engine or cloud-service chapter before writing useful SQL.
 
 The introductory exercises use SQLite. Procedure and permission exercises explicitly switch to PostgreSQL; later notes use several named engines. Run code in its stated engine, because syntax and guarantees differ. A code fragment illustrating a concept is not always a complete setup script. Expected failures are marked in the text.
 
@@ -48,7 +48,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ## Notes
 
-### 1. Introduction to Databases
+### Introduction to Databases
 
 - [Databases Introduction](notes/01_introduction_to_databases/01_databases_intro.md) — Overview of database fundamentals and core concepts.
 - [Types of Databases](notes/01_introduction_to_databases/02_types_of_databases.md) — Exploring relational, NoSQL, and other database types.
@@ -56,7 +56,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Data Models](notes/01_introduction_to_databases/04_data_models.md) — Methods of structuring and representing data.
 - [Glossary](notes/01_introduction_to_databases/05_glossary.md) — Key terms and definitions.
 
-### 2. Database Design
+### Database Design
 
 - [Requirements Analysis](notes/02_database_design/01_requirements_analysis.md) — Determining user needs for database development.
 - [Normalization](notes/02_database_design/02_normalization.md) — Minimizing redundancy through proper organization.
@@ -64,7 +64,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Indexing Strategies](notes/02_database_design/04_indexing_strategies.md) — Optimizing query performance with indexes.
 - [Data Integrity](notes/02_database_design/05_data_integrity.md) — Ensuring accuracy and consistency of data.
 
-### 3. SQL
+### SQL
 
 - [Introduction to SQL](notes/03_sql/01_intro_to_sql.md) — Build the SQLite bookstore and learn queries from expected results.
 - [DDL - Data Definition](notes/03_sql/02_data_definition_language_ddl.md) — CREATE, ALTER, DROP commands.
@@ -79,7 +79,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Aggregate Functions](notes/03_sql/10_aggregate_functions.md) — Grouping, totals, and null handling.
 - [Window Functions](notes/03_sql/11_window_functions.md) — Ranking and calculations without collapsing rows.
 
-### 4. ACID Properties and Transactions
+### ACID Properties and Transactions
 
 - [What is a Transaction](notes/04_acid_properties_and_transactions/01_transactions_intro.md) — Overview of database transactions.
 - [Atomicity](notes/04_acid_properties_and_transactions/02_atomicity.md) — All-or-nothing transaction property.
@@ -87,7 +87,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Isolation](notes/04_acid_properties_and_transactions/04_isolation.md) — Independent transaction execution.
 - [Durability](notes/04_acid_properties_and_transactions/05_durability.md) — Permanent transaction results.
 
-### 5. Database Storage and Indexing
+### Database Storage and Indexing
 
 - [Storage on Disk](notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) — How logical tables, indexes, pages, files, caches, and recovery logs reach storage.
 - [Row vs Column Storage](notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md) — Compare row-oriented transactional layouts with column-oriented analytical storage.
@@ -101,7 +101,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Specialized Index Structures](notes/05_storage_and_indexing/10_specialized_index_structures.md) — Hash, bitmap, inverted/GIN, GiST, SP-GiST, BRIN, spatial, and data-skipping structures.
 - [Index Maintenance, Bloat & Online Operations](notes/05_storage_and_indexing/11_index_maintenance_bloat_and_online_operations.md) — Index lifecycle, redundancy, concurrent builds/rebuilds, monitoring, and safe removal.
 
-### 6. Distributed Databases
+### Distributed Databases
 
 - [Distributed DB Introduction](notes/06_distributed_databases/01_distributed_database_systems.md) — Basic concepts and architectures overview.
 - [Partitioning](notes/06_distributed_databases/02_partitioning.md) — Methods of dividing and distributing data.
@@ -112,7 +112,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Eventual Consistency](notes/06_distributed_databases/07_eventual_consistency.md) — Convergence model for distributed systems.
 - [Advanced Distributed Systems](notes/06_distributed_databases/08_distributed_database_systems.md) — Load balancing, replication, and sharding patterns.
 
-### 7. Concurrency Control and Locking
+### Concurrency Control and Locking
 
 - [Shared vs Exclusive Locks](notes/07_concurrency_control/01_shared_vs_exclusive_locks.md) — Different locking mechanisms.
 - [Deadlocks](notes/07_concurrency_control/02_deadlocks.md) — Understanding and resolving deadlock situations.
@@ -120,7 +120,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Double Booking Problem](notes/07_concurrency_control/04_double_booking_problem.md) — Concurrent resource booking challenges.
 - [Isolation Levels](notes/07_concurrency_control/05_serializable_vs_repeatable_read.md) — Serializable vs Repeatable Read.
 
-### 8. Database Performance and Optimization
+### Database Performance and Optimization
 
 - [Query Optimization](notes/08_database_performance/01_query_optimization_techniques.md) — Diagnose and reduce unnecessary query work with measured plans.
 - [Indexing Strategies](notes/08_database_performance/02_indexing_strategies.md) — Choose index access methods while accounting for write and maintenance cost.
@@ -135,14 +135,14 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Benchmarking, Load Testing & Capacity](notes/08_database_performance/11_benchmarking_load_testing_and_capacity.md) — Build representative workloads, find saturation, and plan headroom.
 - [Write Performance, Vacuum & Bloat](notes/08_database_performance/12_write_performance_vacuum_and_bloat.md) — Understand index write cost, MVCC cleanup, WAL, maintenance, and backfills.
 
-### 9. Database Replication
+### Database Replication
 
 - [Replication Introduction](notes/09_database_replication/01_intro_to_replication.md) — Overview of database replication concepts.
 - [Master-Standby](notes/09_database_replication/02_master_standby_replication.md) — Primary-replica replication model.
 - [Multi-Master](notes/09_database_replication/03_multi_master_replication.md) — Multiple active nodes replication.
 - [Sync vs Async](notes/09_database_replication/04_synchronous_vs_asynchronous_replication.md) — Replication timing strategies.
 
-### 10. NoSQL Databases
+### NoSQL Databases
 
 - [NoSQL Introduction](notes/10_nosql_databases/01_nosql_databases_intro.md) — Choose models from access patterns rather than the NoSQL label.
 - [NoSQL Types](notes/10_nosql_databases/02_types_of_nosql_databases.md) — Key-value, document, wide-column, and graph model overview.
@@ -155,7 +155,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Consistency, Transactions & Replication](notes/10_nosql_databases/09_consistency_transactions_and_replication.md) — Atomicity boundaries, replication, quorums, conflicts, retries, and multi-region trade-offs.
 - [Operating NoSQL & Polyglot Persistence](notes/10_nosql_databases/10_operating_nosql_and_polyglot_persistence.md) — Source-of-truth design, CDC/projections, backups, capacity, observability, and operational ownership.
 
-### 11. Database Security and Best Practices
+### Database Security and Best Practices
 
 - [Backup & Recovery](notes/11_security_best_practices/01_backup_and_recovery_strategies.md) — Backup types, RPO/RTO, point-in-time recovery, restore validation, and recovery planning.
 - [Database Security](notes/11_security_best_practices/02_database_security.md) — Defense-in-depth overview across identity, networks, data, monitoring, and operations.
@@ -170,7 +170,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Database Hardening & Patch Management](notes/11_security_best_practices/11_database_hardening_and_patch_management.md) — Network/host/container hardening, supported versions, patching, baselines, and resource limits.
 - [Incident Response & DR Drills](notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md) — Containment, evidence, failover versus restore, RPO/RTO, restore tests, tabletops, and game days.
 
-### 12. Database Engines
+### Database Engines
 
 - [SQLite](notes/12_database_engines/01_sqlite.md) — Lightweight, serverless SQL database.
 - [MySQL](notes/12_database_engines/02_mysql.md) — Popular open-source RDBMS.
@@ -188,7 +188,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Distributed SQL](notes/12_database_engines/14_distributed_sql.md) — Consensus, distributed transactions, ranges, multi-region placement, and CockroachDB examples.
 - [Azure Database Services](notes/12_database_engines/15_azure_services.md) — Choosing Azure SQL, PostgreSQL, MySQL, Cosmos DB, Managed Redis, and related services.
 
-### 13. Big Data and Data Warehousing
+### Big Data and Data Warehousing
 
 - [Data Warehousing](notes/13_big_data/01_data_warehousing.md) — Architectures for large-scale analytics.
 - [Hadoop & HDFS](notes/13_big_data/02_hadoop_and_hdfs.md) — Distributed file system for big data.
@@ -197,7 +197,7 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Streaming, Kafka, and CDC](notes/13_big_data/05_streaming_kafka_and_cdc.md) — Event logs, partitions, consumer groups, delivery semantics, CDC, and the outbox pattern.
 - [Data Pipelines, Orchestration, and Data Quality](notes/13_big_data/06_data_pipelines_orchestration_and_quality.md) — DAGs, retries, backfills, dbt, lineage, quality tests, and production pipeline design.
 
-### 14. Object-Relational Mapping (ORM)
+### Object-Relational Mapping (ORM)
 
 - [ORM Introduction](notes/14_orm/01_introduction_to_orm.md) — Bridging OOP and relational databases.
 - [Popular ORM Tools](notes/14_orm/02_popular_orm_tools.md) — Hibernate, Entity Framework, SQLAlchemy, Django ORM, Prisma, and related approaches.

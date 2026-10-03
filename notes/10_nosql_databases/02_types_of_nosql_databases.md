@@ -282,7 +282,6 @@ NoSQL databases offer a range of characteristics that make them suitable for mod
 - NoSQL systems are typically cost-effective, leveraging commodity hardware and open-source technologies, reducing infrastructure costs and providing scalable solutions without the need for expensive proprietary systems.
 - They benefit from an active community and extensive ecosystems, offering a wealth of tools, libraries, and resources that facilitate development, deployment, and management of NoSQL databases.
 
-
 ## Focused modeling notes
 
 The model categories above become useful only when connected to concrete access patterns:

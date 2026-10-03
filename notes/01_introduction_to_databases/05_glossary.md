@@ -175,8 +175,7 @@ See [database types](02_types_of_databases.md) and [distributed databases](../06
 | RPO / RTO | Recovery point objective: acceptable data-loss window / recovery time objective: acceptable time to restore service |
 | Migration | A controlled change to schema or data between application versions or systems |
 
-Product names are introduced in the [engine chapters](../../README.md#12-database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
-
+Product names are introduced in the [engine chapters](../../README.md#database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
 
 ## Work through missing values instead of memorizing the definition
 
@@ -236,7 +235,7 @@ A product name tells you which implementation to investigate; it does not stand 
 | Elasticsearch | Search and analytics engine using indexes to retrieve and aggregate matching documents; distinct from a relational table index |
 | Hadoop / Spark | Distributed storage/processing ecosystem / processing engine; covered in the Big Data chapter |
 
-The [Couchbase document guide](https://docs.couchbase.com/go-sdk/current/concept-docs/documents.html) explains its key/document distinction. AWS's [database decision guide](https://docs.aws.amazon.com/decision-guides/latest/decision-guides/databases-on-aws-how-to-choose.html) identifies the cloud-service families; the repository's [engine chapters](../../README.md#12-database-engines) develop them further.
+The [Couchbase document guide](https://docs.couchbase.com/go-sdk/current/concept-docs/documents.html) explains its key/document distinction. AWS's [database decision guide](https://docs.aws.amazon.com/decision-guides/latest/decision-guides/databases-on-aws-how-to-choose.html) identifies the cloud-service families; the repository's [engine chapters](../../README.md#database-engines) develop them further.
 
 ## Check your understanding
 

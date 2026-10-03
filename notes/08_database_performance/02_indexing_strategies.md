@@ -221,7 +221,6 @@ Effective indexing improves query performance while managing resource costs.
 - Query execution can be analyzed using EXPLAIN plans to ensure indexes are being utilized effectively.
 - Continuous monitoring after deployment helps identify any unexpected impacts, enabling further adjustments as needed.
 
-
 ## Performance cost of an index
 
 An index moves work rather than making it disappear.

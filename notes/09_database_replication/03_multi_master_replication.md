@@ -24,9 +24,9 @@ But this immediately creates the central problem:
 
 That question is what makes multi-primary replication much harder than ordinary primary–standby replication.
 
-# 1. Compare single-primary and multi-primary
+## Compare single-primary and multi-primary
 
-## Single-primary
+### Single-primary
 
 ```text
                 writes
@@ -45,7 +45,7 @@ Primary
 
 Two conflicting writes ultimately meet there.
 
-## Multi-primary
+### Multi-primary
 
 ```text
 Client 1 ------> Node A
@@ -71,7 +71,7 @@ Can both commit temporarily and be reconciled later?
 
 Different multi-primary technologies answer those questions very differently.
 
-# 2. "Multi-primary" describes topology, not consistency
+## "Multi-primary" describes topology, not consistency
 
 Consider:
 
@@ -126,7 +126,7 @@ Therefore:
 
 > "Clients can write to any node" does not necessarily mean every node independently commits conflicting writes.
 
-# 3. The core multi-primary conflict
+## The core multi-primary conflict
 
 Suppose:
 
@@ -175,7 +175,7 @@ Did both clients receive SUCCESS?
 
 This is much harder than merely copying rows between servers.
 
-# 4. Another conflict: same row, different values
+## Another conflict: same row, different values
 
 Initial state:
 
@@ -215,7 +215,7 @@ merge them using business logic
 
 Those strategies provide very different guarantees.
 
-# 5. Multi-primary architectures fall into different families
+## Multi-primary architectures fall into different families
 
 | Model | When conflict is resolved | Typical consequence |
 |---|---|---|
@@ -233,7 +233,7 @@ multi-master
 
 does not tell you which one is being used.
 
-# 6. Why multi-primary can reduce geographic write latency
+## Why multi-primary can reduce geographic write latency
 
 Suppose users are in:
 
@@ -275,7 +275,7 @@ the long-distance network latency can still appear inside the transaction commit
 
 Multi-primary therefore does not eliminate the speed of light.
 
-# 7. Multi-primary does not automatically provide linear write scaling
+## Multi-primary does not automatically provide linear write scaling
 
 This is one of the most important corrections to simplistic notes.
 
@@ -319,7 +319,7 @@ MariaDB describes Galera as multi-primary and suitable for distributing write en
 
 For true horizontal write scaling, partitioning/sharding may still be necessary.
 
-# 8. Multi-primary and sharding solve different problems
+## Multi-primary and sharding solve different problems
 
 Consider:
 
@@ -361,7 +361,7 @@ different writes may belong to completely different subsets
 
 Therefore sharding can create genuine independent write capacity in a way that adding fully replicated writable nodes may not.
 
-# 9. Galera Cluster: the concrete model
+## Galera Cluster: the concrete model
 
 MariaDB Galera Cluster is a useful example of certification-based, virtually synchronous multi-primary replication.
 
@@ -390,7 +390,7 @@ At commit time, Galera represents changes as a write set, globally orders the wr
 
 MariaDB describes the process as write-set broadcasting followed by certification and application.
 
-# 10. "Synchronous" in Galera needs qualification
+## "Synchronous" in Galera needs qualification
 
 Galera is commonly described as:
 
@@ -435,7 +435,7 @@ every physical data page on every node changed
 at exactly the same instant
 ```
 
-# 11. Follow one transaction through Galera
+## Follow one transaction through Galera
 
 Suppose a client connected to Node A executes:
 
@@ -480,7 +480,7 @@ later:
 "Oops, these disagree."
 ```
 
-# 12. What is a write set?
+## What is a write set?
 
 A write set is Galera's representation of the transaction changes relevant to replication and conflict detection.
 
@@ -504,7 +504,7 @@ as ordinary statement-based replication would.
 
 This is why Galera requires row-oriented replication behavior for supported clustered operation.
 
-# 13. Certification: the heart of Galera
+## Certification: the heart of Galera
 
 Suppose two concurrent transactions originate on different nodes.
 
@@ -556,7 +556,7 @@ and someone merges later.
 
 That difference is central to Galera.
 
-# 14. The source's "later GTID wins" model is misleading
+## The source's "later GTID wins" model is misleading
 
 The source currently describes conflict behavior approximately as:
 
@@ -594,7 +594,7 @@ It is:
 
 MariaDB documents certification as checking incoming write sets against concurrently committed transactions; conflicts cause a transaction to be aborted rather than merged through a timestamp/GTID winner rule.
 
-# 15. This is optimistic concurrency
+## This is optimistic concurrency
 
 Galera's model is broadly optimistic.
 
@@ -641,7 +641,7 @@ for:
 possible transaction abort at commit time
 ```
 
-# 16. Local execution means commit can still fail
+## Local execution means commit can still fail
 
 This produces an important application rule.
 
@@ -676,7 +676,7 @@ as an operation that can fail due to concurrency.
 
 MariaDB's Galera guidance explicitly advises applications to check for errors after `COMMIT`.
 
-# 17. Why retries are necessary
+## Why retries are necessary
 
 Suppose Node A and Node B repeatedly update the same customer.
 
@@ -723,7 +723,7 @@ perform writes again
 COMMIT
 ```
 
-# 18. Error 1213 can represent Galera conflict behavior
+## Error 1213 can represent Galera conflict behavior
 
 MariaDB exposes some Galera concurrency conflicts using familiar transactional errors, including the deadlock class.
 
@@ -745,7 +745,7 @@ classic local InnoDB lock-cycle deadlock
 
 In a Galera environment, the cluster's certification/concurrency mechanisms can also be involved.
 
-# 19. Hot rows are especially expensive in multi-primary Galera
+## Hot rows are especially expensive in multi-primary Galera
 
 Suppose every checkout performs:
 
@@ -785,7 +785,7 @@ This is why workload shape matters more than the phrase:
 multi-master
 ```
 
-# 20. Good multi-primary workloads
+## Good multi-primary workloads
 
 Galera tends to behave much better when concurrent transactions modify largely independent data.
 
@@ -814,7 +814,7 @@ the same account
 
 because certification conflicts become common.
 
-# 21. Primary keys matter
+## Primary keys matter
 
 Efficient row identification is especially important for certification-based replication.
 
@@ -835,7 +835,7 @@ Primary keys are not merely an ORM convention here.
 
 They help the distributed system identify conflicting row changes efficiently.
 
-# 22. AUTO_INCREMENT becomes interesting in multi-primary systems
+## AUTO_INCREMENT becomes interesting in multi-primary systems
 
 Suppose Node A and Node B both execute:
 
@@ -882,7 +882,7 @@ Node C:
 
 MariaDB documents this automatic adjustment and enables it by default.
 
-# 23. Do not expect contiguous AUTO_INCREMENT values
+## Do not expect contiguous AUTO_INCREMENT values
 
 The consequence is:
 
@@ -925,7 +925,7 @@ invoice 102
 
 with no gaps, ordinary `AUTO_INCREMENT` is the wrong business-sequencing mechanism.
 
-# 24. UUIDs do not solve transaction conflicts
+## UUIDs do not solve transaction conflicts
 
 Using:
 
@@ -967,7 +967,7 @@ without solving:
 distributed write contention.
 ```
 
-# 25. Quorum is what prevents split brain in Galera
+## Quorum is what prevents split brain in Galera
 
 Suppose a three-node cluster is:
 
@@ -1003,7 +1003,7 @@ The minority side cannot simply continue independently as another writable clust
 
 MariaDB documents quorum as requiring more than half of the relevant voting membership; nodes outside the Primary Component stop ordinary query/transaction processing to prevent split brain.
 
-# 26. "Primary Component" does not mean primary database node
+## "Primary Component" does not mean primary database node
 
 Terminology is confusing here.
 
@@ -1039,7 +1039,7 @@ C
 
 and all three can remain writable.
 
-# 27. A three-node quorum example
+## A three-node quorum example
 
 Initial cluster:
 
@@ -1082,7 +1082,7 @@ and cannot safely form the previous cluster's majority by itself.
 
 The correct behavior is to stop ordinary cluster writes rather than invent an independent authoritative history.
 
-# 28. Why two-node clusters are awkward
+## Why two-node clusters are awkward
 
 Suppose the cluster contains only:
 
@@ -1124,7 +1124,7 @@ every deployment needs five database servers
 
 but quorum math must be considered deliberately.
 
-# 29. Quorum solves split-brain authority, not conflict hot spots
+## Quorum solves split-brain authority, not conflict hot spots
 
 Quorum answers:
 
@@ -1155,7 +1155,7 @@ many certification conflicts
 
 because applications repeatedly update the same rows.
 
-# 30. Node failure in Galera is not ordinary "promotion"
+## Node failure in Galera is not ordinary "promotion"
 
 With primary–standby:
 
@@ -1195,7 +1195,7 @@ in front of the database nodes.
 
 MariaDB specifically positions MaxScale alongside Galera for connection routing and HA.
 
-# 31. Client routing still matters
+## Client routing still matters
 
 Suppose clients connect directly to:
 
@@ -1235,7 +1235,7 @@ Node B    Node C
 
 Multi-primary storage does not remove the need for connection routing.
 
-# 32. Read consistency is subtler than "all nodes are synchronous"
+## Read consistency is subtler than "all nodes are synchronous"
 
 Suppose a transaction commits through Node A.
 
@@ -1255,7 +1255,7 @@ for operations requiring a causality check.
 
 MariaDB documents that `wsrep_sync_wait` waits until the local node catches up with cluster updates before executing selected operation types, at the cost of additional read latency.
 
-# 33. Concrete read-after-write example
+## Concrete read-after-write example
 
 Client writes through A:
 
@@ -1290,7 +1290,7 @@ This is another reason:
 
 > "synchronous cluster" does not mean application code can ignore read-consistency semantics.
 
-# 34. Why Galera can still have an apply queue
+## Why Galera can still have an apply queue
 
 Suppose transactions arrive faster than one node can apply them.
 
@@ -1312,7 +1312,7 @@ The problem is local application speed.
 
 Galera uses parallel applier threads to process write sets that can safely be applied concurrently. MariaDB exposes this through Galera applier-thread configuration and receive-queue monitoring.
 
-# 35. Flow Control: the slowest node can affect the cluster
+## Flow Control: the slowest node can affect the cluster
 
 Suppose:
 
@@ -1369,7 +1369,7 @@ cluster resumes
 
 MariaDB documents Flow Control as an automatic cluster-wide throttling mechanism triggered when a node's receive queue grows too large.
 
-# 36. One slow node can therefore reduce cluster write throughput
+## One slow node can therefore reduce cluster write throughput
 
 This is a crucial performance property.
 
@@ -1401,7 +1401,7 @@ more throughput
 
 In replicated systems, the slowest required participant can matter greatly.
 
-# 37. Monitor Flow Control
+## Monitor Flow Control
 
 Important Galera metrics include:
 
@@ -1431,7 +1431,7 @@ means the cluster is spending substantial time throttled by Flow Control.
 
 MariaDB explicitly recommends these metrics for identifying cluster bottlenecks.
 
-# 38. State transfer: how does a node catch up?
+## State transfer: how does a node catch up?
 
 Suppose Node C has been offline.
 
@@ -1460,7 +1460,7 @@ SST
 State Snapshot Transfer
 ```
 
-# 39. IST: Incremental State Transfer
+## IST: Incremental State Transfer
 
 If a donor still has the missing write sets in its GCache, it can send only the missing history.
 
@@ -1483,7 +1483,7 @@ C applies them and catches up.
 
 MariaDB describes IST as the preferred, faster mechanism when the donor's GCache contains the write sets required by the returning node.
 
-# 40. GCache
+## GCache
 
 Galera's GCache retains recent write sets primarily so nodes that briefly disconnect can catch up through IST.
 
@@ -1516,7 +1516,7 @@ a permanent historical backup.
 
 It is recovery/catch-up state.
 
-# 41. SST: State Snapshot Transfer
+## SST: State Snapshot Transfer
 
 If the required history is no longer available:
 
@@ -1548,7 +1548,7 @@ After receiving the state, the joiner then processes newer write sets and eventu
 
 MariaDB documents SST as a full dataset copy used when incremental catch-up is not sufficient.
 
-# 42. IST versus SST
+## IST versus SST
 
 | Property | IST | SST |
 |---|---|---|
@@ -1565,7 +1565,7 @@ This distinction is much more important operationally than merely saying:
 "joining nodes replicate automatically."
 ```
 
-# 43. SST method matters
+## SST method matters
 
 The source config uses:
 
@@ -1594,7 +1594,7 @@ MariaDB documents SST methods as separate provisioning mechanisms and notes that
 
 For current production systems, choose an SST method from current MariaDB documentation rather than treating `rsync` as a default recommendation.
 
-# 44. The source's `wsrep_sst_auth` example is also misleading for `rsync`
+## The source's `wsrep_sst_auth` example is also misleading for `rsync`
 
 The source combines:
 
@@ -1613,7 +1613,7 @@ So the correct documentation pattern is:
 
 Do not teach one generic SST user recipe as universal.
 
-# 45. Quorum loss and full-cluster recovery
+## Quorum loss and full-cluster recovery
 
 Suppose all three nodes shut down.
 
@@ -1633,7 +1633,7 @@ MariaDB's recovery procedure explicitly requires identifying the most advanced n
 
 Bootstrapping is a cluster-authority operation, not merely a startup convenience.
 
-# 46. Why careless bootstrapping is dangerous
+## Why careless bootstrapping is dangerous
 
 Imagine:
 
@@ -1659,7 +1659,7 @@ not:
 Which server boots fastest?
 ```
 
-# 47. Monitoring cluster health
+## Monitoring cluster health
 
 A basic health check should include:
 
@@ -1690,7 +1690,7 @@ depends on how many nodes should currently be members.
 
 MariaDB documents these status variables as central quorum and node-health indicators.
 
-# 48. Do not monitor only cluster size
+## Do not monitor only cluster size
 
 Suppose:
 
@@ -1716,7 +1716,7 @@ Is one node repeatedly transferring state?
 
 A healthy cluster needs several categories of metrics.
 
-# 49. Practical monitoring table
+## Practical monitoring table
 
 | Question | Useful signal |
 |---|---|
@@ -1733,7 +1733,7 @@ A healthy cluster needs several categories of metrics.
 
 MariaDB's monitoring documentation specifically recommends receive/send queues, Flow Control metrics, and certification-dependency information for cluster diagnosis.
 
-# 50. A corrected minimal MariaDB Galera configuration
+## A corrected minimal MariaDB Galera configuration
 
 For a lab, a basic configuration may look conceptually like:
 
@@ -1762,7 +1762,7 @@ MariaDB's current Galera deployment documentation continues to identify `ROW`, I
 
 Do not blindly copy provider paths: they differ across distributions and package layouts.
 
-# 51. Current product naming matters
+## Current product naming matters
 
 The source describes:
 
@@ -1782,7 +1782,7 @@ So for current notes:
 
 Configuration commands should come from the documentation for that exact product/version.
 
-# 52. Do not use "rule of thumb = threads equal CPU cores" blindly
+## Do not use "rule of thumb = threads equal CPU cores" blindly
 
 The source suggests:
 
@@ -1821,7 +1821,7 @@ wsrep_cert_deps_distance
 
 rather than a universal core-count formula.
 
-# 53. `wsrep_slave_threads` versus `wsrep_applier_threads`
+## `wsrep_slave_threads` versus `wsrep_applier_threads`
 
 Terminology differs across product lines and versions.
 
@@ -1849,7 +1849,7 @@ Therefore:
 
 Do not copy Galera settings between products merely because all of them use Galera technology.
 
-# 54. `innodb_autoinc_lock_mode = 2`
+## `innodb_autoinc_lock_mode = 2`
 
 Current MariaDB Galera deployment documentation still includes:
 
@@ -1871,7 +1871,7 @@ which addresses cross-node auto-increment allocation.
 
 These settings live at different layers.
 
-# 55. Large transactions are costly
+## Large transactions are costly
 
 Consider:
 
@@ -1901,7 +1901,7 @@ large rollback cost
 
 MariaDB's Flow Control documentation recommends breaking large write operations into smaller batches when they cause write-set/applier pressure.
 
-# 56. DDL is also distributed coordination
+## DDL is also distributed coordination
 
 Suppose:
 
@@ -1924,7 +1924,7 @@ MariaDB documents TOI as the default mode, ordering DDL consistently with cluste
 
 DDL therefore deserves its own deployment plan.
 
-# 57. Multi-primary does not mean "no failover planning"
+## Multi-primary does not mean "no failover planning"
 
 Galera avoids the classic:
 
@@ -1964,7 +1964,7 @@ The failure model changes.
 
 It does not disappear.
 
-# 58. Three-node failure table
+## Three-node failure table
 
 | Event | A | B | C | Expected cluster behavior |
 |---|---|---|---|---|
@@ -1987,7 +1987,7 @@ It is:
 "Does the surviving component have authoritative quorum?"
 ```
 
-# 59. Geographically distributed Galera needs caution
+## Geographically distributed Galera needs caution
 
 A tempting topology is:
 
@@ -2023,7 +2023,7 @@ MariaDB documentation notes WAN-specific provider considerations, and current En
 
 For some applications, another architecture—regional clusters plus asynchronous inter-region replication, for example—may fit better.
 
-# 60. Compare Galera with asynchronous active-active replication
+## Compare Galera with asynchronous active-active replication
 
 Imagine two asynchronous writable sites:
 
@@ -2068,7 +2068,7 @@ allow divergent histories
 then merge them.
 ```
 
-# 61. Compare Galera with last-write-wins
+## Compare Galera with last-write-wins
 
 Last-write-wins might do:
 
@@ -2099,7 +2099,7 @@ The losing application sees a transaction failure and has an opportunity to retr
 
 These are fundamentally different semantics.
 
-# 62. Compare Galera with consensus-based distributed SQL
+## Compare Galera with consensus-based distributed SQL
 
 Now consider a system such as CockroachDB or Spanner.
 
@@ -2136,7 +2136,7 @@ independent master
 
 should not be treated as synonyms.
 
-# 63. Conflict avoidance can be better than conflict retry
+## Conflict avoidance can be better than conflict retry
 
 Suppose customers are geographically assigned:
 
@@ -2168,7 +2168,7 @@ depending on the architecture.
 
 Multi-primary capability can exist while application routing deliberately reduces multi-writer contention.
 
-# 64. External side effects and Galera retries
+## External side effects and Galera retries
 
 Suppose:
 
@@ -2202,7 +2202,7 @@ careful side-effect boundaries
 
 Galera's ability to abort a transaction at commit makes this especially important.
 
-# 65. Do not confuse replication conflict with business invariant safety
+## Do not confuse replication conflict with business invariant safety
 
 Suppose two transactions modify different rows:
 
@@ -2241,7 +2241,7 @@ for such invariants.
 
 Multi-primary replication does not replace transaction-isolation reasoning.
 
-# 66. Multi-primary and CAP
+## Multi-primary and CAP
 
 Suppose a three-node Galera cluster partitions:
 
@@ -2272,7 +2272,7 @@ preserve one authoritative cluster history
 → sacrifice write availability on minority side
 ```
 
-# 67. Multi-primary therefore does not mean "available everywhere"
+## Multi-primary therefore does not mean "available everywhere"
 
 This misconception is especially common:
 
@@ -2297,7 +2297,7 @@ membership
 consistency guarantee
 ```
 
-# 68. Practical architecture comparison
+## Practical architecture comparison
 
 | Architecture | Writers | Conflict point | Partition behavior | Typical strength |
 |---|---|---|---|---|
@@ -2316,7 +2316,7 @@ Do not choose among these using only:
 
 The mechanisms and guarantees differ substantially.
 
-# 69. What multi-primary replication is good at
+## What multi-primary replication is good at
 
 It can be a strong fit when you need:
 
@@ -2334,7 +2334,7 @@ geographic/localized write entry where coordination latency is acceptable
 
 and the workload has manageable write contention.
 
-# 70. When it becomes difficult
+## When it becomes difficult
 
 Warning signs include:
 
@@ -2359,7 +2359,7 @@ poor primary-key design
 
 Those are architectural issues, not merely tuning problems.
 
-# 71. Common misconceptions
+## Common misconceptions
 
 | Claim | Better explanation |
 |---|---|
@@ -2376,7 +2376,7 @@ Those are architectural issues, not merely tuning problems.
 | "UUIDs prevent multi-primary conflicts. " | They prevent some ID collisions, not business-data conflicts |
 | "Multi-primary replaces sharding. " | Replication and partitioning solve different problems |
 
-# 72. Recommended Galera test plan
+## Recommended Galera test plan
 
 Do not validate a cluster only with:
 
@@ -2405,7 +2405,7 @@ Test actual failure and conflict behavior.
 
 Testing the happy path alone does not validate HA.
 
-# 73. A safer basic deployment sequence
+## A safer basic deployment sequence
 
 For a fresh three-node MariaDB Galera lab:
 
@@ -2448,7 +2448,7 @@ For a fresh three-node MariaDB Galera lab:
 
 The current MariaDB quick-start documentation follows this overall bootstrap-one-then-join-others model.
 
-# 74. Do not bootstrap ordinary joining nodes
+## Do not bootstrap ordinary joining nodes
 
 This command:
 
@@ -2474,7 +2474,7 @@ Normal joining nodes should start normally and connect to the existing Primary C
 
 Careless repeated use can create precisely the split histories quorum is designed to prevent.
 
-# 75. Security considerations
+## Security considerations
 
 A production cluster should secure:
 
@@ -2501,7 +2501,7 @@ Current MariaDB Galera documentation also supports encrypted cluster and state-t
 
 Do not simply expose Galera ports broadly.
 
-# 76. Technology summary: what actually happens to a write
+## Technology summary: what actually happens to a write
 
 | System | Entry point | How one authoritative outcome is reached |
 |---|---|---|
@@ -2521,7 +2521,7 @@ The user-visible statement:
 
 can therefore hide radically different distributed protocols.
 
-# 77. Final mental model
+## Final mental model
 
 Do not memorize multi-primary replication as:
 
@@ -2599,7 +2599,7 @@ cluster safety
 node recovery
 ```
 
-# 78. The question to ask in any multi-primary system
+## The question to ask in any multi-primary system
 
 Do not ask only:
 
@@ -2628,7 +2628,7 @@ slow apply can throttle the whole cluster through Flow Control
 
 Once those mechanisms are understood, "multi-master" stops being a marketing label and becomes a concrete concurrency and availability architecture.
 
-# References
+## References
 
 The source notes provide the original multi-master topology, motivations, conflict-resolution discussion, Galera configuration, SST setup, bootstrapping process, and certification example.
 

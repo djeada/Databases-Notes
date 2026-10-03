@@ -6,7 +6,7 @@ A **database** is an organized collection of data. A **database management syste
 
 This note starts with a small relational database: one that represents facts in tables and connects them through keys. You will create it, insert records, query related tables, update and delete data, and try a rollback. Later notes compare other database models and explain the machinery behind these operations.
 
-## 1. Why a file is not always enough
+## Why a file is not always enough
 
 Suppose the bookstore keeps this CSV:
 
@@ -42,7 +42,7 @@ SQLite runs as a library inside an application and manages a local database, rat
 
 Android's Room library builds on SQLite for local structured storage. An app can keep records locally and show them while offline; Room supplies an application-facing layer for entities and queries. This is a concrete example of database storage being useful even without a remote service. See [Android's Room overview](https://developer.android.com/training/data-storage/room).
 
-## 2. Read the structure before writing commands
+## Read the structure before writing commands
 
 Separate customer details from order details:
 
@@ -76,7 +76,7 @@ customer_id = 2  <----------------  order_id = 103, customer_id = 2
 
 A **foreign key** declares that the reference must match an existing eligible key. It can reject an order for a nonexistent customer. It does not automatically retrieve the customer's name; that is the query's job.
 
-## 3. Create the database and its first tables
+## Create the database and its first tables
 
 The following SQL uses **SQLite**. Use a fresh database for this note, separate from the fuller bookstore setup in the later SQL chapter. Run the blocks in reading order, except the explicitly marked invalid-write examples.
 
@@ -122,7 +122,7 @@ CREATE TABLE orders (
 
 `PRAGMA foreign_keys = ON` enables foreign-key checks for this SQLite connection. A new connection must enable them too. Dates are ISO-formatted text here, such as `2025-01-10`; the declaration alone does not verify that every string is a real date. PostgreSQL would normally use a `DATE` column for this fact.
 
-## 4. Insert records: create the data
+## Insert records: create the data
 
 ```sql
 INSERT INTO customers (customer_id, name, email) VALUES
@@ -139,7 +139,7 @@ INSERT INTO orders (order_id, customer_id, order_date) VALUES
 
 Insert customers first because the orders reference them. An order can have a distinct `order_id` while still repeating `customer_id`: several orders belonging to one customer is expected, not a duplicate-key error.
 
-## 5. Select records: ask a precise question
+## Select records: ask a precise question
 
 First inspect the customers:
 
@@ -172,7 +172,7 @@ Read the clauses as instructions about the result: use `orders` as the input, ke
 
 `SELECT *` requests all columns and is convenient when exploring a table. Named columns are clearer in application queries. Without `ORDER BY`, a result has no guaranteed display order even when repeated runs happen to look the same.
 
-## 6. Join related tables
+## Join related tables
 
 The account page needs a customer name beside each order. Retrieve it with a join:
 
@@ -199,7 +199,7 @@ One-to-one means each record corresponds to at most one record on the other side
 
 Many-to-many means records on both sides can have several matches: one order contains several books, and one book appears in several orders. A relational design normally introduces an `order_items` table to represent these pairings and their quantity and purchase price. The [data-models note](04_data_models.md) creates and queries all three relationship types.
 
-## 7. Update a fact without rewriting its references
+## Update a fact without rewriting its references
 
 Alice corrects her email address:
 
@@ -221,7 +221,7 @@ WHERE customer_id = 1;
 
 Without a `WHERE` condition, this update would target all customer rows. With a condition matching no rows, it would change nothing; that is not necessarily a SQL error. Applications should inspect affected-row counts when they depend on a particular record being updated.
 
-## 8. Delete an independent record
+## Delete an independent record
 
 Add a temporary customer, inspect it, then remove it:
 
@@ -244,7 +244,7 @@ Carol has no orders in this exercise. Deleting Alice is a different operation be
 
 The four everyday data operations are often abbreviated **CRUD**: create records with `INSERT`, read with `SELECT`, update with `UPDATE`, and delete with `DELETE`. Creating a table is schema definition, distinct from CRUD's creation of a record.
 
-## 9. Let the database reject broken rules
+## Let the database reject broken rules
 
 Run these two deliberately invalid statements separately. They are not part of a script expected to complete successfully:
 
@@ -264,7 +264,7 @@ The first fails because of the email rule, and the second because of the custome
 
 These declarations do not verify email ownership, consent, or whether an order was placed by the person operating the browser. Validation, authentication, and authorization remain separate responsibilities.
 
-## 10. Try a transaction without keeping its changes
+## Try a transaction without keeping its changes
 
 A **transaction** groups database changes into a unit that can be accepted with `COMMIT` or discarded with `ROLLBACK`. Try changing Alice's name temporarily:
 
@@ -280,7 +280,7 @@ The first query returns `Temporary name`; the second returns `Alice`. The transa
 
 For checkout, the same grouping can cover stock reduction, order creation, and purchased-item insertion. The application must check failures and choose a correct concurrency strategy. A transaction does not automatically reserve stock that was merely read, and rolling it back cannot unsend an email or reverse an external payment. Those details are developed in the [ACID chapter](../04_acid_properties_and_transactions/01_transactions_intro.md).
 
-## 11. Add an access structure for a recurring query
+## Add an access structure for a recurring query
 
 Order-history requests filter by customer identifier. An **index** gives the DBMS an additional route to those matching orders:
 
@@ -297,7 +297,7 @@ WHERE customer_id = 1;
 
 SQLite uses B-tree structures for its indexes: ordered keys guide lookup toward matching entries. Maintaining those entries costs space and additional work when relevant rows change. That tradeoff is why an index should answer a real access pattern instead of being added to every column. The [DBMS note](03_database_management_systems_dbms_.md) follows planning and execution in more detail.
 
-## 12. Put the database behind an application
+## Put the database behind an application
 
 A website usually has this request path:
 
@@ -332,7 +332,7 @@ The result is `[(101, '2025-01-10'), (102, '2025-01-12')]`. This is an alternati
 
 The `?` placeholder is a **bound parameter**. The driver supplies the customer identifier separately from SQL structure. Application code should bind untrusted values instead of building query text by concatenating them. The [SQL injection note](../11_security_best_practices/06_sql_injection.md) explains why.
 
-## 13. Where other technologies fit
+## Where other technologies fit
 
 The same bookstore can have several kinds of data, but that does not mean it needs several database products immediately.
 

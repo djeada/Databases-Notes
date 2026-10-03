@@ -11,7 +11,6 @@ For illustration, consider a 32-bit hash (0 → $2^{32} - 1$); after the last va
 * **Data movement is proportional to the arc length** affected—so scaling out (or shrinking) causes only *$O(k / n)$* re-shuffles instead of moving everything.
 * The same mechanism underpins virtual nodes (VNodes): each physical server advertises many points on the circle, smoothing load without changing the fundamental rules.
 
-
 ### Hash-ring overview
 
 ```

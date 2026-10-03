@@ -34,7 +34,7 @@ So there are two questions to keep separate:
    implement this particular operation?
 ```
 
-# 1. Why locks are needed
+## Why locks are needed
 
 Suppose account `1` contains:
 
@@ -65,7 +65,7 @@ until T1 finishes.
 
 A lock is one way to express that dependency.
 
-# 2. Shared locks
+## Shared locks
 
 A shared lock, traditionally written:
 
@@ -104,7 +104,7 @@ This is why the lock is called shared.
 
 Multiple transactions can share it.
 
-# 3. Exclusive locks
+## Exclusive locks
 
 An exclusive lock, written:
 
@@ -151,7 +151,7 @@ Hence the name:
 exclusive
 ```
 
-# 4. Basic compatibility matrix
+## Basic compatibility matrix
 
 For traditional S/X locking on the same resource:
 
@@ -184,7 +184,7 @@ same lock manager
 
 An `S` lock on one row obviously does not conflict with an `X` lock on an unrelated row.
 
-# 5. Example: two readers
+## Example: two readers
 
 Suppose two transactions read the same customer.
 
@@ -209,7 +209,7 @@ Neither is modifying the resource.
 
 There is therefore no reason for one reader to wait for the other.
 
-# 6. Example: reader versus writer
+## Example: reader versus writer
 
 Now suppose T1 has:
 
@@ -248,7 +248,7 @@ This model is important for understanding classical lock-based systems.
 
 But later we will see why PostgreSQL, Oracle, and other MVCC engines do not make ordinary readers and writers behave this way.
 
-# 7. Example: writer versus writer
+## Example: writer versus writer
 
 Suppose T1 executes:
 
@@ -290,7 +290,7 @@ MVCC can often eliminate reader/writer blocking.
 
 It does not mean two transactions can freely create incompatible current versions of the same row.
 
-# 8. Shared/exclusive are compatibility modes, not SQL commands
+## Shared/exclusive are compatibility modes, not SQL commands
 
 It is tempting to learn:
 
@@ -334,7 +334,7 @@ SQLite
 
 This distinction is essential.
 
-# 9. MVCC changes the reader/writer picture
+## MVCC changes the reader/writer picture
 
 Suppose T1 is changing:
 
@@ -386,7 +386,7 @@ Now the reader and writer do not necessarily need incompatible locks on the same
 
 This is the foundation of Multi-Version Concurrency Control.
 
-# 10. PostgreSQL ordinary reads do not take blocking shared row locks
+## PostgreSQL ordinary reads do not take blocking shared row locks
 
 Consider PostgreSQL:
 
@@ -424,7 +424,7 @@ without waiting for T1's row lock.
 
 T2 sees a version allowed by its snapshot.
 
-# 11. PostgreSQL locking reads are explicit
+## PostgreSQL locking reads are explicit
 
 Sometimes a transaction is not merely interested in observing a value.
 
@@ -476,11 +476,11 @@ WHERE employee_id = 1
 FOR UPDATE;
 ```
 
-# 12. PostgreSQL `FOR SHARE`
+## PostgreSQL `FOR SHARE`
 
 Consider two sessions.
 
-## Session A
+### Session A
 
 ```sql
 BEGIN;
@@ -533,7 +533,7 @@ its row lock is released.
 
 Session B can then continue.
 
-# 13. Compare that with an ordinary PostgreSQL SELECT
+## Compare that with an ordinary PostgreSQL SELECT
 
 Change Session A to:
 
@@ -567,7 +567,7 @@ A more accurate statement is:
 
 > PostgreSQL ordinary reads use MVCC; explicit `FOR SHARE`/`FOR UPDATE` clauses request row locks when the application needs locking semantics.
 
-# 14. Why would an application use `FOR UPDATE`?
+## Why would an application use `FOR UPDATE`?
 
 Suppose we implement a withdrawal as:
 
@@ -613,7 +613,7 @@ The decision depended on data that another transaction could change.
 
 A locking read can deliberately close that gap.
 
-# 15. PostgreSQL `FOR UPDATE` example
+## PostgreSQL `FOR UPDATE` example
 
 The transaction can instead do:
 
@@ -657,7 +657,7 @@ FROM accounts
 WHERE account_id = 1;
 ```
 
-# 16. MySQL/InnoDB makes the same ordinary-versus-locking distinction
+## MySQL/InnoDB makes the same ordinary-versus-locking distinction
 
 InnoDB also uses MVCC for ordinary consistent reads.
 
@@ -689,7 +689,7 @@ FOR UPDATE;
 
 MySQL states that `FOR SHARE` sets shared-mode locks on selected rows, while `FOR UPDATE` locks selected records similarly to an update.
 
-# 17. MySQL `FOR SHARE`
+## MySQL `FOR SHARE`
 
 Suppose T1 executes:
 
@@ -721,7 +721,7 @@ UPDATE product 100 → conflict
 
 MySQL documents `FOR SHARE` specifically for cases where related data will subsequently be inserted or updated and an ordinary `SELECT` does not provide sufficient protection.
 
-# 18. MySQL `FOR UPDATE`
+## MySQL `FOR UPDATE`
 
 If the transaction intends to modify the row, use:
 
@@ -748,7 +748,7 @@ The locking read protects the relevant current record/index entry from competing
 
 An ordinary InnoDB consistent reader can still behave differently because MVCC reads can use versions in their read view rather than conflicting with the locking read.
 
-# 19. InnoDB locks index records, not an abstract SQL row
+## InnoDB locks index records, not an abstract SQL row
 
 This becomes important in real systems.
 
@@ -783,7 +783,7 @@ it may protect a broader index range using record, gap, or next-key locking depe
 
 That is why indexes affect concurrency behavior as well as performance.
 
-# 20. SQL Server maps much more directly onto textbook S/X terminology
+## SQL Server maps much more directly onto textbook S/X terminology
 
 SQL Server exposes the S/X model very explicitly.
 
@@ -803,7 +803,7 @@ Under pessimistic locking, SQL Server documents `S` as a read lock and `X` as th
 
 This makes SQL Server particularly useful when learning classical locking theory.
 
-# 21. SQL Server READ COMMITTED does not necessarily hold S locks until commit
+## SQL Server READ COMMITTED does not necessarily hold S locks until commit
 
 Even in a lock-based SQL Server configuration, this is too simplistic:
 
@@ -834,7 +834,7 @@ does not automatically mean that the ordinary `READ COMMITTED` shared lock on th
 
 The isolation level determines the required read-lock lifetime.
 
-# 22. SQL Server can use row versions instead of read locks
+## SQL Server can use row versions instead of read locks
 
 SQL Server can also implement `READ COMMITTED` using row versioning through:
 
@@ -859,7 +859,7 @@ query hints
 optimized locking features
 ```
 
-# 23. SQL Server update locks (`U`)
+## SQL Server update locks (`U`)
 
 SQL Server introduces an additional mode that explains an important real-world problem:
 
@@ -902,7 +902,7 @@ This can create an upgrade deadlock.
 
 SQL Server's `U` lock is designed partly to address this pattern: many transactions may hold `S`, but only one transaction can normally hold the update lock for a particular resource. Microsoft explicitly describes this use case.
 
-# 24. SQL Server `UPDLOCK`
+## SQL Server `UPDLOCK`
 
 An application that reads something because it expects to modify it can use:
 
@@ -927,7 +927,7 @@ reserve the update path."
 
 This is not exactly identical to PostgreSQL `FOR UPDATE` internally, but it often serves a similar application-level purpose.
 
-# 25. What does `HOLDLOCK` mean in SQL Server?
+## What does `HOLDLOCK` mean in SQL Server?
 
 SQL Server's:
 
@@ -965,7 +965,7 @@ That is much stronger than merely:
 
 This distinction becomes important for missing rows and predicates.
 
-# 26. Modern SQL Server makes simple lock slogans even less reliable
+## Modern SQL Server makes simple lock slogans even less reliable
 
 Current SQL Server versions can use optimized locking.
 
@@ -984,7 +984,7 @@ are no longer universally accurate descriptions of SQL Server internals.
 
 The isolation guarantee matters more than memorizing one physical lock implementation.
 
-# 27. Oracle is strongly version-oriented for ordinary reads
+## Oracle is strongly version-oriented for ordinary reads
 
 Oracle provides another useful counterexample to:
 
@@ -1017,7 +1017,7 @@ Oracle uses undo information to provide readers with the appropriate consistent 
 
 So ordinary Oracle readers do not need a PostgreSQL-style `FOR SHARE` equivalent.
 
-# 28. Oracle `SELECT. .. FOR UPDATE`
+## Oracle `SELECT. .. FOR UPDATE`
 
 When an Oracle application needs to read rows specifically in preparation for a modification, it can use:
 
@@ -1043,7 +1043,7 @@ SELECT FOR UPDATE
     for a subsequent decision/update
 ```
 
-# 29. Technology summary: ordinary reads
+## Technology summary: ordinary reads
 
 | Database | Ordinary `SELECT` behavior |
 |---|---|
@@ -1056,7 +1056,7 @@ SELECT FOR UPDATE
 
 PostgreSQL separates ordinary MVCC queries from explicit row-locking clauses. InnoDB similarly distinguishes consistent reads from `FOR SHARE`/`FOR UPDATE`. SQL Server can use either shared locks or row versions depending on configuration. Oracle explicitly documents nonblocking ordinary readers and writers.
 
-# 30. Technology summary: explicit locking reads
+## Technology summary: explicit locking reads
 
 | Engine | Read because data will be used for a decision |
 |---|---|
@@ -1068,7 +1068,7 @@ PostgreSQL separates ordinary MVCC queries from explicit row-locking clauses. In
 
 The syntax is superficially similar between some engines, but the exact lock modes, ranges, lifetimes, and MVCC interaction differ.
 
-# 31. A locking read protects existing resources—not necessarily a business rule
+## A locking read protects existing resources—not necessarily a business rule
 
 This is one of the most important limitations.
 
@@ -1114,7 +1114,7 @@ The dangerous resource is:
 
 There is no existing row to row-lock.
 
-# 32. Concrete double-booking example
+## Concrete double-booking example
 
 Initial state:
 
@@ -1182,7 +1182,7 @@ somehow locks:
 
 That is not generally a safe assumption.
 
-# 33. The best solution for uniqueness is usually a constraint
+## The best solution for uniqueness is usually a constraint
 
 If the business rule is:
 
@@ -1215,7 +1215,7 @@ A useful principle is:
 
 > If a business invariant can be expressed directly as a database constraint, prefer the constraint over trying to reproduce it with application locking.
 
-# 34. Rows and predicates are different things
+## Rows and predicates are different things
 
 Suppose the rule is more complex:
 
@@ -1266,7 +1266,7 @@ predicate/dependency tracking
 
 become important.
 
-# 35. How InnoDB protects ranges
+## How InnoDB protects ranges
 
 For many locking range queries under InnoDB, the engine can use:
 
@@ -1310,7 +1310,7 @@ MySQL documents this behavior for non-unique/range locking searches, where the i
 
 This is why InnoDB locking behavior depends strongly on indexes and isolation level.
 
-# 36. How SQL Server protects ranges
+## How SQL Server protects ranges
 
 At `SERIALIZABLE` isolation, SQL Server can use key-range locks.
 
@@ -1340,7 +1340,7 @@ relevant space between those keys
 
 rather than only existing rows.
 
-# 37. PostgreSQL Serializable solves this differently
+## PostgreSQL Serializable solves this differently
 
 PostgreSQL does not implement Serializable merely by turning every predicate into a traditional blocking range lock.
 
@@ -1367,7 +1367,7 @@ PostgreSQL Serializable:
 
 All three are trying to protect the same logical property through different mechanisms.
 
-# 38. Locks exist at different granularities
+## Locks exist at different granularities
 
 A resource does not necessarily mean:
 
@@ -1398,7 +1398,7 @@ the next question should be:
 
 Granularity determines how much unrelated work can proceed concurrently.
 
-# 39. Why intention locks exist
+## Why intention locks exist
 
 Suppose a database supports both:
 
@@ -1452,7 +1452,7 @@ SQL Server explicitly exposes modes such as `IS`, `IX`, and `SIX` for this lock 
 
 InnoDB similarly uses intention locks as part of row/table lock coordination.
 
-# 40. SQL Server compatibility is therefore richer than S/X
+## SQL Server compatibility is therefore richer than S/X
 
 The simple matrix:
 
@@ -1491,7 +1491,7 @@ It lets many normal readers coexist while reserving only one transaction as the 
 
 Microsoft publishes the full compatibility matrix for these modes.
 
-# 41. Lock upgrades can produce deadlocks
+## Lock upgrades can produce deadlocks
 
 Suppose:
 
@@ -1551,7 +1551,7 @@ using an update-oriented locking mode from the beginning can be safer than first
 
 SQL Server's `UPDLOCK` exists partly for this exact pattern.
 
-# 42. Lock duration matters as much as lock type
+## Lock duration matters as much as lock type
 
 Suppose T1 obtains an exclusive lock for:
 
@@ -1601,7 +1601,7 @@ keeps concurrency-sensitive resources occupied while no useful database work is 
 
 Keep transactional sections short.
 
-# 43. `NOWAIT` changes waiting behavior, not compatibility
+## `NOWAIT` changes waiting behavior, not compatibility
 
 Suppose a row is already locked.
 
@@ -1647,7 +1647,7 @@ to:
 fail immediately
 ```
 
-# 44. `SKIP LOCKED`
+## `SKIP LOCKED`
 
 PostgreSQL and MySQL also support patterns such as:
 
@@ -1691,7 +1691,7 @@ instead of waiting behind Worker A.
 
 PostgreSQL explicitly warns that `SKIP LOCKED` gives an intentionally inconsistent view and is suitable for queue-like workloads rather than general-purpose transactional reads.
 
-# 45. Queue example
+## Queue example
 
 A PostgreSQL worker might use:
 
@@ -1726,7 +1726,7 @@ This is a good example of deliberately using locking semantics to partition work
 
 It is very different from using locking to obtain a consistent report.
 
-# 46. SQLite uses a different concurrency model
+## SQLite uses a different concurrency model
 
 SQLite should not be forced into the row-lock model used by client/server databases.
 
@@ -1743,7 +1743,7 @@ FOR UPDATE;
 
 that gives application-controlled row-level locking comparable to PostgreSQL or InnoDB.
 
-# 47. SQLite rollback mode versus WAL
+## SQLite rollback mode versus WAL
 
 In traditional rollback-journal mode, SQLite coordinates access to the database file through states such as:
 
@@ -1774,7 +1774,7 @@ in ordinary WAL operation.
 
 This is conceptually much closer to MVCC/snapshot thinking than to row-level `S/X` locking.
 
-# 48. Technology comparison
+## Technology comparison
 
 | Technology | Ordinary reader | Same-row writer conflict | Explicit locking read | Predicate/range strategy |
 |---|---|---|---|---|
@@ -1785,7 +1785,7 @@ This is conceptually much closer to MVCC/snapshot thinking than to row-level `S/
 | Oracle | Consistent versions | Same-row writers block | `FOR UPDATE` | Serializable/versioning and application/schema design |
 | SQLite | File/WAL snapshot mechanisms | One normal writer at a time | No comparable row-level `FOR UPDATE` mechanism | Database/WAL-level concurrency model |
 
-# 49. Do not use locks where an atomic statement is simpler
+## Do not use locks where an atomic statement is simpler
 
 Suppose inventory contains:
 
@@ -1853,7 +1853,7 @@ there was no stock to reserve.
 
 Atomic SQL can sometimes eliminate the need for explicit application-managed locking.
 
-# 50. Locks and constraints solve different problems
+## Locks and constraints solve different problems
 
 Suppose the invariant is:
 
@@ -1910,7 +1910,7 @@ or Serializable isolation?
 
 This tends to produce simpler systems than reflexively adding `FOR UPDATE` everywhere.
 
-# 51. Shared and exclusive locks do not themselves guarantee serializability
+## Shared and exclusive locks do not themselves guarantee serializability
 
 Another common mistake is:
 
@@ -1958,7 +1958,7 @@ Lock modes answer:
 
 These are separate concepts.
 
-# 52. Shared/exclusive locking and deadlocks
+## Shared/exclusive locking and deadlocks
 
 Locks solve one concurrency problem but create another possibility:
 
@@ -1997,7 +1997,7 @@ The deadlock occurred because the transactions acquired resources in opposite or
 
 Use a deterministic acquisition order where practical and retry deadlock victims.
 
-# 53. Locks, waits, and timeouts are different concepts
+## Locks, waits, and timeouts are different concepts
 
 If T1 holds:
 
@@ -2050,7 +2050,7 @@ timeout
 
 Those are three different states.
 
-# 54. What to inspect in production
+## What to inspect in production
 
 When investigating locking, ask:
 
@@ -2102,7 +2102,7 @@ The underlying question is always:
 
 > Which incompatible dependencies exist, and why did these statements request them?
 
-# 55. Practical decision table
+## Practical decision table
 
 | Situation | Good first mechanism to consider |
 |---|---|
@@ -2119,7 +2119,7 @@ The underlying question is always:
 | Multiple resources need locks | Deterministic lock order |
 | Cross-row business invariant | Explicit protocol or Serializable isolation |
 
-# 56. Final mental model
+## Final mental model
 
 Do not memorize:
 
@@ -2211,7 +2211,7 @@ It is:
 
 That connects the simple S/X compatibility matrix to real database design.
 
-# References
+## References
 
 PostgreSQL's current locking documentation describes its row-level lock modes, their conflicts, transaction lifetime, and the important fact that row locks do not block ordinary data querying.
 

@@ -299,7 +299,6 @@ extensions, application connectivity, recovery point, and the measured RTO.
 - What are the recovery strategies, such as Point-in-Time Recovery and Continuous Data Protection, and in what scenarios are they most effectively used?
 - What best practices and tools should be implemented to ensure reliable, efficient, and secure backup and recovery processes?
 
-
 ## Related notes
 
 - [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)

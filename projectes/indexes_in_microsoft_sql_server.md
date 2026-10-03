@@ -16,7 +16,7 @@ and jump directly to the relevant location.
 
 A database index serves a similar purpose.
 
-## 1. Why indexes exist
+## Why indexes exist
 
 Suppose we have this table:
 
@@ -80,7 +80,7 @@ Conceptually:
 
 This is similar to looking something up in a sorted directory rather than reading every entry.
 
-# 2. SQL Server indexes are normally B-tree structures
+## SQL Server indexes are normally B-tree structures
 
 Traditional SQL Server rowstore indexes are implemented using a tree structure commonly described as a B-tree.
 
@@ -123,7 +123,7 @@ it does not need to inspect every entry. It follows the branch containing `J`.
 
 This operation is generally called an index seek.
 
-# 3. Pages
+## Pages
 
 SQL Server stores data in units called pages.
 
@@ -164,7 +164,7 @@ Pages become important when discussing:
 - fragmentation
 - `FILLFACTOR`
 
-# 4. Heap tables
+## Heap tables
 
 A SQL Server table without a clustered index is called a heap.
 
@@ -205,7 +205,7 @@ The rows are not organized according to a clustered-index key.
 
 That does not mean there is literally no internal organization at all. It means there is no clustered B-tree determining the logical order of the table's rows.
 
-# 5. Clustered indexes
+## Clustered indexes
 
 A clustered index determines how the table's rows are organized at the leaf level of a B-tree.
 
@@ -245,7 +245,7 @@ This is why the clustered index is more than a separate lookup structure.
 
 The table itself is organized as part of that index.
 
-## Only one clustered index per table
+### Only one clustered index per table
 
 A table can have only one clustered index.
 
@@ -269,7 +269,7 @@ but the same physical table cannot simultaneously have two independent clustered
 
 A table can, however, have many nonclustered indexes.
 
-# 6. Clustered primary keys
+## Clustered primary keys
 
 A common SQL Server design is:
 
@@ -313,7 +313,7 @@ PRIMARY KEY NONCLUSTERED(id)
 
 if that design is appropriate.
 
-# 7. Nonclustered indexes
+## Nonclustered indexes
 
 A nonclustered index is a separate data structure from the table's main storage.
 
@@ -360,7 +360,7 @@ carol@example.com          → where Carol's row is
 
 What the row locator contains depends on whether the underlying table is a heap or has a clustered index.
 
-# 8. Row locators for heap tables
+## Row locators for heap tables
 
 Suppose the table is a heap:
 
@@ -414,7 +414,7 @@ So for a heap:
 
 > A nonclustered index uses a physical row locator.
 
-# 9. Row locators when a clustered index exists
+## Row locators when a clustered index exists
 
 Now consider this table:
 
@@ -478,7 +478,7 @@ SQL Server can first find the email and then use the clustered key to reach the 
 
 This operation may appear in a query execution plan as a Key Lookup.
 
-# 10. Heap and clustered-table comparison
+## Heap and clustered-table comparison
 
 The difference can be summarized as follows.
 
@@ -517,7 +517,7 @@ Nonclustered index
 
 This distinction is one of the most important SQL Server storage concepts.
 
-# 11. Creating both designs
+## Creating both designs
 
 The following example creates both kinds of table.
 
@@ -600,7 +600,7 @@ NONCLUSTERED
 
 because its rows are stored through a clustered index and it also has a separate index on `email`.
 
-# 12. Clustered and nonclustered are not the only index technologies
+## Clustered and nonclustered are not the only index technologies
 
 When learning traditional SQL Server rowstore indexing, the two most important index organizations are:
 
@@ -624,7 +624,7 @@ Therefore it is more accurate to say:
 
 It would be misleading to claim that SQL Server supports only two possible kinds of index in every sense.
 
-# 13. Composite indexes
+## Composite indexes
 
 An index does not have to contain only one column.
 
@@ -660,7 +660,7 @@ The first key is `name`.
 
 Within equal `name` values, entries are then ordered by `email`.
 
-# 14. Column order in a composite index matters
+## Column order in a composite index matters
 
 These indexes are not equivalent:
 
@@ -739,7 +739,7 @@ Smith, Alice
 
 but it is much harder to efficiently locate every person whose first name is Alice when their last names are unknown.
 
-# 15. Inspecting composite-index columns
+## Inspecting composite-index columns
 
 SQL Server exposes index metadata through system catalog views.
 
@@ -785,7 +785,7 @@ name  = first index key
 email = second index key
 ```
 
-# 16. Indexes improve reads but have costs
+## Indexes improve reads but have costs
 
 Indexes are not free.
 
@@ -824,7 +824,7 @@ Therefore:
 
 Good index design involves choosing indexes that support important queries without creating unnecessary maintenance overhead.
 
-# 17. Covering indexes and INCLUDE
+## Covering indexes and INCLUDE
 
 Suppose we have:
 
@@ -896,7 +896,7 @@ email → key
 name  → stored at leaf level for retrieval
 ```
 
-# 18. What is FILLFACTOR?
+## What is FILLFACTOR?
 
 Index pages have limited space.
 
@@ -942,7 +942,7 @@ Page B
 
 Page splits involve additional work and can contribute to index fragmentation.
 
-# 19. FILLFACTOR leaves room on index pages
+## FILLFACTOR leaves room on index pages
 
 `FILLFACTOR` tells SQL Server approximately how full to make leaf-level pages when an index is created or rebuilt.
 
@@ -977,7 +977,7 @@ FILLFACTOR = 80
 
 The free space gives future inserts room to fit without immediately causing page splits.
 
-# 20. A low fill factor leaves more free space
+## A low fill factor leaves more free space
 
 Consider:
 
@@ -1041,7 +1041,7 @@ This is a simplified mathematical model.
 
 It should not be interpreted to mean that SQL Server guarantees an exact number of free rows per page. Rows can have different sizes, pages contain internal overhead, and real storage behavior is more complicated.
 
-# 21. FILLFACTOR is not continuously enforced
+## FILLFACTOR is not continuously enforced
 
 A very important detail is that `FILLFACTOR` is mainly applied when an index is:
 
@@ -1085,7 +1085,7 @@ SQL Server does not continuously keep every page at exactly 80% occupancy.
 
 > An initial page-fill target used when building or rebuilding an index.
 
-# 22. Why not always use a very low FILLFACTOR?
+## Why not always use a very low FILLFACTOR?
 
 At first it may sound beneficial to leave enormous amounts of empty space.
 
@@ -1131,7 +1131,7 @@ but larger indexes
 and potentially more I/O
 ```
 
-# 23. Demonstrating FILLFACTOR
+## Demonstrating FILLFACTOR
 
 Create two tables:
 
@@ -1220,7 +1220,7 @@ Fill40       ~40%           ~60%
 
 The purpose of the experiment is to observe the effect of page-fill policy rather than expect mathematically exact page occupancy.
 
-# 24. SQL Server versus PostgreSQL and SQLite
+## SQL Server versus PostgreSQL and SQLite
 
 The general idea of an index exists in all three systems:
 
@@ -1239,7 +1239,7 @@ ON table_name(column1, column2);
 
 However, their internal storage architectures are not identical.
 
-## SQL Server
+### SQL Server
 
 Traditional SQL Server rowstore tables can be organized as:
 
@@ -1269,7 +1269,7 @@ when the table has a clustered index.
 
 This architecture is specific to SQL Server and closely related systems.
 
-## PostgreSQL
+### PostgreSQL
 
 PostgreSQL normally keeps table rows in a heap structure and stores indexes separately.
 
@@ -1298,7 +1298,7 @@ BRIN
 
 These are designed for different types of searches and data.
 
-## SQLite
+### SQLite
 
 SQLite also supports indexes such as:
 
@@ -1325,7 +1325,7 @@ tables, which use a different storage organization.
 
 Again, this is not the same architecture as SQL Server's heap versus clustered-index design.
 
-# 25. What can safely be practiced in PostgreSQL or SQLite?
+## What can safely be practiced in PostgreSQL or SQLite?
 
 The following concepts transfer quite well:
 
@@ -1353,7 +1353,7 @@ SQL Server catalog/DMV inspection
 
 If the goal is to understand SQL Server internals, using PostgreSQL or SQLite as a replacement can create confusion because similar terminology sometimes describes different mechanisms.
 
-# 26. Running SQL Server on Linux
+## Running SQL Server on Linux
 
 SQL Server can be run on Linux using a container.
 
@@ -1383,7 +1383,7 @@ localhost:1433
 
 The container approach is particularly convenient for experiments because the database environment can be created and discarded without permanently changing the host system.
 
-# 27. A useful mental model
+## A useful mental model
 
 The most important relationships can be summarized like this:
 

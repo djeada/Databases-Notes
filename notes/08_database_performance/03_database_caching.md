@@ -96,7 +96,6 @@ Start with one frequently reused, expensive read whose staleness policy is clear
 
 Next: [materialized views](04_materialized_views.md) provide another way to reuse calculated results with explicit maintenance rules.
 
-
 ## Related notes
 
 - [Materialized views](04_materialized_views.md)

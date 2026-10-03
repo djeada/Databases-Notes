@@ -4,7 +4,7 @@ A **data model** describes which facts exist, how they relate, and which rules a
 
 This note develops the bookstore into a complete relational example, then compares the hierarchical, network, entity-relationship, object-oriented, document, column-family, and graph models. The goal is to see how each represents the same kinds of questions, not to memorize a product taxonomy.
 
-## 1. Separate three levels of decision
+## Separate three levels of decision
 
 | Level | Question | Bookstore decision |
 |---|---|---|
@@ -14,7 +14,7 @@ This note develops the bookstore into a complete relational example, then compar
 
 “An order has a customer” is a business fact. “Store `customer_id` as a foreign key” is a relational representation. “Index that column” is an access-path decision. Keeping them separate makes it easier to improve performance without changing what an order means.
 
-## 2. Describe entities, attributes, and relationships
+## Describe entities, attributes, and relationships
 
 An **entity type** is a kind of thing tracked by the system; an **entity instance** is one actual occurrence. Customer is an entity type, while Alice is an instance. An **attribute** describes a fact about an entity, such as a customer's email or a product's title.
 
@@ -41,7 +41,7 @@ An order item is not just an implementation trick. It records the fact “this o
 
 A foreign key can enforce the existence of the referenced customer. It does not automatically enforce “every order has at least one item.” That is an additional workflow invariant, requiring a deliberate implementation.
 
-## 3. Draw an entity-relationship model
+## Draw an entity-relationship model
 
 An **entity-relationship (ER) model** represents entity types, their attributes, and relationships. It is a way to reason about a domain, not a separate storage engine that competes with PostgreSQL or MongoDB.
 
@@ -84,7 +84,7 @@ Read `||` as exactly one, `o{` as zero or many, and `o|` as zero or one. The ord
 
 An ER model can become a relational schema, document schema, or another representation. Translating it requires preserving the rules, not just copying entity names into collections.
 
-## 4. Implement the relational model in SQLite
+## Implement the relational model in SQLite
 
 Run this full setup in a **fresh SQLite database**, independent of the smaller two-table introduction. Prices use integer cents to make the example's arithmetic exact within the chosen currency and unit.
 
@@ -211,7 +211,7 @@ WHERE i.order_id = 101 AND i.line_number = 1;
 
 The old order still charged 1500 per unit. This is intentional historical recording, not an accidental copy of the current price. If an invoice also needs the title as it appeared at purchase time, that may require a separate historical title. The correct ownership follows the business meaning of each fact.
 
-## 5. Hierarchical models: navigate parent–child structure
+## Hierarchical models: navigate parent–child structure
 
 A hierarchical model organizes records under parents. A basic tree has a root and one parent for each non-root node:
 
@@ -280,7 +280,7 @@ ORDER BY depth, category_id;
 
 The first query starts the branch; the second repeatedly adds children. The schema prevents an immediate self-parent but not a longer cycle. Safe moves need additional rules and concurrency handling. The [hierarchical-data note](../03_sql/09_hierarchical_data.md) covers those cases and alternative representations.
 
-## 6. Network models: follow predefined record connections
+## Network models: follow predefined record connections
 
 The historical **network database model** organizes records through named owner/member sets. A record can participate in multiple such relationship structures, allowing paths beyond one simple parent tree. **IDMS** is a named implementation; Broadcom's [owner/member example](https://knowledge.broadcom.com/external/article/209155/idms-considerations-for-new-database-rec.html) illustrates that its relationships are explicit database structures.
 
@@ -326,7 +326,7 @@ ORDER BY s.supplier_id;
 
 This is a relational implementation of the business relationship, not IDMS syntax. It demonstrates that the same domain fact can be represented through different logical models.
 
-## 7. Object-oriented models: persist object state and identity
+## Object-oriented models: persist object state and identity
 
 An object-oriented application represents domain concepts through classes, fields, and references. An **object database** persists those objects through its own object model. **ObjectDB** provides an example for Java with JPA access.
 
@@ -409,7 +409,7 @@ The expected printed title is `Database Basics`. `@Entity` marks persistable sta
 
 Objects are not stored together with executable method code. Their persistent state is stored, and the application supplies behavior through its classes. This approach can fit an object-centered workload but still needs transaction, schema-evolution, query, and integration decisions. See ObjectDB's [entity](https://www.objectdb.com/java/jpa/start/entity), [connection](https://www.objectdb.com/java/jpa/start/connection), and [CRUD](https://www.objectdb.com/java/jpa/start/crud) tutorials for the provider-specific setup and APIs.
 
-## 8. Document models: choose a useful record boundary
+## Document models: choose a useful record boundary
 
 A document can put an order and its bounded set of lines together:
 
@@ -429,9 +429,9 @@ The record is shaped around “load one order with all its lines.” MongoDB can
 
 Embedding trades independent row relationships for an aggregate record boundary. Ask whether lines grow within a manageable limit, whether they are edited together, and what reports need to search across them. Referencing other documents can avoid copying shared facts, but those references do not become SQL-style foreign keys merely because they look like identifiers.
 
-The [types note](02_types_of_databases.md#2-document-databases-retrieve-a-record-with-nested-detail) provides a MongoDB insertion, query, and index example. A document model does not eliminate the need to define required fields, accepted types, or migration behavior.
+The [types note](02_types_of_databases.md#document-databases-retrieve-a-record-with-nested-detail) provides a MongoDB insertion, query, and index example. A document model does not eliminate the need to define required fields, accepted types, or migration behavior.
 
-## 9. Column-family models: plan the partition and ordering
+## Column-family models: plan the partition and ordering
 
 For time-stamped customer events, Cassandra can use `(customer_id, month)` as a partition key and event time as a clustering key. The model groups “one customer's events in one month” as an efficient access unit.
 
@@ -441,7 +441,7 @@ Partition: customer 1, month 2025-01
   2025-01-10 10:00 -> viewed product 10
 ```
 
-This is a query-oriented logical model. An additional query by product across customers may need another representation. Key design must consider skew, growth, and the application's ability to maintain repeated facts. The [Cassandra example](02_types_of_databases.md#4-wide-column-databases-design-partitions-around-known-queries) supplies a complete CQL definition and inserts.
+This is a query-oriented logical model. An additional query by product across customers may need another representation. Key design must consider skew, growth, and the application's ability to maintain repeated facts. The [Cassandra example](02_types_of_databases.md#wide-column-databases-design-partitions-around-known-queries) supplies a complete CQL definition and inserts.
 
 ### See column families directly in HBase
 
@@ -461,7 +461,7 @@ The family layout and row-key choice affect storage and retrieval. A row with ev
 
 The model differs from a columnar physical layout used to scan amounts for analytics. One describes how records are grouped and addressed; the other describes how values are organized for execution and storage.
 
-## 10. Graph models: describe paths and relationship facts
+## Graph models: describe paths and relationship facts
 
 In a property graph, entities become nodes, relationships become edges, and both can carry properties. Neo4j's customer-follow and book-like relationships can express a recommendation path directly:
 
@@ -471,9 +471,9 @@ Alice --FOLLOWS--> Bob --LIKES--> Database Basics
 
 A purchase relationship may have a quantity and a timestamp, but an order often still deserves its own node because it groups several lines and has its own lifecycle. Choosing a graph does not imply every business event should be squeezed into one generic edge.
 
-The [Neo4j example](02_types_of_databases.md#6-graph-databases-make-traversal-a-first-class-operation) creates this graph and runs a Cypher pattern query. Multi-hop traversal is the motivating operation; identity, uniqueness, indexes, and path-expansion limits still require a design.
+The [Neo4j example](02_types_of_databases.md#graph-databases-make-traversal-a-first-class-operation) creates this graph and runs a Cypher pattern query. Multi-hop traversal is the motivating operation; identity, uniqueness, indexes, and path-expansion limits still require a design.
 
-## 11. Decide which rules each representation preserves
+## Decide which rules each representation preserves
 
 | Business requirement | Relational example | Question in another representation |
 |---|---|---|
