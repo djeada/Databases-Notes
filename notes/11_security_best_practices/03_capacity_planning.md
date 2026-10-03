@@ -382,7 +382,6 @@ Configure AWS Auto Scaling to maintain a desired performance level by adding or 
 - What are the essential steps in the capacity planning process, from workload characterization to implementation?
 - How do performance monitoring tools and cloud services support effective capacity planning and resource management?
 
-
 ## Related notes
 
 - [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)

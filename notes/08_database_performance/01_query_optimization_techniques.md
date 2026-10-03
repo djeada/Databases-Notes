@@ -4,7 +4,7 @@ A query can return the correct result and still do far more work than necessary.
 
 Before this note, practice [joins](../03_sql/06_joins_subqueries_and_views.md) and understand [indexes](../05_storage_and_indexing/05_indexing.md). We will use the bookstore's order lookup to connect SQL, access paths, and measurements.
 
-## 1. State the request and measure the problem
+## State the request and measure the problem
 
 Suppose the account page needs a customer's open orders, newest first. Record the SQL, parameter values, typical result size, and observed response times. Also ask whether time is spent executing SQL, waiting for a connection, waiting for a lock, transferring results, or rendering the page.
 
@@ -12,7 +12,7 @@ Suppose the account page needs a customer's open orders, newest first. Record th
 
 Use representative data. A three-row tutorial table teaches syntax; it cannot demonstrate production speed or the effects of skewed customer activity.
 
-## 2. Read a plan for the actual query
+## Read a plan for the actual query
 
 Use the fresh [SQLite bookstore setup](../03_sql/01_intro_to_sql.md):
 
@@ -30,7 +30,7 @@ In PostgreSQL, `EXPLAIN` shows estimates; `EXPLAIN (ANALYZE, BUFFERS)` actually 
 
 **Estimated rows** are the optimizer's prediction. **Actual rows** are what execution produced. A large mismatch is a clue that the optimizer chose based on inaccurate information. Costs in a plan are usually engine-specific estimates, not milliseconds.
 
-## 3. Match an index to the access pattern
+## Match an index to the access pattern
 
 ```sql
 CREATE INDEX idx_orders_customer_status_date
@@ -43,7 +43,7 @@ Run the plan query again. The optimizer may still choose another route, especial
 
 Do not add every column “just in case.” Each index uses space and increases relevant write work. [Performance indexing strategies](02_indexing_strategies.md) covers composite, partial, and covering indexes in more detail.
 
-## 4. Keep predicates usable by the available index
+## Keep predicates usable by the available index
 
 A **predicate** is a condition such as `order_date >= ...`. An index on a date column is often more useful when the query compares that column directly than when it first applies an unrelated function to every value.
 
@@ -61,7 +61,7 @@ A **half-open range** includes the lower boundary and excludes the upper boundar
 
 An expression index can sometimes support a computed predicate. Implicit type conversions, collation differences, and a leading-wildcard search can also change whether an index is useful. Inspect the plan rather than assuming every function or conversion has the same effect in every engine.
 
-## 5. Check whether joins multiply rows unnecessarily
+## Check whether joins multiply rows unnecessarily
 
 If the page only needs customers who have an order, joining customers to every order and then removing duplicates can create avoidable intermediate rows. `EXISTS` expresses the intended question:
 
@@ -79,7 +79,7 @@ This returns Alice and Bob once each. It expresses existence; it does not promis
 
 For real joins, verify the join keys and expected relationship: one-to-many naturally expands rows, while a missing join condition can create every pairing. A join's output size affects later sorts and aggregates.
 
-## 6. Reduce output only when the requirement allows it
+## Reduce output only when the requirement allows it
 
 Select the needed columns instead of an unnecessarily wide result. Paginate long lists rather than transferring every row for one screen. Use a deterministic ordering with a unique tie-breaker.
 
@@ -87,7 +87,7 @@ Select the needed columns instead of an unnecessarily wide result. Paginate long
 
 Avoid an **N+1 query** pattern: loading a list with one query, then issuing one more query per item. A deliberate join, batch lookup, or ORM eager-loading strategy can reduce round trips. It can also overfetch, so compare total work and result size.
 
-## 7. Diagnose statistics and resource limits
+## Diagnose statistics and resource limits
 
 The optimizer uses **statistics** about table size and value distribution. Stale statistics or highly uneven data can lead to poor estimates. Use the engine's supported statistics-maintenance commands and inspect whether the estimate actually improves.
 
@@ -95,7 +95,7 @@ Sorting or joining a large intermediate result can exceed its memory allowance a
 
 A **partitioned table** separates data into subsets. **Partition pruning** lets a suitable predicate exclude irrelevant partitions. It helps only when the request and partition scheme align; partitioning is not a universal replacement for indexing.
 
-## 8. Compare before and after fairly
+## Compare before and after fairly
 
 Keep the data, parameters, and load comparable. Measure more than one run and distinguish cold-cache from warm-cache behavior. Include write costs if you added an index, and verify the same rows, ordering, null behavior, and totals.
 

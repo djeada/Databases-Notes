@@ -44,7 +44,7 @@ The system must answer at least five questions:
 
 Almost every major topic in distributed databases follows from those questions.
 
-# 1. Why distribute a database?
+## Why distribute a database?
 
 A single database server has finite:
 
@@ -102,11 +102,11 @@ These advantages come with a major cost:
 
 > Communication that used to happen inside one process or one machine becomes a distributed protocol.
 
-# 2. The central distinction: partitioning, replication, and coordination
+## The central distinction: partitioning, replication, and coordination
 
 Three ideas are often mixed together.
 
-## Partitioning
+### Partitioning
 
 Different nodes contain different pieces of the data.
 
@@ -126,7 +126,7 @@ write scalability
 parallelism
 ```
 
-## Replication
+### Replication
 
 Different nodes contain copies of the same data.
 
@@ -146,7 +146,7 @@ durability
 read scaling
 ```
 
-## Coordination
+### Coordination
 
 Nodes run protocols to decide:
 
@@ -170,7 +170,7 @@ failover safety
 
 A serious distributed database normally uses all three ideas together.
 
-# 3. Sharding and replication are orthogonal
+## Sharding and replication are orthogonal
 
 Suppose the database is split into three shards:
 
@@ -230,7 +230,7 @@ answers:
 
 MongoDB is a concrete example: a sharded cluster distributes collection data across shards, and each shard is normally implemented as a replica set. `mongos` provides query routing while config servers maintain cluster metadata.
 
-# 4. A more realistic distributed-database picture
+## A more realistic distributed-database picture
 
 A modern distributed database often looks conceptually like:
 
@@ -268,7 +268,7 @@ one shard
 
 A physical server may contain replicas of many different shards.
 
-# 5. Shared-nothing architecture
+## Shared-nothing architecture
 
 In a shared-nothing system, each node has its own:
 
@@ -302,7 +302,7 @@ network capacity
 
 Apache Cassandra is a classic example of a distributed architecture where partition-key hashing assigns portions of the token space across cluster nodes. Its default `Murmur3Partitioner` determines how partition keys map into the distributed token space.
 
-# 6. Shared-disk architecture
+## Shared-disk architecture
 
 A shared-disk architecture gives nodes their own compute and memory but lets several nodes access a common storage subsystem.
 
@@ -332,7 +332,7 @@ Two nodes modifying the same storage page without coordination would corrupt the
 
 Shared-disk therefore removes some data-placement problems but introduces strong coordination requirements around shared storage.
 
-# 7. Shared-memory architecture
+## Shared-memory architecture
 
 A shared-memory or tightly coupled multiprocessor design gives multiple CPUs access to the same physical memory.
 
@@ -359,7 +359,7 @@ continents
 
 where failures, message delay, and partitions become important.
 
-# 8. Architecture summary
+## Architecture summary
 
 | Architecture | CPU | Memory | Storage | Typical scaling problem |
 |---|---|---|---|---|
@@ -371,11 +371,11 @@ Modern cloud databases can also use disaggregated compute and storage, so produc
 
 The categories are mental models, not universal product labels.
 
-# 9. Centralized versus decentralized coordination
+## Centralized versus decentralized coordination
 
 Another independent architecture choice concerns metadata and coordination.
 
-## Centralized coordinator
+### Centralized coordinator
 
 One service may know:
 
@@ -389,7 +389,7 @@ Clients or routers consult that service to locate data.
 
 This simplifies reasoning but creates a component whose availability and scalability must itself be protected.
 
-## Distributed coordination
+### Distributed coordination
 
 Metadata or decisions can instead be maintained through:
 
@@ -404,7 +404,7 @@ The advantage is eliminating one simple central authority.
 
 The cost is considerably more protocol complexity.
 
-# 10. Client routing is not always a load balancer
+## Client routing is not always a load balancer
 
 A normal stateless web service often uses:
 
@@ -432,7 +432,7 @@ The system needs data-aware routing.
 
 MongoDB uses `mongos` as a query router. A query containing the shard key can often be routed to the relevant shard, while a query that cannot be targeted may require broader scatter/gather work across shards.
 
-# 11. Horizontal partitioning
+## Horizontal partitioning
 
 Horizontal partitioning divides rows.
 
@@ -471,7 +471,7 @@ Carlos → C
 
 Each shard stores the same table structure but only some rows.
 
-# 12. Hash partitioning
+## Hash partitioning
 
 Instead of ranges:
 
@@ -503,7 +503,7 @@ The downside is that naturally adjacent keys may no longer be stored together.
 
 This can make range scans more expensive.
 
-# 13. Range partitioning
+## Range partitioning
 
 Range partitioning keeps nearby key values together.
 
@@ -527,7 +527,7 @@ because one shard may contain the entire range.
 
 But a poor range key can create hotspots.
 
-# 14. The hotspot problem
+## The hotspot problem
 
 Suppose an orders table uses:
 
@@ -569,7 +569,7 @@ data distribution
 
 as well as logical relationships.
 
-# 15. Spanner: automatic range splitting
+## Spanner: automatic range splitting
 
 Spanner stores rows ordered by primary key and automatically divides growing data into splits.
 
@@ -593,7 +593,7 @@ As data grows, those splits can be distributed across different servers.
 
 This is horizontal range partitioning managed automatically by the database.
 
-# 16. CockroachDB: ranges
+## CockroachDB: ranges
 
 CockroachDB follows a similar broad idea.
 
@@ -615,7 +615,7 @@ hundreds or thousands of ranges
 
 spread across many machines.
 
-# 17. Vertical partitioning
+## Vertical partitioning
 
 Vertical partitioning divides columns or related data.
 
@@ -661,7 +661,7 @@ against:
 cross-partition reads for another.
 ```
 
-# 18. Functional partitioning
+## Functional partitioning
 
 A system can also divide data by business domain:
 
@@ -695,7 +695,7 @@ may cross several independently owned databases.
 
 That turns a previously local transaction into a distributed workflow.
 
-# 19. Partitioning summary
+## Partitioning summary
 
 | Strategy | Example key | Strength | Main danger |
 |---|---|---|---|
@@ -711,7 +711,7 @@ The right question is:
 
 > Which data is read and written together?
 
-# 20. Data locality matters because networks are expensive
+## Data locality matters because networks are expensive
 
 Suppose one transaction modifies:
 
@@ -753,7 +753,7 @@ latency
 
 Spanner's documentation explicitly notes that transactions involving data in one area of the key space are generally cheaper than transactions spread across many servers.
 
-# 21. Replication
+## Replication
 
 Partitioning answers:
 
@@ -790,7 +790,7 @@ Node 3: A3
 
 Now a single machine failure does not necessarily destroy the shard.
 
-# 22. Asynchronous replication
+## Asynchronous replication
 
 With asynchronous replication:
 
@@ -822,7 +822,7 @@ acknowledged writes may be missing after certain failovers
 
 This is a good choice when some delay is acceptable.
 
-# 23. Synchronous replication
+## Synchronous replication
 
 A synchronous write may require:
 
@@ -851,7 +851,7 @@ applied?
 visible to queries?
 ```
 
-# 24. Quorum replication
+## Quorum replication
 
 Suppose a shard has:
 
@@ -898,7 +898,7 @@ intersection = B
 
 That overlap is useful for consensus and strongly coordinated replicated state.
 
-# 25. MongoDB concrete example
+## MongoDB concrete example
 
 A MongoDB replica set has:
 
@@ -933,7 +933,7 @@ This demonstrates an important distributed-database concept:
 
 > The durability/availability semantics depend not only on the product, but on the requested acknowledgement policy.
 
-# 26. Spanner replication
+## Spanner replication
 
 Spanner synchronously replicates database splits using Paxos-based replica groups.
 
@@ -967,7 +967,7 @@ replicas agree on updates
 
 Those three concepts should be kept separate even though Spanner uses them together.
 
-# 27. Replication and consensus are not the same thing
+## Replication and consensus are not the same thing
 
 Replication means:
 
@@ -997,7 +997,7 @@ The distinction matters.
 
 Copying bytes is easier than deciding which conflicting state is authoritative.
 
-# 28. Distributed concurrency control
+## Distributed concurrency control
 
 Now suppose transactions execute concurrently on several nodes.
 
@@ -1036,7 +1036,7 @@ MVCC
 serializable validation
 ```
 
-# 29. Distributed Two-Phase Locking
+## Distributed Two-Phase Locking
 
 With distributed locking, a transaction may acquire locks from several nodes.
 
@@ -1077,7 +1077,7 @@ T2 on Node B waits for T1 on Node A
 
 No individual local lock manager necessarily sees the whole cycle unless deadlock information is coordinated.
 
-# 30. Timestamp ordering
+## Timestamp ordering
 
 Another family of algorithms assigns transactions ordering metadata such as timestamps.
 
@@ -1107,7 +1107,7 @@ consensus
 
 rather than using a pure textbook timestamp-ordering algorithm.
 
-# 31. Optimistic Concurrency Control
+## Optimistic Concurrency Control
 
 Optimistic concurrency control (OCC) assumes conflicts are relatively uncommon.
 
@@ -1144,7 +1144,7 @@ many transactions
 
 can become expensive.
 
-# 32. Spanner provides a concrete modern example
+## Spanner provides a concrete modern example
 
 Current Spanner supports both pessimistic and optimistic concurrency modes.
 
@@ -1166,7 +1166,7 @@ one concurrency-control algorithm.
 
 The isolation level and transaction mode can change the mechanism.
 
-# 33. What is a distributed transaction?
+## What is a distributed transaction?
 
 Suppose a transfer moves:
 
@@ -1224,7 +1224,7 @@ A not debited
 
 Several nodes must therefore agree on one transaction outcome.
 
-# 34. Why cross-shard transactions cost more
+## Why cross-shard transactions cost more
 
 A single-shard transaction can often be decided by one replica group.
 
@@ -1245,7 +1245,7 @@ MongoDB explicitly notes that transactions touching multiple shards have greater
 
 Spanner likewise documents additional coordination for transactions spanning multiple splits.
 
-# 35. Two-Phase Commit (2PC)
+## Two-Phase Commit (2PC)
 
 Two-Phase Commit solves atomic commitment across participants.
 
@@ -1279,7 +1279,7 @@ A commits
 B aborts
 ```
 
-# 36. Phase 1: prepare
+## Phase 1: prepare
 
 Coordinator asks:
 
@@ -1311,7 +1311,7 @@ A prepared participant promises:
 
 > If the coordinator later says COMMIT, I am capable of committing.
 
-# 37. Phase 2: decision
+## Phase 2: decision
 
 If every required participant prepared:
 
@@ -1346,7 +1346,7 @@ Conceptually:
 
 The protocol ensures one global atomic outcome.
 
-# 38. What happens if the coordinator disappears?
+## What happens if the coordinator disappears?
 
 Suppose both participants have replied:
 
@@ -1386,7 +1386,7 @@ Modern systems mitigate this with durable logs, replicated coordinators, recover
 
 But the basic uncertainty is the reason classical 2PC is described as a blocking commit protocol.
 
-# 39. PostgreSQL exposes prepared transactions directly
+## PostgreSQL exposes prepared transactions directly
 
 PostgreSQL supports:
 
@@ -1410,7 +1410,7 @@ Once prepared, the transaction state is durably retained so an external transact
 
 This makes textbook 2PC unusually visible.
 
-# 40. Spanner: 2PC plus consensus
+## Spanner: 2PC plus consensus
 
 Spanner provides an excellent example of why 2PC and consensus solve different problems.
 
@@ -1454,7 +1454,7 @@ commit atomically across shards
 
 They are complementary.
 
-# 41. 2PC is not consensus
+## 2PC is not consensus
 
 This distinction is fundamental.
 
@@ -1486,7 +1486,7 @@ or:
 
 without much more qualification.
 
-# 42. Three-Phase Commit
+## Three-Phase Commit
 
 Three-Phase Commit adds another protocol stage to reduce the blocking conditions of basic 2PC under stronger timing/failure assumptions.
 
@@ -1515,7 +1515,7 @@ than deploy classic textbook 3PC.
 
 So 3PC is important academically, but it should not be presented as the standard modern replacement for 2PC.
 
-# 43. Consensus: the problem it solves
+## Consensus: the problem it solves
 
 Suppose three replicas contain the same shard:
 
@@ -1552,7 +1552,7 @@ Raft
 
 solve this class of agreement problem.
 
-# 44. Raft mental model
+## Raft mental model
 
 Raft typically organizes nodes into:
 
@@ -1590,7 +1590,7 @@ B and C can potentially elect a new leader because together they form a majority
 
 A alone cannot safely create an independent committed log.
 
-# 45. etcd: a concrete Raft system
+## etcd: a concrete Raft system
 
 etcd is a distributed key-value store built around Raft.
 
@@ -1607,7 +1607,7 @@ Loss of quorum prevents the cluster from making ordinary new consensus progress;
 
 This is a concrete example of consensus affecting availability.
 
-# 46. Replica learners
+## Replica learners
 
 Adding a new voting replica immediately can be dangerous if the new node is far behind.
 
@@ -1627,7 +1627,7 @@ This addresses a subtle distributed-systems issue:
 
 > Membership changes themselves can reduce fault tolerance if performed carelessly.
 
-# 47. Consensus does not make networks free
+## Consensus does not make networks free
 
 Suppose a three-region consensus group is:
 
@@ -1653,7 +1653,7 @@ network congestion
 disk latency
 ```
 
-# 48. Failure types
+## Failure types
 
 Distributed systems face more failure modes than a local database.
 
@@ -1692,7 +1692,7 @@ from:
 network partitioned.
 ```
 
-# 49. Failure detection uses suspicion, not omniscience
+## Failure detection uses suspicion, not omniscience
 
 Distributed systems often use:
 
@@ -1727,7 +1727,7 @@ and both begin accepting conflicting writes, the system can produce split brain.
 
 Consensus/quorum mechanisms are designed in part to prevent isolated minorities from making authoritative decisions.
 
-# 50. Logging and checkpointing
+## Logging and checkpointing
 
 Durable distributed systems still rely on familiar local recovery techniques.
 
@@ -1751,7 +1751,7 @@ A checkpoint records that earlier portions of the log have already been reflecte
 
 In distributed databases, these local recovery mechanisms are combined with replication and consensus.
 
-# 51. Replication is not backup
+## Replication is not backup
 
 Suppose a user executes:
 
@@ -1780,7 +1780,7 @@ It does not preserve historical states automatically.
 
 Backups, snapshots, retained logs, and point-in-time recovery solve different problems.
 
-# 52. CAP enters because communication can fail
+## CAP enters because communication can fail
 
 Suppose two replicas lose connectivity:
 
@@ -1819,7 +1819,7 @@ continue serving both sides
 
 CAP is therefore about behavior during network partitions, not a permanent "pick two" product taxonomy.
 
-# 53. Quorum and CAP
+## Quorum and CAP
 
 Return to three replicas:
 
@@ -1859,7 +1859,7 @@ Quorum does not defeat CAP.
 
 It implements a particular response to the partition.
 
-# 54. PACELC adds the healthy-network question
+## PACELC adds the healthy-network question
 
 CAP asks what happens:
 
@@ -1895,7 +1895,7 @@ Even with no failure, that remote coordination increases latency.
 
 Distributed-database design therefore involves trade-offs even during normal operation.
 
-# 55. Distributed query processing
+## Distributed query processing
 
 Distribution affects reads too.
 
@@ -1937,7 +1937,7 @@ combine results
 
 This is a distributed query plan.
 
-# 56. Scatter/gather
+## Scatter/gather
 
 A scatter/gather query sends work to many partitions and collects the answers.
 
@@ -1966,7 +1966,7 @@ This parallelism can be powerful.
 
 But total query latency often depends heavily on the slowest participating shard.
 
-# 57. Distributed joins
+## Distributed joins
 
 Suppose:
 
@@ -1999,7 +1999,7 @@ shuffle/repartition join
 co-located join
 ```
 
-# 58. Broadcast join
+## Broadcast join
 
 Suppose:
 
@@ -2022,7 +2022,7 @@ Each node joins locally.
 
 This is a broadcast join.
 
-# 59. Shuffle join
+## Shuffle join
 
 If both join inputs are large, rows may need to be redistributed by the join key.
 
@@ -2047,7 +2047,7 @@ shuffle
 
 Large distributed joins can therefore be network-intensive.
 
-# 60. Push computation to the data
+## Push computation to the data
 
 A central principle in distributed query processing is:
 
@@ -2072,7 +2072,7 @@ near where the data resides.
 
 Google Spanner's query engine, for example, can send subplans to remote servers and combine their results at a root server; it includes distributed union/apply and broadcast-hash-join operators.
 
-# 61. MongoDB sharding makes targeted queries important
+## MongoDB sharding makes targeted queries important
 
 MongoDB's `mongos` router can target a subset of shards when the query contains sufficient shard-key information.
 
@@ -2092,7 +2092,7 @@ network traffic
 latency.
 ```
 
-# 62. Homogeneous distributed databases
+## Homogeneous distributed databases
 
 A homogeneous distributed database generally uses the same DBMS technology and compatible internal data model across the participating cluster.
 
@@ -2110,7 +2110,7 @@ This makes internal protocols and schemas easier to coordinate.
 
 Homogeneity does not mean every machine must have identical hardware or workload.
 
-# 63. Heterogeneous distributed data systems
+## Heterogeneous distributed data systems
 
 A heterogeneous architecture may combine:
 
@@ -2138,7 +2138,7 @@ This is often better described as data integration/federation than as one tightl
 
 The distinction matters because one ACID transaction may not span those systems automatically.
 
-# 64. Relational, NoSQL, and distributed SQL
+## Relational, NoSQL, and distributed SQL
 
 The source divides systems into:
 
@@ -2162,7 +2162,7 @@ A clearer classification is based on properties.
 
 "NewSQL" is still encountered, but distributed SQL is often the clearer modern term.
 
-# 65. Spanner as distributed SQL
+## Spanner as distributed SQL
 
 Google describes Spanner as a distributed database providing transactional consistency, synchronous replication, relational schema, SQL, and ACID transactions.
 
@@ -2178,7 +2178,7 @@ strong transactional guarantees
 
 It is a useful example because many theoretical topics appear in one production system.
 
-# 66. CockroachDB as distributed SQL
+## CockroachDB as distributed SQL
 
 CockroachDB similarly exposes a SQL layer over a distributed transactional key-value layer.
 
@@ -2198,7 +2198,7 @@ partitioned key-value ranges
 Raft-replicated copies
 ```
 
-# 67. Cassandra as a different design point
+## Cassandra as a different design point
 
 Cassandra is much more partition-key oriented.
 
@@ -2214,7 +2214,7 @@ So:
 
 is far too vague to describe every operation it supports.
 
-# 68. MongoDB combines replica sets and sharding
+## MongoDB combines replica sets and sharding
 
 A MongoDB distributed deployment may combine:
 
@@ -2240,7 +2240,7 @@ add/adjust replicas
 
 MongoDB also supports multi-document transactions that span sharded clusters, though cross-shard transactions have additional performance cost.
 
-# 69. Technology summary
+## Technology summary
 
 | Technology | Partitioning | Replication / agreement | Transactions | Useful example of |
 |---|---|---|---|---|
@@ -2252,7 +2252,7 @@ MongoDB also supports multi-document transactions that span sharded clusters, th
 
 Spanner's current documentation describes splits, Paxos-based synchronous replication, and multi-split 2PC. MongoDB documents replica-set-backed shards and `mongos` routing. CockroachDB documents replicated ranges coordinated through Raft.
 
-# 70. A complete example: placing an order
+## A complete example: placing an order
 
 Consider an online shop with:
 
@@ -2308,7 +2308,7 @@ The business operation did not become logically more complicated.
 
 The architecture made its implementation more complicated.
 
-# 71. Why distribution is not automatically faster
+## Why distribution is not automatically faster
 
 Suppose a query previously took:
 
@@ -2342,7 +2342,7 @@ independent scaling
 
 It can degrade performance when every operation becomes a cross-node coordination problem.
 
-# 72. The "single-node fast path"
+## The "single-node fast path"
 
 Many distributed databases therefore optimize for operations contained within one partition/range.
 
@@ -2354,7 +2354,7 @@ This illustrates an important architecture rule:
 
 Data modeling should try to keep frequent transactional work local when practical.
 
-# 73. Secondary indexes can unexpectedly make transactions distributed
+## Secondary indexes can unexpectedly make transactions distributed
 
 Suppose one row lives in:
 
@@ -2384,7 +2384,7 @@ This is a useful reminder:
 
 > Distribution can be hidden beneath ordinary SQL.
 
-# 74. Security gets harder too
+## Security gets harder too
 
 A distributed database may communicate across:
 
@@ -2412,7 +2412,7 @@ It may also require controlling where particular data is legally allowed to resi
 
 Data placement can therefore become a compliance property, not only a performance decision.
 
-# 75. Observability must follow one request across nodes
+## Observability must follow one request across nodes
 
 Suppose one SQL query involves:
 
@@ -2457,7 +2457,7 @@ query fan-out
 
 Observability becomes part of database correctness engineering because partial failures can otherwise be extremely difficult to reconstruct.
 
-# 76. Common design mistakes
+## Common design mistakes
 
 | Mistake | Why it fails |
 |---|---|
@@ -2472,7 +2472,7 @@ Observability becomes part of database correctness engineering because partial f
 | "All distributed operations have the same consistency. " | Many systems expose operation-specific consistency/acknowledgement settings |
 | "A network timeout means the write failed. " | The outcome may be unknown; the server may have committed before the response disappeared |
 
-# 77. The unknown-outcome problem
+## The unknown-outcome problem
 
 Suppose the client sends:
 
@@ -2519,7 +2519,7 @@ safe retries
 
 A timeout is not equivalent to rollback.
 
-# 78. Idempotency
+## Idempotency
 
 Suppose a payment request contains:
 
@@ -2539,7 +2539,7 @@ Idempotency is not a database consensus algorithm.
 
 It is an application technique for making retries safer in systems where responses can disappear after work has completed.
 
-# 79. Choosing architecture from requirements
+## Choosing architecture from requirements
 
 Start with requirements rather than technologies.
 
@@ -2582,7 +2582,7 @@ transaction model
 database product
 ```
 
-# 80. Decision table
+## Decision table
 
 | Requirement | Architecture pressure |
 |---|---|
@@ -2599,7 +2599,7 @@ database product
 | Strong leader/metadata correctness | Consensus/quorum |
 | Historical recovery | Backups/PITR, not only replication |
 
-# 81. The full mental model
+## The full mental model
 
 The easiest way to understand a distributed database is as several layers.
 
@@ -2632,7 +2632,7 @@ STORAGE + WAL
 
 A single request may pass through all of these.
 
-# 82. Final technology-oriented mental model
+## Final technology-oriented mental model
 
 Think of several real systems:
 
@@ -2727,7 +2727,7 @@ AP
 shared-nothing
 ```
 
-# 83. Final summary
+## Final summary
 
 A distributed database is not one algorithm.
 
@@ -2767,7 +2767,7 @@ possibly coordinate a quorum
 
 That is why distributed databases can provide extraordinary scalability and availability, but also why their guarantees must always be understood in terms of data placement, replication, coordination, transaction scope, and failure behavior.
 
-# References
+## References
 
 The source notes establish the original framework of shared-nothing/shared-disk/shared-memory architecture, centralized versus decentralized coordination, replication and sharding, distributed concurrency control, 2PC/3PC, consensus, fault tolerance, CAP/PACELC, database categories, and distributed query/observability concerns.
 

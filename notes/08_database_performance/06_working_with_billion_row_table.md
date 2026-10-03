@@ -304,7 +304,6 @@ process_large_dataset.delay(data_chunk)
 - What optimization methods, including query optimization and the use of materialized views, can be applied to efficiently manage and retrieve data from billion-row tables?
 - When should strategies like sharding, distributed caching, and utilizing big data technologies be implemented, and what benefits do they offer for handling massive datasets?
 
-
 ## Related performance notes
 
 - [Execution plans, statistics, and cardinality](07_execution_plans_statistics_and_cardinality.md)

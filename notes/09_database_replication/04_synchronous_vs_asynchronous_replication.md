@@ -54,7 +54,7 @@ An asynchronous system can begin transmitting changes almost immediately.
 
 It is still asynchronous if the client does not have to wait for replica progress before receiving success.
 
-# 1. Start with one transaction
+## Start with one transaction
 
 Suppose the application creates an order:
 
@@ -90,7 +90,7 @@ to the application.
 
 There are several possible milestones.
 
-# 2. The replication pipeline
+## The replication pipeline
 
 A useful generic pipeline is:
 
@@ -144,7 +144,7 @@ applied
 visible to reads
 ```
 
-# 3. Why the acknowledgment point matters
+## Why the acknowledgment point matters
 
 Suppose a replica says:
 
@@ -189,7 +189,7 @@ commit latency
 
 because the primary must wait longer.
 
-# 4. Asynchronous replication
+## Asynchronous replication
 
 In asynchronous replication, replica progress is not part of the client-visible commit requirement.
 
@@ -232,7 +232,7 @@ primary contains newer acknowledged data
 than replica
 ```
 
-# 5. "Asynchronous" does not mean "send everything later"
+## "Asynchronous" does not mean "send everything later"
 
 This is an important correction to a common misconception.
 
@@ -263,7 +263,7 @@ So:
 
 > Synchronous versus asynchronous describes the commit dependency, not necessarily when network transmission begins.
 
-# 6. Failure window in asynchronous replication
+## Failure window in asynchronous replication
 
 Suppose the sequence is:
 
@@ -293,7 +293,7 @@ SUCCESS
 
 This is the classic asynchronous replication data-loss window.
 
-# 7. Replication lag
+## Replication lag
 
 The distance between primary and replica progress is called replication lag.
 
@@ -335,7 +335,7 @@ lag = 2 seconds
 
 number can hide important details.
 
-# 8. Lag in seconds can be misleading
+## Lag in seconds can be misleading
 
 Consider two databases.
 
@@ -377,7 +377,7 @@ apply rates
 
 as well as time-based lag estimates.
 
-# 9. Why asynchronous replicas return stale reads
+## Why asynchronous replicas return stale reads
 
 Suppose:
 
@@ -416,7 +416,7 @@ The database has not necessarily malfunctioned.
 
 The read simply arrived before replication caught up.
 
-# 10. Read-your-writes consistency
+## Read-your-writes consistency
 
 Users often expect:
 
@@ -459,7 +459,7 @@ and wait until the chosen replica reaches it
 
 The correct solution depends on the application.
 
-# 11. Synchronous replication
+## Synchronous replication
 
 Synchronous replication changes when the client receives success.
 
@@ -490,7 +490,7 @@ remote event
 
 must be defined.
 
-# 12. "Synchronous" is incomplete without the acknowledgment level
+## "Synchronous" is incomplete without the acknowledgment level
 
 Consider these possible requirements:
 
@@ -518,7 +518,7 @@ Therefore:
 
 > Never document a system merely as "synchronous. " Document what acknowledgment is required.
 
-# 13. Receive versus durable persistence
+## Receive versus durable persistence
 
 Suppose the replica receives:
 
@@ -552,7 +552,7 @@ durability acknowledgment
 
 provide different guarantees.
 
-# 14. Durable versus applied
+## Durable versus applied
 
 Now suppose the replica has safely written transaction `104` to its recovery log.
 
@@ -585,7 +585,7 @@ read freshness
 
 are separate properties.
 
-# 15. The most important replication distinction
+## The most important replication distinction
 
 Remember:
 
@@ -606,7 +606,7 @@ MySQL
 other log-based replication systems
 ```
 
-# 16. PostgreSQL: the clearest example
+## PostgreSQL: the clearest example
 
 Current PostgreSQL exposes several commit levels through:
 
@@ -626,7 +626,7 @@ off
 
 When synchronous standbys have actually been configured, those values determine how much standby progress the transaction waits for. PostgreSQL documents `remote_write`, `on`, and `remote_apply` as distinct remote acknowledgment levels.
 
-# 17. PostgreSQL requires a synchronous standby configuration too
+## PostgreSQL requires a synchronous standby configuration too
 
 A subtle but important point:
 
@@ -654,7 +654,7 @@ Which replicas count?
 What progress must they report?
 ```
 
-# 18. PostgreSQL `remote_write`
+## PostgreSQL `remote_write`
 
 With:
 
@@ -679,7 +679,7 @@ Standby OS write completed
 → client SUCCESS
 ```
 
-# 19. PostgreSQL `synchronous_commit = on`
+## PostgreSQL `synchronous_commit = on`
 
 With a synchronous standby selected and:
 
@@ -704,7 +704,7 @@ PostgreSQL describes this as the normal durable synchronous-replication level.
 
 But the standby might still not have replayed the transaction.
 
-# 20. PostgreSQL `remote_apply`
+## PostgreSQL `remote_apply`
 
 With:
 
@@ -750,7 +750,7 @@ SUCCESS
 
 This provides a stronger read-after-commit property at the cost of higher latency.
 
-# 21. PostgreSQL summary
+## PostgreSQL summary
 
 | `synchronous_commit` | Client success waits for |
 |---|---|
@@ -762,7 +762,7 @@ This provides a stronger read-after-commit property at the cost of higher latenc
 
 For the remote modes to have their remote meaning, `synchronous_standby_names` must select synchronous standbys. PostgreSQL otherwise treats the non-`off` options as local durable commit behavior.
 
-# 22. PostgreSQL can choose which standbys count
+## PostgreSQL can choose which standbys count
 
 Suppose:
 
@@ -804,7 +804,7 @@ from any two candidates
 
 PostgreSQL supports both priority-based and quorum synchronous replication.
 
-# 23. Why synchronous replication increases commit latency
+## Why synchronous replication increases commit latency
 
 Suppose local storage commit takes:
 
@@ -835,7 +835,7 @@ The important point is:
 
 > Remote coordination is now on the transaction's critical path.
 
-# 24. Geography therefore matters
+## Geography therefore matters
 
 A synchronous replica in the same availability zone or nearby datacenter may have low round-trip latency.
 
@@ -853,7 +853,7 @@ Primary
 
 Different copies have different purposes.
 
-# 25. MySQL uses different terminology: semisynchronous replication
+## MySQL uses different terminology: semisynchronous replication
 
 Traditional MySQL source-to-replica replication is asynchronous.
 
@@ -879,7 +879,7 @@ fully synchronous apply
 
 because replica application remains separate.
 
-# 26. What does a MySQL semisynchronous replica acknowledge?
+## What does a MySQL semisynchronous replica acknowledge?
 
 MySQL documents that the replica acknowledges a transaction after its events have been written to the replica's relay log and flushed to disk.
 
@@ -907,7 +907,7 @@ client may continue
 
 The replica does not have to finish applying the transaction before sending that semisynchronous acknowledgment.
 
-# 27. MySQL semisynchronous durability is not replica read freshness
+## MySQL semisynchronous durability is not replica read freshness
 
 Immediately after the acknowledgment:
 
@@ -941,7 +941,7 @@ durable replication progress
 query-visible application
 ```
 
-# 28. MySQL `AFTER_SYNC`
+## MySQL `AFTER_SYNC`
 
 MySQL's default semisynchronous source wait point is:
 
@@ -969,7 +969,7 @@ MySQL documents `AFTER_SYNC` as the default semisynchronous wait point.
 
 This ordering is specifically chosen to improve consistency of what clients can observe on the source during failover scenarios.
 
-# 29. MySQL `AFTER_COMMIT`
+## MySQL `AFTER_COMMIT`
 
 The alternative is:
 
@@ -993,7 +993,7 @@ So the remote acknowledgment still affects when the client hears success, but it
 
 MySQL documents both `AFTER_SYNC` and `AFTER_COMMIT` as supported semisynchronous wait points.
 
-# 30. MySQL semisynchronous can fall back to asynchronous
+## MySQL semisynchronous can fall back to asynchronous
 
 This is an extremely important operational detail.
 
@@ -1028,7 +1028,7 @@ until a replica acknowledges.
 
 The configured fallback behavior matters.
 
-# 31. This changes the durability guarantee
+## This changes the durability guarantee
 
 Suppose semisynchronous replication is healthy:
 
@@ -1065,7 +1065,7 @@ semisynchronous currently operational
 
 MySQL exposes status variables specifically for that purpose.
 
-# 32. MySQL can require several acknowledgments
+## MySQL can require several acknowledgments
 
 The setting:
 
@@ -1099,7 +1099,7 @@ wait_for_replica_count = 2
 
 the source waits for two replica acknowledgments before satisfying the semisynchronous requirement.
 
-# 33. Waiting for application is separate in MySQL too
+## Waiting for application is separate in MySQL too
 
 MySQL provides synchronization functions that can wait until a replica has applied changes through a specified source binary-log position.
 
@@ -1126,7 +1126,7 @@ has this replica applied through
 the position I need to read?
 ```
 
-# 34. SQL Server Availability Groups
+## SQL Server Availability Groups
 
 SQL Server Always On Availability Groups provide:
 
@@ -1142,7 +1142,7 @@ synchronous-commit mode
 
 For an asynchronous secondary, the primary does not wait for that secondary to harden its transaction log before committing. Microsoft documents that this minimizes transaction latency but permits lag and possible data loss if failover uses a secondary that has not caught up.
 
-# 35. SQL Server synchronous commit
+## SQL Server synchronous commit
 
 For a healthy synchronous-commit secondary:
 
@@ -1168,7 +1168,7 @@ That is a durability milestone.
 
 It is not yet necessarily a read-visibility milestone.
 
-# 36. SQL Server redo is separate
+## SQL Server redo is separate
 
 After the secondary hardens its transaction log:
 
@@ -1201,7 +1201,7 @@ redo queue
 
 develops. Microsoft documents this explicitly.
 
-# 37. SQL Server synchronous secondary reads can therefore be stale
+## SQL Server synchronous secondary reads can therefore be stale
 
 Suppose:
 
@@ -1235,7 +1235,7 @@ does not mean:
 every readable secondary is caught up for queries.
 ```
 
-# 38. SQL Server has an important failure nuance
+## SQL Server has an important failure nuance
 
 A simplistic table often says:
 
@@ -1256,7 +1256,7 @@ and the primary can proceed rather than waiting for it under the normal/default 
 
 This means the data-protection state can change when the secondary becomes unhealthy.
 
-# 39. `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`
+## `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`
 
 SQL Server 2017 and later provide:
 
@@ -1284,7 +1284,7 @@ This is an excellent example of why:
 
 by itself is not the complete configuration.
 
-# 40. Technology comparison
+## Technology comparison
 
 | Technology | Async mode | Stronger mode | What remote acknowledgment means |
 |---|---|---|---|
@@ -1295,7 +1295,7 @@ by itself is not the complete configuration.
 
 The important differences are documented by PostgreSQL's synchronous-replication settings, MySQL's semisynchronous replication protocol, and SQL Server Availability Group modes.
 
-# 41. Do not confuse replication mode with local durability
+## Do not confuse replication mode with local durability
 
 There are actually two separate questions:
 
@@ -1325,7 +1325,7 @@ PostgreSQL documents `off` separately from the remote synchronous modes.
 
 Similarly, SQL Server supports delayed transaction durability independently of Availability Group replication.
 
-# 42. A useful two-axis model
+## A useful two-axis model
 
 Think of:
 
@@ -1359,7 +1359,7 @@ sync / async
 
 from hiding several independent choices.
 
-# 43. What if the replica fails?
+## What if the replica fails?
 
 With asynchronous replication:
 
@@ -1385,7 +1385,7 @@ redundant durability
 
 until replication recovers.
 
-# 44. What if a required synchronous replica fails?
+## What if a required synchronous replica fails?
 
 Now suppose the primary truly requires a remote acknowledgment.
 
@@ -1411,7 +1411,7 @@ MySQL semisynchronous replication, by contrast, can time out and fall back to as
 
 SQL Server's behavior depends additionally on synchronization health and `REQUIRED_SYNCHRONIZED_SECONDARIES_TO_COMMIT`.
 
-# 45. So "synchronous is less available" needs qualification
+## So "synchronous is less available" needs qualification
 
 A common statement is:
 
@@ -1446,7 +1446,7 @@ What does the database do
 when the required replica disappears?
 ```
 
-# 46. Durability versus availability during a partition
+## Durability versus availability during a partition
 
 Imagine:
 
@@ -1476,7 +1476,7 @@ Remote durability guarantee is weakened.
 
 This is another concrete manifestation of distributed-systems trade-offs.
 
-# 47. Failover requires more than synchronous replication
+## Failover requires more than synchronous replication
 
 Suppose:
 
@@ -1516,7 +1516,7 @@ who should now own write authority.
 
 Therefore synchronous replication and failover are separate concerns.
 
-# 48. Synchronous replication does not automatically prevent split brain
+## Synchronous replication does not automatically prevent split brain
 
 Suppose the old primary becomes isolated.
 
@@ -1552,7 +1552,7 @@ depending on the technology.
 
 Replication acknowledgment alone is not enough.
 
-# 49. Which replica should be promoted?
+## Which replica should be promoted?
 
 Suppose three async replicas exist:
 
@@ -1590,7 +1590,7 @@ authority
 
 Promotion policy is part of the consistency/durability architecture.
 
-# 50. RPO: Recovery Point Objective
+## RPO: Recovery Point Objective
 
 RPO answers:
 
@@ -1621,7 +1621,7 @@ Replication design should follow the RPO requirement.
 
 Not the reverse.
 
-# 51. RPO is not simply "replication lag"
+## RPO is not simply "replication lag"
 
 Suppose normal lag is:
 
@@ -1649,7 +1649,7 @@ whether remote data is durable
 
 Monitoring lag helps determine whether the implementation is meeting the intended RPO.
 
-# 52. RTO: Recovery Time Objective
+## RTO: Recovery Time Objective
 
 RTO answers:
 
@@ -1685,7 +1685,7 @@ application reconnection
 
 not merely replication.
 
-# 53. Apply lag can hurt RTO too
+## Apply lag can hurt RTO too
 
 Suppose a synchronous replica has every transaction durably recorded.
 
@@ -1715,7 +1715,7 @@ does not automatically imply:
 good RTO.
 ```
 
-# 54. RPO and RTO are independent dimensions
+## RPO and RTO are independent dimensions
 
 Imagine two systems.
 
@@ -1741,7 +1741,7 @@ Neither is inherently better.
 
 The correct design depends on business requirements.
 
-# 55. Synchronous replication is not backup
+## Synchronous replication is not backup
 
 Suppose the application executes:
 
@@ -1761,7 +1761,7 @@ The replication system worked perfectly.
 
 It did not preserve the old data.
 
-# 56. The same is true for logical corruption
+## The same is true for logical corruption
 
 Examples:
 
@@ -1788,7 +1788,7 @@ restore testing
 
 for historical recovery.
 
-# 57. Monitoring must distinguish the pipeline stages
+## Monitoring must distinguish the pipeline stages
 
 A good monitoring model asks:
 
@@ -1808,7 +1808,7 @@ How far behind is the query-visible state?
 
 Different stages imply different operational failures.
 
-# 58. Example monitoring diagnosis
+## Example monitoring diagnosis
 
 Suppose:
 
@@ -1844,7 +1844,7 @@ redo/replay blocking
 
 Adding network bandwidth would probably not solve that problem.
 
-# 59. Another diagnosis
+## Another diagnosis
 
 Now suppose:
 
@@ -1884,7 +1884,7 @@ replica behind
 
 different cause.
 
-# 60. PostgreSQL monitoring example
+## PostgreSQL monitoring example
 
 PostgreSQL exposes:
 
@@ -1913,7 +1913,7 @@ replica connected = yes
 
 flag.
 
-# 61. SQL Server monitoring example
+## SQL Server monitoring example
 
 SQL Server Availability Group monitoring includes concepts such as:
 
@@ -1943,7 +1943,7 @@ redo queue large
 
 the log may already be safely on the secondary but has not yet been applied to query-visible data. Microsoft explicitly distinguishes these states in its Availability Group diagnostics.
 
-# 62. MySQL monitoring also needs two stages
+## MySQL monitoring also needs two stages
 
 For traditional MySQL replication, distinguish:
 
@@ -1967,7 +1967,7 @@ replica process running
 
 status.
 
-# 63. Synchronous replication and throughput
+## Synchronous replication and throughput
 
 Synchronous replication does not necessarily reduce raw transaction throughput by exactly:
 
@@ -2004,7 +2004,7 @@ replica performance
 number of required acknowledgments
 ```
 
-# 64. Group commit helps
+## Group commit helps
 
 Suppose 100 transactions become ready to commit at nearly the same time.
 
@@ -2032,7 +2032,7 @@ Similar batching can help replication.
 
 Therefore synchronous replication can still provide substantial throughput even while adding remote commit latency.
 
-# 65. Synchronous replication and tail latency
+## Synchronous replication and tail latency
 
 Average latency is not the only concern.
 
@@ -2062,7 +2062,7 @@ latency even if average performance looks acceptable.
 
 For user-facing workloads, monitor latency distributions rather than averages only.
 
-# 66. One slow synchronous participant can matter greatly
+## One slow synchronous participant can matter greatly
 
 Suppose the primary waits for:
 
@@ -2090,7 +2090,7 @@ the transaction can potentially proceed after A and B respond.
 
 This is why quorum/standby-selection policy has major performance consequences.
 
-# 67. More synchronous copies are not free
+## More synchronous copies are not free
 
 Suppose the durability goal changes from:
 
@@ -2117,7 +2117,7 @@ partial outages
 
 Replication count should follow the failure model and business requirement.
 
-# 68. A practical architecture example
+## A practical architecture example
 
 Suppose an online payment company deploys:
 
@@ -2164,7 +2164,7 @@ regional resilience
 
 rather than treating every replica identically.
 
-# 69. Another architecture: analytics replica
+## Another architecture: analytics replica
 
 Suppose:
 
@@ -2195,7 +2195,7 @@ This illustrates an important principle:
 
 > Different replicas can have different jobs and therefore different replication guarantees.
 
-# 70. Comparison table
+## Comparison table
 
 | Concern | Synchronous | Asynchronous |
 |---|---|---|
@@ -2212,7 +2212,7 @@ This illustrates an important principle:
 
 The table is a starting point, not a substitute for knowing a product's exact acknowledgment and fallback rules.
 
-# 71. Technology-specific summary
+## Technology-specific summary
 
 | Engine | Mode | Commit dependency |
 |---|---|---|
@@ -2240,7 +2240,7 @@ async
 
 are families of behavior, not complete specifications.
 
-# 72. Common misconceptions
+## Common misconceptions
 
 | Claim | Better explanation |
 |---|---|
@@ -2255,7 +2255,7 @@ are families of behavior, not complete specifications.
 | "Semisync MySQL means replica applied the transaction. " | The acknowledgment concerns durable relay-log receipt, not completed application |
 | "Replication gives us backup. " | Bad changes replicate too |
 
-# 73. Questions to ask when someone says "we use synchronous replication"
+## Questions to ask when someone says "we use synchronous replication"
 
 Ask:
 
@@ -2303,7 +2303,7 @@ Until those questions are answered:
 
 does not fully describe the guarantee.
 
-# 74. Questions to ask for asynchronous replication
+## Questions to ask for asynchronous replication
 
 Likewise:
 
@@ -2336,7 +2336,7 @@ Asynchronous replication is not:
 
 It is a deliberate latency/availability trade-off.
 
-# 75. Choosing based on the business operation
+## Choosing based on the business operation
 
 Consider several workloads.
 
@@ -2376,7 +2376,7 @@ So the application might temporarily route the user's reads to the primary.
 
 Different operations in the same application may need different guarantees.
 
-# 76. PostgreSQL can choose durability per transaction
+## PostgreSQL can choose durability per transaction
 
 PostgreSQL's `synchronous_commit` can be changed at transaction/session level.
 
@@ -2401,7 +2401,7 @@ PostgreSQL explicitly supports per-transaction synchronous-commit choices.
 
 This can avoid imposing the highest durability cost on every piece of data.
 
-# 77. Measure the workload, not only the configuration
+## Measure the workload, not only the configuration
 
 Before changing replication mode, measure:
 
@@ -2439,7 +2439,7 @@ or:
 network latency is unstable.
 ```
 
-# 78. Test failures rather than only normal replication
+## Test failures rather than only normal replication
 
 A meaningful replication test plan should include:
 
@@ -2460,7 +2460,7 @@ Replication is a failure-handling mechanism.
 
 It should therefore be tested under failure.
 
-# 79. RPO/RTO decision matrix
+## RPO/RTO decision matrix
 
 | Requirement | Likely architectural pressure |
 |---|---|
@@ -2481,7 +2481,7 @@ Not a universal rule such as:
 "synchronous is always better."
 ```
 
-# 80. Final mental model
+## Final mental model
 
 Do not memorize:
 
@@ -2578,7 +2578,7 @@ What happens if they cannot?
 
 Those two questions define most of the practical replication guarantee.
 
-# 81. Final principle
+## Final principle
 
 The most useful question is not:
 
@@ -2602,7 +2602,7 @@ failover safety
 
 become much easier to reason about.
 
-# References
+## References
 
 PostgreSQL's current documentation distinguishes `remote_write`, `on`, and `remote_apply`; explains the role of `synchronous_standby_names`; and documents both priority-based and quorum synchronous replication.
 

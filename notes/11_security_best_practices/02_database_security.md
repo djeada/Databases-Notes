@@ -394,7 +394,6 @@ V. Establishing an Incident Response Plan
 - Defining roles and responsibilities ensures team members know their tasks and decision-making authority during an incident.
 - Effective communication protocols include internal and external strategies to address stakeholders, customers, and authorities efficiently.
 
-
 ## Related focused notes
 
 - [Identity, authentication, and access control](08_identity_authentication_and_access_control.md)

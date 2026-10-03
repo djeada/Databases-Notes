@@ -67,7 +67,7 @@ historical recovery
 
 Those are separate design decisions.
 
-# 1. What problem does primary–standby replication solve?
+## What problem does primary–standby replication solve?
 
 Consider a database running on one machine:
 
@@ -107,7 +107,7 @@ If the primary fails, the standby may already contain nearly all—or, depending
 
 That can significantly reduce recovery time.
 
-# 2. Replication and failover are not the same thing
+## Replication and failover are not the same thing
 
 Replication means:
 
@@ -149,7 +149,7 @@ and accepting writes?
 
 PostgreSQL provides replication and promotion primitives, but PostgreSQL itself does not supply the complete external failure-detection and automatic-failover system.
 
-# 3. Follow one PostgreSQL transaction
+## Follow one PostgreSQL transaction
 
 Suppose the application executes:
 
@@ -204,7 +204,7 @@ standby database reflects transaction
 
 This pipeline is the key to understanding PostgreSQL physical replication.
 
-# 4. PostgreSQL physical replication is WAL replication
+## PostgreSQL physical replication is WAL replication
 
 PostgreSQL physical streaming replication works by transmitting WAL records from the primary to the standby.
 
@@ -244,7 +244,7 @@ This is why physical replication is tightly connected to PostgreSQL's storage an
 
 PostgreSQL describes streaming replication as sending WAL incrementally from the primary to the standby.
 
-# 5. Receive, write, flush, and replay are different events
+## Receive, write, flush, and replay are different events
 
 A crucial mental model is:
 
@@ -280,7 +280,7 @@ These steps mean different things.
 
 PostgreSQL exposes these distinctions through replication positions such as `sent_lsn`, `write_lsn`, `flush_lsn`, and `replay_lsn`.
 
-# 6. LSN: PostgreSQL's progress coordinate
+## LSN: PostgreSQL's progress coordinate
 
 An LSN, or Log Sequence Number, identifies a position in PostgreSQL's WAL stream.
 
@@ -312,7 +312,7 @@ A replica can therefore be durable relatively far forward while its query-visibl
 
 That distinction becomes very important for synchronous replication.
 
-# 7. Asynchronous streaming replication
+## Asynchronous streaming replication
 
 PostgreSQL streaming replication is asynchronous unless synchronous replication is explicitly configured.
 
@@ -361,7 +361,7 @@ after certain primary failures
 
 PostgreSQL explicitly documents that asynchronous log shipping creates a window in which transactions committed on the primary may not yet exist on the standby.
 
-# 8. Concrete stale-read example
+## Concrete stale-read example
 
 Suppose:
 
@@ -403,7 +403,7 @@ The application may appear broken even though replication is functioning exactly
 
 This is replication lag.
 
-# 9. Read-your-writes consistency
+## Read-your-writes consistency
 
 A user often expects:
 
@@ -443,7 +443,7 @@ The application or infrastructure can require a replica to catch up before servi
 
 Which design is appropriate depends on the business semantics.
 
-# 10. Hot standby
+## Hot standby
 
 A PostgreSQL standby used only for failover does not necessarily have to serve ordinary application queries.
 
@@ -475,7 +475,7 @@ until promotion.
 
 PostgreSQL distinguishes warm standbys from hot standbys specifically on whether read-only client queries can be served.
 
-# 11. Read scaling
+## Read scaling
 
 Suppose the workload is:
 
@@ -514,7 +514,7 @@ but not equivalent to:
 write sharding
 ```
 
-# 12. Replica queries can compete with WAL replay
+## Replica queries can compete with WAL replay
 
 A hot standby has two workloads:
 
@@ -547,7 +547,7 @@ and stale-read lag grows.
 
 A read replica is not unlimited free compute.
 
-# 13. Recovery conflicts on a hot standby
+## Recovery conflicts on a hot standby
 
 There is another complication.
 
@@ -577,7 +577,7 @@ PostgreSQL can eventually cancel standby queries when necessary to allow recover
 
 This is why long-running analytical workloads require deliberate standby configuration rather than assuming replicas behave like independent databases.
 
-# 14. `hot_standby_feedback`
+## `hot_standby_feedback`
 
 One option is:
 
@@ -613,7 +613,7 @@ So it should not be summarized as:
 
 The trade-off is essentially the reverse.
 
-# 15. Synchronous replication changes the commit point
+## Synchronous replication changes the commit point
 
 Suppose losing an acknowledged order is unacceptable.
 
@@ -641,7 +641,7 @@ This is synchronous replication.
 
 The application now pays additional commit latency in exchange for a stronger cross-node guarantee.
 
-# 16. PostgreSQL synchronous replication requires two concepts
+## PostgreSQL synchronous replication requires two concepts
 
 A common configuration error is to change only:
 
@@ -675,7 +675,7 @@ causes transactions to wait for the selected synchronous standby's durable WAL a
 
 PostgreSQL's documentation explicitly states that synchronous replication requires a non-empty `synchronous_standby_names`; `synchronous_commit` then determines the acknowledgement point.
 
-# 17. `synchronous_commit` levels
+## `synchronous_commit` levels
 
 For a configured synchronous standby, the important levels include:
 
@@ -717,7 +717,7 @@ so it has become visible to queries there.
 
 PostgreSQL documents this distinction explicitly.
 
-# 18. Durability and read visibility are different
+## Durability and read visibility are different
 
 Suppose:
 
@@ -760,7 +760,7 @@ all replica reads are current
 
 unless the chosen acknowledgement policy specifically waits for apply/replay.
 
-# 19. `remote_apply` and immediate standby reads
+## `remote_apply` and immediate standby reads
 
 Consider:
 
@@ -789,7 +789,7 @@ PostgreSQL describes `remote_apply` as waiting for replay specifically so commit
 
 The cost is higher transaction latency.
 
-# 20. Multiple synchronous standbys
+## Multiple synchronous standbys
 
 Suppose:
 
@@ -829,7 +829,7 @@ wait for any two of those standbys
 
 PostgreSQL supports both `FIRST` and `ANY` selection methods.
 
-# 21. Synchronous replication introduces an availability dependency
+## Synchronous replication introduces an availability dependency
 
 Suppose commits require one synchronous standby.
 
@@ -859,7 +859,7 @@ This is not a defect.
 
 It is the distributed-systems trade-off being explicitly chosen.
 
-# 22. Geographic synchronous replication
+## Geographic synchronous replication
 
 Suppose the primary is in:
 
@@ -901,7 +901,7 @@ remote asynchronous disaster-recovery standby
 
 rather than making every distant copy synchronous.
 
-# 23. Creating a standby: why a base backup is required
+## Creating a standby: why a base backup is required
 
 A standby needs a consistent starting database state.
 
@@ -927,7 +927,7 @@ A PostgreSQL base backup provides that starting point.
 
 `pg_basebackup` is specifically designed to produce a base backup usable for streaming-replication standbys.
 
-# 24. Why arbitrary filesystem copies are dangerous
+## Why arbitrary filesystem copies are dangerous
 
 Suppose a PostgreSQL cluster is running while someone copies:
 
@@ -953,7 +953,7 @@ pg_basebackup
 
 or another supported PostgreSQL backup mechanism.
 
-# 25. `pg_basebackup -R`
+## `pg_basebackup -R`
 
 A convenient initialization command looks conceptually like:
 
@@ -989,7 +989,7 @@ for the resulting standby.
 
 This is preferable to treating `standby. signal` and `primary_conninfo` as unrelated manual steps unless manual control is actually required.
 
-# 26. Do not hard-code example passwords into production configuration
+## Do not hard-code example passwords into production configuration
 
 The source example embeds a replication password directly into:
 
@@ -1020,7 +1020,7 @@ scram-sha-256
 
 in `pg_hba. conf`. Current PostgreSQL documentation distinguishes SCRAM from the older `md5` authentication method.
 
-# 27. A clearer primary configuration
+## A clearer primary configuration
 
 A minimal conceptual primary configuration might include:
 
@@ -1059,7 +1059,7 @@ must match the deployment.
 
 Do not copy example CIDRs and credentials blindly.
 
-# 28. `wal_keep_size` is not the same thing as `min_wal_size` or `max_wal_size`
+## `wal_keep_size` is not the same thing as `min_wal_size` or `max_wal_size`
 
 The source suggests that newer PostgreSQL versions allow:
 
@@ -1089,7 +1089,7 @@ PostgreSQL explicitly documents `wal_keep_size` as independent of `max_wal_size`
 
 So they should not be presented as substitute parameters.
 
-# 29. Replication slots
+## Replication slots
 
 A physical replication slot tells PostgreSQL that a consumer may still require older WAL.
 
@@ -1115,7 +1115,7 @@ A slot is very useful for disconnected or slow standbys.
 
 But it introduces a major operational risk.
 
-# 30. The replication-slot disk-fill problem
+## The replication-slot disk-fill problem
 
 Suppose:
 
@@ -1154,7 +1154,7 @@ That can become a primary outage.
 
 PostgreSQL explicitly warns that a slow or failed replication-slot consumer can cause WAL accumulation.
 
-# 31. `max_slot_wal_keep_size`
+## `max_slot_wal_keep_size`
 
 PostgreSQL provides:
 
@@ -1176,7 +1176,7 @@ but a sufficiently stale standby may lose the WAL it needs and require rebuildin
 
 PostgreSQL documents the default as unlimited retention and exposes slot WAL status through `pg_replication_slots`.
 
-# 32. A slot does not mean "the standby has replayed everything"
+## A slot does not mean "the standby has replayed everything"
 
 This distinction matters.
 
@@ -1206,7 +1206,7 @@ every query on the standby sees all those changes.
 
 Receive/durability progress and replay/visibility progress are different things.
 
-# 33. Monitoring on the primary
+## Monitoring on the primary
 
 A useful starting query is:
 
@@ -1251,7 +1251,7 @@ suggests replay/application lag.
 
 PostgreSQL exposes separate write, flush, and replay positions and lag metrics specifically because those stages are different.
 
-# 34. Monitoring on the standby
+## Monitoring on the standby
 
 Useful functions include positions such as:
 
@@ -1275,7 +1275,7 @@ If that gap grows continuously, the standby may be unable to replay WAL as fast 
 
 Monitoring should focus on trends rather than merely whether the replication process exists.
 
-# 35. Functional replication tests
+## Functional replication tests
 
 A simple test is useful:
 
@@ -1319,7 +1319,7 @@ replay workload
 query conflicts
 ```
 
-# 36. Asynchronous failover and data loss
+## Asynchronous failover and data loss
 
 Suppose:
 
@@ -1356,7 +1356,7 @@ RPO = 0
 
 the replication and failover design must explicitly support that requirement.
 
-# 37. Failover has several steps
+## Failover has several steps
 
 Safe failover is more than:
 
@@ -1388,7 +1388,7 @@ A complete procedure includes something like:
 
 Each step solves a different problem.
 
-# 38. Promotion
+## Promotion
 
 Current PostgreSQL supports promotion with:
 
@@ -1414,7 +1414,7 @@ file.
 
 Use the supported promotion interfaces.
 
-# 39. Split brain
+## Split brain
 
 The most dangerous failover failure is:
 
@@ -1437,7 +1437,7 @@ This is split brain.
 
 PostgreSQL's failover documentation explicitly warns that after promotion there must be a mechanism ensuring the old primary learns it is no longer primary; otherwise both systems can believe they own the primary role, leading to data loss.
 
-# 40. Fencing
+## Fencing
 
 Safe HA requires making sure the losing node can no longer process authoritative writes.
 
@@ -1469,7 +1469,7 @@ The essential property is:
 
 > Before the new writer is trusted, the old writer must no longer be capable of creating a competing authoritative history.
 
-# 41. Application redirection
+## Application redirection
 
 Promotion does not automatically teach every application:
 
@@ -1502,7 +1502,7 @@ db-primary.internal → Node 2
 
 This routing layer is part of the HA system even though it is not PostgreSQL replication itself.
 
-# 42. Planned switchover versus unplanned failover
+## Planned switchover versus unplanned failover
 
 These terms are useful to separate.
 
@@ -1532,7 +1532,7 @@ Failover requires much stronger failure-detection and fencing logic.
 
 A tested switchover procedure does not automatically prove that unexpected failover is safe.
 
-# 43. What happens to the old primary?
+## What happens to the old primary?
 
 Suppose:
 
@@ -1549,7 +1549,7 @@ The old primary cannot simply restart and resume behaving as primary.
 
 It must be converted into a standby following Node 2.
 
-# 44. `pg_rewind`
+## `pg_rewind`
 
 A full new base backup is one option.
 
@@ -1577,7 +1577,7 @@ Sometimes a new base backup is necessary.
 
 Sometimes `pg_rewind` is substantially faster.
 
-# 45. Replication timelines
+## Replication timelines
 
 Promotion creates a new PostgreSQL timeline.
 
@@ -1611,7 +1611,7 @@ and PostgreSQL must distinguish them.
 
 For HA standbys, PostgreSQL recommends following the latest recovery timeline so downstream standbys can follow a promoted server.
 
-# 46. Cascading replication
+## Cascading replication
 
 Standbys do not always have to connect directly to the primary.
 
@@ -1646,7 +1646,7 @@ and gain an additional replication hop.
 
 Also note that PostgreSQL's synchronous-standby selection on a primary concerns directly connected standbys rather than arbitrary downstream cascading standbys.
 
-# 47. Replication is not backup
+## Replication is not backup
 
 Suppose the application accidentally executes:
 
@@ -1686,7 +1686,7 @@ restore testing
 
 for historical recovery.
 
-# 48. WAL archiving and streaming replication solve different problems
+## WAL archiving and streaming replication solve different problems
 
 Streaming replication sends WAL to currently connected standbys.
 
@@ -1718,7 +1718,7 @@ additional disaster-recovery workflows
 
 These mechanisms complement rather than replace each other.
 
-# 49. `archive_mode` is not merely a replication performance tweak
+## `archive_mode` is not merely a replication performance tweak
 
 Settings such as:
 
@@ -1753,7 +1753,7 @@ and its retention must align with base-backup strategy.
 
 PostgreSQL recommends an archive accessible independently of the primary when using WAL archives for standby/recovery purposes.
 
-# 50. Clock synchronization
+## Clock synchronization
 
 Accurate clocks are strongly recommended in distributed infrastructure for:
 
@@ -1784,7 +1784,7 @@ So the accurate guidance is:
 
 > Synchronize clocks operationally, but do not teach clock synchronization as a fundamental prerequisite for basic physical streaming replication.
 
-# 51. Avoid generic Linux tuning prescriptions
+## Avoid generic Linux tuning prescriptions
 
 Advice such as:
 
@@ -1813,7 +1813,7 @@ Replication works because the PostgreSQL replication configuration is correct—
 
 Tune only from measured workload requirements and current platform documentation.
 
-# 52. `checkpoint_timeout` is not a standby catch-up setting
+## `checkpoint_timeout` is not a standby catch-up setting
 
 The source recommends:
 
@@ -1856,7 +1856,7 @@ standby workload
 
 Do not tune checkpoint behavior primarily from a replication slogan.
 
-# 53. `backup_label` is not a tuning parameter
+## `backup_label` is not a tuning parameter
 
 Likewise:
 
@@ -1884,7 +1884,7 @@ recovery target configuration
 
 as a complete recovery design.
 
-# 54. Corrected PostgreSQL lab topology
+## Corrected PostgreSQL lab topology
 
 For a teaching environment:
 
@@ -1922,7 +1922,7 @@ The logical topology is what matters:
           HOT STANDBY    HOT STANDBY
 ```
 
-# 55. Step 1 — create a replication role
+## Step 1 — create a replication role
 
 On the primary:
 
@@ -1934,7 +1934,7 @@ PASSWORD '<managed-secret>';
 
 For a real deployment, store and deliver the secret securely rather than publishing a reusable password in documentation.
 
-# 56. Step 2 — permit replication connections
+## Step 2 — permit replication connections
 
 Example conceptually:
 
@@ -1949,7 +1949,7 @@ The exact authentication policy should follow the environment's security model.
 
 After changing `pg_hba. conf`, reload PostgreSQL as appropriate.
 
-# 57. Step 3 — primary replication parameters
+## Step 3 — primary replication parameters
 
 For example:
 
@@ -1972,7 +1972,7 @@ Then monitor them.
 
 A slot is not a "set it and forget it" feature.
 
-# 58. Step 4 — initialize each standby
+## Step 4 — initialize each standby
 
 Stop PostgreSQL on the target standby and ensure its target data directory is suitable for replacement.
 
@@ -1992,7 +1992,7 @@ If you want `pg_basebackup` itself to use a named slot, configure the relevant s
 
 `-R`/`--write-recovery-conf` creates `standby. signal` and writes connection settings into `postgresql. auto. conf`.
 
-# 59. Step 5 — configure slot identity if used
+## Step 5 — configure slot identity if used
 
 For Standby 1:
 
@@ -2010,7 +2010,7 @@ Each independent physical standby should normally have its own slot if slots are
 
 Otherwise multiple consumers would not independently preserve their own required WAL positions.
 
-# 60. Step 6 — start the standby
+## Step 6 — start the standby
 
 Start PostgreSQL.
 
@@ -2033,7 +2033,7 @@ SELECT *
 FROM pg_stat_replication;
 ```
 
-# 61. Step 7 — verify the pipeline, not only connectivity
+## Step 7 — verify the pipeline, not only connectivity
 
 Check:
 
@@ -2070,7 +2070,7 @@ streaming
 
 is good, but it is only one part of replication health.
 
-# 62. Configuring synchronous replication correctly
+## Configuring synchronous replication correctly
 
 Suppose `standby1` uses:
 
@@ -2116,7 +2116,7 @@ synchronous_commit
 
 controls the wait level.
 
-# 63. Monitoring table
+## Monitoring table
 
 | Question | PostgreSQL signal |
 |---|---|
@@ -2138,7 +2138,7 @@ replication = yes/no
 
 indicator.
 
-# 64. Failover procedure summary
+## Failover procedure summary
 
 A manual emergency sequence is conceptually:
 
@@ -2167,7 +2167,7 @@ A manual emergency sequence is conceptually:
 
 The exact automation belongs to an HA manager rather than ad hoc shell commands.
 
-# 65. What PostgreSQL alone does and does not provide
+## What PostgreSQL alone does and does not provide
 
 PostgreSQL provides:
 
@@ -2198,7 +2198,7 @@ PostgreSQL's own failover documentation explicitly says external system software
 
 Tools and platforms can provide that orchestration layer.
 
-# 66. Primary–standby across technologies
+## Primary–standby across technologies
 
 The same architecture appears under different names.
 
@@ -2225,7 +2225,7 @@ promotion/election after failure
 
 but the exact correctness and failover semantics differ by engine.
 
-# 67. Advantages and limitations
+## Advantages and limitations
 
 | Benefit | Important qualification |
 |---|---|
@@ -2239,7 +2239,7 @@ but the exact correctness and failover semantics differ by engine.
 
 The source correctly identifies read offloading, failover, and write-primary bottlenecks as central characteristics of the topology.
 
-# 68. Common misconceptions
+## Common misconceptions
 
 | Claim | Correct interpretation |
 |---|---|
@@ -2254,7 +2254,7 @@ The source correctly identifies read offloading, failover, and write-primary bot
 | "Replication is backup. " | Logical mistakes replicate too |
 | "More standbys increase write throughput. " | They mainly add redundancy/read capacity in a single-primary design |
 
-# 69. Final mental model
+## Final mental model
 
 Do not memorize primary–standby replication as:
 
@@ -2299,7 +2299,7 @@ read-visible state                   |
 
 Then ask five questions.
 
-### 1. Where does `COMMIT SUCCESS` occur?
+### Where does `COMMIT SUCCESS` occur?
 
 ```text
 after primary only?
@@ -2311,7 +2311,7 @@ after standby flush?
 after standby replay?
 ```
 
-### 2. Where are reads served?
+### Where are reads served?
 
 ```text
 primary?
@@ -2321,7 +2321,7 @@ standby?
 both?
 ```
 
-### 3. How stale may standby reads be?
+### How stale may standby reads be?
 
 ```text
 milliseconds?
@@ -2331,7 +2331,7 @@ seconds?
 not stale at all?
 ```
 
-### 4. What happens when the primary disappears?
+### What happens when the primary disappears?
 
 ```text
 who detects it?
@@ -2343,7 +2343,7 @@ who fences the old one?
 who redirects clients?
 ```
 
-### 5. How do we recover historical data?
+### How do we recover historical data?
 
 ```text
 standby?
@@ -2362,7 +2362,7 @@ If the only documentation says:
 
 you still know very little about its actual availability and durability guarantees.
 
-# References
+## References
 
 The source notes provide the original primary/standby architecture, PostgreSQL streaming-replication example, base-backup setup, replication-status check, manual promotion, replication-slot discussion, and HA tuning suggestions.
 

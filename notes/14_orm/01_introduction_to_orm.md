@@ -94,7 +94,7 @@ The repository includes a complete example:
 
 It uses SQLAlchemy 2.x with SQLite so no database server is required.
 
-### 1. Create an environment
+### Create an environment
 
 From the repository root:
 
@@ -104,7 +104,7 @@ source .venv/bin/activate          # Windows PowerShell: .venv\Scripts\Activate.
 python -m pip install sqlalchemy
 ```
 
-### 2. Run the demo
+### Run the demo
 
 ```bash
 python scripts/orm/sqlalchemy_demo.py

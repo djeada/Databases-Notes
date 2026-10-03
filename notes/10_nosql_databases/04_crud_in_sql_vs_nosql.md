@@ -292,7 +292,6 @@ XVI. SQL databases frequently carry out *partitioning* strategies to handle vast
 - What are the differences between performing CRUD operations in SQL and MongoDB, particularly regarding schema flexibility and data relationships?
 - When should you choose a SQL database over MongoDB, and vice versa, based on application requirements and data integrity needs?
 
-
 ## Related modeling notes
 
 - [Querying NoSQL databases](03_querying_nosql_databases.md)

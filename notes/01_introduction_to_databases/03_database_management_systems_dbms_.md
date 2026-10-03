@@ -4,7 +4,7 @@ A database is the stored data and its definitions. A **database management syste
 
 The [first note](01_databases_intro.md) showed the SQL an application sends. The [database-types note](02_types_of_databases.md) compared models. Here we follow those requests through SQLite and PostgreSQL, then connect the responsibilities to other DBMS families.
 
-## 1. Connect the application to the right process
+## Connect the application to the right process
 
 ### SQLite: the engine runs inside the application
 
@@ -72,7 +72,7 @@ The rows are managed by the server; exiting `psql` does not remove them. The cli
 
 A managed PostgreSQL service still runs a database engine and accepts database connections. The provider can operate infrastructure, patching, or automated backups, while the application team still controls its schema, workload, data-access logic, and many configuration decisions. “Managed” is a division of operational responsibilities, not a different logical data model.
 
-## 2. Follow parsing, planning, and execution
+## Follow parsing, planning, and execution
 
 Use the fresh two-table SQLite setup from sections 3 and 4 of the [introduction](01_databases_intro.md). This is a separate SQLite exercise from the PostgreSQL session above:
 
@@ -133,7 +133,7 @@ The second form actually executes the query and reports runtime details. The pri
 
 For a slow request, identify whether the time comes from execution, a lock wait, acquiring a connection, or transferring a huge result. These need different remedies. Creating an index cannot fix a request that mostly waits for an application connection pool.
 
-## 3. Keep metadata and data distinct
+## Keep metadata and data distinct
 
 The engine maintains a **catalog**: information about tables, columns, constraints, indexes, and other objects. It consults that metadata when interpreting SQL.
 
@@ -154,7 +154,7 @@ ORDER BY name;
 
 This query asks about database objects, not customer records. PostgreSQL has its own system catalogs and exposes portable object information through `information_schema`. Catalog layouts are engine-specific even when the application tables look similar.
 
-## 4. Enforce rules for every writer
+## Enforce rules for every writer
 
 A web form might reject a duplicate email before submitting it. An import script could bypass that form entirely. A database `UNIQUE` constraint applies at the write boundary, protecting the table regardless of which client issued the insert.
 
@@ -162,7 +162,7 @@ Other constraints enforce required values, valid references, and row-level condi
 
 A schema rule is not the same thing as a complete business operation. A price of 1 cent can satisfy a nonnegative-price check while still being an incorrect price. A stock decrement without its related order may satisfy every row-level check while violating checkout behavior.
 
-## 5. Coordinate transactions and competing clients
+## Coordinate transactions and competing clients
 
 A transaction groups related work, but the application must choose the boundary and respond to failures. For example, creating an order, recording its lines, and reserving stock should normally be one database operation from the business perspective.
 
@@ -172,7 +172,7 @@ PostgreSQL uses MVCC: an ordinary reader can see an appropriate committed versio
 
 For the final copy of a book, an application can condition the decrement on stock being available and check that one row changed. It must then create the order in the same transaction. The [transaction-control note](../03_sql/05_transaction_control_language_tcl.md) provides a complete implementation; [isolation](../04_acid_properties_and_transactions/04_isolation.md) explains the concurrency cases.
 
-## 6. Manage memory, pages, and persistent storage
+## Manage memory, pages, and persistent storage
 
 A **page** is a storage chunk containing row or index information. A **buffer pool** or **page cache** keeps useful pages in memory. A query can find a needed page already cached or cause a read from a lower storage layer.
 
@@ -180,7 +180,7 @@ This is why a repeated query can run faster without any SQL change: the pages it
 
 Updates can modify memory-resident pages before those changes reach their final data-file locations. Engines use recovery mechanisms to make the persistence sequence safe. PostgreSQL uses a **write-ahead log (WAL)**: required log information is persisted before corresponding changed data pages. SQLite has rollback-journal and WAL modes with their own details. The [storage chapter](../05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) develops these mechanisms.
 
-## 7. Recover from a crash and from a bad change
+## Recover from a crash and from a bad change
 
 Crash recovery reconstructs the appropriate accepted state after an interrupted process or machine failure. It uses the engine's recovery information and configured durability behavior. A transaction log is not the same thing as application diagnostic output.
 
@@ -219,7 +219,7 @@ psql -d chapter1_dbms_restored -c 'SELECT COUNT(*) FROM server_products;'
 
 The final count should be `1`. `-Fc` creates a custom-format archive, and `pg_restore` loads it into the fresh target database. `pg_dump` exports one database; global objects such as roles need separate treatment. This is a small restore exercise, not a complete production recovery plan. PostgreSQL's [pg_dump documentation](https://www.postgresql.org/docs/current/app-pgdump.html) describes the formats and scope.
 
-## 8. Apply permissions at the right layer
+## Apply permissions at the right layer
 
 In PostgreSQL, a role can represent a login or a set of privileges. Run this example in the `chapter1_dbms` database as an account allowed to create roles and grant access:
 
@@ -235,7 +235,7 @@ Table-read permission also does not mean an application user may see every custo
 
 For SQLite, protecting the database file and controlling which application operations are exposed is central. For a cloud-hosted engine, provider identity and network controls add layers while database privileges still matter.
 
-## 9. Compare the full range of DBMS families
+## Compare the full range of DBMS families
 
 A DBMS's data model is separate from whether it runs embedded, on a server, or as a managed service.
 
@@ -252,7 +252,7 @@ A DBMS's data model is separate from whether it runs embedded, on a server, or a
 
 The [next note](04_data_models.md) shows the hierarchical, network, and object structures, develops entity-relationship modeling, and distinguishes an object database from an ORM using relational storage.
 
-## 10. Distributed SQL and the “NewSQL” label
+## Distributed SQL and the “NewSQL” label
 
 **NewSQL** is an informal label associated with systems that combine relational SQL and transactions with distributed storage and execution. **Distributed SQL** is often a more concrete description. CockroachDB and Google Spanner are examples to investigate; they are not identical architectures or SQL dialects.
 
@@ -304,7 +304,7 @@ Real code must check both records, validate authorization and available credit, 
 
 There is no universal row saying “SQL scales vertically” and “NoSQL has eventual consistency.” Scaling, transaction scope, replica freshness, and deployment are separate properties. Likewise, an informal NewSQL label does not prove low cost or simple operations.
 
-## 11. Evaluate a DBMS beyond a feature list
+## Evaluate a DBMS beyond a feature list
 
 Return to the bookstore's actual workload. One offline terminal and a shared website face different deployment and concurrency questions. A catalog page and a revenue report read different portions of the data.
 

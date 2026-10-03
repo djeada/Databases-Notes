@@ -16,7 +16,7 @@ Two-Phase Commit (2PC) coordinates commit/rollback across multiple participants 
 
 A distributed system can use both, but they solve completely different problems.
 
-# 1. The problem 2PL is trying to solve
+## The problem 2PL is trying to solve
 
 Suppose two transactions operate on two values, `A` and `B`.
 
@@ -95,7 +95,7 @@ The schedule is not conflict serializable.
 
 Two-Phase Locking was designed to prevent exactly these cycles.
 
-# 2. Locks first: Shared and Exclusive
+## Locks first: Shared and Exclusive
 
 The textbook 2PL model usually begins with two lock types.
 
@@ -147,11 +147,11 @@ Those are implementation details built around the same general idea:
 
 > operations that cannot safely occur concurrently must be made incompatible.
 
-# 3. The two phases
+## The two phases
 
 A transaction following Basic 2PL moves through two phases.
 
-## Growing phase
+### Growing phase
 
 The transaction may:
 
@@ -172,7 +172,7 @@ S(C)
 
 is still in the growing phase.
 
-## Shrinking phase
+### Shrinking phase
 
 The shrinking phase begins when the transaction releases its first lock.
 
@@ -206,7 +206,7 @@ X(C)        <-- illegal under 2PL
 
 Once shrinking has started, lock acquisition is finished.
 
-# 4. The lock point
+## The lock point
 
 The lock point is the instant at which a transaction obtains its final lock.
 
@@ -242,7 +242,7 @@ The important fact is simply:
 
 > after the first unlock, the transaction can never obtain another lock.
 
-# 5. Why this strange rule guarantees conflict serializability
+## Why this strange rule guarantees conflict serializability
 
 This is the part that is usually omitted from short 2PL notes.
 
@@ -311,7 +311,7 @@ An acyclic conflict graph means the schedule is conflict serializable.
 
 This is the fundamental reason 2PL works.
 
-# 6. What goes wrong if the two-phase rule is broken
+## What goes wrong if the two-phase rule is broken
 
 Consider this schedule:
 
@@ -366,7 +366,7 @@ is therefore not arbitrary bookkeeping.
 
 It prevents transactions from creating contradictory ordering relationships late in their execution.
 
-# 7. Basic 2PL is serializable, but recovery can still be unpleasant
+## Basic 2PL is serializable, but recovery can still be unpleasant
 
 Basic 2PL guarantees conflict serializability.
 
@@ -407,7 +407,7 @@ If another transaction depended on T2, the rollback could cascade further.
 
 This is the motivation for Strict 2PL.
 
-# 8. The main 2PL variants
+## The main 2PL variants
 
 | Variant | Rule | Main purpose |
 |---|---|---|
@@ -424,7 +424,7 @@ For example, strictness is about how long write locks are retained, while conser
 
 The ideas can therefore overlap.
 
-# 9. Strict 2PL
+## Strict 2PL
 
 Under Strict Two-Phase Locking, a transaction does not release its exclusive locks until:
 
@@ -482,7 +482,7 @@ This makes recovery much easier.
 
 A transaction cannot build committed work on top of another transaction's still-uncommitted write through conflicting locked access.
 
-# 10. Strict 2PL still has a growing and shrinking rule
+## Strict 2PL still has a growing and shrinking rule
 
 A subtle point:
 
@@ -514,7 +514,7 @@ Acquiring `X(C)` afterward violates 2PL.
 
 Holding `X(B)` until commit does not repair that violation.
 
-# 11. Rigorous 2PL
+## Rigorous 2PL
 
 Rigorous 2PL goes further.
 
@@ -557,7 +557,7 @@ However, keeping read locks until transaction completion can increase blocking.
 
 That tradeoff is one reason modern database systems often combine locking with MVCC rather than using textbook rigorous 2PL for every ordinary read.
 
-# 12. Conservative 2PL
+## Conservative 2PL
 
 Ordinary 2PL can deadlock because transactions usually discover the locks they need gradually.
 
@@ -612,7 +612,7 @@ Predeclaring everything would be difficult or impossible.
 
 It can also reduce concurrency by acquiring resources earlier than actually needed.
 
-# 13. Deadlocks are not evidence that 2PL is broken
+## Deadlocks are not evidence that 2PL is broken
 
 Deadlocks are a normal consequence of lock-based concurrency.
 
@@ -663,7 +663,7 @@ MySQL/InnoDB similarly detects deadlocks. Error `1213`, `ER_LOCK_DEADLOCK`, uses
 
 SQL Server chooses a deadlock victim, rolls its transaction back, and returns error `1205`.
 
-# 14. Concrete solution: always lock accounts in the same order
+## Concrete solution: always lock accounts in the same order
 
 A common way to reduce the bank-transfer deadlock is to define a canonical lock order.
 
@@ -728,7 +728,7 @@ It does not mean an application can ignore deadlock handling entirely: databases
 
 Retry logic is still necessary.
 
-# 15. Lock ordering and 2PL solve different problems
+## Lock ordering and 2PL solve different problems
 
 These concepts are often mixed together.
 
@@ -768,7 +768,7 @@ does not imply:
 2PL ⇒ no deadlocks
 ```
 
-# 16. Rows are not the only things that may need locking
+## Rows are not the only things that may need locking
 
 Textbook explanations often talk about:
 
@@ -794,7 +794,7 @@ Real databases may lock or protect:
 
 This becomes especially important for queries based on predicates.
 
-# 17. Row locks cannot protect a row that does not exist
+## Row locks cannot protect a row that does not exist
 
 Consider a reservation system with this rule:
 
@@ -845,7 +845,7 @@ rather than only:
 
 Different database systems solve this in different ways.
 
-# 18. How SQL Server solves predicate protection
+## How SQL Server solves predicate protection
 
 SQL Server's lock-based `SERIALIZABLE` isolation can use key-range locks.
 
@@ -880,7 +880,7 @@ The protected object is partly the space between keys, not only existing rows.
 
 This is how lock-based serializable implementations extend the 2PL idea from individual rows to predicates.
 
-# 19. How MySQL/InnoDB solves range conflicts
+## How MySQL/InnoDB solves range conflicts
 
 InnoDB combines MVCC with record and index-range locking.
 
@@ -907,7 +907,7 @@ or the logical resource is a range rather than one row.
 
 MySQL's InnoDB documentation explicitly separates ordinary consistent MVCC reads from locking reads and documents next-key locking as its phantom-protection mechanism.
 
-# 20. PostgreSQL does something importantly different
+## PostgreSQL does something importantly different
 
 PostgreSQL is an excellent example of why:
 
@@ -953,7 +953,7 @@ PostgreSQL implements all transaction isolation
 using classical 2PL.
 ```
 
-# 21. PostgreSQL Serializable is not lock-based 2PL
+## PostgreSQL Serializable is not lock-based 2PL
 
 PostgreSQL's Serializable level is particularly important.
 
@@ -994,7 +994,7 @@ PostgreSQL explicitly states that its Serializable predicate locks do not themse
 
 That is very different from SQL Server Serializable key-range locks.
 
-# 22. "Predicate lock" means different things operationally
+## "Predicate lock" means different things operationally
 
 The terminology can therefore be confusing.
 
@@ -1019,7 +1019,7 @@ They do not protect it in the same way.
 
 This is exactly why database isolation should be understood in terms of guarantees and mechanisms rather than assuming that every engine implements one textbook algorithm.
 
-# 23. InnoDB is also not "just 2PL"
+## InnoDB is also not "just 2PL"
 
 InnoDB is a hybrid.
 
@@ -1074,7 +1074,7 @@ It should not be reduced to:
 
 without explaining which operations and isolation mode are being discussed.
 
-# 24. SQL Server is the closest of the three to the textbook locking model
+## SQL Server is the closest of the three to the textbook locking model
 
 Traditional SQL Server isolation is easier to map onto lock-based theory.
 
@@ -1108,7 +1108,7 @@ That behavior resembles the textbook progression from row-level locking toward a
 
 However, modern SQL Server adds an important complication.
 
-# 25. Modern SQL Server and optimized locking
+## Modern SQL Server and optimized locking
 
 Recent SQL Server versions and Azure SQL can use optimized locking.
 
@@ -1128,7 +1128,7 @@ This is an important general lesson:
 
 > Textbook 2PL is a model for reasoning about concurrency. Production engines may implement equivalent guarantees using MVCC, dependency tracking, transaction-ID locks, range locks, or combinations of these mechanisms.
 
-# 26. Technology summary
+## Technology summary
 
 | Technology | Ordinary read mechanism | Explicit locking | Predicate/range protection | Serializable strategy |
 |---|---|---|---|---|
@@ -1139,7 +1139,7 @@ This is an important general lesson:
 
 PostgreSQL's current documentation explicitly identifies its Serializable implementation as SSI rather than traditional blocking serializable locking. MySQL documents its combination of consistent MVCC reads and explicit locking reads. SQL Server documents both its traditional lock-based isolation behavior and its newer optimized-locking mechanism.
 
-# 27. A concrete application example: bank transfer
+## A concrete application example: bank transfer
 
 Consider:
 
@@ -1227,7 +1227,7 @@ constraints reject impossible final states
 
 Using both can be valuable.
 
-# 28. Why an ordinary PostgreSQL reader can still see the account
+## Why an ordinary PostgreSQL reader can still see the account
 
 Suppose T1 holds:
 
@@ -1262,7 +1262,7 @@ X lock exists
 
 is a textbook-locking intuition that does not directly describe MVCC engines.
 
-# 29. Another concrete example: reserving a seat
+## Another concrete example: reserving a seat
 
 Suppose an application stores seats individually:
 
@@ -1338,7 +1338,7 @@ redesign the invariant as a directly lockable or constrained resource
 
 This shows why concurrency design depends heavily on the schema.
 
-# 30. A useful design trick: create a row that represents the logical resource
+## A useful design trick: create a row that represents the logical resource
 
 Predicate locking can be complicated.
 
@@ -1397,7 +1397,7 @@ The broader lesson is:
 
 > Good schema and statement design can remove the need for complicated locking.
 
-# 31. `FOR UPDATE` is not a universal magic phrase
+## `FOR UPDATE` is not a universal magic phrase
 
 Adding:
 
@@ -1444,7 +1444,7 @@ for referential integrity where appropriate rather than manually reproducing all
 
 Locking is most useful when the business decision itself cannot be represented directly by a database constraint or atomic statement.
 
-# 32. 2PL versus MVCC
+## 2PL versus MVCC
 
 The cleanest contrast is:
 
@@ -1475,7 +1475,7 @@ transaction retry
 
 Modern databases frequently combine both approaches.
 
-# 33. Blocking versus aborting
+## Blocking versus aborting
 
 Consider two transactions that cannot both safely complete.
 
@@ -1516,7 +1516,7 @@ optimistic detection → retry cost
 
 Yet both approaches can provide serializable outcomes.
 
-# 34. Deadlock versus serialization failure
+## Deadlock versus serialization failure
 
 These are also different concepts.
 
@@ -1549,7 +1549,7 @@ serialization-failure retry
 
 belong to the same broad application pattern but arise for different reasons.
 
-# 35. Retry the complete transaction
+## Retry the complete transaction
 
 When the database aborts a transaction because of a deadlock or serialization conflict, the application should normally retry the transaction from the beginning.
 
@@ -1594,7 +1594,7 @@ PostgreSQL's documentation explicitly recommends retrying the whole transaction 
 
 MySQL likewise tells applications encountering InnoDB deadlock error `1213` to run all operations in the transaction again.
 
-# 36. Keep locked transactions short
+## Keep locked transactions short
 
 Locks are held resources.
 
@@ -1642,7 +1642,7 @@ COMMIT
 
 When external side effects must be coordinated with database state, patterns such as an outbox or idempotency mechanism are often more appropriate than keeping a database transaction open during the external operation.
 
-# 37. Indexes affect locking behavior
+## Indexes affect locking behavior
 
 Indexes are not only performance structures.
 
@@ -1678,7 +1678,7 @@ can alter not only query cost but also concurrency behavior.
 
 This is one reason concurrency testing must use realistic schema, indexes, and execution plans.
 
-# 38. 2PL and 2PC are completely different
+## 2PL and 2PC are completely different
 
 The similar names cause constant confusion.
 
@@ -1701,7 +1701,7 @@ A distributed transaction may use:
 
 so the presence of one tells you nothing about whether the other is being used.
 
-# 39. What applications control and what databases control
+## What applications control and what databases control
 
 The application typically controls:
 
@@ -1751,7 +1751,7 @@ expresses a locking requirement.
 
 It does not generally dictate every internal lock object or storage-level mechanism the engine will use.
 
-# 40. `NOLOCK` is not "use smaller locks"
+## `NOLOCK` is not "use smaller locks"
 
 SQL Server's:
 
@@ -1775,7 +1775,7 @@ It is therefore an isolation choice, not a lock-granularity tuning switch.
 
 Microsoft's own locking documentation shows that using `NOLOCK` can bypass the key-range locks that would otherwise be needed for Serializable behavior, meaning serializability is no longer guaranteed for that access.
 
-# 41. Practical comparison of concurrency strategies
+## Practical comparison of concurrency strategies
 
 | Problem | Common mechanism |
 |---|---|
@@ -1790,7 +1790,7 @@ Microsoft's own locking documentation shows that using `NOLOCK` can bypass the k
 | Long reader should not block writers | MVCC / row-versioning approach |
 | Need deterministic resource acquisition | Canonical lock ordering |
 
-# 42. The most useful mental model
+## The most useful mental model
 
 Do not memorize 2PL as:
 
@@ -1868,7 +1868,7 @@ but:
 
 That question transfers directly from textbook theory to production systems.
 
-# References
+## References
 
 PostgreSQL's explicit-locking documentation describes its table and row lock modes, `FOR UPDATE` behavior, transaction-end lock release, and automatic deadlock detection.
 

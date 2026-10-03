@@ -1,6 +1,6 @@
 # Serializable and Repeatable Read
 
-## 1. Why transaction isolation exists
+## Why transaction isolation exists
 
 Imagine two requests hit an application at almost exactly the same time.
 
@@ -48,7 +48,7 @@ The problem is that the two decisions were not safe when combined.
 
 Transaction isolation determines which of these concurrent interactions a transaction is allowed to observe and which outcomes the database must prevent.
 
-# 2. The central distinction: Repeatable Read versus Serializable
+## The central distinction: Repeatable Read versus Serializable
 
 The most useful mental model is:
 
@@ -61,7 +61,7 @@ A database can give a transaction a perfectly stable snapshot while still allowi
 
 PostgreSQL is an especially clear example. Its Repeatable Read implementation gives the transaction a stable snapshot and even prevents ordinary phantom reads, but serialization anomalies can still occur. Serializable adds additional detection specifically to prevent committed results that have no valid serial ordering.
 
-# 3. What does "serial execution" mean?
+## What does "serial execution" mean?
 
 Suppose there are two transactions, `T1` and `T2`.
 
@@ -124,7 +124,7 @@ cannot be explained by any serial execution.
 
 That is a serialization anomaly.
 
-# 4. The concurrency anomalies you need to recognize
+## The concurrency anomalies you need to recognize
 
 | Anomaly | What happens | Concrete example |
 |---|---|---|
@@ -139,7 +139,7 @@ An important distinction is that write skew usually does not involve two transac
 
 That is why ordinary row-conflict detection is insufficient.
 
-# 5. Why Repeatable Read sounds stronger than it actually is
+## Why Repeatable Read sounds stronger than it actually is
 
 Suppose a transaction starts and sees:
 
@@ -225,7 +225,7 @@ This is the essential weakness of Snapshot Isolation / snapshot-style Repeatable
 
 PostgreSQL explicitly documents this distinction: Repeatable Read provides a stable database view but that view is not necessarily consistent with a serial execution of concurrent transactions.
 
-# 6. A second real-world example: overselling capacity
+## A second real-world example: overselling capacity
 
 Consider an event with ten available seats.
 
@@ -304,7 +304,7 @@ This pattern appears in:
 | Approval workflows | A document must not end up with mutually incompatible approvals |
 | Multiplayer / bidding systems | A unique logical resource must not be allocated twice |
 
-# 7. Repeatable Read is not one universal behavior
+## Repeatable Read is not one universal behavior
 
 This is one of the most important practical points.
 
@@ -328,7 +328,7 @@ Isolation = REPEATABLE READ
 
 in application configuration and infer its exact behavior without knowing the database engine.
 
-# 8. Technology summary
+## Technology summary
 
 | Technology | What Repeatable Read means in practice | Ordinary phantom reads? | Can snapshot-style serialization anomalies remain? | How Serializable is implemented |
 |---|---|---: |---: |---|
@@ -339,7 +339,7 @@ in application configuration and infer its exact behavior without knowing the da
 
 PostgreSQL explicitly identifies its Repeatable Read implementation as Snapshot Isolation and Serializable as Serializable Snapshot Isolation. MySQL InnoDB documents that plain Repeatable Read `SELECT`s share a snapshot, while locking reads and writes use different locking rules including gap and next-key locks. SQL Server instead defines Repeatable Read primarily through locks held on rows and Serializable through additional key-range locking.
 
-# 9. PostgreSQL: Repeatable Read
+## PostgreSQL: Repeatable Read
 
 PostgreSQL's implementation is particularly important because it is stronger than the minimum SQL-standard definition of Repeatable Read.
 
@@ -398,7 +398,7 @@ because it continues using its earlier snapshot.
 
 PostgreSQL therefore prevents an ordinary phantom read at Repeatable Read even though the SQL standard does not require Repeatable Read to do so.
 
-# 10. PostgreSQL Repeatable Read still does not mean Serializable
+## PostgreSQL Repeatable Read still does not mean Serializable
 
 Return to the doctor example.
 
@@ -450,7 +450,7 @@ is the logical dependency connecting those writes.
 
 This is the classic reason why Snapshot Isolation is not the same as Serializable isolation.
 
-# 11. PostgreSQL Serializable: how the problem is solved
+## PostgreSQL Serializable: how the problem is solved
 
 PostgreSQL's Serializable level is implemented using Serializable Snapshot Isolation (SSI).
 
@@ -498,7 +498,7 @@ The important consequence is:
 
 That abort is the mechanism protecting correctness.
 
-# 12. Why PostgreSQL's predicate locks are different from normal locks
+## Why PostgreSQL's predicate locks are different from normal locks
 
 The phrase predicate lock can be confusing.
 
@@ -524,7 +524,7 @@ PostgreSQL Serializable needs to recognize this dependency.
 
 Its SSI mechanism therefore tracks what transactions have read sufficiently to detect dangerous read/write relationships. These `SIReadLock` predicate locks do not behave like ordinary row locks that simply block another writer. PostgreSQL documents them as part of its serialization-anomaly detection system.
 
-# 13. PostgreSQL Serializable does not mean "no concurrency"
+## PostgreSQL Serializable does not mean "no concurrency"
 
 This misconception is common:
 
@@ -557,7 +557,7 @@ then the database can allow all of them to commit.
 
 If no possible ordering explains the result, PostgreSQL aborts one of the participating transactions.
 
-# 14. MySQL InnoDB: Repeatable Read is a hybrid you must understand
+## MySQL InnoDB: Repeatable Read is a hybrid you must understand
 
 MySQL's InnoDB engine defaults to:
 
@@ -599,7 +599,7 @@ They do not behave exactly like the earlier non-locking snapshot read.
 
 MySQL explicitly warns that mixing non-locking snapshot reads with locking statements inside the same Repeatable Read transaction can expose two different notions of database state and can be difficult to reason about.
 
-# 15. MySQL example: snapshot read versus locking read
+## MySQL example: snapshot read versus locking read
 
 Suppose a transaction does:
 
@@ -646,7 +646,7 @@ must be seeing exactly the same version."
 
 That inference is wrong for InnoDB.
 
-# 16. MySQL gap locks and next-key locks
+## MySQL gap locks and next-key locks
 
 Suppose the transaction executes:
 
@@ -683,7 +683,7 @@ MySQL's documentation describes next-key/gap locking for locking reads and range
 
 This is one reason good indexing is not merely a query-performance concern in InnoDB concurrency control: the index range scanned can affect what gets locked.
 
-# 17. MySQL Serializable
+## MySQL Serializable
 
 At InnoDB Serializable isolation, behavior becomes more lock-oriented.
 
@@ -719,7 +719,7 @@ MySQL InnoDB Serializable
 
 Both aim to enforce stronger correctness, but the operational behavior can be very different.
 
-# 18. SQL Server Repeatable Read
+## SQL Server Repeatable Read
 
 SQL Server uses yet another model for its traditional Repeatable Read level.
 
@@ -741,7 +741,7 @@ But there is an important limitation:
 
 Microsoft documents that Repeatable Read does not use the range locks necessary to prevent phantom rows.
 
-# 19. SQL Server phantom example
+## SQL Server phantom example
 
 Suppose:
 
@@ -784,7 +784,7 @@ A new matching row appeared.
 
 That is the classic phantom problem.
 
-# 20. SQL Server Serializable: range locking
+## SQL Server Serializable: range locking
 
 SQL Server Serializable closes this gap with key-range locks.
 
@@ -818,7 +818,7 @@ protect key range → make conflicting transaction wait
 
 Both can produce serializable behavior while using very different mechanisms.
 
-# 21. Do not confuse SQL Server SNAPSHOT with SQL Server REPEATABLE READ
+## Do not confuse SQL Server SNAPSHOT with SQL Server REPEATABLE READ
 
 SQL Server additionally provides:
 
@@ -853,7 +853,7 @@ A stable SNAPSHOT still should not automatically be interpreted as:
 
 because snapshot isolation and serializable isolation solve different problems.
 
-# 22. Same SQL isolation name, three different implementations
+## Same SQL isolation name, three different implementations
 
 Consider:
 
@@ -865,7 +865,7 @@ WHERE customer_id = 1;
 
 followed by a concurrent insert.
 
-## PostgreSQL Repeatable Read
+### PostgreSQL Repeatable Read
 
 T1:
 
@@ -883,7 +883,7 @@ T1 repeats:
 
 because T1 keeps using its transaction snapshot.
 
-## MySQL InnoDB Repeatable Read, ordinary SELECT
+### MySQL InnoDB Repeatable Read, ordinary SELECT
 
 The basic outcome is similar:
 
@@ -895,7 +895,7 @@ because ordinary consistent reads use the transaction snapshot.
 
 But locking reads and writes introduce different current/locking semantics that must be understood separately.
 
-## SQL Server Repeatable Read
+### SQL Server Repeatable Read
 
 T1 can observe:
 
@@ -915,7 +915,7 @@ or:
 
 are incomplete unless the database engine is specified.
 
-# 23. Summary: phantom behavior
+## Summary: phantom behavior
 
 | Isolation / technology | Repeating `WHERE customer_id = 1` after another transaction inserts a matching row |
 |---|---|
@@ -931,7 +931,7 @@ are incomplete unless the database engine is specified.
 
 MySQL documents that Repeatable Read consistent reads share a snapshot, while `READ COMMITTED` creates a fresh snapshot per consistent read and locking range operations can use gap/next-key locks. SQL Server documents the distinction between Repeatable Read and Serializable specifically in terms of whether key ranges are protected.
 
-# 24. The most important application question: what invariant are you protecting?
+## The most important application question: what invariant are you protecting?
 
 Choosing an isolation level should start from the business rule, not from the name of the isolation level.
 
@@ -970,7 +970,7 @@ and modify different rows in a way that jointly breaks it?
 
 If yes, a stable snapshot alone may not be sufficient.
 
-# 25. Sometimes the right solution is a database constraint, not Serializable
+## Sometimes the right solution is a database constraint, not Serializable
 
 Do not solve every concurrency problem by switching the entire application to Serializable.
 
@@ -1035,7 +1035,7 @@ A useful principle is:
 
 Serializable isolation becomes especially valuable for multi-row or predicate-based invariants that cannot easily be represented by a simple uniqueness, foreign-key, or check constraint.
 
-# 26. Another solution: atomic conditional UPDATE
+## Another solution: atomic conditional UPDATE
 
 Consider inventory.
 
@@ -1115,7 +1115,7 @@ read → decide → write
 
 because the condition and modification are handled atomically against the same row.
 
-# 27. Another solution: explicit row locking
+## Another solution: explicit row locking
 
 Suppose an operation must read an account before deciding how to modify it.
 
@@ -1166,7 +1166,7 @@ rows that do not exist yet
 
 At that point you need to understand range/predicate locking or use Serializable isolation.
 
-# 28. Fixing the doctors example with explicit locking
+## Fixing the doctors example with explicit locking
 
 Instead of:
 
@@ -1207,7 +1207,7 @@ without respecting the same design, the application's correctness argument can c
 
 Serializable isolation can sometimes simplify this because the database validates interactions between participating Serializable transactions rather than requiring application code to manually predict every conflicting access pattern.
 
-# 29. Serializable transactions require retry logic
+## Serializable transactions require retry logic
 
 Serializable does not mean:
 
@@ -1252,7 +1252,7 @@ The important phrase is:
 
 PostgreSQL's documentation specifically instructs applications encountering these concurrency failures to restart the transaction from the beginning so that its reads and decisions are recomputed from an appropriate state.
 
-# 30. Why retrying only the UPDATE is wrong
+## Why retrying only the UPDATE is wrong
 
 Suppose the transaction originally did:
 
@@ -1299,7 +1299,7 @@ Bob   = off
 
 and the correct decision is therefore different.
 
-# 31. Be careful with external side effects during retries
+## Be careful with external side effects during retries
 
 Suppose a Serializable transaction does:
 
@@ -1366,9 +1366,9 @@ together.
 
 Idempotency keys can provide additional protection when talking to payment providers and other external APIs.
 
-# 32. PostgreSQL syntax
+## PostgreSQL syntax
 
-## Stable snapshot
+### Stable snapshot
 
 ```sql
 BEGIN TRANSACTION
@@ -1389,7 +1389,7 @@ COMMIT;
 
 The ordinary reads continue to use the transaction snapshot.
 
-## Serializable
+### Serializable
 
 ```sql
 BEGIN TRANSACTION
@@ -1408,9 +1408,9 @@ COMMIT;
 
 The application must be prepared for the commit or one of the statements to fail with a serialization error and retry the transaction.
 
-# 33. MySQL InnoDB syntax
+## MySQL InnoDB syntax
 
-## Repeatable Read
+### Repeatable Read
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1430,7 +1430,7 @@ COMMIT;
 
 InnoDB's default isolation level is Repeatable Read, and ordinary consistent reads within the transaction use the transaction's snapshot.
 
-## Lock rows that drive a decision
+### Lock rows that drive a decision
 
 ```sql
 START TRANSACTION;
@@ -1447,7 +1447,7 @@ WHERE id = 1;
 COMMIT;
 ```
 
-## Serializable
+### Serializable
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -1467,9 +1467,9 @@ COMMIT;
 
 For an explicit Serializable transaction, InnoDB makes ordinary reads more strongly locking rather than treating every `SELECT` as an ordinary historical snapshot read.
 
-# 34. SQL Server syntax
+## SQL Server syntax
 
-## Repeatable Read
+### Repeatable Read
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1485,7 +1485,7 @@ COMMIT TRANSACTION;
 
 Existing rows read by the transaction remain protected by shared locks, but new matching rows are not generally excluded because Repeatable Read does not use the key-range protection of Serializable.
 
-## Serializable
+### Serializable
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -1501,7 +1501,7 @@ COMMIT TRANSACTION;
 
 Here SQL Server can acquire key-range locks so that another transaction cannot freely insert rows into the range protected by the query until the first transaction finishes.
 
-# 35. What happens under contention?
+## What happens under contention?
 
 Stronger isolation does not make conflicts disappear.
 
@@ -1536,7 +1536,7 @@ Is the application doing network calls while holding a transaction open?
 
 A workload with short, mostly independent transactions can behave very differently from one where hundreds of requests compete for the same logical resource.
 
-# 36. A practical decision table
+## A practical decision table
 
 | Situation | Usually consider |
 |---|---|
@@ -1553,11 +1553,11 @@ A workload with short, mostly independent transactions can behave very different
 
 This is a design table, not a universal prescription. The exact solution depends on how the invariant is represented and how every writer interacts with it.
 
-# 37. The easiest way to reason about isolation problems
+## The easiest way to reason about isolation problems
 
 For every concurrency-sensitive operation, write down four things.
 
-### 1. What did the transaction read?
+### What did the transaction read?
 
 Example:
 
@@ -1567,14 +1567,14 @@ FROM doctors
 WHERE on_call = true;
 ```
 
-### 2. What decision did it derive?
+### What decision did it derive?
 
 ```text
 There are at least two doctors,
 therefore one may leave.
 ```
 
-### 3. What did it write?
+### What did it write?
 
 ```sql
 UPDATE doctors
@@ -1582,7 +1582,7 @@ SET on_call = false
 WHERE id = ?;
 ```
 
-### 4. Could another transaction make the same decision concurrently while writing somewhere else?
+### Could another transaction make the same decision concurrently while writing somewhere else?
 
 If yes, you may have:
 
@@ -1596,7 +1596,7 @@ even if neither transaction modifies the same row.
 
 This method is usually more useful than trying to memorize isolation-level definitions.
 
-# 38. The main conceptual trap
+## The main conceptual trap
 
 The following reasoning is wrong:
 
@@ -1629,7 +1629,7 @@ Serializable additionally constrains
 the combined committed execution.
 ```
 
-# 39. Database implementations compared
+## Database implementations compared
 
 | Database | Core technique | Repeatable Read | Serializable |
 |---|---|---|---|
@@ -1640,7 +1640,7 @@ the combined committed execution.
 
 PostgreSQL documents that Serializable builds on Snapshot Isolation by adding serialization-anomaly detection. MySQL documents its combination of transaction snapshots with record/gap/next-key locking and its stronger behavior under Serializable. Microsoft documents SQL Server's transition from row protection at Repeatable Read to range protection at Serializable.
 
-# 40. Final mental model
+## Final mental model
 
 Do not memorize:
 
@@ -1695,7 +1695,7 @@ The practical lesson is:
 
 That is the gap Serializable isolation is intended to close.
 
-# References
+## References
 
 PostgreSQL's current transaction-isolation documentation describes its stronger-than-standard Repeatable Read behavior, Snapshot Isolation implementation, Serializable Snapshot Isolation, predicate locks, serialization failures, and SQLSTATE `40001`.
 

@@ -221,7 +221,7 @@ IV. **Mitigate**
 
 Below is a self-contained, “copy-paste-ready” walk-through you can run on your laptop to **see the double-booking bug happen, then fix it, and finally prove the fix works**.
 
-###  Stack & prerequisites
+### Stack & prerequisites
 
 | Layer                       | Why we pick it                                                                    | Other options                                                                                                   |
 | --------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |

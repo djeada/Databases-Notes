@@ -42,7 +42,7 @@ failover data loss
 write latency
 ```
 
-# 1. Why replicate a database?
+## Why replicate a database?
 
 A single database server creates a simple failure mode:
 
@@ -93,7 +93,7 @@ a failover replica
 
 may have very different requirements.
 
-# 2. A concrete example: create order 104
+## A concrete example: create order 104
 
 Suppose an application creates:
 
@@ -156,7 +156,7 @@ replica can necessarily return order 104
 
 That interval is replication lag.
 
-# 3. Replication usually transfers a change stream, not repeated full database copies
+## Replication usually transfers a change stream, not repeated full database copies
 
 A naive replication design might sound like:
 
@@ -202,7 +202,7 @@ change 104
 
 The replica starts from some known database state and then follows that change stream.
 
-# 4. PostgreSQL example: WAL streaming
+## PostgreSQL example: WAL streaming
 
 PostgreSQL physical streaming replication transfers WAL records.
 
@@ -241,7 +241,7 @@ This is a good example of an important pattern:
 
 > Replication often means shipping the database's recovery/change log to another machine and replaying it there.
 
-# 5. The most important replication pipeline
+## The most important replication pipeline
 
 A useful generic model is:
 
@@ -282,11 +282,11 @@ It can have persisted the transaction to its own log without having made the cha
 
 That distinction explains a large fraction of replication behavior.
 
-# 6. Receive, persist, apply, and visibility
+## Receive, persist, apply, and visibility
 
 Consider order `104`.
 
-## Stage 1 — Receive
+### Stage 1 — Receive
 
 The replica has obtained the replication message:
 
@@ -300,7 +300,7 @@ This says little about crash durability.
 
 The data may not yet be safely stored.
 
-## Stage 2 — Persist / harden
+### Stage 2 — Persist / harden
 
 The replica has recorded the change in durable or recovery storage according to the engine's durability rules.
 
@@ -314,7 +314,7 @@ replication log contains order 104
 
 If the replica process restarts, it may be able to recover the transaction from that log.
 
-## Stage 3 — Apply / replay
+### Stage 3 — Apply / replay
 
 The replica's apply mechanism has executed or replayed the change against the database state:
 
@@ -322,7 +322,7 @@ The replica's apply mechanism has executed or replayed the change against the da
 orders table now contains order 104
 ```
 
-## Stage 4 — Visible to a read
+### Stage 4 — Visible to a read
 
 The database's consistency rules allow a query to observe the applied transaction:
 
@@ -338,7 +338,7 @@ The important principle is:
 
 > Persisted on a replica is not necessarily the same thing as applied on the replica.
 
-# 7. Why this distinction matters
+## Why this distinction matters
 
 Suppose:
 
@@ -367,7 +367,7 @@ This surprises people because durability and read freshness are often incorrectl
 
 They are different.
 
-# 8. SQL Server demonstrates this especially clearly
+## SQL Server demonstrates this especially clearly
 
 With SQL Server Always On Availability Groups, changes are sent from the primary to secondary replicas as transaction log records.
 
@@ -404,7 +404,7 @@ does not automatically mean:
 every read on the replica immediately sees the transaction
 ```
 
-# 9. Replication lag is not one single delay
+## Replication lag is not one single delay
 
 When somebody says:
 
@@ -440,7 +440,7 @@ Or it might apply quickly once data arrives but have a slow network.
 
 Those are different problems.
 
-# 10. PostgreSQL exposes these stages directly
+## PostgreSQL exposes these stages directly
 
 PostgreSQL's replication monitoring includes multiple WAL positions.
 
@@ -478,7 +478,7 @@ and notes that a large difference between received/flushed WAL and replay positi
 
 This is much more useful than treating "replica lag" as one mysterious number.
 
-# 11. Asynchronous replication
+## Asynchronous replication
 
 With asynchronous replication, the primary does not wait for the replica before acknowledging the transaction to the client.
 
@@ -509,7 +509,7 @@ replica apply
 
 The cost is a failure window.
 
-# 12. The asynchronous data-loss window
+## The asynchronous data-loss window
 
 Suppose the primary tells the client:
 
@@ -539,7 +539,7 @@ PostgreSQL explicitly notes that asynchronous streaming replication can lose tra
 
 SQL Server similarly documents possible data loss when failing over from asynchronous-commit replicas that have not caught up.
 
-# 13. MySQL is asynchronous by default
+## MySQL is asynchronous by default
 
 MySQL source-to-replica replication is asynchronous by default.
 
@@ -584,7 +584,7 @@ from:
 applied
 ```
 
-# 14. Why an immediate replica read may fail
+## Why an immediate replica read may fail
 
 Suppose an API endpoint does:
 
@@ -625,7 +625,7 @@ Nothing has necessarily malfunctioned.
 
 The read simply arrived before replication had applied the transaction.
 
-# 15. This is a read-after-write consistency problem
+## This is a read-after-write consistency problem
 
 The user expects:
 
@@ -654,7 +654,7 @@ Another design avoids the confirmation read entirely by returning the newly crea
 
 The correct approach depends on how much staleness the application can tolerate.
 
-# 16. Different reads have different freshness requirements
+## Different reads have different freshness requirements
 
 Consider three queries.
 
@@ -696,7 +696,7 @@ all reads must use primary
 
 without considering the semantics of individual requests.
 
-# 17. Synchronous replication
+## Synchronous replication
 
 Synchronous replication changes the commit rule.
 
@@ -751,7 +751,7 @@ durable flush?
 application/replay?
 ```
 
-# 18. PostgreSQL makes the acknowledgement level explicit
+## PostgreSQL makes the acknowledgement level explicit
 
 PostgreSQL's `synchronous_commit` setting provides an excellent concrete example.
 
@@ -775,7 +775,7 @@ apply
 
 must be understood separately.
 
-# 19. PostgreSQL `remote_apply`
+## PostgreSQL `remote_apply`
 
 Suppose an application requires:
 
@@ -806,7 +806,7 @@ which waits for durable WAL on the synchronous standby but not necessarily repla
 
 That distinction is extremely important for applications performing synchronous replica reads.
 
-# 20. Synchronous replication adds network latency to commits
+## Synchronous replication adds network latency to commits
 
 Consider two servers in the same datacenter:
 
@@ -836,7 +836,7 @@ distant asynchronous disaster-recovery replica
 
 rather than making every geographically distant copy synchronous.
 
-# 21. PostgreSQL can require several replicas
+## PostgreSQL can require several replicas
 
 Suppose:
 
@@ -864,7 +864,7 @@ This illustrates another important principle:
 
 > "Synchronous" also requires defining how many replicas constitute enough acknowledgement.
 
-# 22. MySQL semisynchronous replication
+## MySQL semisynchronous replication
 
 MySQL provides semisynchronous replication in addition to its default asynchronous replication.
 
@@ -899,7 +899,7 @@ replica has already applied the transaction
 
 The replica's apply step remains separate.
 
-# 23. MySQL can wait for more than one replica
+## MySQL can wait for more than one replica
 
 MySQL exposes:
 
@@ -929,7 +929,7 @@ It is:
 
 > Which nodes participate in the commit acknowledgement rule?
 
-# 24. MySQL semisynchronous replication can fall back
+## MySQL semisynchronous replication can fall back
 
 Another operational detail matters.
 
@@ -959,7 +959,7 @@ Do they continue asynchronously?
 What durability guarantee does the application then have?
 ```
 
-# 25. SQL Server synchronous commit
+## SQL Server synchronous commit
 
 SQL Server Always On Availability Groups have:
 
@@ -989,7 +989,7 @@ visible
 
 Synchronous commit does not collapse those into one operation.
 
-# 26. SQL Server synchronous commit can still have stale readable secondary data
+## SQL Server synchronous commit can still have stale readable secondary data
 
 Suppose:
 
@@ -1013,7 +1013,7 @@ This is one of the clearest examples of:
 
 > durability lag and query-visibility lag being different concepts.
 
-# 27. Technology comparison: commit acknowledgement
+## Technology comparison: commit acknowledgement
 
 | Technology | Default/common asynchronous behavior | Stronger acknowledgement option | What stronger acknowledgement means |
 |---|---|---|---|
@@ -1024,7 +1024,7 @@ This is one of the clearest examples of:
 
 These distinctions are documented by PostgreSQL's WAL and synchronous replication configuration, MySQL's replication and semisynchronous replication documentation, and SQL Server's Availability Group availability-mode documentation.
 
-# 28. Starting a new replica requires a consistent starting point
+## Starting a new replica requires a consistent starting point
 
 A new replica cannot normally begin from:
 
@@ -1067,7 +1067,7 @@ initial snapshot
 
 depending on the technology.
 
-# 29. Why copying live database files casually is unsafe
+## Why copying live database files casually is unsafe
 
 Suppose a database contains:
 
@@ -1099,7 +1099,7 @@ PostgreSQL, for example, requires a suitable base backup to bootstrap a physical
 
 MySQL likewise documents taking a source snapshot before starting replication from the corresponding position.
 
-# 30. Replication positions
+## Replication positions
 
 The replica needs to answer:
 
@@ -1140,7 +1140,7 @@ That is much more informative than simply saying:
 replication is running
 ```
 
-# 31. MySQL GTIDs
+## MySQL GTIDs
 
 MySQL can identify transactions using Global Transaction Identifiers (GTIDs).
 
@@ -1156,7 +1156,7 @@ MySQL supports GTID auto-positioning so a replica can determine which transactio
 
 This is especially useful when topology changes make one fixed log filename/offset inconvenient.
 
-# 32. PostgreSQL replication slots
+## PostgreSQL replication slots
 
 A different problem occurs when the replica falls behind.
 
@@ -1202,7 +1202,7 @@ primary disk exhaustion
 
 if monitoring is absent.
 
-# 33. Physical replication
+## Physical replication
 
 Physical replication works at a level closely tied to the storage/recovery format of the database engine.
 
@@ -1229,7 +1229,7 @@ The tradeoff is tighter engine/version/platform coupling.
 
 PostgreSQL notes that physical log shipping is tied closely enough to server storage formats that major PostgreSQL versions generally cannot be mixed in a normal physical primary/standby configuration.
 
-# 34. Logical replication
+## Logical replication
 
 Logical replication works with logical data changes rather than reproducing the source's physical storage layout.
 
@@ -1271,7 +1271,7 @@ orders
 
 to another system.
 
-# 35. PostgreSQL logical replication
+## PostgreSQL logical replication
 
 A PostgreSQL logical replication topology might look like:
 
@@ -1307,7 +1307,7 @@ feeding analytical databases
 
 which PostgreSQL explicitly lists among its logical-replication use cases.
 
-# 36. Physical versus logical replication
+## Physical versus logical replication
 
 | Property | Physical | Logical |
 |---|---|---|
@@ -1323,7 +1323,7 @@ Neither is universally better.
 
 They solve different problems.
 
-# 37. Logical replication does not mean "everything is copied"
+## Logical replication does not mean "everything is copied"
 
 Suppose the publisher adds:
 
@@ -1357,7 +1357,7 @@ does not imply:
 
 > "Every database object and every schema operation is automatically synchronized. "
 
-# 38. Replication lag can come from several places
+## Replication lag can come from several places
 
 A replica can fall behind because:
 
@@ -1383,7 +1383,7 @@ For example, SQL Server explicitly distinguishes log hardening from redo: a seco
 
 PostgreSQL similarly exposes separate received/flushed/replayed WAL positions, making it possible to distinguish network/receive delay from replay delay.
 
-# 39. Read replicas can make themselves slower
+## Read replicas can make themselves slower
 
 Suppose a replica is intended for large reporting queries:
 
@@ -1426,7 +1426,7 @@ This is why:
 
 is not automatically free scalability.
 
-# 40. Failover
+## Failover
 
 Failover changes which node accepts primary/write responsibility.
 
@@ -1465,7 +1465,7 @@ prevent the old primary from continuing to accept writes
 
 Replication by itself does not perform all of those steps safely.
 
-# 41. Promotion
+## Promotion
 
 A replica normally behaves differently from a primary.
 
@@ -1497,7 +1497,7 @@ connection-string listener
 
 depending on the platform.
 
-# 42. SQL Server Availability Group listener
+## SQL Server Availability Group listener
 
 SQL Server Availability Groups provide the concept of an availability group listener.
 
@@ -1511,7 +1511,7 @@ This solves an important layer beyond merely copying data:
 "Which server should my application connect to now?"
 ```
 
-# 43. RPO: how much data can we lose?
+## RPO: how much data can we lose?
 
 The Recovery Point Objective (RPO) describes the tolerated data-loss window.
 
@@ -1543,7 +1543,7 @@ for a low-value reporting database.
 
 The replication architecture should follow the business requirement, not the reverse.
 
-# 44. RTO: how long can the system remain unavailable?
+## RTO: how long can the system remain unavailable?
 
 The Recovery Time Objective (RTO) concerns time rather than data:
 
@@ -1584,7 +1584,7 @@ Replication improves the potential RTO because a mostly up-to-date database alre
 
 But automatic detection, promotion, routing, replay backlog, and application reconnection all affect actual recovery time.
 
-# 45. Replica apply lag can hurt RTO too
+## Replica apply lag can hurt RTO too
 
 Suppose a failover replica has safely received large amounts of transaction log but has not replayed all of it.
 
@@ -1616,7 +1616,7 @@ readiness
 
 are different properties.
 
-# 46. Split brain
+## Split brain
 
 One of the most dangerous failover failures is split brain.
 
@@ -1651,7 +1651,7 @@ Now the system has two conflicting histories.
 
 That is much more difficult than ordinary replica lag.
 
-# 47. Fencing
+## Fencing
 
 Safe failover therefore requires more than promotion.
 
@@ -1689,7 +1689,7 @@ The architectural principle is:
 
 You need a mechanism ensuring only the authorized writer remains active.
 
-# 48. SQL Server shows why quorum matters
+## SQL Server shows why quorum matters
 
 SQL Server synchronous Availability Group automatic failover is not based only on:
 
@@ -1705,7 +1705,7 @@ This is an example of a general distributed-systems principle:
 
 You also need coordination about who has authority.
 
-# 49. Asynchronous failover can lose acknowledged writes
+## Asynchronous failover can lose acknowledged writes
 
 Suppose:
 
@@ -1730,7 +1730,7 @@ The same fundamental risk exists in asynchronous PostgreSQL and MySQL replicatio
 
 Asynchrony trades some durability guarantee for lower commit latency and increased geographic flexibility.
 
-# 50. Synchronous replication changes the failure tradeoff
+## Synchronous replication changes the failure tradeoff
 
 Suppose the commit rule instead requires:
 
@@ -1772,7 +1772,7 @@ Different systems/configurations choose differently.
 
 That is why synchronous replication also creates an availability tradeoff.
 
-# 51. Durability versus availability during network partitions
+## Durability versus availability during network partitions
 
 Consider:
 
@@ -1804,7 +1804,7 @@ The important point is:
 
 > Replication configuration is partly a business decision about what to sacrifice during failures: latency, availability, or risk of data loss.
 
-# 52. Replication is not backup
+## Replication is not backup
 
 Suppose an administrator accidentally runs:
 
@@ -1843,7 +1843,7 @@ is not the same as:
 historical recoverability
 ```
 
-# 53. Corruption and bad application writes can replicate too
+## Corruption and bad application writes can replicate too
 
 Other examples:
 
@@ -1877,7 +1877,7 @@ application bugs
 malicious valid writes
 ```
 
-# 54. Backup solves a different problem
+## Backup solves a different problem
 
 A backup preserves an earlier recoverable state.
 
@@ -1920,7 +1920,7 @@ historical recovery points
 
 A resilient system often needs both.
 
-# 55. Replica, backup, and failover are different concepts
+## Replica, backup, and failover are different concepts
 
 | Mechanism | Main question |
 |---|---|
@@ -1944,11 +1944,11 @@ does not answer:
 Can I recover data deleted last Tuesday?
 ```
 
-# 56. Replication is not sharding
+## Replication is not sharding
 
 These concepts are also frequently confused.
 
-## Replication
+### Replication
 
 ```text
 Node A:
@@ -1960,7 +1960,7 @@ customers 1-1,000,000
 
 The nodes contain overlapping copies.
 
-## Sharding
+### Sharding
 
 ```text
 Shard A:
@@ -2000,7 +2000,7 @@ Shard 3
    replica
 ```
 
-# 57. Read scaling does not scale writes
+## Read scaling does not scale writes
 
 Suppose:
 
@@ -2034,7 +2034,7 @@ Adding read replicas does not magically partition write load.
 
 That is one reason multi-primary systems and sharding exist—but they introduce much harder conflict and coordination problems.
 
-# 58. Cascading replication
+## Cascading replication
 
 Replicas do not always connect directly to the primary.
 
@@ -2066,7 +2066,7 @@ If A falls behind, B and C cannot be more current than the data they receive thr
 
 PostgreSQL supports cascading physical streaming replication, where one standby can stream WAL to downstream standbys. PostgreSQL currently documents that cascading replication itself is asynchronous.
 
-# 59. Monitoring replication
+## Monitoring replication
 
 A production replication system should answer at least:
 
@@ -2090,7 +2090,7 @@ Monitoring only:
 
 is not enough.
 
-# 60. Concrete monitoring concepts by engine
+## Concrete monitoring concepts by engine
 
 | PostgreSQL | MySQL | SQL Server |
 |---|---|---|
@@ -2102,7 +2102,7 @@ is not enough.
 
 PostgreSQL documents WAL-position monitoring and replication sender/receiver views. MySQL tracks source and relay-log/applier positions and supports GTID-based progress tracking. SQL Server exposes redo and synchronization information through Availability Group monitoring and `sys. dm_hadr_database_replica_states`.
 
-# 61. Technology summary
+## Technology summary
 
 | Feature | PostgreSQL physical streaming | MySQL source/replica | SQL Server Availability Groups |
 |---|---|---|---|
@@ -2119,7 +2119,7 @@ PostgreSQL documents WAL-position monitoring and replication sender/receiver vie
 
 PostgreSQL's current documentation describes asynchronous physical streaming, synchronous standbys, WAL positions, hot standbys, and logical publication/subscription replication. MySQL documents source-to-replica asynchronous replication, semisynchronous replication, relay logs, and GTID positioning. SQL Server documents asynchronous/synchronous Availability Group replicas, readable secondaries, log hardening, and failover modes.
 
-# 62. Choosing what each replica is for
+## Choosing what each replica is for
 
 A replica should have an explicit job.
 
@@ -2157,7 +2157,7 @@ strict monitoring
 
 over analytical workloads.
 
-# 63. A useful design exercise
+## A useful design exercise
 
 For each replica, answer:
 
@@ -2195,7 +2195,7 @@ If those questions do not have clear answers, merely knowing:
 
 does not tell you much about the system's actual reliability.
 
-# 64. Final mental model
+## Final mental model
 
 Do not memorize replication as:
 
@@ -2304,7 +2304,7 @@ It is:
 
 That question connects replication lag, synchronous versus asynchronous replication, read consistency, RPO, RTO, and failover into one coherent model.
 
-# References
+## References
 
 PostgreSQL's current high-availability documentation describes physical WAL streaming, asynchronous and synchronous standbys, hot standby reads, replication slots, cascading replication, promotion, WAL positions, and the different synchronous acknowledgement levels.
 

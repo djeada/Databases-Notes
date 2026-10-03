@@ -238,7 +238,6 @@ either the source or final destination.
 - What are the essential steps in the database migration process, from assessment and planning to execution and post-migration activities?
 - What additional measures, such as backup and recovery planning, data validation, and rollback planning, are necessary to ensure a safe and successful database migration?
 
-
 ## Related notes
 
 - [Identity and access control](08_identity_authentication_and_access_control.md)

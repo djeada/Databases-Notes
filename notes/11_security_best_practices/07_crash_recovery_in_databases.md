@@ -247,7 +247,6 @@ V. Validate recovery settings in staging environments to confirm that the databa
 - What are the main steps a database follows during crash recovery after a system restart?
 - What are the benefits and trade-offs associated with WAL-based recovery mechanisms?
 
-
 ## Related notes
 
 - [Backup and recovery](01_backup_and_recovery_strategies.md)

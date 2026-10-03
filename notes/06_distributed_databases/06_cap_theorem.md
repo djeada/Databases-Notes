@@ -53,7 +53,7 @@ Network partitioned:
 
 Gilbert and Lynch's formal treatment proved that an asynchronous distributed system cannot simultaneously guarantee atomic/linearizable consistency, availability, and tolerance of arbitrary message loss.
 
-# 1. Start with the actual problem: information is missing
+## Start with the actual problem: information is missing
 
 Consider two database nodes:
 
@@ -115,7 +115,7 @@ What should B return?
 
 That simple question contains the CAP theorem.
 
-# 2. What does CAP consistency mean?
+## What does CAP consistency mean?
 
 The `C` in CAP refers to a strong consistency model usually expressed as linearizability.
 
@@ -159,7 +159,7 @@ This real-time requirement is important.
 
 If the write completed before the read began, the system cannot pretend that the read occurred before the write.
 
-# 3. Linearizability does not require simultaneous physical updates
+## Linearizability does not require simultaneous physical updates
 
 A common misunderstanding is:
 
@@ -205,7 +205,7 @@ and a later linearizable read occurs, that read must behave consistently with th
 
 The physical implementation may be complicated while the client experiences the illusion of one copy.
 
-# 4. CAP consistency is not ACID consistency
+## CAP consistency is not ACID consistency
 
 The word consistency is unfortunately overloaded.
 
@@ -234,7 +234,7 @@ Likewise, a transaction system can be serializable internally while replication 
 
 These properties answer different questions.
 
-# 5. What does CAP availability mean?
+## What does CAP availability mean?
 
 CAP availability is also stronger and more specific than everyday use of the word "available. "
 
@@ -268,7 +268,7 @@ wait forever
 
 does not satisfy availability.
 
-# 6. CAP availability is not "five nines"
+## CAP availability is not "five nines"
 
 This is a different meaning from operational availability metrics such as:
 
@@ -304,7 +304,7 @@ SLA availability
 latency target
 ```
 
-# 7. What does partition tolerance mean?
+## What does partition tolerance mean?
 
 A network partition means some nodes cannot communicate with other nodes.
 
@@ -364,7 +364,7 @@ A can reach C but C cannot reach A
 
 Distributed protocols must operate despite that uncertainty.
 
-# 8. Why CAP is impossible: the two-world argument
+## Why CAP is impossible: the two-world argument
 
 This is the heart of the theorem.
 
@@ -380,7 +380,7 @@ B cannot communicate with A.
 
 Now consider two possible worlds.
 
-## World 1 — no write happened
+### World 1 — no write happened
 
 Nothing happened at A.
 
@@ -402,7 +402,7 @@ A linearizable answer is:
 10
 ```
 
-# 9. World 2 — a successful write happened
+## World 2 — a successful write happened
 
 While B was isolated, Client 1 sent to A:
 
@@ -428,7 +428,7 @@ For linearizability, the correct answer is now:
 12
 ```
 
-# 10. What does B know?
+## What does B know?
 
 From B's perspective, the two executions look identical.
 
@@ -476,7 +476,7 @@ It is not primarily a database implementation problem.
 
 It is an information problem.
 
-# 11. Why B cannot simply guess
+## Why B cannot simply guess
 
 Suppose B guesses:
 
@@ -522,7 +522,7 @@ Again, CAP availability is lost.
 
 There is no clever cache algorithm hiding somewhere that provides the missing information.
 
-# 12. Timeouts do not solve CAP
+## Timeouts do not solve CAP
 
 Suppose B waits:
 
@@ -564,7 +564,7 @@ A timeout is useful operationally because it puts an upper bound on waiting.
 
 It does not solve the information problem.
 
-# 13. What a consistency-first system does
+## What a consistency-first system does
 
 Suppose we require:
 
@@ -599,7 +599,7 @@ This behavior is often loosely called:
 CP
 ```
 
-# 14. What an availability-first system does
+## What an availability-first system does
 
 Another design says:
 
@@ -629,7 +629,7 @@ AP
 
 The copies may need to reconcile after communication is restored.
 
-# 15. The real CAP choice during a partition
+## The real CAP choice during a partition
 
 The most useful representation is therefore:
 
@@ -650,7 +650,7 @@ pick A + P
 
 because the actual issue is what the system does when communication needed for coordination is unavailable.
 
-# 16. Why "P" is not an ordinary feature toggle
+## Why "P" is not an ordinary feature toggle
 
 The phrase:
 
@@ -672,7 +672,7 @@ That is a valid design.
 
 But it has not somehow prevented the partition from existing.
 
-# 17. What about "CA"?
+## What about "CA"?
 
 You will often see:
 
@@ -702,7 +702,7 @@ That may be perfectly reasonable.
 
 It just does not solve the partition case addressed by CAP.
 
-# 18. A single database server is not a CAP counterexample
+## A single database server is not a CAP counterexample
 
 Consider:
 
@@ -732,7 +732,7 @@ That does not violate CAP and does not defeat CAP.
 
 It is simply a different failure model.
 
-# 19. Quorums make the trade-off concrete
+## Quorums make the trade-off concrete
 
 Now consider three replicas:
 
@@ -785,7 +785,7 @@ A side
 
 This is a common consistency-first pattern.
 
-# 20. Why the minority must stop accepting authoritative writes
+## Why the minority must stop accepting authoritative writes
 
 Suppose both sides accepted authoritative writes.
 
@@ -821,7 +821,7 @@ Any two majorities intersect in at least one node.
 
 That intersection is one of the key building blocks used in quorum and consensus systems.
 
-# 21. Quorums do not "beat CAP"
+## Quorums do not "beat CAP"
 
 Sometimes CAP is explained badly as:
 
@@ -846,7 +846,7 @@ Therefore an operation requiring quorum must fail or wait there.
 
 That is exactly the consistency-over-availability behavior predicted by CAP.
 
-# 22. Concrete CP-style example: etcd
+## Concrete CP-style example: etcd
 
 etcd is a useful concrete example because its client API exposes the distinction directly.
 
@@ -874,7 +874,7 @@ A strong operation that requires current consensus cannot simply allow isolated 
 
 That is the CAP trade-off made concrete.
 
-# 23. etcd can also perform weaker local reads
+## etcd can also perform weaker local reads
 
 etcd also supports what its API calls a:
 
@@ -908,7 +908,7 @@ That is why:
 
 is much less informative than explaining the particular operation being performed.
 
-# 24. Per-operation behavior is more useful than product labels
+## Per-operation behavior is more useful than product labels
 
 A database may support:
 
@@ -940,7 +940,7 @@ A better question is:
 
 > For this operation, under this replication topology and consistency configuration, what happens when the required nodes cannot communicate?
 
-# 25. Cassandra: tunable consistency
+## Cassandra: tunable consistency
 
 Apache Cassandra illustrates this extremely well.
 
@@ -966,7 +966,7 @@ rather than imposing one universal setting on every operation.
 
 The current Cassandra documentation explicitly describes this as tunable consistency.
 
-# 26. Cassandra with `ONE`
+## Cassandra with `ONE`
 
 Suppose:
 
@@ -995,7 +995,7 @@ But replicas can temporarily contain different versions.
 
 Cassandra has mechanisms for replica convergence and repair.
 
-# 27. Cassandra with `QUORUM`
+## Cassandra with `QUORUM`
 
 For:
 
@@ -1054,7 +1054,7 @@ This is much more useful than saying simply:
 "Cassandra is AP."
 ```
 
-# 28. Stronger consistency reduces which failures an operation can tolerate
+## Stronger consistency reduces which failures an operation can tolerate
 
 Suppose:
 
@@ -1105,7 +1105,7 @@ without becoming unavailable.
 
 Cassandra exposes this choice on a per-operation basis.
 
-# 29. Quorum consistency is not a magic synonym for every strong consistency model
+## Quorum consistency is not a magic synonym for every strong consistency model
 
 Be careful with statements such as:
 
@@ -1131,7 +1131,7 @@ So quorum intersection is an important tool.
 
 It is not a replacement for understanding the complete consistency protocol.
 
-# 30. Availability-first designs create a second problem: divergence
+## Availability-first designs create a second problem: divergence
 
 Return to:
 
@@ -1167,7 +1167,7 @@ The communication problem has ended.
 
 A conflict-resolution problem remains.
 
-# 31. Convergence needs a reconciliation rule
+## Convergence needs a reconciliation rule
 
 Some common reconciliation strategies are:
 
@@ -1180,7 +1180,7 @@ Some common reconciliation strategies are:
 
 The network healing itself does not choose the correct business outcome.
 
-# 32. Last-write-wins
+## Last-write-wins
 
 Suppose:
 
@@ -1214,7 +1214,7 @@ One value lost the conflict.
 
 Clock-based LWW schemes also need carefully defined timestamp and tie-breaking behavior.
 
-# 33. Convergence and preservation are different properties
+## Convergence and preservation are different properties
 
 Suppose:
 
@@ -1248,7 +1248,7 @@ Therefore:
 
 That distinction matters enormously in availability-oriented systems.
 
-# 34. Vector clocks detect concurrent histories
+## Vector clocks detect concurrent histories
 
 The original Amazon Dynamo system provides a classic example.
 
@@ -1280,7 +1280,7 @@ It does not automatically answer:
 What does the business want the merged value to be?
 ```
 
-# 35. The original Dynamo shopping-cart example
+## The original Dynamo shopping-cart example
 
 The 2007 Dynamo paper deliberately targeted services for which rejecting updates was undesirable.
 
@@ -1322,7 +1322,7 @@ That is a real example of the complexity hidden behind:
 "eventually consistent"
 ```
 
-# 36. Dynamo used more than eventual consistency
+## Dynamo used more than eventual consistency
 
 The original Dynamo design combined several techniques.
 
@@ -1342,7 +1342,7 @@ The important point is that none of them violates CAP.
 
 They help the system operate usefully after choosing weaker consistency behavior during certain failures.
 
-# 37. Hinted handoff does not solve CAP
+## Hinted handoff does not solve CAP
 
 Suppose the normal replica for key `K` is unavailable.
 
@@ -1378,7 +1378,7 @@ Hinted handoff helps repair state after failures.
 
 It does not remove CAP's missing-information problem.
 
-# 38. Read repair does not solve CAP either
+## Read repair does not solve CAP either
 
 Suppose a read contacts:
 
@@ -1416,7 +1416,7 @@ repair mechanism
 CAP loophole
 ```
 
-# 39. Anti-entropy
+## Anti-entropy
 
 Systems can also periodically compare replica state in the background.
 
@@ -1438,7 +1438,7 @@ Again, these mechanisms repair after or around divergence.
 
 They do not allow an isolated node to know information it has not received.
 
-# 40. Eventual consistency
+## Eventual consistency
 
 A useful simplified definition is:
 
@@ -1472,7 +1472,7 @@ business invariants can never be temporarily violated
 
 Eventual consistency is therefore a convergence statement, not a complete application semantics specification.
 
-# 41. MVCC does not solve CAP
+## MVCC does not solve CAP
 
 MVCC solves a different problem.
 
@@ -1512,7 +1512,7 @@ network-information uncertainty
 
 The problems exist at different layers.
 
-# 42. Dynamo and DynamoDB are not the same system
+## Dynamo and DynamoDB are not the same system
 
 This distinction is important.
 
@@ -1545,7 +1545,7 @@ Do not take an implementation detail from the 2007 Dynamo paper and claim:
 
 unless current DynamoDB documentation says so.
 
-# 43. DynamoDB itself demonstrates why product CAP labels are weak
+## DynamoDB itself demonstrates why product CAP labels are weak
 
 Current DynamoDB provides several different consistency behaviors.
 
@@ -1581,7 +1581,7 @@ CP
 
 hides that distinction.
 
-# 44. Current DynamoDB global tables make the distinction even clearer
+## Current DynamoDB global tables make the distinction even clearer
 
 As of the current AWS documentation, DynamoDB Global Tables support two multi-Region consistency modes:
 
@@ -1601,7 +1601,7 @@ This is a particularly good modern example of why:
 
 > classify the configuration and operation, not the product logo.
 
-# 45. DynamoDB MREC: availability-oriented regional behavior
+## DynamoDB MREC: availability-oriented regional behavior
 
 With MREC:
 
@@ -1624,7 +1624,7 @@ This architecture favors lower cross-Region coordination latency.
 
 The consequence is weaker immediate cross-Region consistency.
 
-# 46. DynamoDB MRSC: stronger coordination
+## DynamoDB MRSC: stronger coordination
 
 MRSC changes the design.
 
@@ -1654,7 +1654,7 @@ AWS explicitly notes that MRSC write and strongly consistent read latency depend
 
 That leads directly into PACELC.
 
-# 47. MRSC also makes the availability trade-off visible
+## MRSC also makes the availability trade-off visible
 
 AWS's MRSC documentation says the local Region can continue servicing read/write operations while it can establish the required coordination with another replica or witness.
 
@@ -1670,7 +1670,7 @@ coordination unavailable
 → strong operation may become unavailable
 ```
 
-# 48. PACELC: CAP describes failures, but systems make trade-offs when healthy too
+## PACELC: CAP describes failures, but systems make trade-offs when healthy too
 
 CAP concentrates on the partition case.
 
@@ -1704,7 +1704,7 @@ ELSE:
 
 Abadi introduced PACELC specifically to emphasize that CAP does not describe the important latency/consistency trade-offs that continue during normal operation.
 
-# 49. PACELC with two regions
+## PACELC with two regions
 
 Suppose:
 
@@ -1759,7 +1759,7 @@ Else no partition:
 Latency versus Consistency.
 ```
 
-# 50. CAP and PACELC together
+## CAP and PACELC together
 
 A good mental model is:
 
@@ -1772,7 +1772,7 @@ This explains why distributed database design does not suddenly become trivial w
 
 Global coordination always has a cost.
 
-# 51. Not every operation needs the same consistency
+## Not every operation needs the same consistency
 
 Consider an e-commerce application.
 
@@ -1790,7 +1790,7 @@ The application should choose consistency based on the invariant being protected
 
 There is no reason every piece of data must necessarily use the same distributed consistency model.
 
-# 52. Why some data merges easily and some does not
+## Why some data merges easily and some does not
 
 Suppose two regions independently modify a set of tags.
 
@@ -1834,7 +1834,7 @@ does not solve the business problem.
 
 The data type and business invariant determine whether concurrent updates are safely mergeable.
 
-# 53. CRDTs help only when the semantics fit
+## CRDTs help only when the semantics fit
 
 A Conflict-Free Replicated Data Type (CRDT) is designed so independently produced states or operations can converge deterministically according to mathematically defined rules.
 
@@ -1866,7 +1866,7 @@ the last available concert ticket
 
 unless the application's semantics have been deliberately modeled to resolve that problem.
 
-# 54. Conflict resolution is a business decision too
+## Conflict resolution is a business decision too
 
 Suppose two disconnected regions update:
 
@@ -1906,7 +1906,7 @@ They have completely different business consequences.
 
 Distributed-system design cannot choose the correct business semantics automatically.
 
-# 55. CAP does not say weak consistency is bad
+## CAP does not say weak consistency is bad
 
 An availability-oriented choice may be exactly correct.
 
@@ -1939,7 +1939,7 @@ CAP does not tell you which business trade-off to choose.
 
 It tells you the distributed-system constraint you must design around.
 
-# 56. CAP does not say strong consistency is always better
+## CAP does not say strong consistency is always better
 
 Strong consistency has costs:
 
@@ -1958,7 +1958,7 @@ The correct choice depends on what can happen if data is stale or conflicting.
 
 A product catalog and a distributed lock service are not the same problem.
 
-# 57. CAP does not say eventual consistency means "random"
+## CAP does not say eventual consistency means "random"
 
 Eventually consistent systems are not necessarily chaotic.
 
@@ -1984,7 +1984,7 @@ alone does not specify all of those properties.
 
 You need to know the actual consistency model.
 
-# 58. CAP does not classify an entire architecture forever
+## CAP does not classify an entire architecture forever
 
 Suppose an application uses:
 
@@ -2020,7 +2020,7 @@ Different operations intentionally make different trade-offs.
 
 Even one datastore can provide several choices.
 
-# 59. Technology summary
+## Technology summary
 
 | Technology / operation | Concrete consistency behavior relevant to this discussion |
 |---|---|
@@ -2037,7 +2037,7 @@ Even one datastore can provide several choices.
 
 etcd documents the difference between its default linearizable reads and lower-cost potentially stale member-local reads. Cassandra documents per-operation tunable consistency and quorum behavior. The original Dynamo paper documents its availability-oriented design and reconciliation mechanisms. Current DynamoDB documentation describes table/index read consistency and separate MREC/MRSC global-table modes.
 
-# 60. Common CAP mistakes
+## Common CAP mistakes
 
 | Claim | Better explanation |
 |---|---|
@@ -2052,7 +2052,7 @@ etcd documents the difference between its default linearizable reads and lower-c
 | "Dynamo and DynamoDB are the same implementation. " | Dynamo is the 2007 architecture/paper; DynamoDB is a separate managed service with its own documented features. |
 | "CAP consistency means ACID consistency. " | CAP uses a distributed visibility/order guarantee; ACID consistency concerns transaction invariants. |
 
-# 61. How to analyze a real system
+## How to analyze a real system
 
 Instead of asking:
 
@@ -2092,7 +2092,7 @@ What latency does normal coordination add?
 
 Those questions reveal the real distributed-system design.
 
-# 62. A complete three-node example
+## A complete three-node example
 
 Suppose:
 
@@ -2128,7 +2128,7 @@ Client 2 sends to B:
 GET price
 ```
 
-## Consistency-first configuration
+### Consistency-first configuration
 
 The system requires:
 
@@ -2162,7 +2162,7 @@ and can continue.
 
 The service preserved the strong consistency protocol but sacrificed availability for strong operations on A's side.
 
-## Availability-first configuration
+### Availability-first configuration
 
 A is allowed to write locally:
 
@@ -2196,7 +2196,7 @@ must be reconciled according to the system's version/conflict rules.
 
 That is CAP in one example.
 
-# 63. The deepest CAP insight
+## The deepest CAP insight
 
 CAP is often taught as a triangle:
 
@@ -2233,7 +2233,7 @@ If operations on one side can change the correct answer on the other side, and c
 
 That information gap is the core of CAP.
 
-# 64. Final mental model
+## Final mental model
 
 Remember CAP like this:
 
@@ -2293,7 +2293,7 @@ Ask:
 
 That question turns CAP from an interview slogan into a practical distributed-systems design tool.
 
-# References
+## References
 
 Gilbert and Lynch formally proved Brewer's conjecture for an asynchronous distributed model, establishing the impossibility of simultaneously guaranteeing atomic/linearizable consistency, availability, and partition tolerance.
 
