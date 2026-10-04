@@ -73,6 +73,26 @@ ROLLBACK;
 
 The query sees `7000` inside the transaction. Rollback returns both the quantity and the cached total to their earlier values. Atomic grouping prevents committing just one change, but all writers still need a concurrency-safe maintenance policy. The example relies on one SQLite writer at a time; do not infer that this recomputation is safe under every multi-writer engine and isolation level.
 
+Input order lines before the transaction:
+
+| order_id | line_number | quantity | unit_price_cents |
+|---:|---:|---:|---:|
+| 101 | 1 | 2 | 1500 |
+| 101 | 2 | 1 | 2500 |
+
+The query inside the transaction returns:
+
+| cached_total_cents |
+|---:|
+| 7000 |
+
+After rollback, the stored order and line return to:
+
+| order_id | line_number | quantity | cached_total_cents |
+|---:|---:|---:|---:|
+| 101 | 1 | 2 | 5500 |
+| 101 | 2 | 1 | 5500 |
+
 For a server database, concurrent edits can require locking the owning order, applying safe deltas, or serializable transactions with retries. A trigger can centralize maintenance but must handle inserts, updates, deletes, moves between orders, and multi-row operations. A trigger that updates only for inserts would leave deletions wrong.
 
 ### Detect drift and rebuild
@@ -87,6 +107,12 @@ HAVING o.cached_total_cents IS NULL
     OR o.cached_total_cents <> COALESCE(SUM(i.quantity * i.unit_price_cents), 0)
 ORDER BY o.order_id;
 ```
+
+Example input tables are the same bookstore `orders` and `order_items` tables above. When cached totals match their source lines, the drift query returns no rows:
+
+| order_id | cached_total_cents | actual_total_cents |
+|---|---:|---:|
+| *(no rows)* |  |  |
 
 The correctly initialized sample returns no rows. Run the original backfill expression to rebuild totals from the source. Reconciliation is part of the design: “the application normally updates it” is not enough when bugs, old clients, or imports can bypass that path.
 
@@ -151,6 +177,19 @@ FROM denorm_sales GROUP BY sold_on;
 SELECT sold_on, revenue_cents FROM denorm_daily_sales ORDER BY sold_on;
 ```
 
+Input rows in `denorm_sales`:
+
+| sale_id | sold_on | amount_cents |
+|---:|---|---:|
+| 1 | 2025-01-10 | 3000 |
+| 2 | 2025-01-10 | 2500 |
+
+The initial materialized-view result is:
+
+| sold_on | revenue_cents |
+|---|---:|
+| 2025-01-10 | 5500 |
+
 The initial result is January 10 with revenue `5500`. Adding a sale does not automatically update this ordinary PostgreSQL materialized view:
 
 ```sql
@@ -159,6 +198,12 @@ INSERT INTO denorm_sales VALUES (3, DATE '2025-01-10', 1500);
 REFRESH MATERIALIZED VIEW denorm_daily_sales;
 SELECT sold_on, revenue_cents FROM denorm_daily_sales ORDER BY sold_on;
 ```
+
+After inserting sale 3 and refreshing the view, it returns:
+
+| sold_on | revenue_cents |
+|---|---:|
+| 2025-01-10 | 7000 |
 
 After refresh it shows `7000`. A concurrent refresh has extra requirements, including a suitable unique index; it is not the default behavior merely because the view exists. See [PostgreSQL materialized views](https://www.postgresql.org/docs/current/rules-materializedviews.html).
 

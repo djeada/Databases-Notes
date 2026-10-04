@@ -23,7 +23,19 @@ finally:
     conn.close()
 ```
 
-The output is `('Database Basics',)`. `:memory:` creates a temporary database private to this ordinary connection; its records disappear when it closes. Using a file path instead allows data to outlive the connection under the engine's persistence guarantees.
+The `products` input row inserted before the query is:
+
+| product_id | title |
+|---:|---|
+| 10 | Database Basics |
+
+The query returns:
+
+| title |
+|---|
+| Database Basics |
+
+The Python tuple output is `('Database Basics',)`. `:memory:` creates a temporary database private to this ordinary connection; its records disappear when it closes. Using a file path instead allows data to outlive the connection under the engine's persistence guarantees.
 
 ```text
 Python process
@@ -83,6 +95,21 @@ WHERE customer_id = 1
 ORDER BY order_id;
 ```
 
+Example input (`orders`):
+
+| order_id | customer_id | order_date |
+|---:|---:|---|
+| 101 | 1 | 2025-01-10 |
+| 102 | 1 | 2025-01-12 |
+| 103 | 2 | 2025-01-12 |
+
+Result:
+
+| order_id | order_date |
+|---:|---|
+| 101 | 2025-01-10 |
+| 102 | 2025-01-12 |
+
 The intended result is orders 101 and 102. The engine typically performs these stages:
 
 | Stage | Question being resolved | Example |
@@ -113,6 +140,13 @@ WHERE customer_id = 1
 ORDER BY order_id;
 ```
 
+The same three input orders above produce these example plans:
+
+| stage | detail |
+|---|---|
+| Before creating the index | SCAN orders |
+| After creating the index | SEARCH orders USING INDEX idx_dbms_orders_customer (customer_id=?) |
+
 On this simple setup, the earlier plan can report `SCAN orders`, while the later plan can report `SEARCH orders USING INDEX idx_dbms_orders_customer (customer_id=?)`. These are illustrative plan details, not guaranteed wording across versions. A **scan** examines input broadly; an indexed **search** targets entries through an access structure. SQLite documents the distinction in [EXPLAIN QUERY PLAN](https://www.sqlite.org/eqp.html).
 
 The index does not change which orders satisfy the query. It changes an available way to find them. With three rows, either approach is inexpensive; with many orders and a selective customer filter, fewer page visits can matter.
@@ -129,6 +163,18 @@ EXPLAIN (ANALYZE, BUFFERS)
 SELECT title FROM server_products WHERE product_id = 10;
 ```
 
+Input (`server_products`):
+
+| product_id | title | price_cents |
+|---:|---|---:|
+| 10 | Database Basics | 1500 |
+
+The `EXPLAIN` commands return plan details; the underlying `SELECT` result is:
+
+| title |
+|---|
+| Database Basics |
+
 The second form actually executes the query and reports runtime details. The primary-key index may be useful, but a tiny table can still get a sequential scan. Estimated costs are planner units, not a direct time measurement. See PostgreSQL's [EXPLAIN documentation](https://www.postgresql.org/docs/current/sql-explain.html).
 
 For a slow request, identify whether the time comes from execution, a lock wait, acquiring a connection, or transferring a huge result. These need different remedies. Creating an index cannot fix a request that mostly waits for an application connection pool.
@@ -138,6 +184,14 @@ For a slow request, identify whether the time comes from execution, a lock wait,
 The engine maintains a **catalog**: information about tables, columns, constraints, indexes, and other objects. It consults that metadata when interpreting SQL.
 
 SQLite exposes schema definitions through `sqlite_schema`:
+
+Example catalog input rows:
+
+| name | type |
+|---|---|
+| customers | table |
+| orders | table |
+| idx_dbms_orders_customer | index |
 
 ```sql
 SELECT name, type
@@ -204,6 +258,19 @@ finally:
     source.close()
 ```
 
+Example input (`customers`):
+
+| customer_id | name |
+|---:|---|
+| 1 | Alice |
+| 2 | Bob |
+
+The `COUNT(*)` query returns:
+
+| COUNT(*) |
+|---:|
+| 2 |
+
 After the introductory exercises, the count is `2`. This checks that a copied table can be read; a serious restore test must check more than one count. The backup API handles copying through the engine instead of assuming that a live database is safely copied by grabbing one arbitrary file. See Python's [SQLite backup interface](https://docs.python.org/3/library/sqlite3.html#sqlite3.Connection.backup).
 
 ### Export and restore a PostgreSQL practice database
@@ -216,6 +283,18 @@ createdb chapter1_dbms_restored
 pg_restore -d chapter1_dbms_restored chapter1_dbms.dump
 psql -d chapter1_dbms_restored -c 'SELECT COUNT(*) FROM server_products;'
 ```
+
+Input (`server_products` in the restored database):
+
+| product_id | title | price_cents |
+|---:|---|---:|
+| 10 | Database Basics | 1500 |
+
+Result:
+
+| COUNT(*) |
+|---:|
+| 1 |
 
 The final count should be `1`. `-Fc` creates a custom-format archive, and `pg_restore` loads it into the fresh target database. `pg_dump` exports one database; global objects such as roles need separate treatment. This is a small restore exercise, not a complete production recovery plan. PostgreSQL's [pg_dump documentation](https://www.postgresql.org/docs/current/app-pgdump.html) describes the formats and scope.
 

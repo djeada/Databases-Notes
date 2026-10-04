@@ -294,11 +294,26 @@ Frameworks such as Spark Structured Streaming and Apache Flink provide event-tim
 
 Instead of polling:
 
+Suppose `last_seen = '2026-10-02 00:00:00'` and the source table contains:
+
+| order_id | updated_at | status | total |
+|---:|---|---|---:|
+| 1001 | 2026-10-01 18:00:00 | paid | 19.95 |
+| 1002 | 2026-10-02 08:30:00 | paid | 39.00 |
+| 1003 | 2026-10-02 09:15:00 | pending | 12.50 |
+
 ```sql
 SELECT *
 FROM orders
 WHERE updated_at > last_seen;
 ```
+
+The polling query returns:
+
+| order_id | updated_at | status | total |
+|---:|---|---|---:|
+| 1002 | 2026-10-02 08:30:00 | paid | 39.00 |
+| 1003 | 2026-10-02 09:15:00 | pending | 12.50 |
 
 a CDC system reads the database's change log.
 

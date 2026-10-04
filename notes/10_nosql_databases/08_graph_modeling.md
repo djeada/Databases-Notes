@@ -156,12 +156,45 @@ Do not choose a graph merely because the domain has relationships. Every relatio
 
 Neo4j uses Cypher.
 
+The example graph contains these nodes and relationships:
+
+**Customers**
+
+| customer_id | name |
+| ---: | --- |
+| 42 | Alice |
+| 73 | Bob |
+| 90 | Carol |
+
+**Books**
+
+| book_id | title |
+| ---: | --- |
+| 101 | Database Systems |
+| 205 | SQL Practice |
+
+**Relationships**
+
+| start | relationship | end |
+| --- | --- | --- |
+| Alice (42) | FOLLOWS | Bob (73) |
+| Bob (73) | LIKES | Database Systems (101) |
+| Bob (73) | LIKES | SQL Practice (205) |
+
 ```cypher
 MATCH (alice:Customer {customer_id: 42})
       -[:FOLLOWS]->(:Customer)
       -[:LIKES]->(book:Book)
-RETURN DISTINCT book.title;
+RETURN DISTINCT book.title
+ORDER BY book.title;
 ```
+
+Result:
+
+| book.title |
+| --- |
+| Database Systems |
+| SQL Practice |
 
 The query visually resembles the graph pattern.
 
@@ -231,6 +264,12 @@ MATCH p =
   (:Customer)
 RETURN p;
 ```
+
+For the sample graph, the result is:
+
+| start node | relationship | end node |
+| --- | --- | --- |
+| Alice (42) | FOLLOWS | Bob (73) |
 
 If each node has 100 outgoing edges:
 
@@ -415,8 +454,20 @@ A pattern such as:
 
 ```cypher
 MATCH (a:Customer), (b:Book)
-RETURN a, b;
+RETURN a, b
+ORDER BY a.name, b.title;
 ```
+
+The sample graph has three customers and two books, so the query returns six customer/book pairs. For example:
+
+| customer | book |
+| --- | --- |
+| Alice | Database Systems |
+| Alice | SQL Practice |
+| Bob | Database Systems |
+| Bob | SQL Practice |
+| Carol | Database Systems |
+| Carol | SQL Practice |
 
 without relationship/filter constraints can create a large Cartesian product.
 
@@ -429,8 +480,20 @@ Graph query languages can express very expensive patterns; model and profile the
 ```cypher
 MATCH (c:Customer)
 OPTIONAL MATCH (c)-[:LIKES]->(b:Book)
-RETURN c.name, b.title;
+RETURN c.name, b.title
+ORDER BY c.name, b.title;
 ```
+
+Input relationships: Bob likes both books; Alice and Carol have no `LIKES` relationships.
+
+Result:
+
+| c.name | b.title |
+| --- | --- |
+| Alice | NULL |
+| Bob | Database Systems |
+| Bob | SQL Practice |
+| Carol | NULL |
 
 Customers without matching books remain in the result.
 
@@ -441,8 +504,15 @@ Graph queries can aggregate:
 ```cypher
 MATCH (:Customer)-[:LIKES]->(b:Book)
 RETURN b.title, count(*) AS likes
-ORDER BY likes DESC;
+ORDER BY likes DESC, b.title;
 ```
+
+Result:
+
+| b.title | likes |
+| --- | ---: |
+| Database Systems | 1 |
+| SQL Practice | 1 |
 
 Use graphs where traversal is the primary value, not just because aggregation exists.
 

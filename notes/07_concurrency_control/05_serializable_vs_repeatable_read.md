@@ -156,18 +156,23 @@ But consider two transactions.
 
 ### Transaction T1
 
+Sample `doctors` table:
+
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
+
 ```sql
 SELECT *
 FROM doctors
 WHERE on_call = true;
 ```
 
-Result:
-
-```text
-Alice
-Bob
-```
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
 T1 decides Alice can leave:
 
@@ -179,7 +184,7 @@ WHERE name = 'Alice';
 
 ### Transaction T2
 
-At approximately the same time:
+At approximately the same time, T2 runs the same query against its snapshot:
 
 ```sql
 SELECT *
@@ -187,12 +192,10 @@ FROM doctors
 WHERE on_call = true;
 ```
 
-T2 also sees:
-
-```text
-Alice
-Bob
-```
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
 and executes:
 
@@ -229,13 +232,29 @@ PostgreSQL explicitly documents this distinction: Repeatable Read provides a sta
 
 Consider an event with ten available seats.
 
-Instead of representing every physical seat separately, the application checks how many bookings exist:
+Instead of representing every physical seat separately, the application checks how many bookings exist. Sample rows:
+
+| booking_id | event_id |
+| ---: | ---: |
+| 1 | 42 |
+| 2 | 42 |
+| 3 | 42 |
+| 4 | 42 |
+| 5 | 42 |
+| 6 | 42 |
+| 7 | 42 |
+| 8 | 42 |
+| 9 | 42 |
 
 ```sql
 SELECT COUNT(*)
 FROM bookings
 WHERE event_id = 42;
 ```
+
+| count |
+| ---: |
+| 9 |
 
 Suppose there are currently nine bookings.
 
@@ -355,6 +374,16 @@ Suppose customer `1` currently has five orders.
 
 ### T1
 
+Suppose `orders` contains these five rows for customer 1:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
 ```sql
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
 
@@ -363,11 +392,13 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-Result:
-
-```text
-5 rows
-```
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
 Meanwhile T2 executes:
 
@@ -380,7 +411,7 @@ COMMIT;
 
 There are now six committed rows globally.
 
-T1 repeats:
+T1 repeats the same query:
 
 ```sql
 SELECT *
@@ -388,11 +419,15 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-T1 still sees:
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
-```text
-5 rows
-```
+T1 still sees the same five rows.
 
 because it continues using its earlier snapshot.
 
@@ -408,7 +443,7 @@ Two PostgreSQL transactions can both start at Repeatable Read:
 BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
 ```
 
-Both execute:
+With the `doctors` rows Alice and Bob both marked on call, both execute:
 
 ```sql
 SELECT COUNT(*)
@@ -416,11 +451,11 @@ FROM doctors
 WHERE on_call = true;
 ```
 
-Both see:
+| count |
+| ---: |
+| 2 |
 
-```text
-2
-```
+Both see a count of 2.
 
 T1:
 
@@ -502,13 +537,24 @@ That abort is the mechanism protecting correctness.
 
 The phrase predicate lock can be confusing.
 
-Suppose the application reads:
+Suppose the sample `bookings` table has two rows for event 42:
+
+| booking_id | event_id |
+| ---: | ---: |
+| 501 | 42 |
+| 502 | 42 |
+
+The application reads:
 
 ```sql
 SELECT COUNT(*)
 FROM bookings
 WHERE event_id = 42;
 ```
+
+| count |
+| ---: |
+| 2 |
 
 The logical thing being depended on is not necessarily one row.
 
@@ -567,6 +613,16 @@ REPEATABLE READ
 
 For ordinary non-locking `SELECT`s, a transaction uses a consistent snapshot established by its first consistent read.
 
+Suppose `orders` has five rows for customer 1:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
 For example:
 
 ```sql
@@ -577,7 +633,15 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-If this establishes a snapshot containing five orders, another ordinary `SELECT` later in the same transaction normally continues to see that snapshot.
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
+If this establishes a snapshot containing five orders, another ordinary `SELECT` later in the same transaction normally continues to see those same rows.
 
 MySQL documents this behavior explicitly.
 
@@ -601,7 +665,7 @@ MySQL explicitly warns that mixing non-locking snapshot reads with locking state
 
 ## MySQL example: snapshot read versus locking read
 
-Suppose a transaction does:
+Suppose `products` contains `(id=100, name='Desk lamp', stock=8)`. A transaction does an ordinary snapshot read:
 
 ```sql
 START TRANSACTION;
@@ -611,11 +675,15 @@ FROM products
 WHERE id = 100;
 ```
 
+| id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 8 |
+
 That ordinary `SELECT` may come from the transaction's snapshot.
 
 Another transaction changes product `100` and commits.
 
-Your transaction then executes:
+After another transaction commits a change to stock from 8 to 7, your transaction executes:
 
 ```sql
 SELECT *
@@ -623,6 +691,10 @@ FROM products
 WHERE id = 100
 FOR UPDATE;
 ```
+
+| id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 7 |
 
 This is not simply another read of exactly the same historical snapshot.
 
@@ -648,7 +720,14 @@ That inference is wrong for InnoDB.
 
 ## MySQL gap locks and next-key locks
 
-Suppose the transaction executes:
+Suppose `bookings` contains two rows for event 42:
+
+| booking_id | event_id |
+| ---: | ---: |
+| 501 | 42 |
+| 502 | 42 |
+
+The transaction executes:
 
 ```sql
 SELECT *
@@ -656,6 +735,11 @@ FROM bookings
 WHERE event_id = 42
 FOR UPDATE;
 ```
+
+| booking_id | event_id |
+| ---: | ---: |
+| 501 | 42 |
+| 502 | 42 |
 
 A problem remains if the database locks only the currently existing rows.
 
@@ -743,7 +827,15 @@ Microsoft documents that Repeatable Read does not use the range locks necessary 
 
 ## SQL Server phantom example
 
-Suppose:
+Suppose `orders` initially has five rows for customer 1:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -755,7 +847,15 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-returns five rows.
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
+The query returns five rows.
 
 SQL Server keeps appropriate shared locks on those existing rows.
 
@@ -768,7 +868,7 @@ VALUES (1, ...);
 COMMIT;
 ```
 
-T1 repeats:
+T1 repeats the query after T2 inserts order 106:
 
 ```sql
 SELECT *
@@ -776,7 +876,16 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-and can now see six rows.
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+| 106 | 1 |
+
+The result now has six rows.
 
 No previously read row needed to change.
 
@@ -788,7 +897,7 @@ That is the classic phantom problem.
 
 SQL Server Serializable closes this gap with key-range locks.
 
-Suppose T1 executes:
+Suppose `orders` contains five rows for customer 1. T1 executes:
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -799,6 +908,14 @@ SELECT *
 FROM orders
 WHERE customer_id = 1;
 ```
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
 SQL Server protects the relevant key range.
 
@@ -855,7 +972,17 @@ because snapshot isolation and serializable isolation solve different problems.
 
 ## Same SQL isolation name, three different implementations
 
-Consider:
+Suppose `orders` contains five rows for customer 1:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
+Consider this query followed by a concurrent insert:
 
 ```sql
 SELECT *
@@ -863,7 +990,13 @@ FROM orders
 WHERE customer_id = 1;
 ```
 
-followed by a concurrent insert.
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
 ### PostgreSQL Repeatable Read
 
@@ -980,6 +1113,11 @@ Suppose the rule is:
 username must be unique
 ```
 
+Suppose `users` has no `alice` row yet:
+
+| user_id | username |
+| ---: | --- |
+
 Do not implement:
 
 ```sql
@@ -987,6 +1125,10 @@ SELECT COUNT(*)
 FROM users
 WHERE username = 'alice';
 ```
+
+| count |
+| ---: |
+| 0 |
 
 followed by:
 
@@ -1039,13 +1181,17 @@ Serializable isolation becomes especially valuable for multi-row or predicate-ba
 
 Consider inventory.
 
-Naive implementation:
+Suppose the `products` row is `(id=42, available_stock=1)`. A naive implementation reads:
 
 ```sql
 SELECT available_stock
 FROM products
 WHERE id = 42;
 ```
+
+| available_stock |
+| ---: |
+| 1 |
 
 Application:
 
@@ -1119,7 +1265,7 @@ because the condition and modification are handled atomically against the same r
 
 Suppose an operation must read an account before deciding how to modify it.
 
-Instead of:
+Suppose `accounts` contains `(id=100, balance=500)`. Instead of an ordinary read:
 
 ```sql
 SELECT *
@@ -1127,7 +1273,11 @@ FROM accounts
 WHERE id = 100;
 ```
 
-use:
+| id | balance |
+| ---: | ---: |
+| 100 | 500 |
+
+use a locking read:
 
 ```sql
 SELECT *
@@ -1168,7 +1318,12 @@ At that point you need to understand range/predicate locking or use Serializable
 
 ## Fixing the doctors example with explicit locking
 
-Instead of:
+With Alice and Bob on call, an ordinary read returns these rows:
+
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
 ```sql
 SELECT *
@@ -1176,7 +1331,7 @@ FROM doctors
 WHERE on_call = true;
 ```
 
-the transaction could deliberately lock the relevant rows:
+The transaction could deliberately lock the same rows:
 
 ```sql
 SELECT *
@@ -1184,6 +1339,11 @@ FROM doctors
 WHERE on_call = true
 FOR UPDATE;
 ```
+
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
 Then decide whether the selected doctor may leave.
 
@@ -1370,6 +1530,8 @@ Idempotency keys can provide additional protection when talking to payment provi
 
 ### Stable snapshot
 
+Suppose `orders` contains five rows for customer 1, IDs 101–105.
+
 ```sql
 BEGIN TRANSACTION
 ISOLATION LEVEL REPEATABLE READ;
@@ -1387,9 +1549,21 @@ WHERE customer_id = 1;
 COMMIT;
 ```
 
+Each read returns the same rows from the transaction snapshot:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
 The ordinary reads continue to use the transaction snapshot.
 
 ### Serializable
+
+Suppose doctors Alice and Bob are both on call. The transaction counts them:
 
 ```sql
 BEGIN TRANSACTION
@@ -1398,19 +1572,31 @@ ISOLATION LEVEL SERIALIZABLE;
 SELECT COUNT(*)
 FROM doctors
 WHERE on_call = true;
+```
 
-UPDATE doctors
-SET on_call = false
-WHERE id = 1;
+| count |
+| ---: |
+| 2 |
 
+It then updates Alice and commits:
+
+```sql
+UPDATE doctors SET on_call = false WHERE id = 1;
 COMMIT;
 ```
+
+| name | on_call |
+| --- | --- |
+| Alice | false |
+| Bob | true |
 
 The application must be prepared for the commit or one of the statements to fail with a serialization error and retry the transaction.
 
 ## MySQL InnoDB syntax
 
 ### Repeatable Read
+
+Suppose `orders` contains five rows for customer 1 (order IDs 101–105).
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1428,9 +1614,21 @@ WHERE customer_id = 1;
 COMMIT;
 ```
 
+Both reads return the same five rows:
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
+
 InnoDB's default isolation level is Repeatable Read, and ordinary consistent reads within the transaction use the transaction's snapshot.
 
 ### Lock rows that drive a decision
+
+Suppose doctors Alice and Bob are both on call. The locking read returns both rows:
 
 ```sql
 START TRANSACTION;
@@ -1439,15 +1637,28 @@ SELECT *
 FROM doctors
 WHERE on_call = true
 FOR UPDATE;
+```
 
-UPDATE doctors
-SET on_call = false
-WHERE id = 1;
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
+The transaction then updates Alice and commits:
+
+```sql
+UPDATE doctors SET on_call = false WHERE id = 1;
 COMMIT;
 ```
 
+| name | on_call |
+| --- | --- |
+| Alice | false |
+| Bob | true |
+
 ### Serializable
+
+Suppose Alice and Bob are on call. The query reads both doctors before deciding whether one can leave:
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
@@ -1457,19 +1668,32 @@ START TRANSACTION;
 SELECT *
 FROM doctors
 WHERE on_call = true;
+```
 
-UPDATE doctors
-SET on_call = false
-WHERE id = 1;
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
+After the update commits, the table contains:
+
+```sql
+UPDATE doctors SET on_call = false WHERE id = 1;
 COMMIT;
 ```
+
+| name | on_call |
+| --- | --- |
+| Alice | false |
+| Bob | true |
 
 For an explicit Serializable transaction, InnoDB makes ordinary reads more strongly locking rather than treating every `SELECT` as an ordinary historical snapshot read.
 
 ## SQL Server syntax
 
 ### Repeatable Read
+
+Suppose `orders` has five rows for customer 1, IDs 101–105.
 
 ```sql
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1482,6 +1706,14 @@ WHERE customer_id = 1;
 
 COMMIT TRANSACTION;
 ```
+
+| order_id | customer_id |
+| ---: | ---: |
+| 101 | 1 |
+| 102 | 1 |
+| 103 | 1 |
+| 104 | 1 |
+| 105 | 1 |
 
 Existing rows read by the transaction remain protected by shared locks, but new matching rows are not generally excluded because Repeatable Read does not use the key-range protection of Serializable.
 
@@ -1559,6 +1791,13 @@ For every concurrency-sensitive operation, write down four things.
 
 ### What did the transaction read?
 
+Suppose the `doctors` table contains:
+
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
+
 Example:
 
 ```sql
@@ -1566,6 +1805,11 @@ SELECT *
 FROM doctors
 WHERE on_call = true;
 ```
+
+| name | on_call |
+| --- | --- |
+| Alice | true |
+| Bob | true |
 
 ### What decision did it derive?
 

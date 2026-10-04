@@ -81,6 +81,14 @@ with tempfile.TemporaryDirectory() as directory:
     final_connection.close()
 ```
 
+The `accepted_orders` table is empty before the committed insert. After reopening and rolling back the pending insert, it contains:
+
+| order_id |
+|---:|
+| 104 |
+
+Both `SELECT` calls return that same row; the uncommitted order 105 never appears.
+
 Both prints are `[(104,)]`. Committed order 104 survives closing and reopening the file. Uncommitted order 105 does not. The temporary directory is removed after the exercise, so this is a repeatable demonstration rather than a permanent order store.
 
 This verifies ordinary persistence and close-time rollback. It does **not** simulate an operating-system crash or a power loss. A crash test needs a disposable environment, controlled interruption, reopening, and validation of acknowledged operation IDs against the configured failure guarantee.
@@ -100,6 +108,14 @@ PRAGMA synchronous;
 PRAGMA wal_checkpoint(PASSIVE);
 ```
 
+Example input state: the database is in WAL mode with committed order 104. The first two queries report settings; the checkpoint row is illustrative because its counters depend on WAL activity:
+
+| query | example result |
+|---|---|
+| `PRAGMA journal_mode` | `wal` |
+| `PRAGMA synchronous` | `2` (FULL) |
+| `PRAGMA wal_checkpoint(PASSIVE)` | `busy=0, log=3, checkpointed=3` |
+
 The journal result depends on the selected mode, and the sync result is a numeric policy value. A passive WAL checkpoint returns counters describing its progress; an active reader can prevent it from checkpointing all frames. A checkpoint is maintenance of already committed state, not a substitute for committing a transaction.
 
 ## Inspect PostgreSQL settings without changing the guarantee
@@ -113,6 +129,14 @@ FROM pg_settings
 WHERE name IN ('fsync', 'synchronous_commit', 'full_page_writes')
 ORDER BY name;
 ```
+
+The input is PostgreSQL's `pg_settings` catalog. A typical normally durable local configuration returns:
+
+| name | setting |
+|---|---|
+| fsync | on |
+| full_page_writes | on |
+| synchronous_commit | on |
 
 A normally durable local configuration commonly reports each setting as `on`. `fsync` requests reliable persistence ordering. `synchronous_commit` controls the point at which a successful commit acknowledgment is sent, including replication behavior when configured. `full_page_writes` protects against partial page writes by logging a full page image on the relevant first change after a checkpoint.
 

@@ -681,7 +681,14 @@ lock lower account_id
 then lock higher account_id
 ```
 
-For example, in PostgreSQL:
+For example, suppose `accounts` contains:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+| 2 | 1000 |
+
+In PostgreSQL, the transaction first locks and reads both rows:
 
 ```sql
 BEGIN;
@@ -691,20 +698,25 @@ FROM accounts
 WHERE account_id IN (1, 2)
 ORDER BY account_id
 FOR UPDATE;
+```
 
--- Application verifies that both accounts exist
--- and that account 1 can be debited.
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+| 2 | 1000 |
 
-UPDATE accounts
-SET balance = balance - 100
-WHERE account_id = 1;
+Then it verifies the rows and applies the transfer:
 
-UPDATE accounts
-SET balance = balance + 100
-WHERE account_id = 2;
-
+```sql
+UPDATE accounts SET balance = balance - 100 WHERE account_id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE account_id = 2;
 COMMIT;
 ```
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 900 |
+| 2 | 1100 |
 
 A concurrent reverse transfer should use the same account ordering.
 
@@ -803,6 +815,11 @@ only one active reservation may exist
 for resource 42 at 10:00
 ```
 
+The `reservations` table has no row for resource 42 at 10:00:
+
+| reservation_id | resource_id | start_time |
+| ---: | ---: | --- |
+
 Transaction T1 executes:
 
 ```sql
@@ -812,6 +829,10 @@ WHERE resource_id = 42
   AND start_time = '10:00'
 FOR UPDATE;
 ```
+
+| rows returned |
+| ---: |
+| 0 |
 
 Suppose no row exists.
 
@@ -849,7 +870,15 @@ Different database systems solve this in different ways.
 
 SQL Server's lock-based `SERIALIZABLE` isolation can use key-range locks.
 
-Suppose a query reads an indexed range:
+Suppose `reservations` contains these rows:
+
+| reservation_id | resource_id | start_time |
+| ---: | ---: | --- |
+| 1 | 42 | 09:30 |
+| 2 | 42 | 10:15 |
+| 3 | 42 | 11:00 |
+
+A query reads the indexed range:
 
 ```sql
 SELECT *
@@ -858,6 +887,10 @@ WHERE resource_id = 42
   AND start_time >= '10:00'
   AND start_time < '11:00';
 ```
+
+| reservation_id | resource_id | start_time |
+| ---: | ---: | --- |
+| 2 | 42 | 10:15 |
 
 Protecting only currently existing rows is insufficient.
 
@@ -884,6 +917,13 @@ This is how lock-based serializable implementations extend the 2PL idea from ind
 
 InnoDB combines MVCC with record and index-range locking.
 
+Suppose `bookings` has these rows for event 42:
+
+| booking_id | event_id |
+| ---: | ---: |
+| 501 | 42 |
+| 502 | 42 |
+
 A locking query such as:
 
 ```sql
@@ -892,6 +932,11 @@ FROM bookings
 WHERE event_id = 42
 FOR UPDATE;
 ```
+
+| booking_id |
+| ---: |
+| 501 |
+| 502 |
 
 can acquire locks on encountered index records.
 
@@ -913,7 +958,7 @@ PostgreSQL is an excellent example of why:
 
 > "database locking" is not automatically the same thing as "the database uses textbook 2PL for everything. "
 
-An ordinary PostgreSQL:
+Suppose `accounts` contains `(account_id=1, balance=1000)`. An ordinary PostgreSQL read is:
 
 ```sql
 SELECT *
@@ -921,7 +966,11 @@ FROM accounts
 WHERE account_id = 1;
 ```
 
-uses MVCC.
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+
+It uses MVCC.
 
 It does not normally acquire an `S` row lock that blocks a concurrent writer.
 
@@ -1025,7 +1074,7 @@ InnoDB is a hybrid.
 
 Ordinary consistent reads use MVCC.
 
-For example, a normal:
+Suppose the `products` row is `(id=100, name='Desk lamp', stock=8)`. An ordinary query is:
 
 ```sql
 SELECT *
@@ -1033,9 +1082,13 @@ FROM products
 WHERE id = 100;
 ```
 
-can read a historical committed row version rather than waiting on a current writer.
+| id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 8 |
 
-But a locking read:
+It can read a historical committed row version rather than waiting on a current writer.
+
+But a locking read returns and locks the matching current row:
 
 ```sql
 SELECT *
@@ -1044,7 +1097,11 @@ WHERE id = 100
 FOR UPDATE;
 ```
 
-behaves differently.
+| id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 8 |
+
+It behaves differently.
 
 It acquires locks on relevant records/index entries.
 
@@ -1164,7 +1221,7 @@ credit destination
 
 Both account changes must belong to one transaction.
 
-A PostgreSQL implementation might be:
+Suppose the two `accounts` rows each have a balance of 1000. A PostgreSQL implementation reads and locks them in order:
 
 ```sql
 BEGIN;
@@ -1174,22 +1231,25 @@ FROM accounts
 WHERE account_id IN (1, 2)
 ORDER BY account_id
 FOR UPDATE;
+```
 
--- Verify:
--- account 1 exists
--- account 2 exists
--- account 1 has at least 100
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+| 2 | 1000 |
 
-UPDATE accounts
-SET balance = balance - 100
-WHERE account_id = 1;
+After checking the balances, the transaction performs both updates and commits:
 
-UPDATE accounts
-SET balance = balance + 100
-WHERE account_id = 2;
-
+```sql
+UPDATE accounts SET balance = balance - 100 WHERE account_id = 1;
+UPDATE accounts SET balance = balance + 100 WHERE account_id = 2;
 COMMIT;
 ```
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 900 |
+| 2 | 1100 |
 
 The important design decisions are not merely:
 
@@ -1237,13 +1297,17 @@ FOR UPDATE
 
 on account `1`.
 
-Another transaction executes:
+Suppose account 1 has a committed balance of 1000 while T1 holds `FOR UPDATE`. Another transaction executes:
 
 ```sql
 SELECT balance
 FROM accounts
 WHERE account_id = 1;
 ```
+
+| balance |
+| ---: |
+| 1000 |
 
 That ordinary PostgreSQL reader is not automatically blocked by the row lock.
 
@@ -1273,7 +1337,13 @@ seat 3
 ...
 ```
 
-To reserve seat 42:
+Suppose `seats` contains:
+
+| seat_id | reserved_by |
+| ---: | ---: |
+| 42 | NULL |
+
+To reserve seat 42, the query reads and locks the existing row:
 
 ```sql
 SELECT *
@@ -1282,13 +1352,19 @@ WHERE seat_id = 42
 FOR UPDATE;
 ```
 
-Then:
+| seat_id | reserved_by |
+| ---: | ---: |
+| 42 | NULL |
+
+Then the transaction updates it:
 
 ```sql
-UPDATE seats
-SET reserved_by = 1001
-WHERE seat_id = 42;
+UPDATE seats SET reserved_by = 1001 WHERE seat_id = 42;
 ```
+
+| seat_id | reserved_by |
+| ---: | ---: |
+| 42 | 1001 |
 
 This maps naturally to row locking because the logical resource already exists as one row.
 
@@ -1344,6 +1420,13 @@ Predicate locking can be complicated.
 
 Sometimes the easiest solution is to transform an abstract invariant into a concrete lockable row.
 
+Suppose `bookings` currently has rows for event 42:
+
+| booking_id | event_id |
+| ---: | ---: |
+| 501 | 42 |
+| 502 | 42 |
+
 Instead of repeatedly checking:
 
 ```sql
@@ -1351,6 +1434,10 @@ SELECT COUNT(*)
 FROM bookings
 WHERE event_id = 42;
 ```
+
+| count |
+| ---: |
+| 2 |
 
 the `events` table might contain:
 
@@ -1407,7 +1494,10 @@ FOR UPDATE
 
 does not automatically make every business rule safe.
 
-Consider:
+Suppose the `users` table has no `alice@example.com` row:
+
+| user_id | email |
+| ---: | --- |
 
 ```sql
 SELECT *
@@ -1415,6 +1505,10 @@ FROM users
 WHERE email = 'alice@example.com'
 FOR UPDATE;
 ```
+
+| rows returned |
+| ---: |
+| 0 |
 
 If no user exists, there may be no existing row to lock.
 

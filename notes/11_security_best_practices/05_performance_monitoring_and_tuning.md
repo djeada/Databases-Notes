@@ -227,6 +227,20 @@ WHERE datname = current_database()
 ORDER BY query_start;
 ```
 
+Example `pg_stat_activity` input rows:
+
+| pid | usename | application_name | state | query_start | query age | wait_event_type | wait_event |
+|---:|---|---|---|---|---|---|---|
+| 4102 | app | checkout | active | 09:58:00 | 2 minutes |  |  |
+| 4103 | app | report | active | 09:59:35 | 25 seconds | Lock | transactionid |
+
+The query returns these current sessions:
+
+| pid | usename | application_name | state | query_age | wait_event_type | wait_event |
+|---:|---|---|---|---|---|---|
+| 4102 | app | checkout | active | 2 minutes |  |  |
+| 4103 | app | report | active | 25 seconds | Lock | transactionid |
+
 This helps answer:
 
 - what is running now?
@@ -256,6 +270,20 @@ FROM pg_stat_activity
 WHERE xact_start IS NOT NULL
 ORDER BY xact_start;
 ```
+
+Example input rows from `pg_stat_activity`:
+
+| pid | usename | state | xact_start |
+|---:|---|---|---|
+| 4102 | app | active | 2026-10-04 10:00:00 |
+| 4104 | app | idle in transaction | 2026-10-04 09:48:00 |
+
+If the query runs at 10:00, its result contains the currently open transactions and their ages:
+
+| pid | usename | state | transaction_age |
+|---:|---|---|---|
+| 4102 | app | active | 0 seconds |
+| 4104 | app | idle in transaction | 12 minutes |
 
 A long transaction may be legitimate, but it should be understood.
 
@@ -392,19 +420,51 @@ Prefer parameter-aware/protected logging that does not expose secrets.
 
 Once a problematic query is known, inspect its execution plan.
 
-PostgreSQL:
+PostgreSQL. For this sample `orders` table:
+
+| order_id | customer_id | created_at | total |
+| ---: | ---: | --- | ---: |
+| 101 | 42 | 2026-10-01 10:00:00 | 49.90 |
+| 102 | 42 | 2026-10-01 23:00:00 | 20.00 |
+| 103 | 42 | 2026-10-02 00:00:00 | 9.00 |
+| 104 | 77 | 2026-10-01 12:00:00 | 30.00 |
+
+The query returns:
+
+| order_id | created_at | total |
+| ---: | --- | ---: |
+| 103 | 2026-10-02 00:00:00 | 9.00 |
+| 102 | 2026-10-01 23:00:00 | 20.00 |
+| 101 | 2026-10-01 10:00:00 | 49.90 |
 
 ```sql
 EXPLAIN
-SELECT ...
+SELECT order_id, created_at, total
+FROM orders
+WHERE customer_id = 42
+ORDER BY created_at DESC
+LIMIT 20;
 ```
 
 For actual runtime:
 
 ```sql
 EXPLAIN (ANALYZE, BUFFERS)
-SELECT ...
+SELECT order_id, created_at, total
+FROM orders
+WHERE customer_id = 42
+ORDER BY created_at DESC
+LIMIT 20;
 ```
+
+An illustrative plan result after creating `(customer_id, created_at DESC)` index:
+
+| plan node | estimated rows | actual rows |
+| --- | ---: | ---: |
+| Limit | 20 | 3 |
+| Index Scan using idx_orders_customer_created | 20 | 3 |
+
+`EXPLAIN` returns a plan for this query; `EXPLAIN ANALYZE` returns the plan plus runtime measurements.
 
 `ANALYZE` executes the query.
 
@@ -474,6 +534,15 @@ Choose indexes from real access patterns.
 
 Example query:
 
+Example input (`orders`):
+
+| order_id | customer_id | created_at | total |
+|---:|---:|---|---:|
+| 101 | 42 | 2026-10-01 10:00:00 | 49.90 |
+| 102 | 42 | 2026-10-01 23:00:00 | 20.00 |
+| 103 | 42 | 2026-10-02 00:00:00 | 9.00 |
+| 104 | 77 | 2026-10-01 12:00:00 | 30.00 |
+
 ```sql
 SELECT
     order_id,
@@ -484,6 +553,14 @@ WHERE customer_id = $1
 ORDER BY created_at DESC
 LIMIT 20;
 ```
+
+For `$1 = 42`, the query returns:
+
+| order_id | created_at | total |
+|---:|---|---:|
+| 103 | 2026-10-02 00:00:00 | 9.00 |
+| 102 | 2026-10-01 23:00:00 | 20.00 |
+| 101 | 2026-10-01 10:00:00 | 49.90 |
 
 A candidate index:
 
@@ -528,6 +605,14 @@ WHERE created_at >= TIMESTAMP '2026-10-01 00:00:00'
   AND created_at <  TIMESTAMP '2026-10-02 00:00:00'
 ```
 
+Using the same `orders` rows above, both predicates match:
+
+| order_id | created_at |
+|---:|---|
+| 101 | 2026-10-01 10:00:00 |
+| 102 | 2026-10-01 23:00:00 |
+| 104 | 2026-10-01 12:00:00 |
+
 The second form exposes a range on the indexed column.
 
 Timezone semantics must match the business requirement.
@@ -538,7 +623,19 @@ Avoid:
 
 ```sql
 SELECT *
+FROM orders
+WHERE customer_id = 42;
 ```
+
+The query result is:
+
+| order_id | customer_id | created_at | total |
+|---:|---:|---|---:|
+| 101 | 42 | 2026-10-01 10:00:00 | 49.90 |
+| 102 | 42 | 2026-10-01 23:00:00 | 20.00 |
+| 103 | 42 | 2026-10-02 00:00:00 | 9.00 |
+
+A hot-path projection can return only the needed `order_id`, `created_at`, and `total` columns, as in the index query above.
 
 for hot paths when only a few columns are needed.
 

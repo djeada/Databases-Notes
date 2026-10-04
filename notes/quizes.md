@@ -383,6 +383,22 @@ A self join is used to join a table to itself, often using aliases to avoid conf
 
 A query to test your understanding of LEFT JOIN and INNER JOIN. Given the users table with columns id, name, and city_id, and the cities table with columns id and name, write a query to find cities without any users.
 
+`cities` input:
+
+| id | name |
+| ---: | --- |
+| 1 | Berlin |
+| 2 | Rome |
+| 3 | Paris |
+
+`users` input:
+
+| id | name | city_id |
+| ---: | --- | ---: |
+| 10 | Ana | 1 |
+| 11 | Ben | 1 |
+| 12 | Chiara | 2 |
+
 ```sql
 SELECT
   cities.name
@@ -392,6 +408,10 @@ FROM
 WHERE
   users.id IS NULL
 ```
+
+| name |
+| --- |
+| Paris |
 
 </details>
 
@@ -473,6 +493,15 @@ A distributed database is a database that is stored across multiple servers or l
 
 Consider a transactions table with columns user_id, created_at, and product. Write a query to obtain the first purchase (i.e., the purchase with the minimum created_at value) for each user.
 
+`transactions` input:
+
+| user_id | created_at | product |
+| ---: | --- | --- |
+| 1 | 2025-01-02 10:00 | Book |
+| 1 | 2025-01-05 09:00 | Mug |
+| 2 | 2025-01-03 12:00 | Pen |
+| 2 | 2025-01-04 08:00 | Bag |
+
 ```sql
 
 SELECT
@@ -487,6 +516,11 @@ FROM
 ```
 
 This returns all purchases tied for the earliest timestamp. To choose exactly one, use `ROW_NUMBER()` ordered by `created_at` and a unique transaction ID.
+
+| user_id | created_at | product |
+| ---: | --- | --- |
+| 1 | 2025-01-02 10:00 | Book |
+| 2 | 2025-01-03 12:00 | Pen |
 
 </details>
 
@@ -565,6 +599,16 @@ PostgreSQL example. Interpret `created_at` in the intended reporting timezone be
 
 Using the transactions table with columns user_id, created_at, and product, write a query to compare total purchases made in the morning (AM) versus afternoon/evening (PM) by day.
 
+`transactions` input (timestamps shown in the reporting timezone):
+
+| user_id | created_at | product |
+| ---: | --- | --- |
+| 1 | 2025-02-01 09:30 | Book |
+| 2 | 2025-02-01 13:10 | Mug |
+| 3 | 2025-02-01 17:15 | Pen |
+| 1 | 2025-02-02 08:45 | Bag |
+| 2 | 2025-02-02 15:00 | Lamp |
+
 ```sql
 SELECT
   DATE_TRUNC('day', created_at) AS date,
@@ -577,6 +621,13 @@ FROM
   transactions
 GROUP BY date, time_of_day
 ```
+
+| date | time_of_day | count |
+| --- | --- | ---: |
+| 2025-02-01 00:00:00 | AM | 1 |
+| 2025-02-01 00:00:00 | PM | 2 |
+| 2025-02-02 00:00:00 | AM | 1 |
+| 2025-02-02 00:00:00 | PM | 1 |
 
 </details>
 
@@ -592,6 +643,22 @@ Entities are objects or concepts represented in a database, and attributes are t
 
 Assume you have two tables: usersAndFriends with columns user_id and friend, and usersLikedPages with columns user_id and page_id. Write a query that recommends pages liked by your friends, excluding pages you already like.
 
+`usersAndFriends` input:
+
+| user_id | friend |
+| ---: | ---: |
+| 1 | 2 |
+| 1 | 3 |
+
+`usersLikedPages` input:
+
+| user_id | page_id |
+| ---: | ---: |
+| 1 | 10 |
+| 2 | 10 |
+| 2 | 20 |
+| 3 | 30 |
+
 ```sql
 SELECT DISTINCT
   uf.user_id, ulp.page_id
@@ -605,6 +672,11 @@ WHERE
     WHERE user_id = uf.user_id AND page_id = ulp.page_id
   )
 ```
+
+| user_id | page_id |
+| ---: | ---: |
+| 1 | 20 |
+| 1 | 30 |
 
 </details>
 
@@ -621,6 +693,17 @@ A deadlock occurs when two or more transactions are waiting for each other to re
 PostgreSQL example. Counts users active at least once in each observed month, not the average daily active users. For a calendar with missing months, join to a complete month series before applying `LAG`.
 
 Assume you have a logins table with columns user_id and date. Write a query to calculate the percentage change in monthly active users month over month.
+
+`logins` input:
+
+| user_id | date |
+| ---: | --- |
+| 1 | 2025-09-03 |
+| 2 | 2025-09-20 |
+| 1 | 2025-10-05 |
+| 2 | 2025-10-12 |
+| 3 | 2025-10-22 |
+| 1 | 2025-11-08 |
 
 ```sql
 
@@ -652,6 +735,12 @@ FROM
 monthly_change
 ORDER BY month;
 ```
+
+| month | active_users | prev_month_active_users | percentage_change |
+| --- | ---: | ---: | ---: |
+| 2025-09-01 00:00:00 | 2 | NULL | NULL |
+| 2025-10-01 00:00:00 | 3 | 2 | 50.00 |
+| 2025-11-01 00:00:00 | 1 | 3 | -66.67 |
 
 </details>
 

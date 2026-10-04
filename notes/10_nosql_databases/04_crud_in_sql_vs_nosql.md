@@ -14,6 +14,8 @@ Comparing common CRUD operations in SQL (relational databases) and MongoDB (a No
 
 Understanding how CRUD operations are implemented in both SQL and MongoDB highlights the practical differences in data manipulation between relational and non-relational databases. Below is an in-depth comparison of each CRUD operation.
 
+Each example uses a `users` table or collection. It starts empty, then contains John Doe, age 25, until the update and delete examples change it.
+
 ### Create
 
 **SQL: Inserting New Records**
@@ -32,6 +34,12 @@ INSERT INTO table_name (column1, column2, ...) VALUES (value1, value2, ...);
 INSERT INTO users (first_name, last_name, age) VALUES ('John', 'Doe', 25);
 ```
 
+Resulting SQL row:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 25 |
+
 This statement adds a new user with the first name "John," last name "Doe," and age 25 to the `users` table.
 
 **MongoDB: Inserting Documents**
@@ -49,6 +57,12 @@ db.collection.insertOne(document);
 ```javascript
 db.users.insertOne({ first_name: 'John', last_name: 'Doe', age: 25 });
 ```
+
+Resulting MongoDB document:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 25 |
 
 This command inserts a new document into the `users` collection with the specified fields and values.
 
@@ -73,6 +87,18 @@ SELECT column1, column2, ... FROM table_name WHERE condition;
 SELECT first_name, last_name, age FROM users WHERE age = 25;
 ```
 
+Input (`users`):
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 25 |
+
+Result:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 25 |
+
 This query retrieves the `first_name`, `last_name`, and `age` of all users in the `users` table who are 25 years old.
 
 **MongoDB: Querying Documents with find**
@@ -90,6 +116,14 @@ db.collection.find(query, projection);
 ```javascript
 db.users.find({ age: 25 }, { first_name: 1, last_name: 1, age: 1, _id: 0 });
 ```
+
+Input (`users`): John Doe, age 25.
+
+Result:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 25 |
 
 This command retrieves all documents from the `users` collection where the `age` is 25, including only the `first_name`, `last_name`, and `age` fields while excluding the `_id` field.
 
@@ -114,6 +148,12 @@ UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition;
 UPDATE users SET age = 26 WHERE first_name = 'John' AND last_name = 'Doe';
 ```
 
+Input row: John Doe, age 25. Resulting row:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 26 |
+
 This statement updates the `age` of the user named "John Doe" to 26 in the `users` table.
 
 **MongoDB: Updating Documents with updateOne/updateMany**
@@ -135,6 +175,12 @@ db.users.updateOne(
   { $set: { age: 26 } }
 );
 ```
+
+Input document: John Doe, age 25. Resulting document:
+
+| first_name | last_name | age |
+| --- | --- | ---: |
+| John | Doe | 26 |
 
 This command updates the `age` field to 26 for the first document in the `users` collection where `first_name` is "John" and `last_name` is "Doe."
 
@@ -159,6 +205,8 @@ DELETE FROM table_name WHERE condition;
 DELETE FROM users WHERE first_name = 'John' AND last_name = 'Doe';
 ```
 
+Input row: John Doe, age 26. Result: one row deleted; `users` is empty.
+
 This statement deletes all records from the `users` table where the `first_name` is "John" and the `last_name` is "Doe."
 
 **MongoDB: Deleting Documents with deleteOne/deleteMany**
@@ -177,6 +225,8 @@ db.collection.deleteMany(filter);
 ```javascript
 db.users.deleteOne({ first_name: 'John', last_name: 'Doe' });
 ```
+
+Input document: John Doe, age 26. Result: `deletedCount` is 1; `users` is empty.
 
 This command deletes the first document in the `users` collection that matches the criteria where `first_name` is "John" and `last_name` is "Doe."
 

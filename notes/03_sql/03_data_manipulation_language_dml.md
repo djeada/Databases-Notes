@@ -4,6 +4,24 @@
 
 Use the SQLite bookstore setup from the [SQL introduction](01_intro_to_sql.md). The write examples below are independent exercises wrapped in a transaction and rolled back, so they do not leave the sample database changed. A transaction is a group of database work; [TCL](05_transaction_control_language_tcl.md) explains it in detail.
 
+The bookstore rows used by these examples are:
+
+**`products`**
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
+
+**`customers`**
+
+| customer_id | name | email |
+| ---: | --- | --- |
+| 1 | Alice | alice@example.com |
+| 2 | Bob | bob@example.com |
+| 3 | Carol | carol@example.com |
+
 ## Read only the data you need
 
 ```sql
@@ -13,7 +31,13 @@ WHERE stock = 0
 ORDER BY product_id;
 ```
 
-The result is product 30, History of Computing, with stock zero. `WHERE` chooses rows, while the `SELECT` list chooses columns.
+Result:
+
+| product_id | title | stock |
+| ---: | --- | ---: |
+| 30 | History of Computing | 0 |
+
+`WHERE` chooses rows, while the `SELECT` list chooses columns.
 
 `SELECT *` requests all columns. That can be convenient while exploring, but listing needed columns makes application expectations clearer and avoids transferring unused data.
 
@@ -30,7 +54,13 @@ SELECT customer_id, name FROM customers WHERE customer_id = 4;
 ROLLBACK;
 ```
 
-The select sees Dana because a transaction sees its own writes. The rollback removes that uncommitted insert. After the exercise, only the original three customers remain.
+The select sees Dana because a transaction sees its own writes. Its result is:
+
+| customer_id | name |
+| ---: | --- |
+| 4 | Dana |
+
+The rollback removes that uncommitted insert. After the exercise, only the original three customers shown above remain.
 
 The column list and value list correspond by position: 4 goes into `customer_id`, Dana into `name`, and the email into `email`. Explicit column lists make that correspondence visible and reduce dependence on a table's column order.
 
@@ -50,7 +80,13 @@ SELECT product_id, price_cents FROM products WHERE product_id = 10;
 ROLLBACK;
 ```
 
-Product 10 temporarily has a current price of 1600 cents. The rollback restores 1500. Existing order-item purchase prices do not change: they describe the amount charged at purchase time, not the product's current offer.
+The select result inside the transaction is:
+
+| product_id | price_cents |
+| ---: | ---: |
+| 10 | 1600 |
+
+The rollback restores 1500. Existing order-item purchase prices do not change: they describe the amount charged at purchase time, not the product's current offer.
 
 `SET` specifies the new value. `WHERE` specifies which rows receive it. Omitting `WHERE` applies the update to every row. That is valid for an intentional bulk change, but disastrous for an operation intended to affect one product.
 
@@ -68,7 +104,13 @@ SELECT stock FROM products WHERE product_id = 10;
 ROLLBACK;
 ```
 
-Stock temporarily becomes seven. The database calculates the new value from the row's current value. This is preferable to unnecessarily reading five into application code and later writing a stale calculated value.
+The select result inside the transaction is:
+
+| stock |
+| ---: |
+| 7 |
+
+The database calculates the new value from the row's current value. This is preferable to unnecessarily reading five into application code and later writing a stale calculated value.
 
 For a limited-stock purchase, the condition matters too:
 
@@ -96,7 +138,12 @@ SELECT customer_id FROM customers WHERE customer_id = 4;
 ROLLBACK;
 ```
 
-The select returns no rows. The customer table still exists. Deleting a customer with referenced orders is different: the foreign-key policy decides whether the deletion is rejected or another declared action happens.
+The select result has no rows:
+
+| customer_id |
+| ---: |
+
+The customer table still exists. Deleting a customer with referenced orders is different: the foreign-key policy decides whether the deletion is rejected or another declared action happens.
 
 ## Distinguish the common outcomes
 
@@ -126,7 +173,23 @@ FROM products
 ORDER BY product_id;
 ```
 
-The first query displays ALICE, BOB, and CAROL. The second labels product 30 unavailable and the others available. The stored names and stock values are unchanged. `CASE` chooses one result according to a condition; it is useful for report labels without introducing redundant stored columns.
+The first query returns:
+
+| customer_id | mailing_label | email_label |
+| ---: | --- | --- |
+| 1 | ALICE | alice@example.com |
+| 2 | BOB | bob@example.com |
+| 3 | CAROL | carol@example.com |
+
+The second query returns:
+
+| product_id | availability |
+| ---: | --- |
+| 10 | available |
+| 20 | available |
+| 30 | unavailable |
+
+The stored names and stock values are unchanged. `CASE` chooses one result according to a condition; it is useful for report labels without introducing redundant stored columns.
 
 SQLite's built-in case conversions are not a complete solution for every language's Unicode rules. Normalizing email addresses also requires an application policy rather than an assumption that all text can safely be lowercased.
 
@@ -151,7 +214,14 @@ WHERE stock > 0;
 SELECT product_id, stock FROM dml_stock_snapshot ORDER BY product_id;
 ```
 
-The result contains product 10 with 5 units and product 20 with 8. `INSERT ... SELECT` inserts the rows returned by its source query; it does not create a continuing link to the source. A later inventory update will not rewrite this snapshot. That is correct only if the table means “stock captured at this time.” For repeated snapshots, include the capture identifier in the key rather than overwriting history accidentally.
+Result:
+
+| product_id | stock |
+| ---: | ---: |
+| 10 | 5 |
+| 20 | 8 |
+
+`INSERT ... SELECT` inserts the rows returned by its source query; it does not create a continuing link to the source. A later inventory update will not rewrite this snapshot. That is correct only if the table means “stock captured at this time.” For repeated snapshots, include the capture identifier in the key rather than overwriting history accidentally.
 
 Specify the destination columns. Relying on every column's current physical order makes an import fragile when the table definition changes. The number and meanings of the selected expressions must match those destination columns.
 
@@ -166,7 +236,15 @@ CREATE TABLE dml_supplier_catalog (
     price_cents INTEGER NOT NULL CHECK (price_cents >= 0)
 );
 INSERT INTO dml_supplier_catalog VALUES ('BK-10', 'Database Basics', 1500);
+```
 
+Input (`dml_supplier_catalog`):
+
+| supplier_sku | title | price_cents |
+| --- | --- | ---: |
+| BK-10 | Database Basics | 1500 |
+
+```sql
 INSERT INTO dml_supplier_catalog (supplier_sku, title, price_cents)
 VALUES ('BK-10', 'Database Basics, revised', 1600)
 ON CONFLICT (supplier_sku) DO UPDATE
@@ -176,7 +254,13 @@ SET title = excluded.title,
 SELECT supplier_sku, title, price_cents FROM dml_supplier_catalog;
 ```
 
-There is one row: BK-10, Database Basics, revised, 1600. `excluded` refers to the proposed insert's values. The conflict target must correspond to a primary key or uniqueness rule. This update policy accepts the incoming source as current; a real integration may also need a version or timestamp to prevent an older message replacing newer data.
+Result:
+
+| supplier_sku | title | price_cents |
+| --- | --- | ---: |
+| BK-10 | Database Basics, revised | 1600 |
+
+`excluded` refers to the proposed insert's values. The conflict target must correspond to a primary key or uniqueness rule. This update policy accepts the incoming source as current; a real integration may also need a version or timestamp to prevent an older message replacing newer data.
 
 SQLite's `INSERT OR REPLACE` is not interchangeable with an update. It can delete a conflicting row and insert a replacement, affecting references, triggers, and generated identifiers. PostgreSQL also has `ON CONFLICT`, while MySQL has different upsert syntax. Check the engine's exact behavior before porting synchronization code.
 
@@ -193,7 +277,13 @@ RETURNING product_id, stock;
 ROLLBACK;
 ```
 
-The update returns `10, 4`, then the rollback restores 5 units. Returning the affected row avoids a separate query just to discover the direct change. No returned row means this statement found no qualifying product. It does not tell you whether the product was missing or out of stock; decide whether the application needs to distinguish those cases.
+The update result is:
+
+| product_id | stock |
+| ---: | ---: |
+| 10 | 4 |
+
+The rollback restores 5 units. Returning the affected row avoids a separate query just to discover the direct change. No returned row means this statement found no qualifying product. It does not tell you whether the product was missing or out of stock; decide whether the application needs to distinguish those cases.
 
 `RETURNING` reports rows changed directly by this statement. It is not a general report of all changes made by triggers. PostgreSQL supports a similar clause; SQL Server uses `OUTPUT` for related purposes.
 
@@ -207,13 +297,41 @@ CREATE TABLE dml_optional_contacts (
     phone TEXT
 );
 INSERT INTO dml_optional_contacts VALUES (1, NULL), (2, ''), (3, '12345');
+```
 
+Input (`dml_optional_contacts`):
+
+| contact_id | phone |
+| ---: | --- |
+| 1 | NULL |
+| 2 | '' |
+| 3 | 12345 |
+
+```sql
 SELECT contact_id FROM dml_optional_contacts WHERE phone IS NULL;
 SELECT contact_id FROM dml_optional_contacts WHERE phone = '';
 SELECT contact_id FROM dml_optional_contacts WHERE phone <> '12345';
 ```
 
-The first returns 1, the second 2, and the third only 2. A null phone does not satisfy `phone <> '12345'`; that comparison is unknown. If the business question includes missing phones, write `phone IS NULL OR phone <> '12345'` explicitly. Replacing nulls with empty strings silently erases the distinction between “unknown” and “known to be empty.”
+Result of `phone IS NULL`:
+
+| contact_id |
+| ---: |
+| 1 |
+
+Result of `phone = ''`:
+
+| contact_id |
+| ---: |
+| 2 |
+
+Result of `phone <> '12345'`:
+
+| contact_id |
+| ---: |
+| 2 |
+
+A null phone does not satisfy `phone <> '12345'`; that comparison is unknown. If the business question includes missing phones, write `phone IS NULL OR phone <> '12345'` explicitly. Replacing nulls with empty strings silently erases the distinction between “unknown” and “known to be empty.”
 
 The same issue affects `NOT IN` when its list or subquery contains a null. An anti-match with `NOT EXISTS` is often clearer, as demonstrated in the joins note.
 

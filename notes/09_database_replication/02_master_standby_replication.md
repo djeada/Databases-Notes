@@ -449,7 +449,14 @@ A PostgreSQL standby used only for failover does not necessarily have to serve o
 
 A hot standby is a standby that accepts read-only queries while recovery/replay continues.
 
-For example:
+For example, after replaying these rows, the standby's `orders` table contains:
+
+| order_id | customer_id | amount |
+| --- | --- | ---: |
+| 104 | 27 | 89.00 |
+| 105 | 28 | 35.00 |
+
+This query can be executed on a hot standby:
 
 ```sql
 SELECT *
@@ -457,7 +464,9 @@ FROM orders
 WHERE customer_id = 27;
 ```
 
-can be executed on a hot standby.
+| order_id | customer_id | amount |
+| --- | --- | ---: |
+| 104 | 27 | 89.00 |
 
 The server still cannot accept ordinary application writes while it remains a physical standby.
 
@@ -1226,6 +1235,12 @@ SELECT
 FROM pg_stat_replication;
 ```
 
+For one streaming standby, an example result is:
+
+| application_name | client_addr | state | sync_state | sent_lsn | write_lsn | flush_lsn | replay_lsn | write_lag | flush_lag | replay_lag |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| reporting_standby | 192.0.2.20 | streaming | async | 0/5000100 | 0/5000100 | 0/5000100 | 0/4FFFE00 | 00:00:00.050 | 00:00:00.050 | 00:00:00.250 |
+
 This gives a much richer picture than checking only:
 
 ```text
@@ -1260,6 +1275,12 @@ SELECT
     pg_last_wal_receive_lsn(),
     pg_last_wal_replay_lsn();
 ```
+
+An example result is:
+
+| pg_last_wal_receive_lsn | pg_last_wal_replay_lsn |
+| --- | --- |
+| 0/5000100 | 0/4FFFE00 |
 
 Conceptually:
 
@@ -1298,7 +1319,15 @@ SELECT *
 FROM replication_test;
 ```
 
-Eventually the row should appear.
+Once the insert has replayed, the standby table and query result are:
+
+| id | data |
+| ---: | --- |
+| 1 | hello standby |
+
+| id | data |
+| ---: | --- |
+| 1 | hello standby |
 
 But in an asynchronous topology, documentation should not promise:
 
@@ -1401,6 +1430,10 @@ or SQL:
 ```sql
 SELECT pg_promote();
 ```
+
+| pg_promote |
+| --- |
+| true |
 
 Promotion ends standby recovery and turns the server into a normal read/write primary.
 
@@ -1968,6 +2001,13 @@ SELECT pg_create_physical_replication_slot('standby1');
 SELECT pg_create_physical_replication_slot('standby2');
 ```
 
+Example results (the returned LSN values depend on the cluster):
+
+| slot_name | lsn |
+| --- | --- |
+| standby1 | 0/3000000 |
+| standby2 | 0/3000000 |
+
 Then monitor them.
 
 A slot is not a "set it and forget it" feature.
@@ -2029,9 +2069,15 @@ starts streaming when possible
 The primary should then show a corresponding connection in:
 
 ```sql
-SELECT *
+SELECT application_name, state, sync_state
 FROM pg_stat_replication;
 ```
+
+Example result after the standby connects:
+
+| application_name | state | sync_state |
+| --- | --- | --- |
+| standby1 | streaming | async |
 
 ## Step 7 — verify the pipeline, not only connectivity
 
@@ -2049,6 +2095,12 @@ SELECT
     replay_lsn
 FROM pg_stat_replication;
 ```
+
+Example result (position values are illustrative):
+
+| application_name | client_addr | state | sync_state | sent_lsn | write_lsn | flush_lsn | replay_lsn |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| standby1 | 192.0.2.11 | streaming | async | 0/5000100 | 0/5000100 | 0/5000100 | 0/4FFFE00 |
 
 You want to understand:
 

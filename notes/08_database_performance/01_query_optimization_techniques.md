@@ -4,6 +4,24 @@ A query can return the correct result and still do far more work than necessary.
 
 Before this note, practice [joins](../03_sql/06_joins_subqueries_and_views.md) and understand [indexes](../05_storage_and_indexing/05_indexing.md). We will use the bookstore's order lookup to connect SQL, access paths, and measurements.
 
+The query examples use these bookstore rows:
+
+**`customers`**
+
+| customer_id | name |
+| ---: | --- |
+| 1 | Alice |
+| 2 | Bob |
+| 3 | Carol |
+
+**`orders`**
+
+| order_id | customer_id | order_date | status |
+| ---: | ---: | --- | --- |
+| 101 | 1 | 2025-01-10 | completed |
+| 102 | 1 | 2025-01-12 | open |
+| 103 | 2 | 2025-01-12 | completed |
+
 ## State the request and measure the problem
 
 Suppose the account page needs a customer's open orders, newest first. Record the SQL, parameter values, typical result size, and observed response times. Also ask whether time is spent executing SQL, waiting for a connection, waiting for a lock, transferring results, or rendering the page.
@@ -23,6 +41,19 @@ FROM orders
 WHERE customer_id = 1 AND status = 'open'
 ORDER BY order_date DESC, order_id DESC;
 ```
+
+The business query returns:
+
+| order_id | order_date |
+| ---: | --- |
+| 102 | 2025-01-12 |
+
+An illustrative plan result is:
+
+| id | parent | notused | detail |
+| ---: | ---: | ---: | --- |
+| 3 | 0 | 0 | SCAN orders |
+| 16 | 0 | 0 | USE TEMP B-TREE FOR ORDER BY |
 
 An **execution plan** describes how the engine intends to obtain the result. Look for a scan or indexed search and whether sorting needs a temporary structure. The exact plan text varies with engine version, statistics, and available indexes; it is not another table of business results.
 
@@ -57,6 +88,14 @@ WHERE order_date >= '2025-01-01'
 ORDER BY order_date, order_id;
 ```
 
+Result:
+
+| order_id | order_date |
+| ---: | --- |
+| 101 | 2025-01-10 |
+| 102 | 2025-01-12 |
+| 103 | 2025-01-12 |
+
 A **half-open range** includes the lower boundary and excludes the upper boundary. With real timestamp columns, this approach also avoids guessing the last fraction of a second in the month. Choose boundaries in the intended timezone.
 
 An expression index can sometimes support a computed predicate. Implicit type conversions, collation differences, and a leading-wildcard search can also change whether an index is useful. Inspect the plan rather than assuming every function or conversion has the same effect in every engine.
@@ -75,7 +114,14 @@ WHERE EXISTS (
 ORDER BY c.customer_id;
 ```
 
-This returns Alice and Bob once each. It expresses existence; it does not promise a faster plan in every engine. The optimizer may implement equivalent SQL forms similarly.
+Result:
+
+| customer_id | name |
+| ---: | --- |
+| 1 | Alice |
+| 2 | Bob |
+
+It expresses existence; it does not promise a faster plan in every engine. The optimizer may implement equivalent SQL forms similarly.
 
 For real joins, verify the join keys and expected relationship: one-to-many naturally expands rows, while a missing join condition can create every pairing. A join's output size affects later sorts and aggregates.
 

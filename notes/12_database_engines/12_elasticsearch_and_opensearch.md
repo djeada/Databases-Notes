@@ -32,6 +32,20 @@ FROM products
 WHERE sku = 'BK-1001';
 ```
 
+Example input documents:
+
+| _id | sku | title | category | price |
+|---:|---|---|---|---:|
+| 1 | BK-1001 | Database Systems Handbook | books | 49.90 |
+| 2 | BK-1002 | Distributed Database Design | books | 59.00 |
+| 3 | VID-10 | Distributed Systems Course | videos | 29.00 |
+
+Result:
+
+| _id | sku | title | category | price |
+|---:|---|---|---|---:|
+| 1 | BK-1001 | Database Systems Handbook | books | 49.90 |
+
 A search engine is designed for questions such as:
 
 > Find products whose title and description are relevant to "distributed database", rank the best matches first, filter to books, and return category facets.
@@ -92,7 +106,7 @@ index: products
 document 1
 {
   "sku": "BK-1001",
-  "title": "Database Systems",
+  "title": "Database Systems Handbook",
   "category": "books",
   "price": 49.90
 }
@@ -100,9 +114,17 @@ document 1
 document 2
 {
   "sku": "BK-1002",
-  "title": "Distributed Data",
+  "title": "Distributed Database Design",
   "category": "books",
   "price": 59.00
+}
+
+document 3
+{
+  "sku": "VID-10",
+  "title": "Distributed Systems Course",
+  "category": "videos",
+  "price": 29.00
 }
 ```
 
@@ -302,6 +324,14 @@ Example:
 }
 ```
 
+Against the three sample products above, the query matches the following documents. Search scores and default result ordering vary by index contents:
+
+| _id | sku | title | category | price |
+|---:|---|---|---|---:|
+| 1 | BK-1001 | Database Systems Handbook | books | 49.90 |
+| 2 | BK-1002 | Distributed Database Design | books | 59.00 |
+| 3 | VID-10 | Distributed Systems Course | videos | 29.00 |
+
 Request:
 
 ```bash
@@ -313,6 +343,14 @@ curl -X POST   "http://localhost:9200/products/_search"   -H "Content-Type: appl
     }
   }'
 ```
+
+The request returns those same three matching documents; `_score` and their ordering depend on the index statistics:
+
+| _id | sku | title | category | price |
+|---:|---|---|---|---:|
+| 1 | BK-1001 | Database Systems Handbook | books | 49.90 |
+| 2 | BK-1002 | Distributed Database Design | books | 59.00 |
+| 3 | VID-10 | Distributed Systems Course | videos | 29.00 |
 
 The `match` query analyzes the search text and computes relevance.
 
@@ -342,6 +380,13 @@ Exact structured filters should not usually affect relevance scoring.
   }
 }
 ```
+
+Using the same three input documents, the `category = books` filter keeps only:
+
+| _id | sku | title | category | price |
+|---:|---|---|---|---:|
+| 1 | BK-1001 | Database Systems Handbook | books | 49.90 |
+| 2 | BK-1002 | Distributed Database Design | books | 59.00 |
 
 This separates:
 
@@ -388,6 +433,13 @@ Example category counts:
   }
 }
 ```
+
+The aggregation reads the category values in the sample documents above and returns:
+
+| category | document_count |
+|---|---:|
+| books | 2 |
+| videos | 1 |
 
 This powers faceted navigation such as:
 

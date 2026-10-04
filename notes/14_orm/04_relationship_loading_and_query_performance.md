@@ -53,6 +53,26 @@ for user in users:
     print(user.name, len(user.posts))
 ```
 
+For the five-user demo, the parent query returns:
+
+| id | name |
+|---:|---|
+| 1 | User 1 |
+| 2 | User 2 |
+| 3 | User 3 |
+| 4 | User 4 |
+| 5 | User 5 |
+
+Each user has two matching post rows; the application output is:
+
+| user | post_count |
+|---|---:|
+| User 1 | 2 |
+| User 2 | 2 |
+| User 3 | 2 |
+| User 4 | 2 |
+| User 5 | 2 |
+
 With lazy loading, the SQL pattern can be:
 
 ```text
@@ -66,6 +86,13 @@ SELECT posts WHERE user=5    # +1
 ---------------------------
 6 queries total
 ```
+
+For example, the first child query returns:
+
+| id | user_id | title |
+|---:|---:|---|
+| 1 | 1 | Post 1-A |
+| 2 | 1 | Post 1-B |
 
 For 1,000 users, this can become 1,001 queries.
 
@@ -144,6 +171,14 @@ LEFT JOIN posts
   ON posts.user_id = users.id;
 ```
 
+Input tables are the two users and three posts shown in the relationship example near the top of this note. The joined result is:
+
+| user_id | name | post_id | title |
+|---:|---|---:|---|
+| 1 | Alice | 10 | ORM notes |
+| 1 | Alice | 11 | Indexes |
+| 2 | Bob | 12 | Transactions |
+
 One database query can retrieve everything.
 
 But the relational result repeats parent columns:
@@ -174,6 +209,21 @@ SELECT id, user_id, title
 FROM posts
 WHERE user_id IN (1, 2, 3, 4, 5);
 ```
+
+For the sample relationship tables above, the parent query returns:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+| 2 | Bob |
+
+The child query returns:
+
+| id | user_id | title |
+|---:|---:|---|
+| 10 | 1 | ORM notes |
+| 11 | 1 | Indexes |
+| 12 | 2 | Transactions |
 
 This usually gives:
 
@@ -251,6 +301,13 @@ rows = session.execute(
 ).all()
 ```
 
+Using the two sample users shown above, the projection returns:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+| 2 | Bob |
+
 Conceptually:
 
 ```text
@@ -277,8 +334,23 @@ Never assume a query returning "all rows" will stay small.
 SELECT id, created_at, title
 FROM posts
 ORDER BY created_at DESC, id DESC
-LIMIT 50 OFFSET 10000;
+LIMIT 2 OFFSET 1;
 ```
+
+Input (`posts`, newest first):
+
+| id | user_id | created_at | title |
+|---:|---:|---|---|
+| 12 | 2 | 2026-10-03 12:00:00 | Transactions |
+| 11 | 1 | 2026-10-02 12:00:00 | Indexes |
+| 10 | 1 | 2026-10-01 12:00:00 | ORM notes |
+
+Result for this small example page:
+
+| id | created_at | title |
+|---:|---|---|
+| 11 | 2026-10-02 12:00:00 | Indexes |
+| 10 | 2026-10-01 12:00:00 | ORM notes |
 
 Simple, but large offsets can become expensive because the database still has to locate and skip earlier rows.
 
@@ -291,8 +363,15 @@ SELECT id, created_at, title
 FROM posts
 WHERE (created_at, id) < (:last_created_at, :last_id)
 ORDER BY created_at DESC, id DESC
-LIMIT 50;
+LIMIT 2;
 ```
+
+With `last_created_at = '2026-10-03 12:00:00'` and `last_id = 12`, the same input rows return:
+
+| id | created_at | title |
+|---:|---|---|
+| 11 | 2026-10-02 12:00:00 | Indexes |
+| 10 | 2026-10-01 12:00:00 | ORM notes |
 
 Keyset pagination is often better for deep scrolling over a stable ordered feed.
 
@@ -304,9 +383,15 @@ A common hidden cost is computing totals for pagination.
 
 ```sql
 SELECT COUNT(*)
-FROM huge_filtered_table
-WHERE ...;
+FROM posts
+WHERE user_id = 1;
 ```
+
+In the three-row sample posts table above, two rows belong to user 1, so the result is:
+
+| COUNT(*) |
+|---:|
+| 2 |
 
 The count can be more expensive than fetching one page.
 
@@ -319,6 +404,13 @@ Alternatives:
 - pre-aggregated statistics.
 
 ## Filtering in the database
+
+Example `users` input rows:
+
+| id | name | active |
+|---:|---|---|
+| 1 | Alice | true |
+| 2 | Bob | false |
 
 Bad:
 
@@ -334,6 +426,12 @@ active = session.scalars(
     select(User).where(User.active.is_(True))
 ).all()
 ```
+
+Both approaches return the active-user row, while the database-side query transfers only:
+
+| id | name | active |
+|---:|---|---|
+| 1 | Alice | true |
 
 Move filtering, grouping, and aggregation into SQL when the database can do it efficiently.
 
@@ -361,6 +459,20 @@ UPDATE orders
 SET status = 'archived'
 WHERE status = 'expired';
 ```
+
+Input (`orders`):
+
+| order_id | status |
+|---:|---|
+| 501 | expired |
+| 502 | paid |
+
+Resulting table:
+
+| order_id | status |
+|---:|---|
+| 501 | archived |
+| 502 | paid |
 
 ORMs usually expose bulk update APIs or raw SQL for this case.
 
@@ -432,6 +544,20 @@ ORDER BY created_at DESC
 LIMIT 20;
 ```
 
+Example input rows:
+
+| id | user_id | created_at | title |
+|---:|---:|---|---|
+| 21 | 42 | 2026-10-03 12:00:00 | Relationships |
+| 20 | 42 | 2026-10-02 12:00:00 | SQL |
+
+The underlying `SELECT` returns:
+
+| id | user_id | title |
+|---:|---:|---|
+| 21 | 42 | Relationships |
+| 20 | 42 | SQL |
+
 Look for:
 - sequential scans on large tables,
 - unexpected row estimates,
@@ -454,6 +580,13 @@ WHERE user_id = ?
 ORDER BY created_at DESC
 LIMIT 20;
 ```
+
+Using the same input rows, the result includes all selected columns:
+
+| id | user_id | created_at | title |
+|---:|---:|---|---|
+| 21 | 42 | 2026-10-03 12:00:00 | Relationships |
+| 20 | 42 | 2026-10-02 12:00:00 | SQL |
 
 A useful index might be:
 
@@ -552,6 +685,19 @@ b = session.get(User, 1)
 
 # often a is b inside the same session
 ```
+
+Input (`users`):
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
+Both lookups resolve to the same row, and usually to the same in-memory object within one session:
+
+| lookup | id | name |
+|---|---:|---|
+| `session.get(User, 1)` | 1 | Alice |
+| second `session.get(User, 1)` | 1 | Alice |
 
 This can reduce duplicate object loading inside one unit of work.
 

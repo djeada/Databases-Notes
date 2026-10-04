@@ -81,6 +81,14 @@ A **result set** is the output of a query, not automatically a stored table. It 
 
 ## Read a query one clause at a time
 
+The `products` rows used below are:
+
+| product_id | title | price_cents | stock |
+| --- | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
+
 ```sql
 SELECT title, price_cents
 FROM products
@@ -106,6 +114,20 @@ WHERE price_cents < 2000 AND stock > 0
 ORDER BY product_id;
 ```
 
+Input (`products`):
+
+| product_id | title | price_cents | stock |
+| --- | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
+
+Result:
+
+| product_id | title |
+| ---: | --- |
+| 10 | Database Basics |
+
 Only Database Basics matches both conditions. History of Computing costs less than 2000 cents but has no stock.
 
 Use `AND` when both conditions must hold, `OR` when either suffices, and parentheses when the grouping could be unclear. Use `=` for equality and `<>` for inequality. Strings use single quotes, as in `status = 'open'`.
@@ -114,15 +136,43 @@ Use `AND` when both conditions must hold, `OR` when either suffices, and parenth
 
 An **alias** is a name used within a query or its result:
 
+Input (`products`):
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+
 ```sql
 SELECT title, price_cents / 100.0 AS price
 FROM products
 WHERE product_id = 10;
 ```
 
-The result contains `Database Basics` and `15.0`. `AS price` names the calculated column; it does not rename the stored `price_cents` column. `100.0` requests non-integer arithmetic here. Formatting a currency for display is a separate application concern.
+Result:
+
+| title | price |
+| --- | ---: |
+| Database Basics | 15.0 |
+
+`AS price` names the calculated column; it does not rename the stored `price_cents` column. `100.0` requests non-integer arithmetic here. Formatting a currency for display is a separate application concern.
 
 ## Join related rows
+
+Input (`customers`):
+
+| customer_id | name |
+| ---: | --- |
+| 1 | Alice |
+| 2 | Bob |
+| 3 | Carol |
+
+Input (`orders`):
+
+| order_id | customer_id | status |
+| ---: | ---: | --- |
+| 101 | 1 | completed |
+| 102 | 1 | open |
+| 103 | 2 | completed |
 
 ```sql
 SELECT c.name, o.order_id, o.status
@@ -144,6 +194,15 @@ Joins do not copy the joined values permanently into another table. They assembl
 ## Calculate one result per group
 
 An **aggregate function** combines several input values. `SUM` adds them; `COUNT` counts rows or non-null values.
+
+Input (`order_items`):
+
+| order_id | line_number | quantity | unit_price_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 1 | 2 | 1500 |
+| 101 | 2 | 1 | 2500 |
+| 102 | 1 | 1 | 1500 |
+| 103 | 1 | 2 | 2500 |
 
 ```sql
 SELECT order_id, SUM(quantity * unit_price_cents) AS total_cents
@@ -181,6 +240,14 @@ Some classifications place `SELECT` in a separate query-language group. Understa
 
 The bookstore asks three different questions: which books fall in a price band, which selected books are available, and which titles contain a word. Each has a direct SQL expression:
 
+Input (`products`):
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
+
 ```sql
 SELECT product_id, title
 FROM products
@@ -198,9 +265,36 @@ WHERE title LIKE '%Computing%'
 ORDER BY product_id;
 ```
 
-The first query returns products 10 and 30. `BETWEEN` includes both endpoints; product 10 is not excluded for costing exactly 1500 cents. The second returns only product 10: membership in a list and availability must both hold. The third returns product 30. In a `LIKE` pattern, `%` matches any sequence of characters and `_` matches one character. Case matching and escaping depend on the database and collation, so do not assume that a search behaves identically on every engine.
+Result of the `BETWEEN` query:
+
+| product_id | title |
+| ---: | --- |
+| 10 | Database Basics |
+| 30 | History of Computing |
+
+Result of the `IN` query:
+
+| product_id | title |
+| ---: | --- |
+| 10 | Database Basics |
+
+Result of the `LIKE` query:
+
+| product_id | title |
+| ---: | --- |
+| 30 | History of Computing |
+
+`BETWEEN` includes both endpoints; product 10 is not excluded for costing exactly 1500 cents. The second result includes only product 10: membership in a list and availability must both hold. The third result includes product 30. In a `LIKE` pattern, `%` matches any sequence of characters and `_` matches one character. Case matching and escaping depend on the database and collation, so do not assume that a search behaves identically on every engine.
 
 A search box should pass its value as a parameter, not paste it into the statement. In Python's SQLite interface:
+
+Input (`products`):
+
+| product_id | title |
+| ---: | --- |
+| 10 | Database Basics |
+| 20 | SQL Practice |
+| 30 | History of Computing |
 
 ```python
 search = '%Computing%'
@@ -210,9 +304,23 @@ rows = connection.execute(
 ).fetchall()
 ```
 
+The returned rows are:
+
+| product_id | title |
+| ---: | --- |
+| 30 | History of Computing |
+
 Here `connection` is the connection containing the setup. The parameter is a value, not SQL syntax. A value containing a quote remains data. Parameters do not substitute table names or an entire `ORDER BY` expression; choose allowed identifiers in application code when those must vary.
 
 ## Order before choosing the first few rows
+
+Input (`products`):
+
+| product_id | title | price_cents |
+| ---: | --- | ---: |
+| 10 | Database Basics | 1500 |
+| 20 | SQL Practice | 2500 |
+| 30 | History of Computing | 1800 |
 
 ```sql
 SELECT product_id, title, price_cents
@@ -221,13 +329,37 @@ ORDER BY price_cents DESC, product_id
 LIMIT 2;
 ```
 
-This returns SQL Practice at 2500 cents, followed by History of Computing at 1800 cents. `LIMIT` restricts the result count. It does not mean “the newest” or “the highest” without an appropriate ordering. The ID breaks ties so that a page boundary is predictable.
+Result:
+
+| product_id | title | price_cents |
+| ---: | --- | ---: |
+| 20 | SQL Practice | 2500 |
+| 30 | History of Computing | 1800 |
+
+`LIMIT` restricts the result count. It does not mean “the newest” or “the highest” without an appropriate ordering. The ID breaks ties so that a page boundary is predictable.
 
 SQLite and PostgreSQL support this `LIMIT` spelling. SQL Server commonly uses `TOP` or `OFFSET ... FETCH`; an example copied between engines may need syntax changes. Offset pagination can also shift when other users insert rows. For a changing order history, a cursor based on the last `(order_date, order_id)` can provide a more stable continuation.
 
 ## Distinguish filtering rows from filtering groups
 
 Suppose the report should include only completed orders worth at least 5000 cents:
+
+Input (`orders`):
+
+| order_id | status |
+| ---: | --- |
+| 101 | completed |
+| 102 | open |
+| 103 | completed |
+
+Input (`order_items`):
+
+| order_id | quantity | unit_price_cents |
+| ---: | ---: | ---: |
+| 101 | 2 | 1500 |
+| 101 | 1 | 2500 |
+| 102 | 1 | 1500 |
+| 103 | 2 | 2500 |
 
 ```sql
 SELECT o.order_id,
@@ -240,13 +372,45 @@ HAVING SUM(i.quantity * i.unit_price_cents) >= 5000
 ORDER BY o.order_id;
 ```
 
-The result is order 101 with 5500 cents and order 103 with 5000 cents. `WHERE` removes order 102 before totals are calculated. `HAVING` then tests each completed order's total. Putting a total calculation directly in `WHERE` would confuse a condition on one input row with a condition on a group.
+Result:
+
+| order_id | total_cents |
+| ---: | ---: |
+| 101 | 5500 |
+| 103 | 5000 |
+
+`WHERE` removes order 102 before totals are calculated. `HAVING` then tests each completed order's total. Putting a total calculation directly in `WHERE` would confuse a condition on one input row with a condition on a group.
 
 Select the grouping key and aggregate values deliberately. SQLite permits some non-grouped columns in aggregate queries, but that can produce an arbitrary representative value and is rejected by other engines. Do not rely on that permissive behavior to choose which customer's name belongs to a total.
 
 ## Build a report in two understandable steps
 
 A **common table expression (CTE)** names a query result within one statement. It is useful when an intermediate result has a clear meaning:
+
+Input (`customers`):
+
+| customer_id | name |
+| ---: | --- |
+| 1 | Alice |
+| 2 | Bob |
+| 3 | Carol |
+
+Input (`orders`):
+
+| order_id | customer_id | status |
+| ---: | ---: | --- |
+| 101 | 1 | completed |
+| 102 | 1 | open |
+| 103 | 2 | completed |
+
+Input (`order_items`):
+
+| order_id | line_number | quantity | unit_price_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 1 | 2 | 1500 |
+| 101 | 2 | 1 | 2500 |
+| 102 | 1 | 1 | 1500 |
+| 103 | 1 | 2 | 2500 |
 
 ```sql
 WITH customer_spending AS (
@@ -262,11 +426,27 @@ LEFT JOIN customer_spending AS s ON s.customer_id = c.customer_id
 ORDER BY c.customer_id;
 ```
 
-Alice has 7000 cents, Bob 5000, and Carol 0. This example includes all statuses; an accounting report would first decide whether open or cancelled orders belong in its definition of spending. The CTE totals each customer's lines. The outer query includes every customer and converts a missing total to zero for display. `COALESCE` returns the first non-null argument.
+Result:
+
+| name | spent_cents |
+| --- | ---: |
+| Alice | 7000 |
+| Bob | 5000 |
+| Carol | 0 |
+
+This example includes all statuses; an accounting report would first decide whether open or cancelled orders belong in its definition of spending. The CTE totals each customer's lines. The outer query includes every customer and converts a missing total to zero for display. `COALESCE` returns the first non-null argument.
 
 A CTE is not automatically a stored table or a performance improvement. The optimizer's handling varies. Its immediate value here is that “calculate customer totals” and “display all customers” are visible as separate steps.
 
 A **subquery** can also provide one value for a condition:
+
+Input (`products`):
+
+| product_id | title | price_cents |
+| ---: | --- | ---: |
+| 10 | Database Basics | 1500 |
+| 20 | SQL Practice | 2500 |
+| 30 | History of Computing | 1800 |
 
 ```sql
 SELECT product_id, title
@@ -275,11 +455,25 @@ WHERE price_cents > (SELECT AVG(price_cents) FROM products)
 ORDER BY product_id;
 ```
 
-The average is about 1933.33 cents, so only SQL Practice qualifies. The inner query returns one scalar value. Later notes explain subqueries that refer to the current outer row and queries that test whether any matching row exists.
+The inner query returns an average of about 1933.33 cents. The outer query's result is:
+
+| product_id | title |
+| ---: | --- |
+| 20 | SQL Practice |
+
+Later notes explain subqueries that refer to the current outer row and queries that test whether any matching row exists.
 
 ## Make changes without losing the practice data
 
 Reading with `SELECT` does not reserve a book. A change must use a writing statement. This exercise inserts a customer, updates their name, and removes the row inside one transaction:
+
+Initial input (`customers`):
+
+| customer_id | name | email |
+| ---: | --- | --- |
+| 1 | Alice | alice@example.com |
+| 2 | Bob | bob@example.com |
+| 3 | Carol | carol@example.com |
 
 ```sql
 BEGIN;
@@ -291,7 +485,13 @@ DELETE FROM customers WHERE customer_id = 4;
 ROLLBACK;
 ```
 
-The intermediate result is `4, Dana Lee`. The final rollback restores the state from before `BEGIN`. The example is a rehearsal, not a recommended way to create then immediately delete a real customer. In an actual operation, use `COMMIT` only after the required work succeeds.
+The query inside the transaction returns:
+
+| customer_id | name |
+| ---: | --- |
+| 4 | Dana Lee |
+
+After `ROLLBACK`, the `customers` table is back to the initial rows shown above. The example is a rehearsal, not a recommended way to create then immediately delete a real customer. In an actual operation, use `COMMIT` only after the required work succeeds.
 
 The predicate is crucial: `UPDATE customers SET name = 'Dana Lee'` would target every customer. Inspect the corresponding `SELECT` when learning, and have application code check how many rows a write affected when it expects exactly one.
 
@@ -311,13 +511,36 @@ SELECT batch_id, source_name, imported_rows FROM intro_import_batches;
 DROP TABLE intro_import_batches;
 ```
 
-The query returns `1, supplier catalog, 0`. `CREATE` defines the empty table, `ALTER` adds a column, and `INSERT` supplies a record under that definition. `DROP` removes the scratch object afterward. Use this disposable table for practice; changing a populated application's structure requires the migration procedure in the next note.
+Just before `DROP TABLE`, the scratch table and query result are:
+
+**Input table (`intro_import_batches`):**
+
+| batch_id | source_name | imported_rows |
+| ---: | --- | ---: |
+| 1 | supplier catalog | 0 |
+
+**Result:**
+
+| batch_id | source_name | imported_rows |
+| ---: | --- | ---: |
+| 1 | supplier catalog | 0 |
+
+`CREATE` defines the empty table, `ALTER` adds a column, and `INSERT` supplies a record under that definition. `DROP` removes the scratch object afterward. Use this disposable table for practice; changing a populated application's structure requires the migration procedure in the next note.
 
 A text declaration does not by itself validate a date, and a number does not carry a currency unit automatically. Integer cents are suitable for this single-currency exercise, but currency conversions, fractional unit prices, and taxes require an explicit precision and rounding policy. PostgreSQL's `NUMERIC` and other engines' exact decimal types can serve different requirements from approximate floating point.
 
 ## Preview a window without replacing the detailed lesson
 
 The order lines can retain their individual rows while showing the order's total beside each line:
+
+Input (`order_items`):
+
+| order_id | line_number | quantity | unit_price_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 1 | 2 | 1500 |
+| 101 | 2 | 1 | 2500 |
+| 102 | 1 | 1 | 1500 |
+| 103 | 1 | 2 | 2500 |
 
 ```sql
 SELECT order_id, line_number,
@@ -327,7 +550,16 @@ FROM order_items
 ORDER BY order_id, line_number;
 ```
 
-Order 101 has two rows, with line totals 3000 and 2500; both carry the order total 5500. Orders 102 and 103 have one row each, with totals 1500 and 5000. `GROUP BY` would instead collapse each order into one row. This difference is the starting point for the window-function note, which later adds ordering, ranking, and frames.
+Result:
+
+| order_id | line_number | line_total_cents | order_total_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 1 | 3000 | 5500 |
+| 101 | 2 | 2500 | 5500 |
+| 102 | 1 | 1500 | 1500 |
+| 103 | 1 | 5000 | 5000 |
+
+`GROUP BY` would instead collapse each order into one row. This difference is the starting point for the window-function note, which later adds ordering, ranking, and frames.
 
 Partitioning a large table and replicating a database are different topics from a window's `PARTITION BY`. Table partitioning divides storage by a chosen rule; replication maintains another copy of data. Neither automatically repairs a query that counts the same fact twice. First learn what the query should return, then investigate its plan and the deployment's scaling needs.
 
@@ -345,12 +577,24 @@ The basic ideas—tables, joins, predicates, groups, and transactions—carry ac
 
 An index may change how a query finds rows without changing which rows it should return. To inspect SQLite's choice, run:
 
+Input (`products`):
+
+| product_id | title |
+| ---: | --- |
+| 10 | Database Basics |
+
 ```sql
 EXPLAIN QUERY PLAN
 SELECT title FROM products WHERE product_id = 10;
 ```
 
-The exact plan text varies by version. Look for access through the integer primary key. A plan describes an access strategy; timing, data size, and the workload determine whether that strategy is useful. Three sample products cannot establish that a production query is fast.
+An illustrative result is:
+
+| id | parent | notused | detail |
+| ---: | ---: | ---: | --- |
+| 2 | 0 | 0 | SEARCH products USING INTEGER PRIMARY KEY (rowid=?) |
+
+The exact plan text and IDs vary by version. Look for access through the integer primary key. A plan describes an access strategy; timing, data size, and the workload determine whether that strategy is useful. Three sample products cannot establish that a production query is fast.
 
 The following notes develop this foundation in order: DDL defines the rules, DML changes the facts, DCL controls who may act, and TCL groups changes. Joins and routines then build larger queries, while aggregates and windows answer reporting questions.
 

@@ -79,6 +79,12 @@ SELECT @@VERSION;
 GO
 ```
 
+Result (the text depends on the installed SQL Server build):
+
+| @@VERSION |
+| --- |
+| Microsoft SQL Server version and platform details |
+
 ## Create a database
 
 ```sql
@@ -106,13 +112,21 @@ GO
 Insert data:
 
 ```sql
-INSERT INTO dbo.orders (customer_id, total_amount)
+INSERT INTO dbo.orders (customer_id, created_at, total_amount)
 VALUES
-    (101, 49.90),
-    (205, 19.95),
-    (101, 120.00);
+    (101, '2025-01-12T10:00:00', 49.90),
+    (205, '2025-01-12T11:00:00', 19.95),
+    (101, '2025-01-13T10:00:00', 120.00);
 GO
 ```
+
+Input (`dbo.orders`, with generated IDs and default timestamps):
+
+| order_id | customer_id | created_at | total_amount |
+| ---: | ---: | --- | ---: |
+| 1 | 101 | 2025-01-12 10:00:00 | 49.90 |
+| 2 | 205 | 2025-01-12 11:00:00 | 19.95 |
+| 3 | 101 | 2025-01-13 10:00:00 | 120.00 |
 
 Query it:
 
@@ -126,6 +140,13 @@ GROUP BY customer_id
 ORDER BY revenue DESC;
 GO
 ```
+
+Result:
+
+| customer_id | orders | revenue |
+| ---: | ---: | ---: |
+| 101 | 2 | 169.90 |
+| 205 | 1 | 19.95 |
 
 ## Existing repository console
 
@@ -160,8 +181,17 @@ Using explicit schema names is a good habit:
 
 ```sql
 SELECT *
-FROM dbo.orders;
+FROM dbo.orders
+ORDER BY order_id;
 ```
+
+Result:
+
+| order_id | customer_id | created_at | total_amount |
+| ---: | ---: | --- | ---: |
+| 1 | 101 | 2025-01-12 10:00:00 | 49.90 |
+| 2 | 205 | 2025-01-12 11:00:00 | 19.95 |
+| 3 | 101 | 2025-01-13 10:00:00 | 120.00 |
 
 Schemas help separate ownership and permissions without requiring a separate database for every logical module.
 
@@ -258,6 +288,12 @@ WHERE name = DB_NAME();
 GO
 ```
 
+In a default local `shop` database, an illustrative result is:
+
+| name | is_read_committed_snapshot_on | snapshot_isolation_state_desc |
+| --- | ---: | --- |
+| shop | 0 | OFF |
+
 Isolation should be chosen around application correctness, not only throughput.
 
 ## Clustered and nonclustered indexes
@@ -278,6 +314,8 @@ GO
 This index can support queries such as:
 
 ```sql
+DECLARE @customer_id BIGINT = 101;
+
 SELECT TOP (20)
     order_id,
     created_at,
@@ -286,6 +324,13 @@ FROM dbo.orders
 WHERE customer_id = @customer_id
 ORDER BY created_at DESC;
 ```
+
+For `@customer_id = 101`, the result is:
+
+| order_id | created_at | total_amount |
+| ---: | --- | ---: |
+| 3 | 2025-01-13 10:00:00 | 120.00 |
+| 1 | 2025-01-12 10:00:00 | 49.90 |
 
 The `INCLUDE` columns can make the index cover the query without adding them to the search key.
 
@@ -373,6 +418,12 @@ SELECT JSON_VALUE(@doc, '$.customer.id');
 GO
 ```
 
+Result:
+
+| JSON_VALUE |
+| ---: |
+| 42 |
+
 Relational columns should still be preferred for strongly structured, indexed business data when that model is natural.
 
 ## Stored procedures
@@ -403,6 +454,13 @@ Execute:
 EXEC dbo.get_customer_orders @customer_id = 101;
 GO
 ```
+
+For the sample `dbo.orders` rows, the procedure returns:
+
+| order_id | created_at | total_amount |
+| ---: | --- | ---: |
+| 3 | 2025-01-13 10:00:00 | 120.00 |
+| 1 | 2025-01-12 10:00:00 | 49.90 |
 
 Stored procedures are useful when:
 

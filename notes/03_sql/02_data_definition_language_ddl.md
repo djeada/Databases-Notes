@@ -53,7 +53,19 @@ SELECT supplier_id, name, country_code
 FROM suppliers;
 ```
 
-The country is `DE`. Changing a column's default later does not generally rewrite all explicitly stored historical values.
+The input table contains the newly inserted supplier:
+
+| supplier_id | name | email | country_code |
+| ---: | --- | --- | --- |
+| 1 | Example Books | orders@example.com | DE |
+
+The query result is:
+
+| supplier_id | name | country_code |
+| ---: | --- | --- |
+| 1 | Example Books | DE |
+
+Changing a column's default later does not generally rewrite all explicitly stored historical values.
 
 ## Connect tables with a foreign key
 
@@ -125,7 +137,38 @@ PRAGMA foreign_key_list(order_items);
 PRAGMA index_list(order_items);
 ```
 
-The first result contains the customer index and the two tables. The pragmas show column declarations, references to orders and products, and indexes on order lines. `table_info` includes the column's type, nullability, default, and position in a primary key. These are definitions, not a list of the rows currently stored.
+The first query returns:
+
+| name | type |
+| --- | --- |
+| idx_orders_customer | index |
+| order_items | table |
+| orders | table |
+
+`PRAGMA table_info(order_items)` returns its column definitions; abbreviated here to the fields most relevant to the query:
+
+| cid | name | type | notnull | pk |
+| ---: | --- | --- | ---: | ---: |
+| 0 | order_id | INTEGER | 1 | 1 |
+| 1 | line_number | INTEGER | 1 | 2 |
+| 2 | product_id | INTEGER | 1 | 0 |
+| 3 | quantity | INTEGER | 1 | 0 |
+| 4 | unit_price_cents | INTEGER | 1 | 0 |
+
+`PRAGMA foreign_key_list(order_items)` returns:
+
+| table | from | to |
+| --- | --- | --- |
+| products | product_id | product_id |
+| orders | order_id | order_id |
+
+`PRAGMA index_list(order_items)` returns the primary-key index:
+
+| seq | name | unique | origin |
+| ---: | --- | ---: | --- |
+| 0 | sqlite_autoindex_order_items_1 | 1 | pk |
+
+These are definitions, not a list of the rows currently stored.
 
 PostgreSQL and MySQL expose much of this metadata through `information_schema`; SQL Server also has `sys` catalog views. Their schemas are not identical, so use the catalog intended for the engine you are inspecting.
 
@@ -139,6 +182,16 @@ CREATE TABLE ddl_contacts (
     full_name TEXT NOT NULL
 );
 INSERT INTO ddl_contacts VALUES (1, 'Alice Smith'), (2, 'Bob Jones');
+```
+
+Input (`ddl_contacts` before the migration):
+
+| contact_id | full_name |
+| ---: | --- |
+| 1 | Alice Smith |
+| 2 | Bob Jones |
+
+```sql
 
 BEGIN;
 ALTER TABLE ddl_contacts ADD COLUMN display_name TEXT;
@@ -147,7 +200,14 @@ SELECT contact_id, display_name FROM ddl_contacts ORDER BY contact_id;
 COMMIT;
 ```
 
-The result is Alice Smith and Bob Jones under the new column. The migration has three responsibilities: introduce a place to store the new value, supply values for existing rows, and decide when the application starts reading or writing that place. A backfill alone does not keep future writes synchronized. If old application versions still write only `full_name`, the migration plan must handle those writers too.
+The query result is:
+
+| contact_id | display_name |
+| ---: | --- |
+| 1 | Alice Smith |
+| 2 | Bob Jones |
+
+The migration has three responsibilities: introduce a place to store the new value, supply values for existing rows, and decide when the application starts reading or writing that place. A backfill alone does not keep future writes synchronized. If old application versions still write only `full_name`, the migration plan must handle those writers too.
 
 For a rename rather than a new fact, modern SQLite supports:
 
@@ -158,6 +218,13 @@ SELECT contact_id, legal_name, display_name
 FROM ddl_customer_contacts
 ORDER BY contact_id;
 ```
+
+The query result is:
+
+| contact_id | legal_name | display_name |
+| ---: | --- | --- |
+| 1 | Alice Smith | Alice Smith |
+| 2 | Bob Jones | Bob Jones |
 
 Both names still contain the original values. Renaming preserves the fact; it changes how code refers to it. Update application queries and examine views, triggers, reports, and migration tooling that depend on the old name.
 
@@ -186,13 +253,28 @@ FROM ddl_customer_contacts
 ORDER BY contact_id;
 ```
 
-The two contacts survive. If the copy encounters a null display name, the `NOT NULL` constraint rejects it; the client should roll back the transaction. In a real schema, this shortened example is insufficient when other tables reference the rebuilt table. Use SQLite's full documented procedure and run `PRAGMA foreign_key_check` afterward.
+The query result is:
+
+| contact_id | display_name |
+| ---: | --- |
+| 1 | Alice Smith |
+| 2 | Bob Jones |
+
+If the copy encounters a null display name, the `NOT NULL` constraint rejects it; the client should roll back the transaction. In a real schema, this shortened example is insufficient when other tables reference the rebuilt table. Use SQLite's full documented procedure and run `PRAGMA foreign_key_check` afterward.
 
 In PostgreSQL, changing nullability can instead use `ALTER TABLE ... ALTER COLUMN ... SET NOT NULL`. The shorter command still needs a valid population and may need locking or a validation strategy on a large table. Syntax convenience does not remove the migration's data obligations.
 
 ## Create a view and remove only its access path
 
 A **view** stores a query definition. An **index** stores an access structure. Neither is a new customer or order:
+
+Input (`products`):
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
 
 ```sql
 CREATE VIEW ddl_available_products AS
@@ -207,7 +289,14 @@ DROP INDEX ddl_products_by_price;
 DROP VIEW ddl_available_products;
 ```
 
-The view returns Database Basics and SQL Practice. Dropping the index leaves every product intact. Dropping the view removes the saved query, also leaving the products intact. Dependency rules differ: an engine may refuse to drop a referenced object or offer a cascading drop. Read the dependency list before accepting a cascade.
+The query result is:
+
+| title |
+| --- |
+| Database Basics |
+| SQL Practice |
+
+Dropping the index leaves every product intact. Dropping the view removes the saved query, also leaving the products intact. Dependency rules differ: an engine may refuse to drop a referenced object or offer a cascading drop. Read the dependency list before accepting a cascade.
 
 ## Treat defaults, checks, and unique constraints as separate rules
 
@@ -224,7 +313,13 @@ VALUES (1, 'pickup');
 SELECT code, fee_cents FROM ddl_delivery_methods;
 ```
 
-The result is `pickup, 0`. A negative explicit fee would fail the check; repeating `pickup` would fail uniqueness. Without `NOT NULL`, a check such as `fee_cents >= 0` would not by itself reject a null, because SQL checks accept an unknown result. A definition should express both presence and validity when the requirement needs both.
+The query result is:
+
+| code | fee_cents |
+| --- | ---: |
+| pickup | 0 |
+
+A negative explicit fee would fail the check; repeating `pickup` would fail uniqueness. Without `NOT NULL`, a check such as `fee_cents >= 0` would not by itself reject a null, because SQL checks accept an unknown result. A definition should express both presence and validity when the requirement needs both.
 
 Use stable keys for relationships. A display name can change or be shared; a primary key must still identify one row. An autogenerated key alone does not enforce a separate business rule such as “one delivery method per code,” which is why this table has both a primary key and a unique code.
 

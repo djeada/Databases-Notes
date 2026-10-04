@@ -238,7 +238,19 @@ FROM customers
 WHERE customer_id = 3;
 ```
 
-The first query returns `(3, Carol)`; the final count is `0`. `DELETE` removes rows while retaining the table definition. `DROP TABLE` removes the table object itself.
+The first query returns:
+
+| customer_id | name |
+| ---: | --- |
+| 3 | Carol |
+
+The final query returns:
+
+| remaining_rows |
+| ---: |
+| 0 |
+
+`DELETE` removes rows while retaining the table definition. `DROP TABLE` removes the table object itself.
 
 Carol has no orders in this exercise. Deleting Alice is a different operation because existing orders refer to her. With the declared foreign key and no cascading deletion policy, that deletion is rejected. Deciding how to remove or anonymize customers with order history is a business-design question.
 
@@ -276,7 +288,19 @@ ROLLBACK;
 SELECT name FROM customers WHERE customer_id = 1;
 ```
 
-The first query returns `Temporary name`; the second returns `Alice`. The transaction can read its own uncommitted change, and rollback removes that change. Her earlier email correction remains because this rollback does not undo previously committed work.
+The first query returns:
+
+| name |
+| --- |
+| Temporary name |
+
+The query after rollback returns:
+
+| name |
+| --- |
+| Alice |
+
+The transaction can read its own uncommitted change, and rollback removes that change. Her earlier email correction remains because this rollback does not undo previously committed work.
 
 For checkout, the same grouping can cover stock reduction, order creation, and purchased-item insertion. The application must check failures and choose a correct concurrency strategy. A transaction does not automatically reserve stock that was merely read, and rolling it back cannot unsend an email or reverse an external payment. Those details are developed in the [ACID chapter](../04_acid_properties_and_transactions/01_transactions_intro.md).
 
@@ -294,6 +318,14 @@ WHERE customer_id = 1;
 ```
 
 `EXPLAIN QUERY PLAN` describes SQLite's chosen access path. It can show a search using `idx_orders_customer` rather than a scan through all orders. It does not return the order history itself. Exact plan text varies, and a three-row table cannot demonstrate a production performance gain.
+
+An illustrative plan result is:
+
+| id | parent | notused | detail |
+| ---: | ---: | ---: | --- |
+| 3 | 0 | 0 | SEARCH orders USING INDEX idx_orders_customer (customer_id=?) |
+
+The exact IDs and detail text depend on the SQLite version and planner.
 
 SQLite uses B-tree structures for its indexes: ordered keys guide lookup toward matching entries. Maintaining those entries costs space and additional work when relevant rows change. That tradeoff is why an index should answer a real access pattern instead of being added to every column. The [DBMS note](03_database_management_systems_dbms_.md) follows planning and execution in more detail.
 
@@ -328,7 +360,14 @@ finally:
     conn.close()
 ```
 
-The result is `[(101, '2025-01-10'), (102, '2025-01-12')]`. This is an alternative way to run the initial setup, not a program to run on top of an already populated file. SQLite's connection opens a local file, so no database server is required.
+The returned rows are:
+
+| order_id | order_date |
+| ---: | --- |
+| 101 | 2025-01-10 |
+| 102 | 2025-01-12 |
+
+This is an alternative way to run the initial setup, not a program to run on top of an already populated file. SQLite's connection opens a local file, so no database server is required.
 
 The `?` placeholder is a **bound parameter**. The driver supplies the customer identifier separately from SQL structure. Application code should bind untrusted values instead of building query text by concatenating them. The [SQL injection note](../11_security_best_practices/06_sql_injection.md) explains why.
 

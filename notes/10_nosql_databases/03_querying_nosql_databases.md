@@ -33,6 +33,21 @@ A relational database may still solve all four well enough. Specialized systems 
 
 ## MongoDB: query documents by fields
 
+The MongoDB examples use these `products` documents:
+
+| _id | title | price_cents | tags | publisher.country |
+| --- | --- | ---: | --- | --- |
+| book-101 | Database Systems | 4990 | database, systems | DE |
+| book-205 | SQL Practice | 3500 | database, tutorials | US |
+
+The `orders` collection contains:
+
+| _id | customer_id | status | placed_at | total_cents | items |
+| --- | --- | --- | --- | ---: | --- |
+| order-1001 | customer-42 | paid | 2026-10-02 | 4990 | book-101 × 1 |
+| order-1002 | customer-42 | open | 2026-10-03 | 3500 | book-205 × 1 |
+| order-1003 | customer-77 | paid | 2026-10-01 | 2500 | book-205 × 1 |
+
 Example product document:
 
 ```json
@@ -54,6 +69,12 @@ Exact lookup:
 db.products.findOne({ _id: "book-101" })
 ```
 
+Result:
+
+| _id | title | price_cents | tags | publisher.country |
+| --- | --- | ---: | --- | --- |
+| book-101 | Database Systems | 4990 | database, systems | DE |
+
 Filter by nested field:
 
 ```javascript
@@ -62,6 +83,12 @@ db.products.find({
 })
 ```
 
+Result:
+
+| _id | title |
+| --- | --- |
+| book-101 | Database Systems |
+
 Array membership:
 
 ```javascript
@@ -69,6 +96,13 @@ db.products.find({
   tags: "database"
 })
 ```
+
+Result:
+
+| _id | title |
+| --- | --- |
+| book-101 | Database Systems |
+| book-205 | SQL Practice |
 
 MongoDB query syntax expresses predicates over document fields and arrays.
 
@@ -83,6 +117,13 @@ db.products.find(
 )
 ```
 
+Result:
+
+| title | price_cents |
+| --- | ---: |
+| Database Systems | 4990 |
+| SQL Practice | 3500 |
+
 Projection reduces network transfer and deserialization.
 
 ## Comparison operators
@@ -92,6 +133,13 @@ db.products.find({
   price_cents: { $gte: 3000, $lt: 6000 }
 })
 ```
+
+Result:
+
+| _id | title | price_cents |
+| --- | --- | ---: |
+| book-101 | Database Systems | 4990 |
+| book-205 | SQL Practice | 3500 |
 
 Common operators include equality, range, membership, and logical combinations.
 
@@ -109,6 +157,12 @@ db.orders.find({
 })
 ```
 
+Result:
+
+| _id | customer_id | status | placed_at | total_cents |
+| --- | --- | --- | --- | ---: |
+| order-1002 | customer-42 | open | 2026-10-03 | 3500 |
+
 This query suggests an index beginning with fields used for equality and range/sort according to the measured workload.
 
 ## Sorting and limiting
@@ -120,6 +174,13 @@ db.orders.find({
 .sort({ placed_at: -1 })
 .limit(20)
 ```
+
+Result, newest first:
+
+| _id | placed_at | status |
+| --- | --- | --- |
+| order-1002 | 2026-10-03 | open |
+| order-1001 | 2026-10-02 | paid |
 
 A compound index such as:
 
@@ -140,6 +201,16 @@ db.orders.find({
 .sort({ placed_at: -1 })
 .explain("executionStats")
 ```
+
+For the sample orders, the result summary is:
+
+| metric | value |
+| --- | --- |
+| documents returned | 2 |
+| keys examined | depends on indexes and plan |
+| documents examined | depends on plan |
+
+The exact plan stage and examined counts depend on the collection's indexes and server version.
 
 Inspect:
 
@@ -178,6 +249,13 @@ db.orders.aggregate([
 ])
 ```
 
+Result:
+
+| _id (customer_id) | orders | revenue_cents |
+| --- | ---: | ---: |
+| customer-42 | 1 | 4990 |
+| customer-77 | 1 | 2500 |
+
 Conceptually:
 
 ```text
@@ -203,8 +281,7 @@ Suppose an order embeds items:
 {
   "_id": "order-1001",
   "items": [
-    {"product_id": "book-101", "quantity": 1},
-    {"product_id": "book-205", "quantity": 2}
+    {"product_id": "book-101", "quantity": 1}
   ]
 }
 ```
@@ -216,6 +293,12 @@ db.orders.find({
   "items.product_id": "book-101"
 })
 ```
+
+Result:
+
+| _id | product_id | quantity |
+| --- | --- | ---: |
+| order-1001 | book-101 | 1 |
 
 An array index can support the access pattern, with write/index-size cost.
 
@@ -258,6 +341,16 @@ python scripts/mongo/nosql_document_modeling.py
 
 ## Redis: compute the key first
 
+Example Redis state:
+
+| key | data |
+| --- | --- |
+| `cart:user:42` | hash: `book-101=1`, `book-205=2` |
+| `session:abc123` | `user=42` |
+| `page:home:views` | integer `99` |
+| `team:7:members` | set: `42`, `73` |
+| `leaderboard:2026` | sorted set: `alice=42`, `bob=27`, `carol=55` |
+
 A key-value query often begins in application code:
 
 ```text
@@ -271,6 +364,13 @@ Then:
 HGETALL cart:user:42
 ```
 
+Result:
+
+| field | value |
+| --- | ---: |
+| book-101 | 1 |
+| book-205 | 2 |
+
 Unlike MongoDB, the normal operation is not:
 
 > search every cart document where customer_id = 42.
@@ -283,6 +383,12 @@ The key already encodes the lookup.
 GET session:abc123
 ```
 
+Result:
+
+| key | value |
+| --- | --- |
+| session:abc123 | user=42 |
+
 This is the natural key-value access pattern.
 
 If an application repeatedly scans values to find matching properties, the model probably needs another maintained index or a different database.
@@ -293,6 +399,14 @@ If an application repeatedly scans values to find matching properties, the model
 INCR page:home:views
 ```
 
+Input value: `99`.
+
+Result:
+
+| command | integer result | stored value after command |
+| --- | ---: | ---: |
+| `INCR page:home:views` | 100 | 100 |
+
 A server-side atomic command avoids application read-modify-write races.
 
 ## Set membership
@@ -301,11 +415,26 @@ A server-side atomic command avoids application read-modify-write races.
 SISMEMBER team:7:members 42
 ```
 
+Result:
+
+| command | result |
+| --- | ---: |
+| `SISMEMBER team:7:members 42` | 1 |
+
 or:
 
 ```text
 SMEMBERS team:7:members
 ```
+
+Result:
+
+| member |
+| --- |
+| 42 |
+| 73 |
+
+Redis does not promise a particular order for this result.
 
 The data structure is part of the query model.
 
@@ -314,6 +443,14 @@ The data structure is part of the query model.
 ```text
 ZREVRANGE leaderboard:2026 0 9 WITHSCORES
 ```
+
+Result, highest score first:
+
+| rank | member | score |
+| ---: | --- | ---: |
+| 1 | carol | 55 |
+| 2 | alice | 42 |
+| 3 | bob | 27 |
 
 The store can answer rank-oriented queries because the value is modeled as a sorted set.
 
@@ -330,6 +467,15 @@ Query:
 ```text
 TTL session:abc123
 ```
+
+The command results are:
+
+| command | result |
+| --- | --- |
+| `SET` | `OK` |
+| `TTL` | integer from 0 to 3600 |
+
+The `TTL` value depends on elapsed time; `-2` means the key has expired or does not exist.
 
 ## Redis NoSQL exercise
 
@@ -365,6 +511,13 @@ CREATE TABLE events_by_customer_month (
 ) WITH CLUSTERING ORDER BY (event_time DESC);
 ```
 
+Example rows in the table:
+
+| customer_id | bucket_month | event_time | event_id | event_type | payload |
+| --- | --- | --- | --- | --- | --- |
+| customer-42 | 2026-10 | 2026-10-01T12:00:00Z | e1 | viewed | book-101 |
+| customer-42 | 2026-10 | 2026-10-01T12:05:00Z | e2 | purchased | book-101 |
+
 Natural query:
 
 ```sql
@@ -375,7 +528,12 @@ WHERE customer_id = 'customer-42'
 LIMIT 50;
 ```
 
-The full partition key is known.
+Result:
+
+| customer_id | bucket_month | event_time | event_id | event_type | payload |
+| --- | --- | --- | --- | --- | --- |
+| customer-42 | 2026-10 | 2026-10-01T12:05:00Z | e2 | purchased | book-101 |
+| customer-42 | 2026-10 | 2026-10-01T12:00:00Z | e1 | viewed | book-101 |
 
 ## Clustering range
 
@@ -390,7 +548,12 @@ WHERE customer_id = 'customer-42'
   AND event_time <  '2026-10-02T00:00:00Z';
 ```
 
-This is query-first modeling: the table was built for that operation.
+Result:
+
+| event_time | event_id | event_type | payload |
+| --- | --- | --- | --- |
+| 2026-10-01T12:05:00Z | e2 | purchased | book-101 |
+| 2026-10-01T12:00:00Z | e1 | viewed | book-101 |
 
 ## Why arbitrary filtering is different
 
@@ -418,6 +581,14 @@ The demo shows the same customer's September and October events in separate part
 
 ## Neo4j: query a relationship pattern
 
+Example graph data:
+
+| start node | relationship | end node |
+| --- | --- | --- |
+| Customer 42 | FOLLOWS | Customer 73 |
+| Customer 73 | LIKES | Book 101, Database Systems |
+| Customer 73 | LIKES | Book 205, SQL Practice |
+
 Graph query:
 
 ```cypher
@@ -427,6 +598,13 @@ MATCH (:Customer {customer_id: 42})
 RETURN DISTINCT book.book_id, book.title
 ORDER BY book.book_id;
 ```
+
+Result:
+
+| book.book_id | book.title |
+| ---: | --- |
+| 101 | Database Systems |
+| 205 | SQL Practice |
 
 The query expresses a path rather than joins assembled from foreign-key tables.
 
@@ -451,6 +629,14 @@ MATCH p =
   (:Customer)
 RETURN p;
 ```
+
+For the sample graph above, the result is:
+
+| path start | relationship | path end |
+| --- | --- | --- |
+| Customer 42 | FOLLOWS | Customer 73 |
+
+The returned path includes its two nodes and the `FOLLOWS` relationship.
 
 Always consider fan-out. A small depth in a high-degree graph can visit many candidates.
 
@@ -477,17 +663,48 @@ Possible representations:
 
 ### Document
 
+Input document:
+
+| _id | name | status |
+|---|---|---|
+| customer-42 | Alice | premium |
+
 ```javascript
 db.customers.findOne({ _id: "customer-42" })
 ```
 
+Result:
+
+| _id | name | status |
+|---|---|---|
+| customer-42 | Alice | premium |
+
 ### Key-value
+
+Input key-value rows:
+
+| key | field | value |
+|---|---|---|
+| `customer:42` | name | Alice |
+| `customer:42` | status | premium |
 
 ```text
 GET customer:42
 ```
 
+Result:
+
+| name | status |
+|---|---|
+| Alice | premium |
+
 ### Wide-column
+
+Input row:
+
+| customer_id | name | status |
+|---|---|---|
+| customer-42 | Alice | premium |
 
 ```sql
 SELECT *
@@ -495,12 +712,30 @@ FROM customer_state
 WHERE customer_id = 'customer-42';
 ```
 
+Result:
+
+| customer_id | name | status |
+|---|---|---|
+| customer-42 | Alice | premium |
+
 ### Graph
+
+Input graph nodes:
+
+| label | customer_id | name | status |
+|---|---:|---|---|
+| Customer | 42 | Alice | premium |
 
 ```cypher
 MATCH (c:Customer {customer_id: 42})
 RETURN c;
 ```
+
+Result:
+
+| customer_id | name | status |
+|---:|---|---|
+| 42 | Alice | premium |
 
 The syntax differs, but the deeper difference is how the store expects data to be addressed and what surrounding operations are cheap.
 

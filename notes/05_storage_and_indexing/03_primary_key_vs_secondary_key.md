@@ -33,11 +33,25 @@ VALUES (1, 'alice@example.com', 'Smith'),
        (2, 'bob@example.com', 'Smith');
 ```
 
+Input (`users`):
+
+| user_id | email | last_name |
+| ---: | --- | --- |
+| 1 | alice@example.com | Smith |
+| 2 | bob@example.com | Smith |
+
 `user_id` is the primary key, `email` is an alternate key, and `last_name` has a non-unique secondary index. Both Smith rows are valid. Duplicate emails are rejected.
 
 ```sql
-SELECT user_id, email FROM users WHERE last_name = 'Smith';
+SELECT user_id, email FROM users WHERE last_name = 'Smith' ORDER BY user_id;
 ```
+
+Result:
+
+| user_id | email |
+| ---: | --- |
+| 1 | alice@example.com |
+| 2 | bob@example.com |
 
 The optimizer can use the secondary index but may prefer a scan for a small table or a predicate matching many rows. An index does not guarantee a particular query plan or output order; add `ORDER BY` when order matters.
 

@@ -36,6 +36,22 @@ $query =
     "WHERE username = '$username'";
 ```
 
+With `username = "alice' OR '1'='1"`, the input `users` table is:
+
+| user_id | username | role |
+|---:|---|---|
+| 1 | alice | user |
+| 2 | bob | user |
+| 3 | carol | admin |
+
+The unsafe predicate matches every row, so it returns:
+
+| user_id |
+|---:|
+| 1 |
+| 2 |
+| 3 |
+
 The application combines code and untrusted text before the database parses it.
 
 That makes it possible for the input to alter the predicate.
@@ -101,6 +117,12 @@ cursor.execute(
 )
 ```
 
+With the same three input rows and the attack string bound as one username value, the parameterized query returns no rows:
+
+| user_id |
+|---:|
+| *(no rows)* |
+
 Placeholder syntax depends on the driver.
 
 Do not manually add quotes around the placeholder.
@@ -146,6 +168,12 @@ using var command = new SqlCommand(
 command.Parameters.AddWithValue("@username", username);
 ```
 
+For an ordinary bound value `username = 'alice'`, all the safe parameterized examples above return:
+
+| user_id |
+|---:|
+| 1 |
+
 For performance/type precision, explicit parameter types can be preferable to generic type inference.
 
 The security property is that values are bound separately.
@@ -188,18 +216,26 @@ Python:
 
 ```python
 allowed_sort_columns = {
-    "name": "name",
+    "name": "username",
     "created": "created_at",
 }
 
 sort_column = allowed_sort_columns[requested_sort]
 
 query = (
-    "SELECT user_id, name "
+    "SELECT user_id, username "
     "FROM users "
     f"ORDER BY {sort_column}"
 )
 ```
+
+With `requested_sort = 'name'`, the input users are the three rows shown above and the result is:
+
+| user_id | username |
+|---:|---|
+| 1 | alice |
+| 2 | bob |
+| 3 | carol |
 
 The interpolated text comes only from trusted constants.
 
@@ -276,6 +312,20 @@ cursor.execute(
 )
 ```
 
+Example `products` input:
+
+| id | title |
+|---:|---|
+| 10 | Database Basics |
+| 11 | SQL Practice |
+| 12 | Desk Lamp |
+
+With `search_text = 'SQL'`, the result is:
+
+| id | title |
+|---:|---|
+| 11 | SQL Practice |
+
 The wildcard behavior is now a search-semantics issue, not SQL syntax injection.
 
 If literal `%` or `_` must be searched, use the database's escaping rules for `LIKE`.
@@ -304,6 +354,18 @@ SELECT user_id, password_hash
 FROM users
 WHERE username = ?
 ```
+
+Example `users` input:
+
+| user_id | username | password_hash |
+|---:|---|---|
+| 1 | alice | `$argon2id$...` |
+
+For the bound username `alice`, the query result is:
+
+| user_id | password_hash |
+|---:|---|
+| 1 | `$argon2id$...` |
 
 Then verify the password with the language/framework password-hashing API.
 
@@ -348,7 +410,7 @@ Escaping may still matter for other contexts such as `LIKE` semantics, but it sh
 
 ## HTML escaping is unrelated
 
-```htmlspecialchars()``, HTML encoding, and output escaping defend browser-rendering contexts.
+`htmlspecialchars()`, HTML encoding, and output escaping defend browser-rendering contexts.
 
 They do not make SQL concatenation safe.
 

@@ -41,11 +41,26 @@ Creating a B-tree index on the `last_name` column:
 CREATE INDEX idx_customers_last_name ON customers(last_name);
 ```
 
+Example input (`customers`):
+
+| customer_id | first_name | last_name |
+| ---: | --- | --- |
+| 1 | Alice | Smith |
+| 2 | Bob | Jones |
+| 3 | Carol | Smith |
+
 The optimizer can use this index for queries such as the following; it may still choose a scan when many rows match:
 
 ```sql
 SELECT * FROM customers WHERE last_name = 'Smith';
 ```
+
+Result:
+
+| customer_id | first_name | last_name |
+| ---: | --- | --- |
+| 1 | Alice | Smith |
+| 3 | Carol | Smith |
 
 ### How B-tree Indexes Improve Performance
 
@@ -91,6 +106,21 @@ This index speeds up queries like:
 ```sql
 SELECT COUNT(*) FROM sales WHERE region = 'North' AND product_category = 'Electronics';
 ```
+
+Example input (`sales`):
+
+| sale_id | region | product_category |
+| ---: | --- | --- |
+| 1 | North | Electronics |
+| 2 | North | Books |
+| 3 | South | Electronics |
+| 4 | North | Electronics |
+
+Result:
+
+| COUNT(*) |
+| ---: |
+| 2 |
 
 ### Advantages and Considerations
 
@@ -139,6 +169,19 @@ Querying with the index:
 SELECT * FROM users WHERE username = 'johndoe';
 ```
 
+Example input (`users`):
+
+| user_id | username |
+| ---: | --- |
+| 1 | johndoe |
+| 2 | janedoe |
+
+Result:
+
+| user_id | username |
+| ---: | --- |
+| 1 | johndoe |
+
 ### Limitations
 
 - **No Range Queries**: Cannot efficiently handle queries like `username > 'j'`.
@@ -184,6 +227,20 @@ Searching using the index:
 ```sql
 SELECT title FROM articles WHERE to_tsvector('english', content) @@ to_tsquery('database & indexing');
 ```
+
+Example input (`articles`):
+
+| title | content |
+| --- | --- |
+| Index Design | Database indexing helps select rows efficiently. |
+| Query Basics | Learn database queries and joins. |
+| Storage Notes | Index structures organize stored pages. |
+
+Result:
+
+| title |
+| --- |
+| Index Design |
 
 This query finds articles that contain both 'database' and 'indexing'.
 

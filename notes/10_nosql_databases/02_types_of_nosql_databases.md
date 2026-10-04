@@ -45,11 +45,27 @@ Key-value stores manage data as a collection of key-value pairs, where the key i
 # Set key-value pairs
 SET user123 "John Smith"
 SET user456 "Jane Doe"
+SET session789 '{"id":789,"user":"John Smith","timestamp":"2024-09-14T12:34:56Z"}'
 
 # Retrieve values
 GET user123  # Returns "John Smith"
 GET session789  # Returns {"id": 789, "user": "John Smith", "timestamp": "2024-09-14T12:34:56Z"}
 ```
+
+Input key-value rows after the `SET` commands:
+
+| key | value |
+|---|---|
+| `user123` | John Smith |
+| `user456` | Jane Doe |
+| `session789` | `{"id":789,"user":"John Smith","timestamp":"2024-09-14T12:34:56Z"}` |
+
+The two `GET` commands return:
+
+| key | result |
+|---|---|
+| `user123` | John Smith |
+| `session789` | `{"id":789,"user":"John Smith","timestamp":"2024-09-14T12:34:56Z"}` |
 
 Redis commands like `SET` and `GET` facilitate straightforward interactions with the key-value pairs, enabling rapid data manipulation and retrieval.
 
@@ -102,6 +118,12 @@ Document stores manage data in **documents**, typically using formats like JSON,
 }
 ```
 
+Example `users` collection row:
+
+| _id | name | email | orders |
+|---|---|---|---|
+| user123 | John Smith | john@example.com | Laptop: 1200; Mouse: 30 |
+
 - The `orders` field contains an array of order documents, allowing for multiple orders per user.
 - The `address` and `preferences` fields demonstrate nested data structures, showcasing the ability to represent complex relationships within a single document.
 - A dynamic schema allows additional fields to be added without affecting other documents, enabling flexible data evolution.
@@ -111,22 +133,54 @@ Document stores manage data in **documents**, typically using formats like JSON,
 ```javascript
 // Find user by ID
 db.users.find({ "_id": "user123" })
+```
 
+Input is the `user123` document shown above. Result:
+
+| _id | name | email |
+|---|---|---|
+| user123 | John Smith | john@example.com |
+
+```javascript
 // Retrieve users with orders over $1000
 db.users.find({ "orders.price": { $gt: 1000 } })
+```
 
+Result:
+
+| _id | name | matching order |
+|---|---|---|
+| user123 | John Smith | Laptop, 1200 |
+
+```javascript
 // Update a user's email
 db.users.update(
   { "_id": "user123" },
   { $set: { "email": "newemail@example.com" } }
 )
+```
 
+Resulting document fields:
+
+| _id | name | email |
+|---|---|---|
+| user123 | John Smith | newemail@example.com |
+
+```javascript
 // Add a new order to a user's orders
 db.users.update(
   { "_id": "user123" },
   { $push: { "orders": { "id": 3, "product": "Keyboard", "price": 50 } } }
 )
 ```
+
+Starting `orders` array: Laptop (1200), Mouse (30). Resulting array:
+
+| order id | product | price |
+|---:|---|---:|
+| 1 | Laptop | 1200 |
+| 2 | Mouse | 30 |
+| 3 | Keyboard | 50 |
 
 These queries demonstrate the powerful and flexible querying capabilities of document stores, enabling complex data manipulations and retrievals with ease.
 
@@ -201,6 +255,13 @@ VALUES (
 );
 ```
 
+The resulting `ecommerce.users` rows are:
+
+| user_id | name | email | age | orders |
+|---|---|---|---:|---|
+| user123 | John | john@example.com | 30 | Laptop, Mouse, Keyboard |
+| user456 | Jane | jane@example.com | 25 | Keyboard, Monitor |
+
 This example demonstrates how column-family stores can efficiently handle dynamic and varied data structures, enabling flexible and scalable data management.
 
 ## Graph Databases
@@ -242,7 +303,23 @@ Graph databases use **nodes**, **edges**, and properties to represent and store 
 - `(User:1)-[:FRIEND]->(User:2)` indicates John is friends with Jane.
 - `(User:1)-[:PURCHASED]->(Product:101)` indicates John purchased a laptop.
 - `(User:2)-[:PURCHASED]->(Product:102)` indicates Jane purchased a mouse.
+- `(User:2)-[:PURCHASED]->(Product:101)` indicates Jane also purchased a laptop.
 - `(User:1)-[:LIKES]->(Product:102)` indicates John likes the mouse.
+
+| node id | label | name |
+|---:|---|---|
+| 1 | User | John Smith |
+| 2 | User | Jane Doe |
+| 101 | Product | Laptop |
+| 102 | Product | Mouse |
+
+| start node | relationship | end node |
+|---|---|---|
+| John Smith | FRIEND | Jane Doe |
+| John Smith | PURCHASED | Laptop |
+| Jane Doe | PURCHASED | Mouse |
+| Jane Doe | PURCHASED | Laptop |
+| John Smith | LIKES | Mouse |
 
 **Cypher Query Examples (Neo4j):**
 
@@ -250,20 +327,51 @@ Graph databases use **nodes**, **edges**, and properties to represent and store 
 // Find friends of John
 MATCH (john:User {name: 'John Smith'})-[:FRIEND]->(friend)
 RETURN friend.name;
+```
 
+Using the node and relationship tables above, the result is:
+
+| friend.name |
+|---|
+| Jane Doe |
+
+```cypher
 // Recommend products purchased by friends
 MATCH (john:User {name: 'John Smith'})-[:FRIEND]->(friend)-[:PURCHASED]->(product)
 RETURN DISTINCT product.name;
+```
 
+Result:
+
+| product.name |
+|---|
+| Laptop |
+| Mouse |
+
+```cypher
 // Find users who have purchased the same product as John
 MATCH (john:User {name: 'John Smith'})-[:PURCHASED]->(product)<-[:PURCHASED]-(other:User)
 WHERE other.name <> 'John Smith'
 RETURN other.name, product.name;
+```
 
+Result:
+
+| other.name | product.name |
+|---|---|
+| Jane Doe | Laptop |
+
+```cypher
 // Shortest path between two users
 MATCH path = shortestPath((john:User {name: 'John Smith'})-[:FRIEND*]-(jane:User {name: 'Jane Doe'}))
 RETURN path;
 ```
+
+Result:
+
+| path |
+|---|
+| John Smith -[:FRIEND]-> Jane Doe |
 
 These queries demonstrate the power of graph databases in uncovering relationships, making recommendations, and analyzing network structures efficiently.
 

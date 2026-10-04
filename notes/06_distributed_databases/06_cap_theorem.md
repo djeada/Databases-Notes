@@ -1553,19 +1553,25 @@ For ordinary DynamoDB tables and local secondary indexes, applications can reque
 
 Global secondary indexes support eventually consistent reads only.
 
-So even inside one regional DynamoDB table:
+Suppose the base `Orders` table contains this item:
 
-```text
-table GetItem with ConsistentRead=true
-```
+| customer_id | order_id | status | total |
+| --- | --- | --- | ---: |
+| 42 | 104 | OPEN | 89.00 |
 
-and:
+A strongly consistent `GetItem` for that key returns:
 
-```text
-GSI Query
-```
+| customer_id | order_id | status | total |
+| --- | --- | --- | ---: |
+| 42 | 104 | OPEN | 89.00 |
 
-have different consistency properties.
+A `Query` on a global secondary index partitioned by `status` might temporarily return no rows before that index catches up:
+
+| rows returned |
+| ---: |
+| 0 |
+
+After propagation, it can return the item. So even inside one regional DynamoDB table, `GetItem` with `ConsistentRead=true` and a GSI `Query` have different consistency properties.
 
 Calling the entire service simply:
 

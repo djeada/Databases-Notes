@@ -388,13 +388,21 @@ This is the foundation of Multi-Version Concurrency Control.
 
 ## PostgreSQL ordinary reads do not take blocking shared row locks
 
-Consider PostgreSQL:
+Consider PostgreSQL. The sample `employees` table contains:
+
+| employee_id | salary |
+| ---: | ---: |
+| 1 | 50000 |
 
 ```sql
 SELECT employee_id, salary
 FROM employees
 WHERE employee_id = 1;
 ```
+
+| employee_id | salary |
+| ---: | ---: |
+| 1 | 50000 |
 
 This ordinary query uses PostgreSQL's MVCC visibility rules.
 
@@ -419,6 +427,12 @@ SELECT salary
 FROM employees
 WHERE employee_id = 1;
 ```
+
+Its snapshot returns the previously committed value:
+
+| salary |
+| ---: |
+| 50000 |
 
 without waiting for T1's row lock.
 
@@ -458,6 +472,10 @@ FROM employees
 WHERE employee_id = 1;
 ```
 
+| salary |
+| ---: |
+| 50000 |
+
 is fundamentally different from:
 
 ```sql
@@ -467,6 +485,10 @@ WHERE employee_id = 1
 FOR SHARE;
 ```
 
+| salary |
+| ---: |
+| 50000 |
+
 or:
 
 ```sql
@@ -475,6 +497,10 @@ FROM employees
 WHERE employee_id = 1
 FOR UPDATE;
 ```
+
+| salary |
+| ---: |
+| 50000 |
 
 ## PostgreSQL `FOR SHARE`
 
@@ -545,6 +571,10 @@ FROM employees
 WHERE employee_id = 1;
 ```
 
+| employee_id | salary |
+| ---: | ---: |
+| 1 | 50000 |
+
 This is merely an ordinary MVCC read.
 
 Session B executes:
@@ -569,13 +599,23 @@ A more accurate statement is:
 
 ## Why would an application use `FOR UPDATE`?
 
-Suppose we implement a withdrawal as:
+Suppose the sample `accounts` table is:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 500 |
+
+We implement a withdrawal with:
 
 ```sql
 SELECT balance
 FROM accounts
 WHERE account_id = 1;
 ```
+
+| balance |
+| ---: |
+| 500 |
 
 The application receives:
 
@@ -626,6 +666,10 @@ WHERE account_id = 1
 FOR UPDATE;
 ```
 
+| balance |
+| ---: |
+| 500 |
+
 Then:
 
 ```text
@@ -659,17 +703,17 @@ WHERE account_id = 1;
 
 ## MySQL/InnoDB makes the same ordinary-versus-locking distinction
 
-InnoDB also uses MVCC for ordinary consistent reads.
-
-At its default `REPEATABLE READ` level, plain non-locking `SELECT`s in a transaction use the transaction's consistent snapshot.
-
-For example:
+InnoDB also uses MVCC for ordinary consistent reads. At its default `REPEATABLE READ` level, plain non-locking `SELECT`s in a transaction use the transaction's consistent snapshot. Suppose the `accounts` row has balance 500:
 
 ```sql
 SELECT balance
 FROM accounts
 WHERE account_id = 1;
 ```
+
+| balance |
+| ---: |
+| 500 |
 
 is normally a consistent non-locking read.
 
@@ -691,7 +735,13 @@ MySQL states that `FOR SHARE` sets shared-mode locks on selected rows, while `FO
 
 ## MySQL `FOR SHARE`
 
-Suppose T1 executes:
+Suppose the `products` table contains:
+
+| product_id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 8 |
+
+T1 executes:
 
 ```sql
 START TRANSACTION;
@@ -701,6 +751,10 @@ FROM products
 WHERE product_id = 100
 FOR SHARE;
 ```
+
+| product_id | name | stock |
+| ---: | --- | ---: |
+| 100 | Desk lamp | 8 |
 
 Another transaction may perform a compatible locking read.
 
@@ -752,6 +806,14 @@ An ordinary InnoDB consistent reader can still behave differently because MVCC r
 
 This becomes important in real systems.
 
+Suppose `orders` contains:
+
+| order_id | customer_id | total |
+| ---: | ---: | ---: |
+| 101 | 42 | 25.00 |
+| 102 | 42 | 40.00 |
+| 103 | 7 | 15.00 |
+
 When InnoDB executes a locking query such as:
 
 ```sql
@@ -760,6 +822,11 @@ FROM orders
 WHERE customer_id = 42
 FOR UPDATE;
 ```
+
+| order_id | customer_id | total |
+| ---: | ---: | ---: |
+| 101 | 42 | 25.00 |
+| 102 | 42 | 40.00 |
 
 the lock behavior depends on the access path.
 
@@ -816,7 +883,7 @@ At ordinary pessimistic `READ COMMITTED`, shared row/page locks are generally re
 
 SQL Server documents that `READ COMMITTED` normally uses short-duration shared locks when row versioning is not being used.
 
-So:
+Suppose `accounts` contains one row `(account_id=1, balance=500)`. So:
 
 ```sql
 BEGIN TRANSACTION;
@@ -829,6 +896,10 @@ WHERE account_id = 1;
 
 COMMIT;
 ```
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 500 |
 
 does not automatically mean that the ordinary `READ COMMITTED` shared lock on that row is retained for those entire 20 seconds.
 
@@ -904,13 +975,17 @@ SQL Server's `U` lock is designed partly to address this pattern: many transacti
 
 ## SQL Server `UPDLOCK`
 
-An application that reads something because it expects to modify it can use:
+Using the sample account `(account_id=1, balance=500)`, an application that expects to modify it can use:
 
 ```sql
 SELECT balance
 FROM accounts WITH (UPDLOCK)
 WHERE account_id = 1;
 ```
+
+| balance |
+| ---: |
+| 500 |
 
 `UPDLOCK` tells SQL Server to take update locks for the read and retain them until the transaction completes.
 
@@ -992,13 +1067,17 @@ Oracle provides another useful counterexample to:
 SELECT = shared row lock
 ```
 
-For ordinary querying:
+For ordinary querying, suppose `accounts` contains `(account_id=1, balance=500)`:
 
 ```sql
 SELECT *
 FROM accounts
 WHERE account_id = 1;
 ```
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 500 |
 
 Oracle uses consistent-read mechanisms.
 
@@ -1027,6 +1106,10 @@ FROM accounts
 WHERE account_id = 1
 FOR UPDATE;
 ```
+
+| balance |
+| ---: |
+| 500 |
 
 Oracle describes this operation as selecting and locking the rows so another user cannot change those row values before the current transaction performs its update.
 
@@ -1072,7 +1155,10 @@ The syntax is superficially similar between some engines, but the exact lock mod
 
 This is one of the most important limitations.
 
-Suppose an application prevents duplicate bookings with:
+Suppose the requested reservation is not present in the `reservations` table:
+
+| room_id | reservation_date | customer_id |
+| ---: | --- | ---: |
 
 ```sql
 SELECT *
@@ -1082,11 +1168,9 @@ WHERE room_id = 7
 FOR UPDATE;
 ```
 
-The query returns:
-
-```text
-0 rows
-```
+| rows returned |
+| ---: |
+| 0 |
 
 The application concludes:
 
@@ -1124,6 +1208,11 @@ reservations table:
 (no reservation for room 7 on Oct 15)
 ```
 
+T1 and T2 both query an empty `reservations` table for the requested key:
+
+| room_id | reservation_date | customer_id |
+| ---: | --- | ---: |
+
 T1:
 
 ```sql
@@ -1134,19 +1223,15 @@ WHERE room_id = 7
 FOR UPDATE;
 ```
 
-Result:
+| rows returned |
+| ---: |
+| 0 |
 
-```text
-0 rows
-```
+T2 executes the same query and also gets zero rows:
 
-T2 executes the same query.
-
-Result:
-
-```text
-0 rows
-```
+| rows returned |
+| ---: |
+| 0 |
 
 T1 inserts:
 
@@ -1224,6 +1309,21 @@ no more than 10 active reservations
 for event 42
 ```
 
+Suppose `reservations` has nine active rows and one cancelled row for event 42:
+
+| reservation_id | event_id | status |
+| ---: | ---: | --- |
+| 1 | 42 | active |
+| 2 | 42 | active |
+| 3 | 42 | active |
+| 4 | 42 | active |
+| 5 | 42 | active |
+| 6 | 42 | active |
+| 7 | 42 | active |
+| 8 | 42 | active |
+| 9 | 42 | active |
+| 10 | 42 | cancelled |
+
 The transaction executes:
 
 ```sql
@@ -1232,6 +1332,10 @@ FROM reservations
 WHERE event_id = 42
   AND status = 'active';
 ```
+
+| count |
+| ---: |
+| 9 |
 
 and obtains:
 
@@ -1314,7 +1418,14 @@ This is why InnoDB locking behavior depends strongly on indexes and isolation le
 
 At `SERIALIZABLE` isolation, SQL Server can use key-range locks.
 
-Suppose T1 executes:
+Suppose the sample table has one October reservation and one September reservation:
+
+| reservation_id | room_id | reservation_date |
+| ---: | ---: | --- |
+| 10 | 7 | 2026-10-15 |
+| 11 | 7 | 2026-09-15 |
+
+T1 executes:
 
 ```sql
 SELECT *
@@ -1323,6 +1434,10 @@ WHERE room_id = 7
   AND reservation_date BETWEEN '2026-10-01'
                            AND '2026-10-31';
 ```
+
+| reservation_id | room_id | reservation_date |
+| ---: | ---: | --- |
+| 10 | 7 | 2026-10-15 |
 
 Protecting only existing rows would not prevent a new October reservation.
 
@@ -1705,6 +1820,46 @@ ORDER BY job_id
 FOR UPDATE SKIP LOCKED
 LIMIT 1;
 ```
+
+Suppose the pending queue contains jobs 100, 101, and 102, and another worker holds the lock on job 100:
+
+| job_id | status |
+| ---: | --- |
+| 100 | pending (locked) |
+| 101 | pending |
+| 102 | pending |
+
+Worker 1 gets:
+
+| job_id |
+| ---: |
+| 100 |
+
+Worker 2 skips that row and gets:
+
+| job_id |
+| ---: |
+| 101 |
+
+With job 100 locked by another worker, the sample queue is:
+
+| job_id | status |
+| ---: | --- |
+| 100 | pending (locked) |
+| 101 | pending |
+| 102 | pending |
+
+Worker 1 returns:
+
+| job_id |
+| ---: |
+| 100 |
+
+Worker 2 skips it and returns:
+
+| job_id |
+| ---: |
+| 101 |
 
 Suppose Worker 1 obtains:
 

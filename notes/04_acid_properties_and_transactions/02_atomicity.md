@@ -19,6 +19,24 @@ ROLLBACK;
 SELECT stock FROM products WHERE product_id = 10;
 ```
 
+Input (`products`):
+
+| product_id | stock |
+|---:|---:|
+| 10 | 5 |
+
+The first query inside the transaction returns:
+
+| stock |
+|---:|
+| 4 |
+
+After rollback, the second query returns:
+
+| stock |
+|---:|
+| 5 |
+
 The first query returns 4 within this transaction. The second returns 5 after rollback. Rolling back removes this transaction's change; it does not restore the entire database to an old snapshot or undo other transactions' committed work.
 
 ## An error is not the same as rollback
@@ -97,6 +115,34 @@ print(connection.execute('SELECT COUNT(*) FROM atomic_orders').fetchone()[0])
 connection.close()
 ```
 
+Input rows before the checkout attempt:
+
+`atomic_stock`
+
+| product_id | stock |
+|---:|---:|
+| 10 | 5 |
+
+`atomic_orders`
+
+| order_id | product_id |
+|---:|---:|
+| 101 | 10 |
+
+After the duplicate insert fails and the transaction rolls back, the queries return:
+
+`atomic_stock`
+
+| product_id | stock |
+|---:|---:|
+| 10 | 5 |
+
+`atomic_orders` row count:
+
+| COUNT(*) |
+|---:|
+| 1 |
+
 The output is `checkout rejected`, then `5`, then `1`. The stock update reached 4 inside the transaction, but the duplicate insert raised an exception that escaped the context manager. The context therefore rolled back the whole pending operation. Catching the exception **inside** the context and continuing normally could cause the earlier update to commit under this connection mode.
 
 The example uses Python's default SQLite transaction handling. It proves that the application has a rollback path for this failure. It does not test a power loss or prove every deployment setting is durable.
@@ -140,6 +186,26 @@ WHERE o.sent_at IS NULL
 ORDER BY o.message_id;
 ```
 
+Input rows after checkout commit:
+
+`atomic_checkouts`
+
+| checkout_id | request_key | customer_name |
+|---:|---|---|
+| 1 | checkout-request-abc | Bob |
+
+`atomic_outbox`
+
+| message_id | checkout_id | message_type | sent_at |
+|---:|---:|---|---|
+| 1 | 1 | order_confirmation | NULL |
+
+The pending-message query returns:
+
+| request_key | message_type |
+|---|---|
+| checkout-request-abc | order_confirmation |
+
 The pending message is `checkout-request-abc, order_confirmation`. A failure before commit must roll back both records. A worker sees the committed pending record later, sends the notification, and then marks progress. A crash after sending but before marking progress can cause another send, so delivery needs duplicate tolerance or a stable message ID accepted by the recipient.
 
 The unique request key helps recognize a retried checkout. It does not automatically return the first request's outcome: application code must look up the existing record and verify that a repeated key represents the same operation. The unique message pair prevents recording the same confirmation intent twice for one checkout.
@@ -168,6 +234,18 @@ SELECT gid FROM pg_prepared_xacts WHERE gid = 'notes_atomicity_demo';
 COMMIT PREPARED 'notes_atomicity_demo';
 SELECT event_id, description FROM atomic_pg_events;
 ```
+
+Immediately after `PREPARE TRANSACTION`, `pg_prepared_xacts` contains:
+
+| gid |
+|---|
+| notes_atomicity_demo |
+
+After `COMMIT PREPARED`, the final query returns:
+
+| event_id | description |
+|---:|---|
+| 1 | prepared example |
 
 Preparation ends the current transaction but leaves its outcome unresolved. The prepared-transaction view shows the identifier; `COMMIT PREPARED`, issued outside a transaction block by an authorized role, makes event 1 visible. `ROLLBACK PREPARED` is the alternative abort decision. Always resolve the exercise's prepared transaction; abandoning it can retain locks.
 

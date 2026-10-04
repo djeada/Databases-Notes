@@ -523,6 +523,24 @@ FROM customers
 WHERE customer_id BETWEEN 11000 AND 11500;
 ```
 
+Example input (`customers`):
+
+| customer_id | name |
+|---:|---|
+| 10999 | Ada |
+| 11000 | Ben |
+| 11250 | Chen |
+| 11500 | Dia |
+| 11501 | Eli |
+
+Result:
+
+| customer_id | name |
+|---:|---|
+| 11000 | Ben |
+| 11250 | Chen |
+| 11500 | Dia |
+
 because one shard may contain the entire range.
 
 But a poor range key can create hotspots.
@@ -1907,6 +1925,20 @@ FROM users
 WHERE user_id = 100;
 ```
 
+Example input rows on the shards:
+
+| user_id | name |
+|---:|---|
+| 99 | Ava |
+| 100 | Bo |
+| 101 | Cy |
+
+Result of the point lookup:
+
+| user_id | name |
+|---:|---|
+| 100 | Bo |
+
 and `user_id` is the partition key.
 
 The router can likely target one shard.
@@ -1917,6 +1949,18 @@ But:
 SELECT COUNT(*)
 FROM users;
 ```
+
+Example shard-local inputs and the combined result:
+
+| shard | user rows |
+|---|---:|
+| A | 2 |
+| B | 1 |
+| C | 3 |
+
+| COUNT(*) |
+|---:|
+| 6 |
 
 may require every shard.
 
@@ -1962,6 +2006,18 @@ Coordinator calculates:
 3,500,000
 ```
 
+The example partial counts form this result:
+
+| shard | partial count |
+|---|---:|
+| A | 1,000,000 |
+| B | 2,000,000 |
+| C | 500,000 |
+
+| combined COUNT(*) |
+|---:|
+| 3,500,000 |
+
 This parallelism can be powerful.
 
 But total query latency often depends heavily on the slowest participating shard.
@@ -1988,6 +2044,29 @@ FROM customers c
 JOIN orders o
   ON c.customer_id = o.customer_id;
 ```
+
+Example input tables:
+
+`customers`
+
+| customer_id | name |
+|---:|---|
+| 42 | Alice |
+| 73 | Bob |
+
+`orders`
+
+| order_id | customer_id | total |
+|---:|---:|---:|
+| 501 | 42 | 49.90 |
+| 502 | 73 | 29.00 |
+
+Result:
+
+| name | total |
+|---|---:|
+| Alice | 49.90 |
+| Bob | 29.00 |
 
 may require moving data between nodes.
 

@@ -359,6 +359,19 @@ RLS policy
        └── tenant differs -> hidden
 ```
 
+Example input (`orders`):
+
+| tenant_id | order_id | total |
+|---:|---:|---:|
+| 42 | 1001 | 49.90 |
+| 73 | 1002 | 29.00 |
+
+With the RLS policy set to tenant 42, the query returns:
+
+| tenant_id | order_id | total |
+|---:|---:|---:|
+| 42 | 1001 | 49.90 |
+
 RLS can provide defense in depth for multi-tenant systems.
 
 It also increases complexity. Policies must be tested for:
@@ -391,6 +404,18 @@ CREATE VIEW reporting.customers AS
 SELECT id, name
 FROM app.customers;
 ```
+
+Example `app.customers` input:
+
+| id | name | email | password_hash | internal_risk_score |
+|---:|---|---|---|---:|
+| 1 | Alice | alice@example.com | `$argon2id$...` | 7 |
+
+Querying `reporting.customers` returns only the exposed columns:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
 
 The reporting account receives access to the view, not the base table.
 
@@ -571,6 +596,19 @@ WHERE rolcanlogin
 ORDER BY rolname;
 ```
 
+Example `pg_roles` input rows:
+
+| rolname | rolsuper | rolcreatedb | rolcreaterole | rolcanlogin |
+|---|---|---|---|---|
+| analyst | false | false | false | true |
+| app_group | false | false | false | false |
+
+The login-role query returns:
+
+| rolname | rolsuper | rolcreatedb | rolcreaterole | rolcanlogin |
+|---|---|---|---|---|
+| analyst | false | false | false | true |
+
 List role memberships:
 
 ```sql
@@ -584,6 +622,27 @@ JOIN pg_roles member_role
   ON member_role.oid = m.member
 ORDER BY member, granted_role;
 ```
+
+Example input catalog rows:
+
+`pg_auth_members`
+
+| member oid | roleid |
+|---:|---:|
+| 101 | 200 |
+
+`pg_roles`
+
+| oid | rolname |
+|---:|---|
+| 101 | analyst |
+| 200 | reporting_reader |
+
+The joined result is:
+
+| member | granted_role |
+|---|---|
+| analyst | reporting_reader |
 
 Review these queries from an appropriately privileged administrative account.
 

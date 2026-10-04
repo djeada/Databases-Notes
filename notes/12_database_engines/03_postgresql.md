@@ -64,26 +64,61 @@ VALUES (value1, value2, ...);
 
 ### Querying Data
 
+Use this small `products` table as the example input:
+
+| product_id | name | category | price |
+|---:|---|---|---:|
+| 1 | Database Basics | books | 29.99 |
+| 2 | Desk Lamp | home | 18.50 |
+| 3 | SQL Guide | books | 34.00 |
+
+```sql
+SELECT product_id, name, price
+FROM products
+WHERE category = 'books'
+ORDER BY product_id;
 ```
-SELECT column1, column2, ...
-FROM table_name
-WHERE condition;
-```
+
+Result:
+
+| product_id | name | price |
+|---:|---|---:|
+| 1 | Database Basics | 29.99 |
+| 3 | SQL Guide | 34.00 |
 
 ### Updating Data
 
+Starting with the products above, reduce the lamp price:
+
+```sql
+UPDATE products
+SET price = 16.00
+WHERE product_id = 2;
 ```
-UPDATE table_name
-SET column1 = value1, column2 = value2, ...
-WHERE condition;
-```
+
+Resulting table:
+
+| product_id | name | category | price |
+|---:|---|---|---:|
+| 1 | Database Basics | books | 29.99 |
+| 2 | Desk Lamp | home | 16.00 |
+| 3 | SQL Guide | books | 34.00 |
 
 ### Deleting Data
 
+Starting with the products above, delete the desk lamp:
+
+```sql
+DELETE FROM products
+WHERE product_id = 2;
 ```
-DELETE FROM table_name
-WHERE condition;
-```
+
+Resulting table:
+
+| product_id | name | category | price |
+|---:|---|---|---:|
+| 1 | Database Basics | books | 29.99 |
+| 3 | SQL Guide | books | 34.00 |
 
 ### Dropping Tables
 

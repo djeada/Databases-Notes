@@ -25,6 +25,14 @@ This is a comparison of programming models, not a performance ranking. Database 
 
 Imagine the database contains users and posts, and the application needs active users ordered by name.
 
+Input (`users`):
+
+| id | name | active |
+|---:|---|---|
+| 1 | Alice | true |
+| 2 | Bob | false |
+| 3 | Carol | true |
+
 Conceptually the SQL is:
 
 ```sql
@@ -66,6 +74,13 @@ var users = await db.Users
 ```ruby
 users = User.where(active: true).order(:name)
 ```
+
+Each SQL/ORM example above returns:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+| 3 | Carol |
 
 The syntax changes, but the database still receives SQL. Query count, indexes, row counts, transaction scope, and execution plans remain important in every ecosystem.
 
@@ -403,6 +418,31 @@ SELECT users ...
 SELECT posts ... WHERE user_id IN (...)
 ```
 
+Example input tables:
+
+`users`
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+| 2 | Bob |
+
+`posts`
+
+| id | user_id | title |
+|---:|---:|---|
+| 10 | 1 | ORM notes |
+| 11 | 1 | Indexes |
+| 12 | 2 | Transactions |
+
+The parent query returns both users; the child query returns all three posts:
+
+| id | user_id | title |
+|---:|---:|---|
+| 10 | 1 | ORM notes |
+| 11 | 1 | Indexes |
+| 12 | 2 | Transactions |
+
 Benefit:
 - predictable small number of queries,
 - avoids large Cartesian-style row multiplication.
@@ -426,6 +466,18 @@ SET name = ?
 WHERE id = ?;
 ```
 
+Input (`users`):
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
+Resulting table after updating id 1 to Alicia:
+
+| id | name |
+|---:|---|
+| 1 | Alicia |
+
 This is convenient for request-driven applications.
 
 For large bulk operations, loading every row as an object can be inefficient. A set-based SQL operation is often better:
@@ -436,6 +488,22 @@ SET status = 'expired'
 WHERE expires_at < CURRENT_TIMESTAMP
   AND status = 'active';
 ```
+
+Input (`subscriptions`), assuming the example runs on 2026-10-04:
+
+| id | status | expires_at |
+|---:|---|---|
+| 1 | active | 2026-10-01 |
+| 2 | active | 2026-10-20 |
+| 3 | cancelled | 2026-09-01 |
+
+Resulting table:
+
+| id | status | expires_at |
+|---:|---|---|
+| 1 | expired | 2026-10-01 |
+| 2 | active | 2026-10-20 |
+| 3 | cancelled | 2026-09-01 |
 
 One database statement can replace millions of object updates.
 
@@ -589,6 +657,15 @@ Fetching whole entities for a report that needs only two fields.
 ```python
 all_users = session.scalars(select(User)).all()
 ```
+
+For a small input table:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+| 2 | Bob |
+
+the result contains both rows. On a very large `users` table, returning every row can consume excessive memory and database/network capacity.
 
 This may be fine for 20 users and disastrous for 20 million.
 

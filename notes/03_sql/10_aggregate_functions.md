@@ -416,7 +416,13 @@ FROM Employees
 WHERE EmployeeID < 0;
 ```
 
-The result is `0, 0, NULL, NULL, 0`. An aggregate without `GROUP BY` still returns a result row on empty input: counts are zero, while `SUM` and `AVG` are null. With a grouping key, empty input has no groups and therefore produces no result rows.
+Result:
+
+| row_count | known_salary_count | salary_sum | salary_average | displayed_sum |
+| ---: | ---: | --- | --- | ---: |
+| 0 | 0 | NULL | NULL | 0 |
+
+An aggregate without `GROUP BY` still returns a result row on empty input: counts are zero, while `SUM` and `AVG` are null. With a grouping key, empty input has no groups and therefore produces no result rows.
 
 Displaying zero may be appropriate for “no payroll entries this period.” It can be misleading for “payroll total unavailable,” so choose the fallback from the report's meaning. `AVG(COALESCE(Salary, 0))` treats unknown salaries as actual zero salaries and changes the denominator. `COALESCE(AVG(Salary), 0)` leaves unknown salaries out of the calculation and only replaces an absent final average. These expressions answer different questions.
 
@@ -434,7 +440,15 @@ GROUP BY DepartmentID
 ORDER BY DepartmentID;
 ```
 
-Human Resources has 3 employees, 2 known salaries, and 1 missing salary. Engineering has 2, 2, 0; Marketing has 1, 1, 0. `CASE` produces one or zero for every input row, then `SUM` counts the selected condition. This technique generalizes to approved orders, overdue invoices, or available stock while keeping one row per reporting group.
+Result:
+
+| DepartmentID | employee_count | known_salary_count | missing_salary_count |
+| ---: | ---: | ---: | ---: |
+| 1 | 3 | 2 | 1 |
+| 2 | 2 | 2 | 0 |
+| 3 | 1 | 1 | 0 |
+
+`CASE` produces one or zero for every input row, then `SUM` counts the selected condition. This technique generalizes to approved orders, overdue invoices, or available stock while keeping one row per reporting group.
 
 PostgreSQL and SQLite also support aggregate `FILTER` clauses, but `CASE` is widely portable. If a left join is used to include empty departments, account for its null-extended row: `COUNT(*)` would count that preserved row, and a null-salary condition could confuse “no employee” with “employee with missing salary.” Test the employee ID's presence as well.
 
@@ -459,7 +473,13 @@ HAVING COUNT(*) >= 2
 ORDER BY DepartmentID;
 ```
 
-Only Engineering qualifies, with 2 employees. Jane qualifies individually in Human Resources, but John at exactly 60000 does not pass the strict inequality, and Susan's unknown salary does not pass either. `HAVING` tests the resulting group count. Moving `Salary > 60000` into an arbitrary non-grouped expression changes or invalidates the query.
+Result:
+
+| DepartmentID | qualifying_employees |
+| ---: | ---: |
+| 2 | 2 |
+
+Jane qualifies individually in Human Resources, but John at exactly 60000 does not pass the strict inequality, and Susan's unknown salary does not pass either. `HAVING` tests the resulting group count. Moving `Salary > 60000` into an arbitrary non-grouped expression changes or invalidates the query.
 
 An index on a selective filter can reduce the input to aggregate, but an aggregate still needs an appropriate plan to group or sort that input. A report over almost every row can legitimately use a scan. Inspect the actual plan and workload rather than indexing every aggregated column.
 

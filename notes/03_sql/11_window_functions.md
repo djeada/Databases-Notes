@@ -382,6 +382,15 @@ GROUP BY
     ProductID;
 ```
 
+Result:
+
+| ProductID | TotalSales |
+| ---: | ---: |
+| 101 | 675.00 |
+| 102 | 575.00 |
+| 103 | 360.00 |
+| 104 | 440.00 |
+
 **Window Function Example: Total Sales per Product Alongside Each Sale**
 
 ```sql
@@ -398,6 +407,22 @@ ORDER BY
     ProductID,
     SaleDate;
 ```
+
+Result:
+
+| SaleID | ProductID | TotalSalesPerProduct |
+| ---: | ---: | ---: |
+| 1 | 101 | 675.00 |
+| 3 | 101 | 675.00 |
+| 6 | 101 | 675.00 |
+| 11 | 101 | 675.00 |
+| 2 | 102 | 575.00 |
+| 5 | 102 | 575.00 |
+| 9 | 102 | 575.00 |
+| 4 | 103 | 360.00 |
+| 7 | 103 | 360.00 |
+| 8 | 104 | 440.00 |
+| 10 | 104 | 440.00 |
 
 - The aggregate function provides a summarized view with one row per `ProductID`.
 - The window function adds the total sales per product to each individual sale row without reducing the number of rows.
@@ -569,6 +594,22 @@ ORDER BY
     SaleDate;
 ```
 
+Result:
+
+| SaleID | ProductID | PreviousQuantity |
+| ---: | ---: | ---: |
+| 1 | 101 | NULL |
+| 3 | 101 | 10 |
+| 6 | 101 | 20 |
+| 11 | 101 | 15 |
+| 2 | 102 | NULL |
+| 5 | 102 | 5 |
+| 9 | 102 | 10 |
+| 4 | 103 | NULL |
+| 7 | 103 | 7 |
+| 8 | 104 | NULL |
+| 10 | 104 | 12 |
+
 **Using Self-Joins**
 
 ```sql
@@ -596,6 +637,22 @@ ORDER BY
     s1.ProductID,
     s1.SaleDate;
 ```
+
+Result:
+
+| SaleID | ProductID | PreviousQuantity |
+| ---: | ---: | ---: |
+| 1 | 101 | NULL |
+| 3 | 101 | 10 |
+| 6 | 101 | 20 |
+| 11 | 101 | 15 |
+| 2 | 102 | NULL |
+| 5 | 102 | 5 |
+| 9 | 102 | 10 |
+| 4 | 103 | NULL |
+| 7 | 103 | 7 |
+| 8 | 104 | NULL |
+| 10 | 104 | 12 |
 
 - The window function directly expresses the previous-row operation and is usually easier to read. Compare plans to determine its performance benefit.
 - The self-join approach is more complex and can be less efficient, especially on large datasets.
@@ -696,6 +753,14 @@ The outer `ORDER BY` controls presentation. The orders inside `OVER` control cal
 
 The default ordered frame commonly ends at the current row's peer group, rather than the end of the partition. That can make `LAST_VALUE` look unexpectedly like the current value:
 
+Input (`sample_values`):
+
+| id | amount |
+| ---: | ---: |
+| 1 | 100 |
+| 2 | 150 |
+| 3 | 200 |
+
 ```sql
 WITH sample_values(id, amount) AS (VALUES (1, 100), (2, 150), (3, 200))
 SELECT id,
@@ -708,11 +773,27 @@ FROM sample_values
 ORDER BY id;
 ```
 
-The default-frame values are 100, 150, 200. The full-partition values are 200, 200, 200. `UNBOUNDED FOLLOWING` is necessary when the desired answer lies after the current row. `LAG` and `LEAD` have different offset semantics and should not be explained as though they simply aggregate the same frame.
+Result:
+
+| id | last_in_default_frame | last_in_partition |
+| ---: | ---: | ---: |
+| 1 | 100 | 200 |
+| 2 | 150 | 200 |
+| 3 | 200 | 200 |
+
+`UNBOUNDED FOLLOWING` is necessary when the desired answer lies after the current row. `LAG` and `LEAD` have different offset semantics and should not be explained as though they simply aggregate the same frame.
 
 ## A time interval is different from a fixed number of rows
 
 Three recent sale rows might cover three minutes or three months. For a time-based report, use the engine's supported time-range syntax. This **PostgreSQL** example is independent of the SQLite Sales table:
+
+Input (`dated_sales`):
+
+| sale_id | sold_at | quantity |
+| ---: | --- | ---: |
+| 1 | 2025-01-01 12:00 | 10 |
+| 2 | 2025-01-03 12:00 | 20 |
+| 3 | 2025-01-10 12:00 | 30 |
 
 ```sql
 -- PostgreSQL
@@ -735,7 +816,15 @@ FROM dated_sales
 ORDER BY sale_id;
 ```
 
-The averages are `(10, 10)`, `(15, 15)`, and `(25, 20)`. On January 10, the seven-day range includes January 3 at the boundary and January 10, excluding January 1. The three-row frame includes all three sales. Neither calculates an average per calendar day including days with no sales: that requires generating or joining a calendar and deciding how empty days contribute.
+Result:
+
+| sale_id | seven_day_average | three_row_average |
+| ---: | ---: | ---: |
+| 1 | 10 | 10 |
+| 2 | 15 | 15 |
+| 3 | 25 | 20 |
+
+On January 10, the seven-day range includes January 3 at the boundary and January 10, excluding January 1. The three-row frame includes all three sales. Neither calculates an average per calendar day including days with no sales: that requires generating or joining a calendar and deciding how empty days contribute.
 
 An offset range frame in PostgreSQL requires a single ordering expression. Its timestamp interval does not use the same spelling as SQLite's numeric `RANGE` offsets. For SQLite, a suitable numeric time expression such as `julianday(...)` can be used with a deliberately chosen numeric-day offset; do not paste PostgreSQL's interval literal into it.
 

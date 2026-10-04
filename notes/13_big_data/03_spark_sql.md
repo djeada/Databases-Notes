@@ -29,16 +29,31 @@ The driver plans the work. Executors process partitions in parallel.
 
 ## Lazy execution
 
-Most DataFrame transformations are lazy.
+Most DataFrame transformations are lazy. The following operations use these `sales` rows:
 
-This code:
+| category | quantity | unit_price |
+|---|---:|---:|
+| Books | 2 | 15.00 |
+| Books | 1 | 20.00 |
+| Games | 3 | 10.00 |
 
 ```python
+from pyspark.sql import functions as F
+
 filtered = sales.filter(sales.quantity > 1)
-grouped = filtered.groupBy("category").sum("revenue")
+grouped = filtered.groupBy("category").agg(
+    F.sum(F.col("quantity") * F.col("unit_price")).alias("revenue")
+).orderBy("category")
 ```
 
-describes a computation but does not necessarily run it immediately.
+The grouped result, once an action such as `show()` runs, is:
+
+| category | revenue |
+|---|---:|
+| Books | 30.00 |
+| Games | 30.00 |
+
+These transformations describe a computation but do not necessarily run it immediately.
 
 An **action** triggers execution, for example:
 
@@ -60,8 +75,16 @@ result = spark.sql("""
     SELECT category, SUM(quantity * unit_price) AS revenue
     FROM sales
     GROUP BY category
+    ORDER BY category
 """)
 ```
+
+For the three `sales` input rows above, the SQL result is:
+
+| category | revenue |
+|---|---:|
+| Books | 50.00 |
+| Games | 30.00 |
 
 The equivalent DataFrame expression is:
 
@@ -70,7 +93,7 @@ from pyspark.sql import functions as F
 
 result = sales.groupBy("category").agg(
     F.sum(F.col("quantity") * F.col("unit_price")).alias("revenue")
-)
+).orderBy("category")
 ```
 
 The choice between SQL and DataFrames is often about readability and team preference rather than a completely different execution engine.
@@ -113,6 +136,21 @@ The script:
 5. prints the physical plan,
 6. writes the result as Parquet,
 7. reads the Parquet result back.
+
+Its input table is:
+
+| category | quantity | unit_price |
+|---|---:|---:|
+| Books | 2 | 15.00 |
+| Books | 1 | 20.00 |
+| Games | 3 | 10.00 |
+
+The grouped SQL query and the Parquet read-back return the same result:
+
+| category | revenue |
+|---|---:|
+| Books | 50.00 |
+| Games | 30.00 |
 
 Expected business result:
 
@@ -240,6 +278,29 @@ from pyspark.sql.functions import broadcast
 joined = facts.join(broadcast(products), "product_id")
 ```
 
+Example input tables:
+
+`facts`
+
+| product_id | quantity |
+|---:|---:|
+| 1 | 2 |
+| 2 | 1 |
+
+`products`
+
+| product_id | title |
+|---:|---|
+| 1 | Database Basics |
+| 2 | SQL Practice |
+
+Result:
+
+| product_id | quantity | title |
+|---:|---:|---|
+| 1 | 2 | Database Basics |
+| 2 | 1 | SQL Practice |
+
 Broadcasting helps only when the small side is genuinely small enough for executor memory.
 
 ## Data skew
@@ -278,6 +339,19 @@ result = events.select("event_date", "user_id").where(
     "event_date >= DATE '2026-01-01'"
 )
 ```
+
+Example input rows:
+
+| event_date | user_id | event_type |
+|---|---:|---|
+| 2026-01-01 | 101 | view |
+| 2025-12-31 | 202 | purchase |
+
+Result:
+
+| event_date | user_id |
+|---|---:|
+| 2026-01-01 | 101 |
 
 With suitable Parquet metadata and partitioning, Spark may avoid reading unrelated columns and files.
 
@@ -376,6 +450,20 @@ from pyspark.sql import functions as F
 
 df.withColumn("normalized", F.lower(F.trim("name")))
 ```
+
+Input:
+
+| name |
+|---|
+| ` Alice ` |
+| `BOB` |
+
+Result:
+
+| name | normalized |
+|---|---|
+| ` Alice ` | alice |
+| `BOB` | bob |
 
 over a Python UDF that does the same thing.
 

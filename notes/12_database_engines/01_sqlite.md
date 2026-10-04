@@ -149,6 +149,18 @@ Retrieve data using the `SELECT` command.
 sqlite> SELECT * FROM users;
 ```
 
+Input (`users`):
+
+| id | name | email |
+| ---: | --- | --- |
+| 1 | Alice Smith | alice@example.com |
+
+Result:
+
+| id | name | email |
+| ---: | --- | --- |
+| 1 | Alice Smith | alice@example.com |
+
 *Example Output:*
 
 ```
@@ -169,6 +181,18 @@ Modify existing data with the `UPDATE` command.
 sqlite> UPDATE users SET email = 'alice.smith@example.com' WHERE id = 1;
 ```
 
+Input (`users`):
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Smith | alice@example.com |
+
+Resulting table:
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Smith | alice.smith@example.com |
+
 *Example Output:*
 
 ```
@@ -184,6 +208,18 @@ Remove data using the `DELETE` command.
 ```sql
 sqlite> DELETE FROM users WHERE id = 1;
 ```
+
+Input (`users`):
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Smith | alice.smith@example.com |
+
+Resulting table:
+
+| id | name | email |
+|---|---|---|
+| *(no rows)* |  |  |
 
 *Example Output:*
 

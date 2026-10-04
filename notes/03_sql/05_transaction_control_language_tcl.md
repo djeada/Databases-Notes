@@ -38,6 +38,12 @@ The example uses a known sample purchase price. A real checkout also needs a pol
 
 This exercise deliberately does not keep its change:
 
+Input (`products`):
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 20 | SQL Practice | 2500 | 8 |
+
 ```sql
 BEGIN;
 UPDATE products SET stock = stock + 10 WHERE product_id = 20;
@@ -46,7 +52,19 @@ ROLLBACK;
 SELECT stock FROM products WHERE product_id = 20;
 ```
 
-The first select sees 18; the second sees the original eight. A transaction reads its own changes before committing them. Rollback does not undo commits made by unrelated transactions.
+The first query returns:
+
+| stock |
+| ---: |
+| 18 |
+
+The query after rollback returns:
+
+| stock |
+| ---: |
+| 8 |
+
+A transaction reads its own changes before committing them. Rollback does not undo commits made by unrelated transactions.
 
 ## Handle the failure explicitly
 
@@ -120,6 +138,13 @@ A transaction also does not undo an email or remote payment already sent. Extern
 
 Two updates can form one business operation. Use a separate pair of accounts:
 
+Input (`tcl_accounts`):
+
+| account_id | balance_cents |
+| ---: | ---: |
+| 1 | 10000 |
+| 2 | 2000 |
+
 ```sql
 CREATE TABLE tcl_accounts (
     account_id INTEGER PRIMARY KEY,
@@ -136,7 +161,14 @@ SELECT account_id, balance_cents FROM tcl_accounts ORDER BY account_id;
 ROLLBACK;
 ```
 
-Inside the transaction the balances are 7000 and 5000; after rollback they are 10000 and 2000. A successful transfer would commit instead. However, the SQL alone has a gap: an update can affect zero rows without raising an error. If the destination were missing, blindly committing would debit money without crediting an account.
+The query inside the transaction returns:
+
+| account_id | balance_cents |
+| ---: | ---: |
+| 1 | 7000 |
+| 2 | 5000 |
+
+After `ROLLBACK`, the input balances are restored. A successful transfer would commit instead. However, the SQL alone has a gap: an update can affect zero rows without raising an error. If the destination were missing, blindly committing would debit money without crediting an account.
 
 The application must verify both outcomes. This helper uses Python's default SQLite transaction mode and assumes the account setup has been committed before the call:
 
@@ -179,6 +211,13 @@ An application should own the full transaction boundary. Returning a pooled conn
 
 A savepoint does not create an independently committed transaction. This SQLite example keeps one accepted adjustment and abandons an optional second adjustment:
 
+Input (`tcl_accounts`):
+
+| account_id | balance_cents |
+| ---: | ---: |
+| 1 | 10000 |
+| 2 | 2000 |
+
 ```sql
 BEGIN;
 UPDATE tcl_accounts SET balance_cents = balance_cents + 100 WHERE account_id = 1;
@@ -190,7 +229,14 @@ SELECT account_id, balance_cents FROM tcl_accounts ORDER BY account_id;
 ROLLBACK;
 ```
 
-On the original account setup, the intermediate result is 10100 and 2000. Rolling back to the savepoint preserves the first adjustment and undoes the second. Releasing the savepoint removes that inner boundary; the final outer rollback still undoes the first adjustment. If you ran the successful Python transfer first, begin this exercise with a fresh account setup to obtain these values.
+The query inside the transaction returns:
+
+| account_id | balance_cents |
+| ---: | ---: |
+| 1 | 10100 |
+| 2 | 2000 |
+
+Rolling back to the savepoint preserves the first adjustment and undoes the second. Releasing the savepoint removes that inner boundary; the final outer rollback still undoes the first adjustment. If you ran the successful Python transfer first, begin this exercise with a fresh account setup to obtain these values.
 
 In PostgreSQL, an error normally leaves the transaction unable to execute ordinary statements until rollback, or rollback to an appropriate earlier savepoint. In SQLite, many constraint errors undo just the failed statement and leave the transaction active. The application should not infer one engine's error handling from another's behavior.
 

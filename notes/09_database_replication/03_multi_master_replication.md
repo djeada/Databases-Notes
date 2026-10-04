@@ -1257,22 +1257,34 @@ MariaDB documents that `wsrep_sync_wait` waits until the local node catches up w
 
 ## Concrete read-after-write example
 
-Client writes through A:
+Client writes through A; suppose the resulting row is `(104, 27, 89.00)`:
 
 ```sql
-INSERT INTO orders(id, ...)
-VALUES (104, ...);
+BEGIN;
+
+INSERT INTO orders(id, customer_id, amount)
+VALUES (104, 27, 89.00);
 
 COMMIT;
 ```
 
-Then immediately connects to B:
+After the write, node A's `orders` table includes:
+
+| id | customer_id | amount |
+| ---: | ---: | ---: |
+| 104 | 27 | 89.00 |
+
+Then the client immediately connects to B and reads from the replicated table:
 
 ```sql
 SELECT *
 FROM orders
 WHERE id = 104;
 ```
+
+| id | customer_id | amount |
+| ---: | ---: | ---: |
+| 104 | 27 | 89.00 |
 
 For a critical causal read, the session can use:
 
@@ -1283,6 +1295,10 @@ SELECT *
 FROM orders
 WHERE id = 104;
 ```
+
+| id | customer_id | amount |
+| ---: | ---: | ---: |
+| 104 | 27 | 89.00 |
 
 The read waits for the local node to be synchronized sufficiently before execution.
 

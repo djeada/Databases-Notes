@@ -405,7 +405,19 @@ public class ObjectModelDemo {
 }
 ```
 
-The expected printed title is `Database Basics`. `@Entity` marks persistable state, `@Id` declares identity, and `persist` schedules storage within the transaction. The query uses **JPQL**, referring to the entity and its Java fields rather than a SQL table declaration.
+After `persist`, the example's `Book` table contains:
+
+| productId | title | priceCents |
+| ---: | --- | ---: |
+| 10 | Database Basics | 1500 |
+
+The JPQL query returns and prints:
+
+| title |
+| --- |
+| Database Basics |
+
+`@Entity` marks persistable state, `@Id` declares identity, and `persist` schedules storage within the transaction. The query uses **JPQL**, referring to the entity and its Java fields rather than a SQL table declaration.
 
 Objects are not stored together with executable method code. Their persistent state is stored, and the application supplies behavior through its classes. This approach can fit an object-centered workload but still needs transaction, schema-evolution, query, and integration decisions. See ObjectDB's [entity](https://www.objectdb.com/java/jpa/start/entity), [connection](https://www.objectdb.com/java/jpa/start/connection), and [CRUD](https://www.objectdb.com/java/jpa/start/crud) tutorials for the provider-specific setup and APIs.
 

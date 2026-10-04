@@ -48,6 +48,12 @@ INSERT INTO users (name)
 VALUES (?);
 ```
 
+With an empty `users` table and the parameter `name = 'Alice'`, the resulting row is:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
 Later:
 
 ```python
@@ -61,6 +67,18 @@ SELECT id, name
 FROM users
 WHERE id = ?;
 ```
+
+Input (`users`):
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
+Result:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
 
 The exact SQL depends on the ORM, database, mappings, and query.
 
@@ -127,6 +145,20 @@ SELECT users.id, users.name FROM users ORDER BY users.id
 UPDATE users SET name=? WHERE users.id = ?
 ```
 
+The query runs after the demo inserts Alice and Bob, then updates Alice to Alicia:
+
+| id | name before update | name after update |
+|---:|---|---|
+| 1 | Alice | Alicia |
+| 2 | Bob | Bob |
+
+The `SELECT` result is:
+
+| id | name |
+|---:|---|
+| 1 | Alicia |
+| 2 | Bob |
+
 This is useful because ORM code should never be treated as mysterious. Inspecting the generated SQL is part of using an ORM well.
 
 ## SQLAlchemy 2.x minimal example
@@ -167,6 +199,18 @@ Expected output:
 ```text
 1 Alice
 ```
+
+Input (`users`):
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
+Result:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
 
 ## Session and unit of work
 
@@ -307,6 +351,18 @@ Suppose one query loads 100 orders:
 ```sql
 SELECT * FROM orders;
 ```
+
+Example input (`orders`):
+
+| id | customer_id | total |
+|---:|---:|---:|
+| 101 | 1 | 49.90 |
+
+Result:
+
+| id | customer_id | total |
+|---:|---:|---:|
+| 101 | 1 | 49.90 |
 
 Then application code accesses each order's customer:
 
@@ -504,6 +560,17 @@ session.execute(
     {"email": email},
 )
 ```
+
+With `email = 'alice@example.com'`, the input and result are:
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice | alice@example.com |
+| 2 | Bob | bob@example.com |
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice | alice@example.com |
 
 Do not concatenate untrusted values into SQL strings.
 

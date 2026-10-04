@@ -77,7 +77,21 @@ ORDER BY order_id;
 RESET ROLE;
 ```
 
-The reader sees two rows. `SET ROLE` changes the active role for the session; it does not create a network login or change the underlying session's login identity. The administrator can switch to this practice role for the test. An ordinary application login needs an authorized membership before it can use another role.
+Input (`dcl_practice.order_summary`):
+
+| order_id | total_cents |
+| ---: | ---: |
+| 101 | 5500 |
+| 103 | 5000 |
+
+Result for the reader:
+
+| order_id | total_cents |
+| ---: | ---: |
+| 101 | 5500 |
+| 103 | 5000 |
+
+`SET ROLE` changes the active role for the session; it does not create a network login or change the underlying session's login identity. The administrator can switch to this practice role for the test. An ordinary application login needs an authorized membership before it can use another role.
 
 `USAGE` lets the role resolve objects in this schema. `SELECT` lets it read this table. Neither grant lets it insert orders. To observe a denied operation, switch roles again and run this statement **separately**, outside a transaction block:
 
@@ -125,7 +139,19 @@ SELECT report_date, total_cents FROM dcl_practice.daily_totals;
 RESET ROLE;
 ```
 
-The reader can select the newly created table. These defaults belong to the creating role and affect future objects. They do not retroactively change every existing table, and they do not automatically apply to tables created by a different owner. If a deployment pipeline creates tables under another role, configure that owner's defaults deliberately.
+Input (`dcl_practice.daily_totals`):
+
+| report_date | total_cents |
+| --- | ---: |
+| 2025-01-12 | 6500 |
+
+Result for the reader:
+
+| report_date | total_cents |
+| --- | ---: |
+| 2025-01-12 | 6500 |
+
+These defaults belong to the creating role and affect future objects. They do not retroactively change every existing table, and they do not automatically apply to tables created by a different owner. If a deployment pipeline creates tables under another role, configure that owner's defaults deliberately.
 
 An insert using a generated sequence can require sequence permissions in addition to table permissions. Grant the specific capabilities a writer needs; adding `ALL` merely because one sequence call failed is a much wider change.
 
@@ -146,7 +172,19 @@ SELECT has_table_privilege(
 ) AS may_read;
 ```
 
-In this isolated setup, the answers are true then false. On a live database, inspect other paths if the answer remains true. Object owners normally retain powers that an ordinary grantee lacks, and superusers are unsuitable for testing a restricted account.
+In this isolated setup, the first query returns:
+
+| may_read |
+| --- |
+| true |
+
+After the revoke, the second query returns:
+
+| may_read |
+| --- |
+| false |
+
+On a live database, inspect other paths if the answer remains true. Object owners normally retain powers that an ordinary grantee lacks, and superusers are unsuitable for testing a restricted account.
 
 `WITH GRANT OPTION` permits a grantee to grant a privilege onward. Use it only when delegation is intended. Revoking delegated privileges can involve dependencies and cascading revocation. Keep the ownership and grant chain understandable instead of treating every role as an independent list of permissions.
 

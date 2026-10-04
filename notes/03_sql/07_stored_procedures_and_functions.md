@@ -27,6 +27,14 @@ INSERT INTO routine_order_items VALUES
 
 These rows reproduce the first two orders from the SQLite tutorial without requiring you to translate its whole setup.
 
+Input (`routine_order_items`):
+
+| order_id | line_number | quantity | unit_price_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 1 | 2 | 1500 |
+| 101 | 2 | 1 | 2500 |
+| 102 | 1 | 1 | 1500 |
+
 ## Define and call a function
 
 ```sql
@@ -42,7 +50,11 @@ $$;
 SELECT bookstore_order_total(101) AS total_cents;
 ```
 
-The expected result is `5500`.
+Result:
+
+| total_cents |
+| ---: |
+| 5500 |
 
 Read the definition in order:
 
@@ -80,13 +92,24 @@ FROM bookstore_large_orders(5000)
 ORDER BY order_id;
 ```
 
-The result is order 101 with 5500 cents. The function belongs in `FROM` because it supplies rows. The scalar total function belongs in an expression because it supplies one value. PostgreSQL's sum over `BIGINT` returns `NUMERIC`, so this function explicitly converts its total to the declared output type. A total beyond `BIGINT` range would fail; choose a numeric contract if that range is insufficient.
+Result:
+
+| order_id | total_cents |
+| ---: | ---: |
+| 101 | 5500 |
+
+The function belongs in `FROM` because it supplies rows. The scalar total function belongs in an expression because it supplies one value. PostgreSQL's sum over `BIGINT` returns `NUMERIC`, so this function explicitly converts its total to the declared output type. A total beyond `BIGINT` range would fail; choose a numeric contract if that range is insufficient.
 
 `STABLE` tells PostgreSQL that the function's result can depend on reads but will not modify the database and has stability within a statement under its documented snapshot rules. It is not a cache that keeps yesterday's report forever. `IMMUTABLE` would be inappropriate for a total that changes when table data changes.
 
 ## Define and call a procedure
 
-A procedure is invoked to perform an operation rather than used as an expression in a `SELECT`. This example creates another independent practice table:
+A procedure is invoked to perform an operation rather than used as an expression in a `SELECT`. This example creates another independent practice table. Before cancellation, it contains:
+
+| order_id | status |
+| ---: | --- |
+| 101 | completed |
+| 102 | open |
 
 ```sql
 CREATE TABLE routine_orders (
@@ -119,7 +142,11 @@ This routine changes status only. It is not a complete cancellation workflow: it
 
 ## Make the cancellation contract report a rejected operation
 
-The original procedure silently ignores a completed or missing order. A PL/pgSQL procedure can make that outcome explicit. Order 102 is already cancelled from the earlier exercise, so add an open order for this one:
+The original procedure silently ignores a completed or missing order. A PL/pgSQL procedure can make that outcome explicit. Order 102 is already cancelled from the earlier exercise, so add an open order for this one. The target row is:
+
+| order_id | status |
+| ---: | --- |
+| 104 | open |
 
 ```sql
 -- PostgreSQL
@@ -142,7 +169,13 @@ CALL cancel_open_order_checked(104);
 SELECT order_id, status FROM routine_orders WHERE order_id = 104;
 ```
 
-The row is `104, cancelled`. `FOUND` records whether the preceding update affected a row. Calling this checked procedure again raises an exception. Its contract treats an already cancelled order as an error; another workflow could intentionally report “already cancelled” as a successful idempotent outcome. Decide that policy before naming the interface.
+Result:
+
+| order_id | status |
+| ---: | --- |
+| 104 | cancelled |
+
+`FOUND` records whether the preceding update affected a row. Calling this checked procedure again raises an exception. Its contract treats an already cancelled order as an error; another workflow could intentionally report “already cancelled” as a successful idempotent outcome. Decide that policy before naming the interface.
 
 Run the failing call separately. If it occurs inside a transaction, recover with rollback before continuing. PL/pgSQL's `BEGIN ... END` groups procedural statements; it does not commit the update on its own. The caller can still roll back a successful call.
 
@@ -192,7 +225,15 @@ WHERE CustomerId = @CreatedId;
 GO
 ```
 
-In this fresh table the result is customer 1, Dana. An output parameter returns a value separately from a result set. Both the definition and the call mark it `OUTPUT`. `SCOPE_IDENTITY()` retrieves the identity generated in the current scope; using a global or session-wide “latest ID” without understanding triggers and other inserts can retrieve the wrong value.
+Input: `dbo.RoutineCustomers` is empty before the procedure call.
+
+Result:
+
+| CustomerId | CustomerName |
+| ---: | --- |
+| 1 | Dana |
+
+An output parameter returns a value separately from a result set. Both the definition and the call mark it `OUTPUT`. `SCOPE_IDENTITY()` retrieves the identity generated in the current scope; using a global or session-wide “latest ID” without understanding triggers and other inserts can retrieve the wrong value.
 
 Identity values can have gaps. A failed or rolled-back insert does not make an identity sequence a gapless receipt-number service. Use a dedicated, correctly coordinated numbering process if a business rule requires gapless document numbers.
 

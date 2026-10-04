@@ -925,13 +925,27 @@ may not have applied 104 yet
 
 Therefore:
 
+Before WAL has been applied on the replica, its relevant rows may look like this:
+
+| id | total |
+| ---: | ---: |
+| 103 | 42.00 |
+
 ```sql id="hdd8fn"
 SELECT *
 FROM orders
 WHERE id = 104;
 ```
 
-on the replica may still lag behind.
+| rows returned |
+| ---: |
+| 0 |
+
+The query on the replica may still lag behind. After WAL applies the new row, the result becomes:
+
+| id | total |
+| ---: | ---: |
+| 104 | 89.00 |
 
 Again:
 
@@ -1902,6 +1916,12 @@ SELECT
     replay_lag
 FROM pg_stat_replication;
 ```
+
+Example output for one replica (lag intervals and WAL positions are illustrative):
+
+| application_name | state | sync_state | sent_lsn | write_lsn | flush_lsn | replay_lsn | write_lag | flush_lag | replay_lag |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| standby1 | streaming | async | 0/5000100 | 0/5000100 | 0/5000100 | 0/4FFFE00 | 00:00:00.050 | 00:00:00.050 | 00:00:00.250 |
 
 The positions correspond to increasingly advanced stages of standby progress.
 

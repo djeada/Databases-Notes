@@ -181,11 +181,23 @@ Example:
 SET feature:checkout:v2 enabled
 ```
 
+Resulting key-value row (the command replies `OK`):
+
+| key | value |
+|---|---|
+| `feature:checkout:v2` | enabled |
+
 Counter:
 
 ```text
 INCR article:42:views
 ```
+
+Starting key-value row and result:
+
+| key | value before | `INCR` result | value after |
+|---|---:|---:|---:|
+| `article:42:views` | 9 | 10 | 10 |
 
 ## Hash
 
@@ -198,6 +210,14 @@ HSET user:42
   country "DE"
 ```
 
+Resulting hash fields:
+
+| key | field | value |
+|---|---|---|
+| `user:42` | name | Alice |
+| `user:42` | plan | pro |
+| `user:42` | country | DE |
+
 This can update one field without replacing the entire serialized value.
 
 ## Set
@@ -207,6 +227,14 @@ A set represents unique membership.
 ```text
 SADD team:7:members 42 51 87
 ```
+
+Resulting set members (Redis does not promise an order):
+
+| key | member |
+|---|---:|
+| `team:7:members` | 42 |
+| `team:7:members` | 51 |
+| `team:7:members` | 87 |
 
 Useful for:
 
@@ -223,6 +251,13 @@ ZADD leaderboard 1200 alice
 ZADD leaderboard 1500 bob
 ```
 
+Resulting sorted-set rows:
+
+| key | member | score |
+|---|---|---:|
+| `leaderboard` | alice | 1200 |
+| `leaderboard` | bob | 1500 |
+
 Useful for:
 
 - rankings,
@@ -238,6 +273,12 @@ Example:
 ```text
 SET session:abc <value> EX 3600
 ```
+
+Resulting key state (the `SET` command replies `OK`):
+
+| key | value | expiry |
+|---|---|---:|
+| `session:abc` | `<value>` | 3600 seconds |
 
 A session expires after one hour.
 
@@ -484,6 +525,12 @@ Example:
 INCR inventory:reserved
 ```
 
+If `inventory:reserved` starts at 10, the command returns 11 and stores 11:
+
+| key | value before | result | value after |
+|---|---:|---:|---:|
+| `inventory:reserved` | 10 | 11 | 11 |
+
 is safer than:
 
 ```text
@@ -693,6 +740,18 @@ Direct lookup:
 ```text
 GET session:abc
 ```
+
+Input key-value row:
+
+| key | value |
+|---|---|
+| `session:abc` | `{"user_id":42,"role":"reader"}` |
+
+Result:
+
+| key | returned value |
+|---|---|
+| `session:abc` | `{"user_id":42,"role":"reader"}` |
 
 matches the model.
 

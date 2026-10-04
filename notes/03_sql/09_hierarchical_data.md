@@ -29,6 +29,17 @@ INSERT INTO categories VALUES
     (6, 'SQL', 4);
 ```
 
+The table's input rows are:
+
+| category_id | name | parent_id |
+| ---: | --- | ---: |
+| 1 | Books | NULL |
+| 2 | Computing | 1 |
+| 3 | Fiction | 1 |
+| 4 | Databases | 2 |
+| 5 | Programming | 2 |
+| 6 | SQL | 4 |
+
 ```text
 Books (1)
 ├── Computing (2)
@@ -69,7 +80,14 @@ WITH computing_children AS (
 SELECT name FROM computing_children ORDER BY category_id;
 ```
 
-It returns Databases and Programming again. The name does not create a permanent table or view. A CTE also does not guarantee a particular physical execution strategy.
+Result:
+
+| name |
+| --- |
+| Databases |
+| Programming |
+
+The name does not create a permanent table or view. A CTE also does not guarantee a particular physical execution strategy.
 
 ## Extend the result one level at a time
 
@@ -147,7 +165,15 @@ WHERE NOT EXISTS (
 ORDER BY c.category_id;
 ```
 
-The leaves are Fiction (3), Programming (5), and SQL (6). Fiction is close to the root but still a leaf. To display a path while traversing, carry a value into each recursive step:
+The leaf query returns:
+
+| category_id | name |
+| ---: | --- |
+| 3 | Fiction |
+| 5 | Programming |
+| 6 | SQL |
+
+Fiction is close to the root but still a leaf. To display a path while traversing, carry a value into each recursive step:
 
 ```sql
 WITH RECURSIVE category_paths(category_id, name, path) AS (
@@ -160,7 +186,18 @@ WITH RECURSIVE category_paths(category_id, name, path) AS (
 SELECT category_id, path FROM category_paths ORDER BY category_id;
 ```
 
-SQL's path is `Books / Computing / Databases / SQL`. This calculates a display path; it does not store another copy of every ancestor's name. A rename is reflected on the next query. If names contain the chosen separator, a UI should format a structured list of nodes rather than treat this string as an unambiguous identifier encoding.
+Result:
+
+| category_id | path |
+| ---: | --- |
+| 1 | Books |
+| 2 | Books / Computing |
+| 3 | Books / Fiction |
+| 4 | Books / Computing / Databases |
+| 5 | Books / Computing / Programming |
+| 6 | Books / Computing / Databases / SQL |
+
+This calculates a display path; it does not store another copy of every ancestor's name. A rename is reflected on the next query. If names contain the chosen separator, a UI should format a structured list of nodes rather than treat this string as an unambiguous identifier encoding.
 
 ## A parent reference does not guarantee a tree
 
@@ -189,7 +226,16 @@ WITH RECURSIVE safe_walk(category_id, name, visited) AS (
 SELECT category_id, name FROM safe_walk ORDER BY category_id;
 ```
 
-On the valid setup it returns IDs 2, 4, 5, 6. This avoids revisiting a node along a path; it does not repair invalid parent relationships or make a cycle-producing update acceptable. A production traversal should also consider the size of the reachable set and whether the structure is actually a tree or a graph with multiple paths to a node.
+On the valid setup it returns:
+
+| category_id | name |
+| ---: | --- |
+| 2 | Computing |
+| 4 | Databases |
+| 5 | Programming |
+| 6 | SQL |
+
+This avoids revisiting a node along a path; it does not repair invalid parent relationships or make a cycle-producing update acceptable. A production traversal should also consider the size of the reachable set and whether the structure is actually a tree or a graph with multiple paths to a node.
 
 References: [SQLite recursive CTEs](https://www.sqlite.org/lang_with.html) and [PostgreSQL ltree](https://www.postgresql.org/docs/current/ltree.html).
 
@@ -230,7 +276,27 @@ WHERE path LIKE '/1/2/%'
 ORDER BY category_id;
 ```
 
-The result contains Computing, Databases, Programming, and SQL. The trailing delimiter makes `/1/2/` different from `/1/20/`. This query includes the starting node. To exclude it, add `category_id <> 2`.
+The input table is:
+
+| category_id | name | path |
+| ---: | --- | --- |
+| 1 | Books | /1/ |
+| 2 | Computing | /1/2/ |
+| 3 | Fiction | /1/3/ |
+| 4 | Databases | /1/2/4/ |
+| 5 | Programming | /1/2/5/ |
+| 6 | SQL | /1/2/4/6/ |
+
+Result:
+
+| category_id | name | path |
+| ---: | --- | --- |
+| 2 | Computing | /1/2/ |
+| 4 | Databases | /1/2/4/ |
+| 5 | Programming | /1/2/5/ |
+| 6 | SQL | /1/2/4/6/ |
+
+The trailing delimiter makes `/1/2/` different from `/1/20/`. This query includes the starting node. To exclude it, add `category_id <> 2`.
 
 Moving SQL from Databases to Programming changes its prefix. If SQL had children, they would need the same prefix replacement:
 
@@ -243,7 +309,19 @@ SELECT path FROM hier_paths WHERE category_id = 6;
 ROLLBACK;
 ```
 
-The intermediate path is `/1/2/5/6/`; rollback restores the old one. `substr` preserves any suffix below the moved root. The update must run only after validating that the proposed parent is outside the moved subtree. A string path alone does not guarantee that every encoded ancestor exists or that concurrent moves cannot conflict.
+Input (`hier_paths` before the update):
+
+| category_id | name | path |
+| ---: | --- | --- |
+| 6 | SQL | /1/2/4/6/ |
+
+The intermediate query result is:
+
+| path |
+| --- |
+| /1/2/5/6/ |
+
+Rollback restores the old path. `substr` preserves any suffix below the moved root. The update must run only after validating that the proposed parent is outside the moved subtree. A string path alone does not guarantee that every encoded ancestor exists or that concurrent moves cannot conflict.
 
 An index can sometimes accelerate prefix lookup, but the details depend on collation, operator, and engine. PostgreSQL's `ltree` extension provides a dedicated path type and tree operators, rather than asking ordinary text to handle every operation. Materialized paths favor frequent subtree reads when branch moves are relatively rare.
 
@@ -275,7 +353,27 @@ WHERE parent.category_id = 2
 ORDER BY child.lft;
 ```
 
-The result is Computing, Databases, SQL, Programming, in traversal order. Strict inequalities would exclude Computing itself. SQL's breadcrumb can reverse the containment test:
+Input (`hier_nested`):
+
+| category_id | name | lft | rgt |
+| ---: | --- | ---: | ---: |
+| 1 | Books | 1 | 12 |
+| 2 | Computing | 2 | 9 |
+| 3 | Fiction | 10 | 11 |
+| 4 | Databases | 3 | 6 |
+| 5 | Programming | 7 | 8 |
+| 6 | SQL | 4 | 5 |
+
+Result:
+
+| name |
+| --- |
+| Computing |
+| Databases |
+| SQL |
+| Programming |
+
+Strict inequalities would exclude Computing itself. SQL's breadcrumb can reverse the containment test:
 
 ```sql
 SELECT ancestor.name
@@ -286,7 +384,16 @@ WHERE node.category_id = 6
 ORDER BY ancestor.lft;
 ```
 
-It returns Books, Computing, Databases, SQL. Both queries avoid recursive expansion because the stored interval already encodes transitive containment.
+Result:
+
+| name |
+| --- |
+| Books |
+| Computing |
+| Databases |
+| SQL |
+
+Both queries avoid recursive expansion because the stored interval already encodes transitive containment.
 
 ## Make room before inserting into a nested set
 
@@ -304,7 +411,15 @@ ORDER BY category_id;
 ROLLBACK;
 ```
 
-The intermediate rows are Books `(1, 14)`, Fiction `(10, 13)`, and Mysteries `(11, 12)`, where the pairs are left/right boundaries. The transaction keeps the position changes and new node together. Rollback restores the original tree.
+The input rows in `hier_nested` are shown above. The intermediate query returns:
+
+| category_id | name | lft | rgt |
+| ---: | --- | ---: | ---: |
+| 1 | Books | 1 | 14 |
+| 3 | Fiction | 10 | 13 |
+| 7 | Mysteries | 11 | 12 |
+
+The transaction keeps the position changes and new node together. Rollback restores the original tree.
 
 This exercise has no unique boundary indexes. Naively adding uniqueness and using bulk increments can cause transient collisions under some update strategies; maintenance algorithms must account for the constraints actually declared. The row check only guarantees `lft < rgt`, not a valid tree's entire interval structure. Concurrent insertions and moves require coordination across the affected tree. Nested sets are attractive for relatively static reporting hierarchies, while frequent changes can rewrite many rows.
 
@@ -342,7 +457,16 @@ WHERE c.ancestor_id = 2
 ORDER BY c.depth, n.category_id;
 ```
 
-The rows are Computing 0, Databases 1, Programming 1, SQL 2. Each node's self-pair has depth zero. Looking up a breadcrumb instead filters `descendant_id` and joins node names through `ancestor_id`; order by depth descending to put the root first.
+The closure input rows include the self-pairs and transitive pairs declared in the setup above. The query returns:
+
+| name | depth |
+| --- | ---: |
+| Computing | 0 |
+| Databases | 1 |
+| Programming | 1 |
+| SQL | 2 |
+
+Each node's self-pair has depth zero. Looking up a breadcrumb instead filters `descendant_id` and joins node names through `ancestor_id`; order by depth descending to put the root first.
 
 The primary key prevents duplicate pairs; it does not prove the pairs describe one correct tree. The maintenance code must insert all required paths and remove obsolete ones. Foreign keys only verify that referenced nodes exist.
 
@@ -366,7 +490,16 @@ ORDER BY c.depth DESC;
 ROLLBACK;
 ```
 
-The breadcrumb is Books 3, Computing 2, Databases 1, Indexes 0. Three ancestor rows and one self-pair are added. A long chain needs more pairs for each new node than a shallow tree does.
+The breadcrumb result is:
+
+| name | depth |
+| --- | ---: |
+| Books | 3 |
+| Computing | 2 |
+| Databases | 1 |
+| Indexes | 0 |
+
+Three ancestor rows and one self-pair are added. A long chain needs more pairs for each new node than a shallow tree does.
 
 For the existing leaf SQL, a move beneath Programming removes its old external ancestor paths and builds new ones:
 
@@ -385,7 +518,16 @@ ORDER BY c.depth DESC;
 ROLLBACK;
 ```
 
-It temporarily produces Books, Computing, Programming, SQL. This algorithm is specifically for a **leaf**. Moving a non-leaf branch must preserve paths inside that branch, remove paths from old external ancestors to every descendant, and add combinations of new ancestors with branch descendants. New depth is the new ancestor-to-parent distance plus one plus the moved-root-to-descendant distance. Merely replacing the moved root's paths would leave its children attached to obsolete ancestors.
+The temporary breadcrumb result is:
+
+| name |
+| --- |
+| Books |
+| Computing |
+| Programming |
+| SQL |
+
+This algorithm is specifically for a **leaf**. Moving a non-leaf branch must preserve paths inside that branch, remove paths from old external ancestors to every descendant, and add combinations of new ancestors with branch descendants. New depth is the new ancestor-to-parent distance plus one plus the moved-root-to-descendant distance. Merely replacing the moved root's paths would leave its children attached to obsolete ancestors.
 
 Validate a move's cycle rule and coordinate competing mutations in the same transaction. Some designs retain an adjacency `parent_id` as the direct relationship and maintain the closure table as a derived structure. Then both must be updated together, and a rebuild procedure should be able to regenerate the closure from valid parents.
 
@@ -402,7 +544,27 @@ SELECT category_id, name FROM hier_paths ORDER BY category_id;
 ROLLBACK;
 ```
 
-IDs 4 and 6 disappear temporarily; IDs 1, 2, 3, and 5 remain. With adjacency, deleting only node 4 would fail its incoming foreign key because SQL still references it. A `CASCADE` policy would be a separate deliberate choice. A safe adjacency deletion can identify the full subtree first and remove it according to the engine's reference rules.
+Input (`hier_paths` before deletion):
+
+| category_id | name | path |
+| ---: | --- | --- |
+| 1 | Books | /1/ |
+| 2 | Computing | /1/2/ |
+| 3 | Fiction | /1/3/ |
+| 4 | Databases | /1/2/4/ |
+| 5 | Programming | /1/2/5/ |
+| 6 | SQL | /1/2/4/6/ |
+
+The query result inside the transaction is:
+
+| category_id | name |
+| ---: | --- |
+| 1 | Books |
+| 2 | Computing |
+| 3 | Fiction |
+| 5 | Programming |
+
+With adjacency, deleting only node 4 would fail its incoming foreign key because SQL still references it. A `CASCADE` policy would be a separate deliberate choice. A safe adjacency deletion can identify the full subtree first and remove it according to the engine's reference rules.
 
 In the closure representation, delete the pairs involving a branch's nodes before deleting those nodes. Capture the target IDs before changing the closure, so later commands do not lose the traversal they depend on:
 
@@ -421,7 +583,16 @@ SELECT category_id, name FROM hier_closure_nodes ORDER BY category_id;
 ROLLBACK;
 ```
 
-Again, only IDs 1, 2, 3, and 5 remain during the transaction. Removing merely the pair `(4, 6)` would not delete SQL or its other ancestor relationships. The closure's transitive rows are facts that must remain consistent with the chosen tree.
+The query result inside the transaction is:
+
+| category_id | name |
+| ---: | --- |
+| 1 | Books |
+| 2 | Computing |
+| 3 | Fiction |
+| 5 | Programming |
+
+Removing merely the pair `(4, 6)` would not delete SQL or its other ancestor relationships. The closure's transitive rows are facts that must remain consistent with the chosen tree.
 
 For nested sets, subtree deletion also leaves a gap in traversal positions. Removing Databases' interval `[3, 6]` frees four positions:
 
@@ -434,7 +605,16 @@ SELECT category_id, name, lft, rgt FROM hier_nested ORDER BY lft;
 ROLLBACK;
 ```
 
-The remaining intervals are Books `[1, 8]`, Computing `[2, 5]`, Programming `[3, 4]`, and Fiction `[6, 7]`. This algorithm uses the example's unconstrained boundary columns and one coordinated writer. A production implementation must handle concurrent structural writes and any additional uniqueness rules.
+The query result inside the transaction is:
+
+| category_id | name | lft | rgt |
+| ---: | --- | ---: | ---: |
+| 1 | Books | 1 | 8 |
+| 2 | Computing | 2 | 5 |
+| 5 | Programming | 3 | 4 |
+| 3 | Fiction | 6 | 7 |
+
+This algorithm uses the example's unconstrained boundary columns and one coordinated writer. A production implementation must handle concurrent structural writes and any additional uniqueness rules.
 
 ## Choose from the workload, then validate maintenance
 

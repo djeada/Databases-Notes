@@ -32,7 +32,15 @@ This statement is deliberately invalid. SQLite rejects it with a check-constrain
 SELECT stock FROM products WHERE product_id = 10;
 ```
 
-The value is still 5. The constraint protects this rule even if an application sends a bad update.
+Input (`products`): product 10 has stock 5.
+
+Result:
+
+| stock |
+| ---: |
+| 5 |
+
+The constraint protects this rule even if an application sends a bad update.
 
 `CHECK (stock >= 0)` alone does not reject `NULL` in SQL: a check generally rejects a false result, while an unknown result is allowed. `NOT NULL` supplies the separate requirement that a value be present. Likewise, foreign-key enforcement must actually be enabled; the SQLite setup uses `PRAGMA foreign_keys = ON` for each connection.
 
@@ -75,8 +83,25 @@ CREATE TABLE consistency_bookings (
 INSERT INTO consistency_bookings VALUES
     (1, 100, 'A1', 'Alice'),
     (2, 101, 'A1', 'Bob');
+```
+
+Input (`consistency_bookings`):
+
+| booking_id | screening_id | seat_code | customer_name |
+| ---: | ---: | --- | --- |
+| 1 | 100 | A1 | Alice |
+| 2 | 101 | A1 | Bob |
+
+```sql
 SELECT screening_id, seat_code FROM consistency_bookings ORDER BY screening_id;
 ```
+
+Result:
+
+| screening_id | seat_code |
+| ---: | --- |
+| 100 | A1 |
+| 101 | A1 |
 
 Both rows are valid: A1 can be sold once for screening 100 and once for screening 101. A second A1 booking for screening 100 would fail, even if two applications attempted it concurrently. The key encodes the scope of the invariant. A uniqueness rule on `seat_code` alone would prohibit legitimate sales at later screenings.
 
@@ -107,7 +132,19 @@ WHERE product_id = 10 AND version = 1;
 SELECT product_id, price_cents, version FROM consistency_catalog;
 ```
 
-The first update changes one row; the second changes zero. The final row is `(10, 1600, 2)`. Both proposed prices satisfy the nonnegative-price check. The version condition enforces a different rule: do not overwrite a change made since the editor's read.
+Input (`consistency_catalog`):
+
+| product_id | price_cents | version |
+| ---: | ---: | ---: |
+| 10 | 1500 | 1 |
+
+The first update changes one row; the second changes zero. The query returns:
+
+| product_id | price_cents | version |
+| ---: | ---: | ---: |
+| 10 | 1600 | 2 |
+
+Both proposed prices satisfy the nonnegative-price check. The version condition enforces a different rule: do not overwrite a change made since the editor's read.
 
 The application must inspect the affected-row count and report the conflict or reload data. A zero-row outcome should not be described as a saved edit. This is **optimistic concurrency control** at the application level; the database still coordinates the actual write. Every editing path must follow the version protocol, or an administrative update can bypass it.
 
@@ -133,7 +170,21 @@ GROUP BY product_id
 ORDER BY product_id;
 ```
 
-The derived stock is 6. This ledger preserves reasons and provides a way to reconstruct quantity. It does not yet prevent a dispatch that drives the total negative: an ordinary check on one movement cannot sum the other rows safely under concurrent writers.
+Input (`consistency_movements`):
+
+| movement_id | product_id | quantity_delta | reason |
+| ---: | ---: | ---: | --- |
+| 1 | 10 | 5 | opening stock |
+| 2 | 10 | -1 | sale |
+| 3 | 10 | 2 | delivery |
+
+Result:
+
+| product_id | calculated_stock |
+| ---: | ---: |
+| 10 | 6 |
+
+This ledger preserves reasons and provides a way to reconstruct quantity. It does not yet prevent a dispatch that drives the total negative: an ordinary check on one movement cannot sum the other rows safely under concurrent writers.
 
 One approach retains a current-stock row and conditionally decrements it in the same transaction that inserts a dispatch movement. Receipts increment the current-stock row and insert their movement together. A reconciliation query compares the cache with the ledger sum. This adds a redundancy invariant, so every writing path must maintain both representations. Another design derives stock entirely from movements but needs a concurrency strategy for admitting new dispatches.
 

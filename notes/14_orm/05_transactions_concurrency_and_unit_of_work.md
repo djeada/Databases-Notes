@@ -106,6 +106,12 @@ session.add(User(name="Alice"))
 session.flush()
 ```
 
+Input (`users`) is empty. In the current transaction after the flush, the row is:
+
+| id | name |
+|---:|---|
+| 1 | Alice |
+
 The row may now have a generated primary key, but another transaction may still not see it and the current transaction can still roll back.
 
 ```text
@@ -138,6 +144,12 @@ session.add(user)
 # A query may trigger an autoflush before SELECT.
 count = session.scalar(select(func.count(User.id)))
 ```
+
+The `users` table has no committed rows before this code. Autoflush inserts Alice before the count query, so the result is:
+
+| COUNT(User.id) |
+|---:|
+| 1 |
 
 This can surprise developers who think no SQL is sent until `commit()`.
 
@@ -184,6 +196,18 @@ SET balance = balance - 20
 WHERE id = 1;
 ```
 
+Starting `accounts` table:
+
+| id | balance |
+|---:|---:|
+| 1 | 100.00 |
+
+After both atomic updates, the result is:
+
+| id | balance |
+|---:|---:|
+| 1 | 70.00 |
+
 The database serializes the row updates according to its locking/MVCC rules, so each statement operates on committed/current row state rather than an old application copy.
 
 Set-based atomic statements are often safer than read-modify-write cycles.
@@ -212,6 +236,18 @@ SET title = 'New title',
 WHERE id = 1
   AND version = 7;
 ```
+
+Input (`documents`):
+
+| id | title | version |
+|---:|---|---:|
+| 1 | Draft | 7 |
+
+If this update wins, the resulting row is:
+
+| id | title | version |
+|---:|---|---:|
+| 1 | New title | 8 |
 
 If another transaction already changed the row to version 8, this statement updates zero rows.
 
@@ -265,6 +301,18 @@ Session B was rejected because its version was stale.
 Final row: title='Edited by session A', version=2
 ```
 
+The demo begins with:
+
+| id | title | version |
+|---:|---|---:|
+| 1 | Initial title | 1 |
+
+It ends with:
+
+| id | title | version |
+|---:|---|---:|
+| 1 | Edited by session A | 2 |
+
 SQL logging is enabled so the version check is visible.
 
 ## Pessimistic locking
@@ -279,6 +327,18 @@ FROM accounts
 WHERE id = 1
 FOR UPDATE;
 ```
+
+Input (`accounts`):
+
+| id | balance |
+|---:|---:|
+| 1 | 70.00 |
+
+The query returns and locks this row for the current transaction:
+
+| id | balance |
+|---:|---:|
+| 1 | 70.00 |
 
 The transaction locks the selected row for conflicting writes until commit or rollback.
 
@@ -318,6 +378,12 @@ account = session.scalar(
     .with_for_update()
 )
 ```
+
+Using the same `accounts` row, the ORM query returns the locked account with `id = 1` and `balance = 70.00`:
+
+| id | balance |
+|---:|---:|
+| 1 | 70.00 |
 
 The target database must support the requested locking semantics.
 
@@ -419,6 +485,18 @@ T2: COMMIT
 T1: SELECT status -> may now see 'paid'
 ```
 
+Starting `orders` table:
+
+| order_id | status |
+|---:|---|
+| 501 | pending |
+
+The first T1 query returns `pending`. After T2 commits, a second T1 query at READ COMMITTED can return:
+
+| order_id | status |
+|---:|---|
+| 501 | paid |
+
 This is often a reasonable default for request-driven applications, but multi-step decisions can still need locks or version checks.
 
 ## Repeatable read / snapshot behavior
@@ -435,6 +513,24 @@ T2 commits
 T1 reads again
 T1 still sees 10
 ```
+
+Input before T2's update:
+
+| id | value |
+|---:|---:|
+| 1 | 10 |
+
+The committed table after T2 is:
+
+| id | value |
+|---:|---:|
+| 1 | 20 |
+
+T1's later query still returns its snapshot:
+
+| id | value visible to T1 |
+|---:|---:|
+| 1 | 10 |
 
 This provides a stable view but does not automatically prevent every application-level anomaly.
 
@@ -489,6 +585,14 @@ if missing:
     INSERT key
 ```
 
+Example input (`tags`):
+
+| name |
+|---|
+| *(no rows)* |
+
+If two requests race to create `database`, both must converge on one row when a unique key is enforced.
+
 Better approaches:
 - database-native upsert,
 - unique constraint plus retry,
@@ -502,6 +606,12 @@ VALUES ('database')
 ON CONFLICT (name)
 DO NOTHING;
 ```
+
+Resulting `tags` table when the tag was initially absent:
+
+| name |
+|---|
+| database |
 
 Then fetch the existing/current row.
 
@@ -518,6 +628,18 @@ ON CONFLICT (key)
 DO UPDATE
 SET value = counters.value + 1;
 ```
+
+Input (`counters`):
+
+| key | value |
+|---|---:|
+| orders | 5 |
+
+Resulting table:
+
+| key | value |
+|---|---:|
+| orders | 6 |
 
 MySQL and SQLite have their own upsert syntax.
 

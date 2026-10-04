@@ -71,7 +71,21 @@ JOIN order_items AS i ON i.order_id = o.order_id
 WHERE o.order_id = 104;
 ```
 
-The stock result is `(10, 4)`. The order result is `(104, 2, open, 10, 1, 1500)`. Its `open` status comes from the default, not from a hidden transaction property. The purchase price is recorded on the line so a later catalog price change does not rewrite what Bob agreed to pay.
+Input before checkout: product 10 has five units; order 104 does not exist.
+
+The first query returns:
+
+| product_id | stock |
+| ---: | ---: |
+| 10 | 4 |
+
+The second query returns:
+
+| order_id | customer_id | status | product_id | quantity | unit_price_cents |
+| ---: | ---: | --- | ---: | ---: | ---: |
+| 104 | 2 | open | 10 | 1 | 1500 |
+
+Its `open` status comes from the default, not from a hidden transaction property. The purchase price is recorded on the line so a later catalog price change does not rewrite what Bob agreed to pay.
 
 This is still a deliberately small checkout. It does not charge a card, calculate tax, reserve a named copy, or record a complete stock ledger. A transaction's boundary should correspond to the operation actually implemented, and its success response should describe only that operation's guarantees.
 
@@ -93,7 +107,22 @@ ROLLBACK;
 SELECT step_id FROM tx_demo_steps ORDER BY step_id;
 ```
 
-In a SQLite shell with no enclosing transaction, the initial insert commits as its own statement. Inside the explicit transaction, the first query sees steps 1 and 2. After rollback, only step 1 remains. Rollback undoes the pending transaction; it cannot undo an earlier independent commit merely because the commands were part of the same script.
+Input after the first insert: step 1 is committed.
+
+Inside the transaction, the query returns:
+
+| step_id |
+| ---: |
+| 1 |
+| 2 |
+
+After rollback, the query returns:
+
+| step_id |
+| ---: |
+| 1 |
+
+In a SQLite shell with no enclosing transaction, the initial insert commits as its own statement. Rollback undoes the pending transaction; it cannot undo an earlier independent commit merely because the commands were part of the same script.
 
 A driver might implicitly begin a transaction for that first insert. Before reproducing the shell behavior through Python, commit the setup and initial insert, or configure explicit transaction handling. A script is a sequence of commands, while a transaction is a database boundary. They are not synonyms.
 
@@ -139,7 +168,26 @@ SELECT SUM(amount_cents) AS total_cents FROM tx_report_ledger;
 COMMIT;
 ```
 
-The initial results are 2 and 10500. PostgreSQL Repeatable Read uses one snapshot established by the first relevant statement, so both reads use the same committed view even if another session inserts a row between them. Read Committed would ordinarily take a new snapshot for the second statement. A stable snapshot does not automatically validate every cross-row business invariant; the isolation note explains write skew.
+The input ledger is:
+
+| entry_id | amount_cents |
+| ---: | ---: |
+| 1 | 5500 |
+| 2 | 5000 |
+
+The first query returns:
+
+| entry_count |
+| ---: |
+| 2 |
+
+The second query returns:
+
+| total_cents |
+| ---: |
+| 10500 |
+
+PostgreSQL Repeatable Read uses one snapshot established by the first relevant statement, so both reads use the same committed view even if another session inserts a row between them. Read Committed would ordinarily take a new snapshot for the second statement. A stable snapshot does not automatically validate every cross-row business invariant; the isolation note explains write skew.
 
 Long-running reports also have costs. Their snapshots can keep older row versions needed for visibility, and they can contend with maintenance or schema changes. Choose a clear consistency requirement rather than leaving a transaction open while a user reads the report on screen.
 

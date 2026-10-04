@@ -36,7 +36,13 @@ SET balance = balance - 100
 WHERE account_id = 1;
 ```
 
-T1 now holds whatever write-related locks the database requires for that update.
+The starting `accounts` table contains:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+
+After T1's update, its uncommitted version has balance 900. T1 now holds whatever write-related locks the database requires for that update.
 
 T2 executes:
 
@@ -46,7 +52,11 @@ SET balance = balance + 50
 WHERE account_id = 1;
 ```
 
-T2 may have to wait.
+T2 may have to wait. Its update has not changed the committed row yet; after T1 commits, the row will become:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 950 |
 
 The situation is:
 
@@ -97,6 +107,13 @@ Account 1 = €1,000
 Account 2 = €1,000
 ```
 
+Initial `accounts` table:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+| 2 | 1000 |
+
 Two transfers occur concurrently.
 
 Transaction T1 wants:
@@ -133,7 +150,12 @@ SET balance = balance - 50
 WHERE account_id = 2;
 ```
 
-T2 obtains the lock associated with account `2`.
+T2 obtains the lock associated with account `2`. The intermediate uncommitted rows are:
+
+| account_id | balance |
+| ---: | ---: |
+| 1 | 900 |
+| 2 | 950 |
 
 The state is:
 
@@ -517,7 +539,14 @@ FROM accounts
 WHERE account_id IN (1, 2)
 ORDER BY account_id
 FOR UPDATE;
+```
 
+| account_id | balance |
+| ---: | ---: |
+| 1 | 1000 |
+| 2 | 1000 |
+
+```sql
 -- Verify both rows exist.
 -- Verify the debit is permitted.
 
@@ -704,13 +733,19 @@ pg_locks
 
 which contains outstanding lock information.
 
-A simple first inspection is:
+A simple first inspection selects the waiting lock requests from `pg_locks`:
 
 ```sql
-SELECT *
+SELECT pid, locktype, mode, granted
 FROM pg_locks
 WHERE NOT granted;
 ```
+
+Example output while a backend waits for a transaction lock:
+
+| pid | locktype | mode | granted |
+| ---: | --- | --- | --- |
+| 24680 | transactionid | ShareLock | false |
 
 This shows lock requests that are currently waiting.
 
@@ -736,6 +771,12 @@ SELECT
 FROM pg_stat_activity AS a
 WHERE cardinality(pg_blocking_pids(a.pid)) > 0;
 ```
+
+Example output while process 24680 waits for process 13579:
+
+| pid | query | wait_event_type | wait_event | blocking_pids |
+| ---: | --- | --- | --- | --- |
+| 24680 | UPDATE accounts SET balance = balance + 50 WHERE account_id = 1 | Lock | transactionid | {13579} |
 
 This helps answer:
 
@@ -1478,17 +1519,17 @@ A local convention inside one method is insufficient if another code path access
 
 PostgreSQL supports advisory locks, allowing the application to define logical resources that do not correspond directly to rows.
 
-For example:
+For example, a transaction can request a lock for logical customer 100:
+
+| lock key | logical resource |
+| ---: | --- |
+| 100 | customer 100 |
 
 ```sql
 SELECT pg_advisory_xact_lock(100);
 ```
 
-could represent:
-
-```text
-logical customer 100
-```
+The function returns `void`; successful execution holds the transaction-scoped lock until commit or rollback.
 
 If one transaction obtains:
 

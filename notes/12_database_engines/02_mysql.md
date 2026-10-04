@@ -127,6 +127,18 @@ Retrieve data from your table with the `SELECT` command.
 SELECT * FROM users;
 ```
 
+Input (`users`):
+
+| id | name | email |
+| ---: | --- | --- |
+| 1 | Alice Johnson | alice.johnson@example.com |
+
+Result:
+
+| id | name | email |
+| ---: | --- | --- |
+| 1 | Alice Johnson | alice.johnson@example.com |
+
 *Example Output:*
 
 ```
@@ -149,6 +161,18 @@ Modify existing records using the `UPDATE` command.
 UPDATE users SET email = 'alice.j@example.com' WHERE id = 1;
 ```
 
+Input (`users`):
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Johnson | alice.johnson@example.com |
+
+Resulting table:
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Johnson | alice.j@example.com |
+
 *Example Output:*
 
 ```
@@ -167,6 +191,18 @@ Remove records from your table using the `DELETE` command.
 ```sql
 DELETE FROM users WHERE id = 1;
 ```
+
+Input (`users`):
+
+| id | name | email |
+|---:|---|---|
+| 1 | Alice Johnson | alice.j@example.com |
+
+Resulting table:
+
+| id | name | email |
+|---|---|---|
+| *(no rows)* |  |  |
 
 *Example Output:*
 

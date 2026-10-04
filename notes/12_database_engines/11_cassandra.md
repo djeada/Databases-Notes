@@ -116,6 +116,21 @@ WHERE user_id = ?
 LIMIT 50;
 ```
 
+Example input rows in `messages_by_user`:
+
+| user_id | sent_at | message_id | body |
+|---|---|---|---|
+| user-42 | 2026-09-30 20:05:00 | `22222222-2222-2222-2222-222222222222` | Check the database notes |
+| user-42 | 2026-09-30 20:00:00 | `11111111-1111-1111-1111-111111111111` | Welcome |
+| user-99 | 2026-09-30 20:07:00 | `33333333-3333-3333-3333-333333333333` | Hello |
+
+With `user_id = 'user-42'`, the result is:
+
+| user_id | sent_at | message_id | body |
+|---|---|---|---|
+| user-42 | 2026-09-30 20:05:00 | `22222222-2222-2222-2222-222222222222` | Check the database notes |
+| user-42 | 2026-09-30 20:00:00 | `11111111-1111-1111-1111-111111111111` | Welcome |
+
 Cassandra can route directly to the replicas that own that user's partition.
 
 A query such as:
@@ -125,6 +140,8 @@ SELECT *
 FROM messages_by_user
 WHERE body LIKE '%database%';
 ```
+
+Using the same three input rows, this is an anti-pattern rather than a runnable result example: Cassandra normally rejects the query because it has no partition-key restriction and `body` has no supporting index. It returns no result table unless the schema and query are redesigned.
 
 does not match the table's access pattern.
 
@@ -210,6 +227,21 @@ Then query:
 ```bash
 docker exec -it cassandra-notes   cqlsh   -e "SELECT * FROM notes.events_by_user WHERE user_id = 'user-42';"
 ```
+
+The demo starts with these event rows:
+
+| user_id | event_time | event_id | event_type | payload |
+|---|---|---|---|---|
+| user-42 | 2026-09-30 20:00:00 | `11111111-1111-1111-1111-111111111111` | login | `{"device":"web"}` |
+| user-42 | 2026-09-30 20:05:00 | `22222222-2222-2222-2222-222222222222` | view_product | `{"sku":"DB-101"}` |
+| user-99 | 2026-09-30 20:07:00 | `33333333-3333-3333-3333-333333333333` | login | `{"device":"mobile"}` |
+
+The command selects the `user-42` rows, newest first:
+
+| user_id | event_time | event_id | event_type | payload |
+|---|---|---|---|---|
+| user-42 | 2026-09-30 20:05:00 | `22222222-2222-2222-2222-222222222222` | view_product | `{"sku":"DB-101"}` |
+| user-42 | 2026-09-30 20:00:00 | `11111111-1111-1111-1111-111111111111` | login | `{"device":"web"}` |
 
 The demo uses replication factor 1 because it is a single-node learning environment.
 
@@ -447,6 +479,12 @@ VALUES (
 USING TTL 3600;
 ```
 
+Example starting state: there is no row for session `abc`. Immediately after the insert, the table contains:
+
+| session_id | user_id | payload | remaining TTL |
+|---|---|---|---:|
+| abc | user-42 | `...` | about 3600 seconds |
+
 TTL is useful for expiring:
 
 - sessions,
@@ -474,6 +512,21 @@ WHERE device_id = ?
   AND event_time < ?
 ORDER BY event_time DESC;
 ```
+
+Example `readings_by_device` input rows:
+
+| device_id | event_time | reading |
+|---|---|---:|
+| sensor-7 | 2026-09-30 10:00:00 | 21.4 |
+| sensor-7 | 2026-09-30 09:00:00 | 20.8 |
+| sensor-8 | 2026-09-30 09:30:00 | 18.2 |
+
+For `device_id = 'sensor-7'` and a range covering both rows, the result is:
+
+| device_id | event_time | reading |
+|---|---|---:|
+| sensor-7 | 2026-09-30 10:00:00 | 21.4 |
+| sensor-7 | 2026-09-30 09:00:00 | 20.8 |
 
 natural and efficient.
 
@@ -525,6 +578,20 @@ WHERE username = ?
 IF user_id = null;
 ```
 
+Example input table (bind `username = 'alice'` and `user_id = 'user-42'`):
+
+| username | user_id |
+|---|---|
+| *(no rows)* |  |
+
+If the condition succeeds, the result is:
+
+| username | user_id |
+|---|---|
+| alice | user-42 |
+
+The conditional write reports `[applied] = true`; if another row already had that username, `[applied]` would be `false` and the table would stay unchanged.
+
 Lightweight transactions require consensus and are more expensive than normal Cassandra writes.
 
 Use them for specific correctness requirements, not every write.
@@ -555,6 +622,28 @@ SELECT *
 FROM orders
 JOIN customers ...
 ```
+
+For example, relational input tables might be:
+
+`orders`
+
+| order_id | customer_id | total |
+|---:|---:|---:|
+| 501 | 42 | 49.90 |
+
+`customers`
+
+| customer_id | name |
+|---:|---|
+| 42 | Alice |
+
+A relational join would return:
+
+| order_id | customer_id | total | name |
+|---:|---:|---:|---|
+| 501 | 42 | 49.90 | Alice |
+
+Cassandra does not execute this join; the result illustrates the row the query-shaped table should store.
 
 model the read directly:
 

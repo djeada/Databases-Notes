@@ -53,6 +53,15 @@ Both clustered and secondary B-tree indexes can support range searches. A second
 
 Assume PostgreSQL and this access pattern:
 
+Input (`orders`):
+
+| order_id | customer_id | order_date | total |
+| ---: | ---: | --- | ---: |
+| 301 | 42 | 2024-12-31 | 1000 |
+| 302 | 42 | 2025-01-10 | 4500 |
+| 303 | 42 | 2025-12-01 | 6200 |
+| 304 | 8 | 2025-06-01 | 800 |
+
 ```sql
 SELECT order_id, order_date, total
 FROM orders
@@ -61,6 +70,13 @@ WHERE customer_id = 42
   AND order_date < DATE '2026-01-01'
 ORDER BY order_date;
 ```
+
+Result:
+
+| order_id | order_date | total |
+| ---: | --- | ---: |
+| 302 | 2025-01-10 | 4500 |
+| 303 | 2025-12-01 | 6200 |
 
 A useful candidate is:
 
@@ -101,6 +117,19 @@ CREATE INDEX idx_users_lower_email ON users (lower(email));
 SELECT user_id FROM users WHERE lower(email) = 'alice@example.com';
 ```
 
+Input (`users`):
+
+| user_id | email |
+| ---: | --- |
+| 1 | Alice@Example.com |
+| 2 | bob@example.com |
+
+Result:
+
+| user_id |
+| ---: |
+| 1 |
+
 An expression index can support a matching expression. Requirements such as function immutability and collation semantics depend on the engine.
 
 ## Keys, uniqueness, and foreign keys
@@ -120,7 +149,15 @@ FROM orders
 WHERE customer_id = 42;
 ```
 
-`ANALYZE` executes the statement. Look at actual rows, estimates, buffers, and total time. A sequential scan is not inherently a problem: on a small table, or when much of a table qualifies, it can be the best plan.
+The query's data rows for the sample `orders` table are:
+
+| order_id | order_date | total |
+| ---: | --- | ---: |
+| 301 | 2024-12-31 | 1000 |
+| 302 | 2025-01-10 | 4500 |
+| 303 | 2025-12-01 | 6200 |
+
+`ANALYZE` executes the statement and returns a plan with measurements; those plan rows vary with the database and runtime. Look at actual rows, estimates, buffers, and total time. A sequential scan is not inherently a problem: on a small table, or when much of a table qualifies, it can be the best plan.
 
 Refresh planner statistics when needed. Compare representative parameter values and consider the write cost before retaining an index.
 
@@ -137,6 +174,13 @@ FROM pg_stat_user_indexes
 WHERE schemaname = 'public'
 ORDER BY pg_relation_size(indexrelid) DESC;
 ```
+
+Illustrative result (values depend on activity since the statistics were reset):
+
+| table_name | index_name | idx_scan | index_size |
+| --- | --- | ---: | --- |
+| orders | idx_orders_customer_date | 1250 | 64 kB |
+| users | users_pkey | 980 | 32 kB |
 
 Size and a zero scan count do not prove bloat or redundancy. Statistics have an observation period and can reset; an index may enforce a constraint or support infrequent critical work. Measure unused space with suitable engine-specific diagnostics.
 

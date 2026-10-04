@@ -219,6 +219,21 @@ SELECT *
 FROM staging_sales;
 ```
 
+Example source (`staging_sales`) and target (`daily_sales`) before the insert:
+
+`staging_sales`
+
+| sale_id | sales_date | revenue |
+|---:|---|---:|
+| 1001 | 2026-09-30 | 49.90 |
+
+`daily_sales` is empty. After one run, it contains one row; after a retry of the same insert, it contains two copies:
+
+| sale_id | sales_date | revenue |
+|---:|---|---:|
+| 1001 | 2026-09-30 | 49.90 |
+| 1001 | 2026-09-30 | 49.90 |
+
 If the task retries, rows may duplicate.
 
 Safer options include:
@@ -244,6 +259,28 @@ WHERE sales_date = DATE '2026-09-30';
 
 COMMIT;
 ```
+
+Example `staging_sales` rows for the date being replaced:
+
+| sale_id | sales_date | revenue |
+|---:|---|---:|
+| 1001 | 2026-09-30 | 49.90 |
+| 1002 | 2026-09-30 | 39.00 |
+
+Before replacement, `daily_sales` contains a stale value for September 30:
+
+| sale_id | sales_date | revenue |
+|---:|---|---:|
+| 1000 | 2026-09-29 | 20.00 |
+| 1001 | 2026-09-30 | 45.00 |
+
+After commit, `daily_sales` has one copy of each source row for that date. Rows for other dates remain unchanged:
+
+| sale_id | sales_date | revenue |
+|---:|---|---:|
+| 1000 | 2026-09-29 | 20.00 |
+| 1001 | 2026-09-30 | 49.90 |
+| 1002 | 2026-09-30 | 39.00 |
 
 Now rerunning the same date produces the same logical result.
 
@@ -353,6 +390,22 @@ WHERE status = 'completed'
 GROUP BY 1
 ```
 
+Example `stg_orders` input rows:
+
+| created_at | status | total_amount |
+|---|---|---:|
+| 2026-10-01 09:00:00 | completed | 49.90 |
+| 2026-10-01 10:00:00 | completed | 10.00 |
+| 2026-10-01 11:00:00 | pending | 5.00 |
+| 2026-10-02 08:00:00 | completed | 12.50 |
+
+Result (`orders_daily`):
+
+| order_date | orders | revenue |
+|---|---:|---:|
+| 2026-10-01 | 2 | 59.90 |
+| 2026-10-02 | 1 | 12.50 |
+
 The `ref()` call establishes a dependency.
 
 Conceptually:
@@ -387,6 +440,30 @@ This is why data tests are necessary.
 
 ## Common quality dimensions
 
+The checks below use these sample `orders` rows:
+
+| order_id | status |
+|---:|---|
+| 1001 | paid |
+| 1002 | paid |
+| 1002 | refunded |
+| NULL | pending |
+
+For referential integrity and freshness, use these separate input tables:
+
+`dim_product`
+
+| product_key | category |
+|---:|---|
+| 1 | Books |
+
+`fact_sales`
+
+| order_id | product_key | loaded_at |
+|---:|---:|---|
+| 1001 | 1 | 2026-10-04 08:00:00 |
+| 1002 | 99 | 2026-10-04 08:30:00 |
+
 ### Completeness
 
 Are required records or fields present?
@@ -399,6 +476,12 @@ WHERE order_id IS NULL;
 
 Expected: zero.
 
+Result on the sample rows:
+
+| COUNT(*) |
+|---:|
+| 1 |
+
 ### Uniqueness
 
 ```sql
@@ -409,6 +492,12 @@ HAVING COUNT(*) > 1;
 ```
 
 Expected: no rows.
+
+Result on the sample rows:
+
+| order_id | COUNT(*) |
+|---:|---:|
+| 1002 | 2 |
 
 ### Referential integrity
 
@@ -421,6 +510,12 @@ WHERE p.product_key IS NULL;
 ```
 
 Expected: zero.
+
+Result on the sample rows:
+
+| COUNT(*) |
+|---:|
+| 1 |
 
 ### Accepted values
 
@@ -435,12 +530,24 @@ WHERE status NOT IN (
 );
 ```
 
+Result on the sample rows:
+
+| status |
+|---|
+| refunded |
+
 ### Freshness
 
 ```sql
 SELECT MAX(loaded_at)
 FROM fact_sales;
 ```
+
+Result on the sample rows:
+
+| MAX(loaded_at) |
+|---|
+| 2026-10-04 08:30:00 |
 
 The result should be within the promised freshness window.
 
@@ -617,9 +724,23 @@ Full rebuild:
 
 ```sql
 CREATE OR REPLACE TABLE fact_sales AS
-SELECT ...
+SELECT order_id, sales_date, revenue
 FROM all_orders;
 ```
+
+Example input (`all_orders`):
+
+| order_id | sales_date | revenue |
+|---:|---|---:|
+| 1001 | 2026-09-30 | 49.90 |
+| 1002 | 2026-09-30 | 39.00 |
+
+After the full rebuild, `fact_sales` contains:
+
+| order_id | sales_date | revenue |
+|---:|---|---:|
+| 1001 | 2026-09-30 | 49.90 |
+| 1002 | 2026-09-30 | 39.00 |
 
 Simple but expensive.
 

@@ -139,13 +139,36 @@ GROUP BY d.year, p.category
 ORDER BY d.year, revenue DESC;
 ```
 
-Expected result:
+Example input tables from the DuckDB demo:
 
-```text
-year  category  revenue
-2026  Books     50.00
-2026  Games     30.00
-```
+`dim_date`
+
+| date_key | calendar_date | year |
+|---:|---|---:|
+| 20260101 | 2026-01-01 | 2026 |
+| 20260102 | 2026-01-02 | 2026 |
+
+`dim_product`
+
+| product_key | sku | category |
+|---:|---|---|
+| 1 | BOOK-001 | Books |
+| 2 | GAME-001 | Games |
+
+`fact_sales`
+
+| order_id | line_number | date_key | product_key | quantity | unit_price |
+|---:|---:|---:|---:|---:|---:|
+| 1001 | 1 | 20260101 | 1 | 2 | 15.00 |
+| 1001 | 2 | 20260101 | 2 | 3 | 10.00 |
+| 1002 | 1 | 20260102 | 1 | 1 | 20.00 |
+
+Result:
+
+| year | category | revenue |
+|---:|---|---:|
+| 2026 | Books | 50.00 |
+| 2026 | Games | 30.00 |
 
 Notice that the fact table stores keys and numeric measures, while category and calendar year come from dimensions. This is the core pattern behind many BI models.
 

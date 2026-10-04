@@ -67,6 +67,21 @@ FROM events
 GROUP BY country;
 ```
 
+Sample `events` rows:
+
+| event_time | user_id | country | event_type | revenue |
+|---|---:|---|---|---:|
+| 2026-09-29 10:00:00 | 101 | DE | view | 0.00 |
+| 2026-09-29 10:01:00 | 101 | DE | purchase | 19.95 |
+| 2026-09-30 09:00:00 | 205 | US | view | 0.00 |
+
+Result:
+
+| country | sum(revenue) |
+|---|---:|
+| DE | 19.95 |
+| US | 0.00 |
+
 A row-oriented engine reads row structures containing all fields.
 
 A column-oriented engine can focus primarily on:
@@ -106,6 +121,12 @@ Check version:
 SELECT version();
 ```
 
+Example result (the version string depends on the installed server):
+
+| version() |
+|---|
+| 25.8.1.1 |
+
 Stop:
 
 ```bash
@@ -132,6 +153,25 @@ The script:
 2. inserts sample rows,
 3. performs grouped analytics,
 4. demonstrates the effect of the sorting key.
+
+The source rows inserted by the demo are:
+
+| event_time | user_id | country | event_type | revenue |
+|---|---:|---|---|---:|
+| 2026-09-29 10:00:00 | 101 | DE | view | 0.00 |
+| 2026-09-29 10:01:00 | 101 | DE | purchase | 19.95 |
+| 2026-09-30 09:00:00 | 205 | US | view | 0.00 |
+| 2026-09-30 09:02:00 | 205 | US | purchase | 39.00 |
+| 2026-09-30 09:05:00 | 101 | DE | view | 0.00 |
+
+The grouped query in the demo returns:
+
+| country | event_type | events | revenue | users |
+|---|---|---:|---:|---:|
+| DE | purchase | 1 | 19.95 | 1 |
+| DE | view | 2 | 0.00 | 1 |
+| US | purchase | 1 | 39.00 | 1 |
+| US | view | 1 | 0.00 | 1 |
 
 ## MergeTree
 
@@ -177,6 +217,21 @@ FROM events
 WHERE customer_id = 42
   AND event_time >= now() - INTERVAL 7 DAY;
 ```
+
+For this query, assume a table with `customer_id`, `event_time`, and `total` columns and these rows:
+
+| customer_id | event_time | total |
+|---:|---|---:|
+| 42 | 2026-09-28 10:00:00 | 80.00 |
+| 42 | 2026-09-30 12:00:00 | 25.00 |
+| 17 | 2026-09-30 09:00:00 | 40.00 |
+
+Example result, assuming the seven-day window includes these dates:
+
+| customer_id | event_time | total |
+|---:|---|---:|
+| 42 | 2026-09-28 10:00:00 | 80.00 |
+| 42 | 2026-09-30 12:00:00 | 25.00 |
 
 Conceptually:
 
@@ -294,6 +349,8 @@ The exact optimal batch size depends on row size, latency requirements, and depl
 
 ## Example analytical query
 
+The following query uses the five sample event rows shown in the runnable demo above.
+
 ```sql
 SELECT
     country,
@@ -306,8 +363,17 @@ WHERE event_time >= now() - INTERVAL 30 DAY
 GROUP BY
     country,
     event_type
-ORDER BY revenue DESC;
+ORDER BY revenue DESC, country, event_type;
 ```
+
+Result:
+
+| country | event_type | events | revenue | users |
+|---|---|---:|---:|---:|
+| US | purchase | 1 | 39.00 | 1 |
+| DE | purchase | 1 | 19.95 | 1 |
+| DE | view | 2 | 0.00 | 1 |
+| US | view | 1 | 0.00 | 1 |
 
 This is the kind of scan/aggregate workload ClickHouse is built around.
 

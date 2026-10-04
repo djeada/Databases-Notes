@@ -6,7 +6,15 @@ Assume you know tables and basic `SELECT` queries. The [SQL introduction](../03_
 
 ## Begin with the question the application asks
 
-A customer opens an order-history page. The query looks for that customer's recent orders:
+A customer opens an order-history page. The query looks for that customer's recent orders.
+
+Input (`orders`):
+
+| order_id | customer_id | order_date | status |
+| ---: | ---: | --- | --- |
+| 101 | 1 | 2025-01-10 | completed |
+| 102 | 1 | 2025-01-12 | open |
+| 103 | 2 | 2025-01-12 | completed |
 
 ```sql
 SELECT order_id, order_date
@@ -14,6 +22,13 @@ FROM orders
 WHERE customer_id = 1
 ORDER BY order_date, order_id;
 ```
+
+Result:
+
+| order_id | order_date |
+| ---: | --- |
+| 101 | 2025-01-10 |
+| 102 | 2025-01-12 |
 
 Without a suitable index, the engine may examine the orders table to find matching rows. With millions of orders and only a few belonging to this customer, avoiding that work can matter. With three rows, a scan may be simpler and faster.
 
@@ -102,7 +117,13 @@ WHERE customer_id = 1
 ORDER BY order_date, order_id;
 ```
 
-SQLite can report a covering-index search because it can obtain the required values from the index. PostgreSQL's index-only scans have additional visibility requirements; containing the columns alone does not guarantee zero heap visits. The source of the result remains the table's logical data, not a new authoritative customer history.
+The result is the same two order rows shown at the start of this note. An illustrative SQLite plan row is:
+
+| id | parent | notused | detail |
+| ---: | ---: | ---: | --- |
+| 3 | 0 | 0 | SEARCH orders USING COVERING INDEX idx_design_customer_history (customer_id=?) |
+
+Plan wording and identifiers vary by SQLite version. PostgreSQL's index-only scans have additional visibility requirements; containing the columns alone does not guarantee zero heap visits. The source of the result remains the table's logical data, not a new authoritative customer history.
 
 If the application primarily needs open orders, a partial index can omit completed and cancelled orders:
 
@@ -117,7 +138,15 @@ WHERE customer_id = 1 AND status = 'open'
 ORDER BY order_date, order_id;
 ```
 
-The result is order 102 on January 12. The partial index saves entries by indexing a subset, but the planner must establish that the query fits that predicate. A query parameter that could mean any status may not provide the same proof. See [SQLite partial indexes](https://www.sqlite.org/partialindex.html).
+Input (`orders`) is shown at the start of this note; order 102 is the only open order for customer 1.
+
+Result:
+
+| order_id | order_date |
+| ---: | --- |
+| 102 | 2025-01-12 |
+
+The partial index saves entries by indexing a subset, but the planner must establish that the query fits that predicate. A query parameter that could mean any status may not provide the same proof. See [SQLite partial indexes](https://www.sqlite.org/partialindex.html).
 
 ## Use a hash index for equality, not range ordering
 
@@ -134,7 +163,19 @@ CREATE INDEX idx_login_email_hash ON index_login_accounts USING hash(email);
 SELECT account_id FROM index_login_accounts WHERE email = 'alice@example.com';
 ```
 
-The result is account 1. A hash maps the search value to a bucket and can support equality. It does not provide the same ordered traversal for prefix ranges or sorting as a B-tree. PostgreSQL hash indexes also do not replace a unique constraint for enforcing distinct emails. The [PostgreSQL index-types guide](https://www.postgresql.org/docs/current/indexes-types.html) describes supported operations.
+Input (`index_login_accounts`):
+
+| account_id | email |
+| ---: | --- |
+| 1 | alice@example.com |
+
+Result:
+
+| account_id |
+| ---: |
+| 1 |
+
+A hash maps the search value to a bucket and can support equality. It does not provide the same ordered traversal for prefix ranges or sorting as a B-tree. PostgreSQL hash indexes also do not replace a unique constraint for enforcing distinct emails. The [PostgreSQL index-types guide](https://www.postgresql.org/docs/current/indexes-types.html) describes supported operations.
 
 For a login table requiring unique email, the B-tree-backed uniqueness rule may already supply the needed lookup. Adding a hash copy without a demonstrated benefit would add maintenance rather than solve a missing access path.
 
@@ -161,7 +202,20 @@ FROM design_book_search
 WHERE design_book_search MATCH 'transactions';
 ```
 
-The result is `SQL Practice`. This creates a virtual full-text table, not a normal B-tree over the original products table. Keeping it synchronized with the catalog requires an explicit maintenance design; FTS5 also supports external-content arrangements with their own rules. See [SQLite FTS5](https://www.sqlite.org/fts5.html).
+Input (`design_book_search`):
+
+| title | description |
+| --- | --- |
+| Database Basics | An introduction to relational database design |
+| SQL Practice | Exercises about queries joins and transactions |
+
+Result:
+
+| title |
+| --- |
+| SQL Practice |
+
+This creates a virtual full-text table, not a normal B-tree over the original products table. Keeping it synchronized with the catalog requires an explicit maintenance design; FTS5 also supports external-content arrangements with their own rules. See [SQLite FTS5](https://www.sqlite.org/fts5.html).
 
 PostgreSQL uses text-search values and commonly a GIN index for this role. A plain text B-tree does not become a language-search index just because it is placed on a description column.
 
@@ -183,6 +237,19 @@ WHERE min_x <= 5 AND max_x >= 5
   AND min_y <= 5 AND max_y >= 5
 ORDER BY region_id;
 ```
+
+Input (`design_pickup_regions`):
+
+| region_id | min_x | max_x | min_y | max_y |
+| ---: | ---: | ---: | ---: | ---: |
+| 1 | 0 | 10 | 0 | 10 |
+| 2 | 20 | 30 | 20 | 30 |
+
+Result:
+
+| region_id |
+| ---: |
+| 1 |
 
 Region 1 contains the point `(5, 5)`. Bounding-box matching is not the same as proving an exact relationship for an arbitrary polygon. GIS engines can use the index to find candidates, then perform an exact test. Coordinate systems and units matter for distance queries. See [SQLite R-tree](https://www.sqlite.org/rtree.html).
 

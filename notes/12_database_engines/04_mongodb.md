@@ -98,6 +98,12 @@ WriteResult({ "nInserted" : 1 })
 - Indicates that one document was inserted into the 'users' collection.
 - The fields 'name', 'email', and 'age' are now stored in the document.
 
+Collection contents after the insert:
+
+| name | email | age |
+|---|---|---:|
+| Alice Smith | alice@example.com | 30 |
+
 ### Querying Data
 
 Retrieve documents from a collection using the `find` method:
@@ -111,6 +117,12 @@ db.users.find({ name: "Alice Smith" });
 ```
 { "_id" : ObjectId("5f8d0d55b54764421b7156c5"), "name" : "Alice Smith", "email" : "alice@example.com", "age" : 30 }
 ```
+
+Result table (MongoDB also returns the generated `_id` shown above):
+
+| name | email | age |
+|---|---|---:|
+| Alice Smith | alice@example.com | 30 |
 
 *Interpretation of the Output:*
 
@@ -140,6 +152,12 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 - `nModified: 1` indicates that one document was updated.
 - The 'age' field for Alice Smith is now updated to 31.
 
+Collection contents after the update:
+
+| name | email | age |
+|---|---|---:|
+| Alice Smith | alice@example.com | 31 |
+
 ### Deleting Data
 
 Remove documents from a collection using the `remove` method:
@@ -158,6 +176,12 @@ WriteResult({ "nRemoved" : 1 })
 
 - Confirms that one document was removed from the 'users' collection.
 - The document with 'name' equal to 'Alice Smith' has been deleted.
+
+Collection contents after the delete:
+
+| name | email | age |
+|---|---|---:|
+| *(no documents)* |  |  |
 
 ### Dropping Collections
 

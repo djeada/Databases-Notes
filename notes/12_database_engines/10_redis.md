@@ -66,6 +66,12 @@ Check connectivity:
 PING
 ```
 
+No key-value rows are needed for this health check. The command result is:
+
+| command | result |
+|---|---|
+| `PING` | `PONG` |
+
 Expected:
 
 ```text
@@ -97,6 +103,18 @@ SET user:42:name "Alice"
 GET user:42:name
 ```
 
+Key-value input after `SET`:
+
+| key | value |
+|---|---|
+| `user:42:name` | Alice |
+
+Result of `GET user:42:name`:
+
+| key | returned value |
+|---|---|
+| `user:42:name` | Alice |
+
 Counters are atomic:
 
 ```text
@@ -106,11 +124,19 @@ INCR page:home:views
 GET page:home:views
 ```
 
+Starting key-value rows: `page:home:views` is set to `0` before the two increments.
+
 Expected:
 
 ```text
 "2"
 ```
+
+Result and final key-value row:
+
+| key | value returned by `GET` | stored value afterward |
+|---|---:|---:|
+| `page:home:views` | 2 | 2 |
 
 Counters are useful for:
 
@@ -128,6 +154,18 @@ SET session:abc123 "user=42" EX 3600
 TTL session:abc123
 ```
 
+The `SET` creates this key before `TTL` reads its remaining lifetime:
+
+| key | value | expiry set |
+|---|---|---:|
+| `session:abc123` | `user=42` | 3600 seconds |
+
+Example `TTL` result table (the exact remaining seconds decrease over time):
+
+| key | TTL result |
+|---|---:|
+| `session:abc123` | about 3600 seconds |
+
 This is one reason Redis is popular for sessions and caches.
 
 Expiration is not a substitute for application correctness. If a key must exist permanently, relying only on TTL-based Redis state is usually the wrong design.
@@ -141,6 +179,21 @@ HSET user:42 name "Alice" plan "pro" country "DE"
 HGET user:42 name
 HGETALL user:42
 ```
+
+Hash fields before the reads:
+
+| key | field | value |
+|---|---|---|
+| `user:42` | name | Alice |
+| `user:42` | plan | pro |
+| `user:42` | country | DE |
+
+Results:
+
+| command | result |
+|---|---|
+| `HGET user:42 name` | Alice |
+| `HGETALL user:42` | name=Alice, plan=pro, country=DE |
 
 Conceptually:
 
@@ -165,11 +218,39 @@ SMEMBERS article:7:tags
 SISMEMBER article:7:tags redis
 ```
 
+Set rows after `SADD`:
+
+| key | member |
+|---|---|
+| `article:7:tags` | redis |
+| `article:7:tags` | database |
+| `article:7:tags` | caching |
+
+Results (`SMEMBERS` order is unspecified):
+
+| command | result |
+|---|---|
+| `SMEMBERS article:7:tags` | caching, database, redis |
+| `SISMEMBER article:7:tags redis` | 1 (true) |
+
 Set operations can model intersections:
 
 ```text
 SINTER users:premium users:active
 ```
+
+Example input sets and result:
+
+| set key | member |
+|---|---|
+| `users:premium` | user:1 |
+| `users:premium` | user:2 |
+| `users:active` | user:2 |
+| `users:active` | user:3 |
+
+| command | result member |
+|---|---|
+| `SINTER users:premium users:active` | user:2 |
 
 Useful for:
 
@@ -189,6 +270,22 @@ ZADD leaderboard 1325 carol
 
 ZREVRANGE leaderboard 0 2 WITHSCORES
 ```
+
+Input sorted-set rows:
+
+| key | member | score |
+|---|---|---:|
+| `leaderboard` | alice | 1200 |
+| `leaderboard` | bob | 1500 |
+| `leaderboard` | carol | 1325 |
+
+Result, highest score first:
+
+| rank | member | score |
+|---:|---|---:|
+| 1 | bob | 1500 |
+| 2 | carol | 1325 |
+| 3 | alice | 1200 |
 
 Typical use cases:
 
@@ -214,6 +311,20 @@ LPUSH jobs email:1002
 RPOP jobs
 ```
 
+The two `LPUSH` commands leave this list before `RPOP`:
+
+| position | value |
+|---:|---|
+| 1 (left) | email:1002 |
+| 2 | email:1001 |
+
+Result and remaining list:
+
+| item | value |
+|---|---|
+| popped by `RPOP` | email:1001 |
+| remaining list, left to right | email:1002 |
+
 Lists can support simple queues, but production task systems often need stronger delivery tracking, retries, visibility, and observability.
 
 Redis Streams are often better when an append-only event log and consumer groups are needed.
@@ -228,6 +339,20 @@ XADD orders * order_id 1002 amount 19.95
 
 XRANGE orders - +
 ```
+
+Example stream rows (Redis-generated entry IDs vary):
+
+| entry id | order_id | amount |
+|---|---:|---:|
+| `1727776800000-0` | 1001 | 49.90 |
+| `1727776800001-0` | 1002 | 19.95 |
+
+`XRANGE orders - +` returns both entries in ID order:
+
+| order_id | amount |
+|---:|---:|
+| 1001 | 49.90 |
+| 1002 | 19.95 |
 
 Conceptually:
 
@@ -253,6 +378,12 @@ For example:
 ```text
 INCR rate:user:42
 ```
+
+Example counter table before and after the command:
+
+| key | value before | `INCR` result | value after |
+|---|---:|---:|---:|
+| `rate:user:42` | 10 | 11 | 11 |
 
 does not require a read-modify-write cycle in application code.
 
@@ -280,6 +411,20 @@ INCR account:42:logins
 SET account:42:last_login "2026-09-30T20:00:00Z"
 EXEC
 ```
+
+Starting key-value rows: `account:42:logins = 4`; `account:42:last_login` is absent.
+
+Example `EXEC` results and final key-value rows:
+
+| command | result |
+|---|---|
+| `INCR account:42:logins` | 5 |
+| `SET account:42:last_login ...` | OK |
+
+| key | value after `EXEC` |
+|---|---|
+| `account:42:logins` | 5 |
+| `account:42:last_login` | `2026-09-30T20:00:00Z` |
 
 Commands are queued and executed as a transaction block.
 
@@ -406,6 +551,12 @@ A basic fixed-window limiter:
 INCR rate:api:42:2026093020
 EXPIRE rate:api:42:2026093020 3600
 ```
+
+Example key-value state and command results, assuming the counter starts at 7:
+
+| key | value after `INCR` | TTL after `EXPIRE` |
+|---|---:|---:|
+| `rate:api:42:2026093020` | 8 | 3600 seconds |
 
 If the counter exceeds the quota, reject further requests.
 

@@ -157,6 +157,21 @@ GROUP BY event_type
 ORDER BY event_type;
 ```
 
+Example source rows for the `2026-09-30` partition:
+
+| event_time | user_id | event_type | revenue |
+|---|---:|---|---:|
+| 2026-09-30 09:00:00 | 205 | view | 0.00 |
+| 2026-09-30 09:02:00 | 205 | purchase | 39.00 |
+| 2026-09-30 09:05:00 | 101 | view | 0.00 |
+
+Result:
+
+| event_type | events |
+|---|---:|
+| purchase | 1 |
+| view | 2 |
+
 This local demo uses DuckDB, but the same storage ideas apply to Spark, Trino, Athena, BigQuery external tables, and other analytical engines.
 
 ## Partitioning

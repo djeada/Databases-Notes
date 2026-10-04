@@ -4,6 +4,14 @@ A **trigger** is database logic invoked automatically by a specified event. Unli
 
 This note uses **SQLite** and the fresh [bookstore setup](01_intro_to_sql.md). We will record changes to product prices, then see what happens when the surrounding transaction rolls back.
 
+The product rows used by these examples are:
+
+| product_id | title | price_cents | stock |
+| ---: | --- | ---: | ---: |
+| 10 | Database Basics | 1500 | 5 |
+| 20 | SQL Practice | 2500 | 8 |
+| 30 | History of Computing | 1800 | 0 |
+
 ## Begin with a reason for the extra behavior
 
 Suppose staff can update prices through two different applications. Both should record the old and new price. If each application must remember an extra insert, one might forget. A database trigger can apply that behavior to updates from either application.
@@ -68,7 +76,13 @@ UPDATE products SET price_cents = 1600 WHERE product_id = 10;
 SELECT COUNT(*) AS change_count FROM product_price_changes;
 ```
 
-The count stays 1 because the `WHEN` condition is false.
+The count result is:
+
+| change_count |
+| ---: |
+| 1 |
+
+It stays 1 because the `WHEN` condition is false.
 
 ## Trigger changes participate in rollback
 
@@ -83,7 +97,23 @@ SELECT COUNT(*) AS change_count FROM product_price_changes;
 SELECT price_cents FROM products WHERE product_id = 10;
 ```
 
-The first count is 2 inside the transaction. After rollback, the count is 1 and the price is 1600. The trigger's inserted row rolls back with the price update.
+The first count query returns:
+
+| change_count |
+| ---: |
+| 2 |
+
+After rollback, the count query returns 1 and the price query returns 1600:
+
+| change_count |
+| ---: |
+| 1 |
+
+| price_cents |
+| ---: |
+| 1600 |
+
+The trigger's inserted row rolls back with the price update.
 
 Consequently, this history table records accepted changes, not every attempted change or rejected statement. A security audit of unsuccessful attempts needs a different logging design.
 
@@ -121,12 +151,24 @@ END;
 
 Run this **deliberately failing** statement separately:
 
+Input (`orders`):
+
+| order_id | status |
+| ---: | --- |
+| 101 | completed |
+
 ```sql
 -- Expected trigger error; not part of a successful script
 UPDATE orders SET status = 'open' WHERE order_id = 101;
 ```
 
-Order 101 remains completed. `RAISE(ABORT, ...)` aborts the statement; it does not mean that every earlier statement in an already open transaction has been rolled back. Application error handling still owns that larger boundary.
+The input status and status after the rejected update are:
+
+| order_id | status |
+| ---: | --- |
+| 101 | completed |
+
+`RAISE(ABORT, ...)` aborts the statement; it does not mean that every earlier statement in an already open transaction has been rolled back. Application error handling still owns that larger boundary.
 
 This rule prohibits one transition. It does not fully specify a state machine, and it does not validate refunds. If cancelled orders may never reopen either, declare that additional rule. Prefer a check for rules about one new row alone, and a trigger only when the old row or related work is essential.
 
@@ -154,7 +196,19 @@ SELECT COUNT(*) AS change_count FROM product_price_changes;
 ROLLBACK;
 ```
 
-Continuing the earlier price-history exercise, the intermediate price is 1800 and history count is 2. Updating the base table activates its existing audit trigger as well. The rollback returns the price to 1600 and count to 1. The view trigger chooses the old product ID as the target and only writes price; it is not a general-purpose implementation for every possible update to this view.
+Continuing the earlier price-history exercise, the first query returns:
+
+| product_id | price_cents |
+| ---: | ---: |
+| 10 | 1800 |
+
+The second query returns:
+
+| change_count |
+| ---: |
+| 2 |
+
+Updating the base table activates its existing audit trigger as well. The rollback returns the price to 1600 and count to 1. The view trigger chooses the old product ID as the target and only writes price; it is not a general-purpose implementation for every possible update to this view.
 
 These nested effects are why readers of schema code need to know which triggers exist. A single visible update may touch several objects, and an error in the additional work can reject the original statement.
 
@@ -189,7 +243,19 @@ UPDATE trigger_pg_notes SET body = 'revised draft' WHERE note_id = 1;
 SELECT note_id, body, updated_at FROM trigger_pg_notes;
 ```
 
-The row contains 1, revised draft, and the update statement's timestamp. The exact timestamp depends on execution time. `RETURN NEW` supplies the row version to write. `CURRENT_TIMESTAMP` in PostgreSQL represents the transaction's start time; using `statement_timestamp()` here deliberately records the statement's start instead. Neither timestamp is automatically a precise commit time.
+Initial input row:
+
+| note_id | body |
+| ---: | --- |
+| 1 | first draft |
+
+Result (timestamp varies with execution time):
+
+| note_id | body | updated_at |
+| ---: | --- | --- |
+| 1 | revised draft | statement timestamp |
+
+The exact timestamp depends on execution time. `RETURN NEW` supplies the row version to write. `CURRENT_TIMESTAMP` in PostgreSQL represents the transaction's start time; using `statement_timestamp()` here deliberately records the statement's start instead. Neither timestamp is automatically a precise commit time.
 
 A default handles the initial insert, while a trigger handles later updates. MySQL permits assignments with its own `SET NEW.column = ...` syntax in a before trigger. The same requirement can therefore have different executable forms across engines.
 
@@ -229,7 +295,21 @@ FROM dbo.TriggerPriceHistory ORDER BY ProductId;
 GO
 ```
 
-The history has `(10, 1500, 1600)` and `(20, 2500, 2600)`. The join assumes product IDs are stable during the update. A mutable primary key requires a different matching policy. The trigger handles the statement's full set without a cursor.
+Input (`dbo.TriggerProducts` before the update):
+
+| ProductId | PriceCents |
+| ---: | ---: |
+| 10 | 1500 |
+| 20 | 2500 |
+
+Result:
+
+| ProductId | OldPriceCents | NewPriceCents |
+| ---: | ---: | ---: |
+| 10 | 1500 | 1600 |
+| 20 | 2500 | 2600 |
+
+The join assumes product IDs are stable during the update. A mutable primary key requires a different matching policy. The trigger handles the statement's full set without a cursor.
 
 ## Manage trigger lifecycle and cost
 

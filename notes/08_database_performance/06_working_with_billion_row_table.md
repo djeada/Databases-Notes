@@ -111,6 +111,33 @@ Inefficient query:
 SELECT * FROM transactions JOIN users ON transactions.user_id = users.id;
 ```
 
+Example input tables:
+
+`transactions`
+
+| id | user_id | amount | transaction_date |
+|---:|---:|---:|---|
+| 1 | 10 | 100.00 | 2022-01-10 |
+| 2 | 10 | 50.00 | 2022-01-20 |
+| 3 | 20 | 80.00 | 2021-12-31 |
+| 4 | 20 | 30.00 | 2019-05-01 |
+
+`users`
+
+| id | name |
+|---:|---|
+| 10 | Alice |
+| 20 | Bob |
+
+The unfiltered join returns:
+
+| transactions.id | transactions.user_id | amount | transaction_date | users.id | name |
+|---:|---:|---:|---|---:|---|
+| 1 | 10 | 100.00 | 2022-01-10 | 10 | Alice |
+| 2 | 10 | 50.00 | 2022-01-20 | 10 | Alice |
+| 3 | 20 | 80.00 | 2021-12-31 | 20 | Bob |
+| 4 | 20 | 30.00 | 2019-05-01 | 20 | Bob |
+
 Optimized query:
 
 ```sql
@@ -119,6 +146,13 @@ FROM transactions t
 INNER JOIN users u ON t.user_id = u.id
 WHERE t.transaction_date >= '2022-01-01';
 ```
+
+Result of the filtered query:
+
+| amount | transaction_date | name |
+|---:|---|---|
+| 100.00 | 2022-01-10 | Alice |
+| 50.00 | 2022-01-20 | Alice |
 
 ### Materialized Views
 
@@ -136,6 +170,14 @@ SELECT DATE_TRUNC('month', transaction_date) AS month,
 FROM transactions
 GROUP BY month;
 ```
+
+Using the `transactions` input table above, the materialized view contains:
+
+| month | total_amount |
+|---|---:|
+| 2019-05-01 | 30.00 |
+| 2021-12-01 | 80.00 |
+| 2022-01-01 | 150.00 |
 
 To refresh the materialized view:
 
@@ -159,6 +201,20 @@ SELECT * FROM transactions WHERE transaction_date < '2020-01-01';
 
 DELETE FROM transactions WHERE transaction_date < '2020-01-01';
 ```
+
+Before archiving, the matching source row is:
+
+| id | user_id | amount | transaction_date |
+|---:|---:|---:|---|
+| 4 | 20 | 30.00 | 2019-05-01 |
+
+After both statements, `transactions_archive` contains that row and the active `transactions` table is:
+
+| id | user_id | amount | transaction_date |
+|---:|---:|---:|---|
+| 1 | 10 | 100.00 | 2022-01-10 |
+| 2 | 10 | 50.00 | 2022-01-20 |
+| 3 | 20 | 80.00 | 2021-12-31 |
 
 ### Hardware Upgrades
 
@@ -222,6 +278,15 @@ monthly_totals = df.groupBy("transaction_date").sum("amount")
 monthly_totals.show()
 ```
 
+Using the sample `transactions` rows above, grouping by transaction date returns:
+
+| transaction_date | sum(amount) |
+|---|---:|
+| 2019-05-01 | 30.00 |
+| 2021-12-31 | 80.00 |
+| 2022-01-10 | 100.00 |
+| 2022-01-20 | 50.00 |
+
 ### Caching Strategies
 
 Implementing caching mechanisms can reduce database load and improve response times.
@@ -245,6 +310,18 @@ cache.set('user_123_data', user_data, ex=3600)  # Expires in 1 hour
 # Retrieve from cache
 cached_data = cache.get('user_123_data')
 ```
+
+Example cache row before the read:
+
+| key | cached value |
+|---|---|
+| `user_123_data` | `{"user_id":123,"name":"Alice"}` |
+
+The `GET` result is the stored value (returned as bytes by the default Python Redis client):
+
+| key | result |
+|---|---|
+| `user_123_data` | `b'{"user_id":123,"name":"Alice"}'` |
 
 ### Asynchronous Processing
 

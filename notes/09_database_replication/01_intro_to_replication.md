@@ -324,7 +324,13 @@ orders table now contains order 104
 
 ### Stage 4 — Visible to a read
 
-The database's consistency rules allow a query to observe the applied transaction:
+The database's consistency rules allow a query to observe the applied transaction. Once order 104 has been applied on the replica, its `orders` table contains:
+
+| order_id | customer_id | amount |
+| --- | --- | ---: |
+| 104 | 27 | 89.00 |
+
+The read returns that row:
 
 ```sql
 SELECT *
@@ -332,7 +338,9 @@ FROM orders
 WHERE order_id = 104;
 ```
 
-returns the row.
+| order_id | customer_id | amount |
+| --- | --- | ---: |
+| 104 | 27 | 89.00 |
 
 The important principle is:
 
@@ -1385,14 +1393,30 @@ PostgreSQL similarly exposes separate received/flushed/replayed WAL positions, m
 
 ## Read replicas can make themselves slower
 
-Suppose a replica is intended for large reporting queries:
+Suppose a replica is intended for large reporting queries. For example, the replica may have these orders:
+
+| order_id | customer_id | amount |
+| --- | --- | ---: |
+| 104 | 27 | 89.00 |
+| 105 | 27 | 35.00 |
+| 106 | 28 | 120.00 |
+
+A report can aggregate them by customer:
 
 ```sql
-SELECT ...
+SELECT
+    customer_id,
+    COUNT(*) AS order_count,
+    SUM(amount) AS total_amount
 FROM orders
-JOIN ...
-GROUP BY ...
+GROUP BY customer_id
+ORDER BY customer_id;
 ```
+
+| customer_id | order_count | total_amount |
+| ---: | ---: | ---: |
+| 27 | 2 | 124.00 |
+| 28 | 1 | 120.00 |
 
 Those queries consume:
 

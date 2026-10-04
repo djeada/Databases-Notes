@@ -92,9 +92,21 @@ Interacting with Neo4j involves using the Cypher query language to create, read,
 
 To create a node with a label and properties, you use the `CREATE` statement:
 
+Input graph has no `Person` nodes yet:
+
+| label | name | age |
+|---|---|---:|
+| *(no nodes)* |  |  |
+
 ```cypher
 CREATE (n:Person {name: 'Alice', age: 30});
 ```
+
+The new node is:
+
+| label | name | age |
+| --- | --- | ---: |
+| Person | Alice | 30 |
 
 *Example Output:*
 
@@ -110,10 +122,42 @@ Added 1 nodes, created 1 labels, set 2 properties.
 
 To establish a relationship between two existing nodes, you first match them and then create the relationship:
 
+Input before adding Bob:
+
+| label | name | age |
+|---|---|---:|
+| Person | Alice | 30 |
+
+Add Bob so both matched nodes exist:
+
+```cypher
+CREATE (:Person {name: 'Bob', age: 31});
+```
+
+Resulting nodes:
+
+| label | name | age |
+|---|---|---:|
+| Person | Alice | 30 |
+| Person | Bob | 31 |
+
+The input nodes are:
+
+| name | age |
+| --- | ---: |
+| Alice | 30 |
+| Bob | 31 |
+
 ```cypher
 MATCH (a:Person {name: 'Alice'}), (b:Person {name: 'Bob'})
 CREATE (a)-[:KNOWS]->(b);
 ```
+
+The resulting relationship is:
+
+| from | relationship | to |
+| --- | --- | --- |
+| Alice | KNOWS | Bob |
 
 *Example Output:*
 
@@ -135,15 +179,13 @@ WHERE n.name = 'Alice'
 RETURN n;
 ```
 
-*Example Output:*
+Input graph: Alice (age 30) and Bob (age 31) are connected by `Alice-[:KNOWS]->Bob`.
 
-```
-╒════════════════════════════════════╕
-│n                                   │
-╞════════════════════════════════════╡
-│{:name => 'Alice', :age => 30}      │
-╘════════════════════════════════════╛
-```
+Result:
+
+| name | age |
+| --- | ---: |
+| Alice | 30 |
 
 - The query searches for nodes labeled `Person` with the `name` property 'Alice'.
 - It returns the matched node along with its properties.
@@ -159,11 +201,19 @@ WHERE n.name = 'Alice'
 SET n.age = 31;
 ```
 
-*Example Output:*
+Input:
 
-```
-Properties set: 1.
-```
+| name | age |
+| --- | ---: |
+| Alice | 30 |
+
+Result:
+
+| name | age |
+| --- | ---: |
+| Alice | 31 |
+
+Mutation summary: `Properties set: 1.`
 
 - The command matches the `Person` node where `name` is 'Alice'.
 - The `age` property is updated from 30 to 31.
@@ -179,11 +229,19 @@ WHERE n.name = 'Alice'
 DETACH DELETE n;
 ```
 
-*Example Output:*
+Input graph:
 
-```
-Deleted 1 nodes, deleted 1 relationships.
-```
+| start node | relationship | end node |
+| --- | --- | --- |
+| Alice (age 31) | KNOWS | Bob (age 31) |
+
+Remaining node:
+
+| name | age |
+| --- | ---: |
+| Bob | 31 |
+
+Remaining relationships: none. Mutation summary: `Deleted 1 nodes, deleted 1 relationships.`
 
 - The command finds the `Person` node with `name` 'Alice'.
 - `DETACH DELETE` removes the node and any relationships connected to it.
@@ -277,10 +335,29 @@ Cypher is designed specifically for querying graph data. Its syntax uses ASCII-a
 
 For example, to find all people that 'Alice' knows:
 
+Input node table:
+
+| name | label |
+|---|---|
+| Alice | Person |
+| Bob | Person |
+
+Input relationship table:
+
+| start node | relationship | end node |
+|---|---|---|
+| Alice | KNOWS | Bob |
+
 ```cypher
 MATCH (a:Person {name: 'Alice'})-[:KNOWS]->(friend)
 RETURN friend.name;
 ```
+
+Result:
+
+| friend.name |
+| --- |
+| Bob |
 
 This query matches patterns where 'Alice' has a `KNOWS` relationship to another node, returning the names of her friends.
 

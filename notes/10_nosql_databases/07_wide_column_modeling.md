@@ -226,6 +226,28 @@ FROM orders
 JOIN customers ...
 ```
 
+Example relational input rows:
+
+`orders`
+
+| order_id | customer_id |
+|---:|---:|
+| 501 | 42 |
+
+`customers`
+
+| customer_id | name |
+|---:|---|
+| 42 | Alice |
+
+A relational join would return:
+
+| order_id | customer_id | name |
+|---:|---:|---|
+| 501 | 42 | Alice |
+
+Cassandra does not execute this join; a query-shaped Cassandra row would store the fields needed by that read together.
+
 store a query-shaped row.
 
 That may include copied display fields.
@@ -280,6 +302,22 @@ WHERE customer_id = 'customer-42'
 LIMIT 50;
 ```
 
+Example input rows:
+
+| customer_id | bucket_month | event_time | event_id | event_type | payload |
+|---|---|---|---|---|---|
+| customer-42 | 2026-10 | 2026-10-01 12:05:00 | e2 | purchased | book-101 |
+| customer-42 | 2026-10 | 2026-10-01 12:00:00 | e1 | viewed | book-101 |
+| customer-42 | 2026-09 | 2026-09-30 23:00:00 | e0 | viewed | book-205 |
+| customer-77 | 2026-10 | 2026-10-01 12:10:00 | e3 | viewed | book-205 |
+
+Result:
+
+| customer_id | bucket_month | event_time | event_id | event_type | payload |
+|---|---|---|---|---|---|
+| customer-42 | 2026-10 | 2026-10-01 12:05:00 | e2 | purchased | book-101 |
+| customer-42 | 2026-10 | 2026-10-01 12:00:00 | e1 | viewed | book-101 |
+
 The query supplies the full partition key.
 
 ## Partition-local range query
@@ -294,6 +332,13 @@ WHERE customer_id = 'customer-42'
   AND event_time >= '2026-10-01T00:00:00Z'
   AND event_time <  '2026-10-02T00:00:00Z';
 ```
+
+Using the same rows, the time-range result is:
+
+| event_time | event_id | event_type | payload |
+|---|---|---|---|
+| 2026-10-01 12:05:00 | e2 | purchased | book-101 |
+| 2026-10-01 12:00:00 | e1 | viewed | book-101 |
 
 The table exists for this query pattern.
 

@@ -203,6 +203,20 @@ The script:
 3. transfers value inside a transaction,
 4. queries the result.
 
+The starting `accounts` rows are:
+
+| id | owner | balance |
+|---:|---|---:|
+| 1 | Alice | 1000.00 |
+| 2 | Bob | 500.00 |
+
+After the script transfers 125.00 from Alice to Bob, its final `SELECT` returns:
+
+| id | owner | balance |
+|---:|---|---:|
+| 1 | Alice | 875.00 |
+| 2 | Bob | 625.00 |
+
 The SQL intentionally looks familiar because distributed SQL aims to preserve the relational programming model.
 
 ## Transactions
@@ -224,6 +238,20 @@ WHERE id = 2;
 
 COMMIT;
 ```
+
+Example starting table:
+
+| id | owner | balance |
+|---:|---|---:|
+| 1 | Alice | 1000.00 |
+| 2 | Bob | 500.00 |
+
+After the transaction commits, the result table is:
+
+| id | owner | balance |
+|---:|---|---:|
+| 1 | Alice | 900.00 |
+| 2 | Bob | 600.00 |
 
 From the application perspective, the transaction is relational.
 

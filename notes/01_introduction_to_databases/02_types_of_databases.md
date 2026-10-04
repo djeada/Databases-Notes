@@ -37,6 +37,21 @@ GROUP BY c.customer_id, c.name
 ORDER BY c.customer_id;
 ```
 
+Input (`customers`):
+
+| customer_id | name |
+| ---: | --- |
+| 1 | Alice |
+| 2 | Bob |
+
+Input (`orders`):
+
+| order_id | customer_id | total_cents |
+| ---: | ---: | ---: |
+| 101 | 1 | 5500 |
+| 102 | 1 | 1500 |
+| 103 | 2 | 5000 |
+
 | name | spent_cents |
 |---|---|
 | Alice | 7000 |
@@ -90,7 +105,20 @@ db.products.find(
 ).sort({ _id: 1 });
 ```
 
-The query returns the print book:
+Input (`products`):
+
+| _id | title | format | price_cents | attributes.language |
+| ---: | --- | --- | ---: | --- |
+| 10 | Database Basics | print | 1500 | en |
+| 20 | SQL on the Move | audio | 2500 | NULL |
+
+Result:
+
+| _id | title |
+| ---: | --- |
+| 10 | Database Basics |
+
+The matching result document is:
 
 ```json
 { "_id": 10, "title": "Database Basics" }
@@ -130,7 +158,17 @@ GET chapter1:session:abc123
 TTL chapter1:session:abc123
 ```
 
-The first command returns `OK`. An immediate `GET` returns the stored JSON string, and `TTL` returns its remaining lifetime in seconds. `EX 900` sets a 15-minute expiration. After expiration, `GET` returns a nil reply rather than the old session.
+Input: `chapter1:session:abc123` is absent before `SET`.
+
+Command results:
+
+| command | result |
+| --- | --- |
+| `SET` | `OK` |
+| `GET` | `{"customer_id":1}` |
+| `TTL` | 0 to 900 seconds |
+
+`EX 900` sets a 15-minute expiration. After expiration, `GET` returns a nil reply rather than the old session.
 
 Redis treats this value as a string; it does not automatically interpret the JSON's fields. The application parses it. The official [SET documentation](https://redis.io/docs/latest/commands/set/) describes the value and expiration options.
 
@@ -141,7 +179,14 @@ HSET chapter1:cart:abc123 product:10 2 product:20 1
 HGETALL chapter1:cart:abc123
 ```
 
-The hash contains quantities `2` for product 10 and `1` for product 20; the [HSET documentation](https://redis.io/docs/latest/commands/hset/) describes field updates. The result's display order is not the cart's business ordering. A stored cart is an intention to buy, not a stock reservation.
+The command result is:
+
+| field | value |
+| --- | ---: |
+| product:10 | 2 |
+| product:20 | 1 |
+
+The result's display order is not the cart's business ordering. A stored cart is an intention to buy, not a stock reservation. See the [HSET documentation](https://redis.io/docs/latest/commands/hset/) for field updates.
 
 ### Direct access is useful but does not answer every query
 
@@ -188,7 +233,21 @@ FROM chapter1.events_by_customer_month
 WHERE customer_id = 1 AND month = '2025-01';
 ```
 
-The result contains the January 12 event before the January 10 event. The nested parentheses in the primary key make `(customer_id, month)` the partition key. The remaining columns identify and order records within it, with `event_id` distinguishing events at the same timestamp.
+Input (`chapter1.events_by_customer_month`):
+
+| customer_id | month | occurred_at | event_id | action |
+| ---: | --- | --- | ---: | --- |
+| 1 | 2025-01 | 2025-01-10 10:00:00Z | 1 | viewed product 10 |
+| 1 | 2025-01 | 2025-01-12 11:00:00Z | 2 | placed order 102 |
+
+Result, newest first:
+
+| occurred_at | action |
+| --- | --- |
+| 2025-01-12 11:00:00Z | placed order 102 |
+| 2025-01-10 10:00:00Z | viewed product 10 |
+
+The nested parentheses in the primary key make `(customer_id, month)` the partition key. The remaining columns identify and order records within it, with `event_id` distinguishing events at the same timestamp.
 
 A **keyspace** is Cassandra's namespace and replication configuration. The single-copy `SimpleStrategy` setting keeps the local exercise small; it provides no replica redundancy. Production deployments generally use `NetworkTopologyStrategy` with appropriate datacenter settings. See Cassandra's [data-definition documentation](https://cassandra.apache.org/doc/latest/cassandra/developing/cql/ddl.html).
 
@@ -225,6 +284,14 @@ GROUP BY product_id
 ORDER BY product_id;
 ```
 
+Input (`sales`):
+
+| sale_id | product_id | quantity | amount_cents |
+| ---: | ---: | ---: | ---: |
+| 101 | 10 | 2 | 3000 |
+| 102 | 20 | 1 | 2500 |
+| 103 | 20 | 2 | 5000 |
+
 | product_id | revenue_cents |
 |---|---|
 | 10 | 3000 |
@@ -253,6 +320,13 @@ CREATE (alice:Customer {customer_id: 1, name: 'Alice'}),
 ```
 
 Now find the path:
+
+Input graph:
+
+| start node | relationship | end node |
+| --- | --- | --- |
+| Customer 1, Alice | FOLLOWS | Customer 2, Bob |
+| Customer 2, Bob | LIKES | Book 10, Database Basics |
 
 ```cypher
 MATCH (:Customer {customer_id: 1})-[:FOLLOWS]->(friend)-[:LIKES]->(book:Book)
