@@ -53,7 +53,7 @@ DocumentDB is not the MongoDB server. Keyspaces is not an arbitrary Cassandra in
 
 ## Service lifecycle changes
 
-**QLDB is historical material, not a current deployment choice.** AWS ended its support on July 31, 2025. Older exam material associates it with an immutable, cryptographically verifiable ledger; new designs need another supported architecture and explicit audit-history guarantees. See the [AWS QLDB end-of-support notice](https://docs.aws.amazon.com/qldb/latest/developerguide/getting-started-step-7.html).
+**QLDB is historical material, not a current deployment choice.** AWS ended its support on July 31, 2025. Older exam material associates it with an immutable, cryptographically verifiable ledger; new designs need another supported architecture and explicit audit-history guarantees. See the [AWS QLDB migration and end-of-support guidance](https://aws.amazon.com/blogs/database/migrate-an-amazon-qldb-ledger-to-amazon-aurora-postgresql/).
 
 **Timestream for LiveAnalytics closed to new customers on June 20, 2025.** Distinguish it from Timestream for InfluxDB and verify customer eligibility rather than recommending “Timestream” generically. See the [LiveAnalytics availability change](https://docs.aws.amazon.com/timestream/latest/developerguide/AmazonTimestreamForLiveAnalytics-availability-change.html).
 
