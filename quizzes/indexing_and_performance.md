@@ -222,7 +222,7 @@ INCLUDE (total_cents);
 * [ ] That every query uses a prepared statement
 * [ ] That autocommit is disabled in every instance
 
-> **Explanation:** Fleet-wide connections multiply: 10 × 50 = 500. Larger pools can add memory use, lock contention and tail latency, so size them from measured database capacity.
+> **Explanation:** Fleet-wide connections multiply: $10 \times 50 = 500$. Larger pools can add memory use, lock contention and tail latency, so size them from measured database capacity.
 
 #### Q. With cache-aside, a writer commits a new price and deletes the cache key. How can the cache still end up stale?
 

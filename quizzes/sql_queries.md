@@ -268,7 +268,7 @@ SET price_cents = excluded.price_cents;
 * [x] 9
 * [ ] 0, because there is no join condition
 
-> **Explanation:** A cross join returns every pair: 3 × 3 = 9. That is useful when all combinations are intended and a warning sign when a matching condition was accidentally omitted.
+> **Explanation:** A cross join returns every pair: $3 \times 3 = 9$. That is useful when all combinations are intended and a warning sign when a matching condition was accidentally omitted.
 
 #### Q. Products cost 1500, 2500 and 1800. How many rows does this self-join return?
 
