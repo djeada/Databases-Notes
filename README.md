@@ -110,7 +110,6 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 - [Consistent Hashing](notes/06_distributed_databases/05_consistent_hashing.md) — Distributing data with minimal rehashing.
 - [CAP Theorem](notes/06_distributed_databases/06_cap_theorem.md) — Consistency, availability, partition tolerance.
 - [Eventual Consistency](notes/06_distributed_databases/07_eventual_consistency.md) — Convergence model for distributed systems.
-- [Advanced Distributed Systems](notes/06_distributed_databases/08_distributed_database_systems.md) — Load balancing, replication, and sharding patterns.
 
 ### Concurrency Control and Locking
 
@@ -207,7 +206,8 @@ Use the [glossary](notes/01_introduction_to_databases/05_glossary.md) as a refer
 
 ## Exercises and demonstrations
 
-- [Review quiz](notes/quizes.md) — Questions and worked SQL exercises.
+- [Review quiz](notes/quizes.md) — Questions and worked SQL exercises, also available as [interactive flashcards](https://adamdjellouli.com/tools/flash_cards/?category=databases).
+- Quizzes — Multiple-choice self-checks: [SQL Queries](quizzes/sql_queries.md), [Database Design](quizzes/database_design.md), [Indexing and Performance](quizzes/indexing_and_performance.md), [Transactions and Concurrency](quizzes/transactions_and_concurrency.md), [Distributed Databases, Replication and NoSQL](quizzes/distributed_replication_and_nosql.md). Take them [interactively](https://adamdjellouli.com/tools/quiz_app/?category=databases).
 - [Runnable database demonstrations](scripts/README.md) — Engine-specific examples and setup instructions.
 - [SQL Server indexing walkthrough](projectes/indexes_in_microsoft_sql_server.md) — A practical indexing project.
 
