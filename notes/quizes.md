@@ -91,8 +91,8 @@ Integrity is about what values are allowed; independence is about separating the
 <details>
 <summary>List some relational operations that can be performed on tables in a relational database.</summary>
 
-- **Selection (σ):** keep the rows that satisfy a condition; in SQL, the `WHERE` clause.
-- **Projection (π):** keep only some columns; in SQL, the `SELECT` list.
+- **Selection ($\sigma$):** keep the rows that satisfy a condition; in SQL, the `WHERE` clause.
+- **Projection ($\pi$):** keep only some columns; in SQL, the `SELECT` list.
 - **Join:** combine rows from two tables based on related columns.
 - **Union:** rows from either input, without duplicates.
 - **Intersection:** rows present in both inputs (`INTERSECT`).

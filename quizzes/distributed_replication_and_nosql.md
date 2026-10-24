@@ -79,11 +79,11 @@ Test how data is split, copied and kept consistent across machines, and how NoSQ
 #### Q. A Cassandra table has replication factor 3, and both reads and writes use `QUORUM`. Why does a read meet the latest acknowledged write under the documented model?
 
 * [ ] `QUORUM` waits for all three replicas
-* [x] `R + W = 4 > 3`, so the read and write sets overlap
+* [x] $R + W = 4 > 3$, so the read and write sets overlap
 * [ ] `QUORUM` always reads from the coordinator node
 * [ ] Writes at `QUORUM` are applied synchronously everywhere
 
-> **Explanation:** A quorum of 3 is 2. Any two replicas read and any two written must share at least one node. With `ONE` for both, `R + W = 2` and a read can miss the write.
+> **Explanation:** A quorum of 3 is 2. Any two replicas read and any two written must share at least one node. With `ONE` for both, $R + W = 2$ and a read can miss the write.
 
 #### Q. Why is a single PostgreSQL server not a counterexample to CAP?
 
