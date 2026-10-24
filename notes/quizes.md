@@ -2,14 +2,19 @@
 
 Try answering each question before opening its answer. SQL exercises identify their dialect; syntax and guarantees vary between engines.
 
-<details>
-<summary>What is the purpose of a VIEW in a relational database?</summary>
+## Database Fundamentals
 
-A VIEW in a relational database is a virtual table based on the result set of a SELECT query. Views serve several purposes:
-- **Simplify Complex Queries:** Views can encapsulate complex queries, making it easier for users to retrieve data without needing to understand the underlying query logic.
-- **Customized Data Representation:** Views can present data in a specific format or structure that is more useful for certain applications or user needs.
-- **Data Security:** Views can restrict access to specific columns or rows, ensuring that users see only the data they are authorized to view.
-- **Data Abstraction:** Views provide a level of abstraction, hiding the complexity and details of the underlying database schema.
+<details>
+<summary>What is a database?</summary>
+
+A database is an organized collection of data stored electronically so it can be queried, updated and managed efficiently. A database management system (DBMS) is the software that stores the data, enforces rules such as constraints, coordinates concurrent users through transactions, and recovers the data after failures. Databases range from a single SQLite file embedded in an application to distributed systems spread across many servers.
+
+</details>
+
+<details>
+<summary>What is SQL?</summary>
+
+SQL (Structured Query Language) is the standard declarative language for relational databases. You describe the result you want, and the optimizer decides how to obtain it. SQL covers querying data, changing rows, defining and altering structures, controlling access and grouping work into transactions. Every engine implements its own dialect, so syntax and behavior can differ between PostgreSQL, MySQL, SQL Server and SQLite.
 
 </details>
 
@@ -21,50 +26,97 @@ A schema can mean the logical design of tables and constraints or an engine-spec
 </details>
 
 <details>
-<summary>What is a stored procedure?</summary>
+<summary>What is a database schema, and why is it important?</summary>
 
-A stored procedure is a named routine executed by the database. It can accept parameters and contain SQL and procedural logic. Compilation and plan caching depend on the engine; a procedure is not automatically faster than equivalent parameterized SQL.
-
-</details>
-
-<details>
-<summary>What is the purpose of the NULL value in SQL?</summary>
-
-In SQL, the NULL value represents the absence of a value or an unknown value in a column. It is distinct from zero, an empty string, or any other default value. Handling NULLs requires special considerations in SQL queries because standard comparison operators (e.g., =, <, >) do not work with NULL values. Instead, SQL provides specific functions and keywords such as IS NULL and IS NOT NULL to manage NULLs effectively. NULL values are used to represent missing or undefined data.
+A database schema is the structured blueprint of a database: its tables, columns, data types, relationships, indexes and constraints. It defines how data is organized and which rules every writer must obey. A well-designed schema keeps data consistent and unambiguous, makes queries straightforward to write, and lets the database reject invalid data instead of relying on every application to check it.
 
 </details>
 
 <details>
-<summary>What is the difference between a view and a materialized view?</summary>
+<summary>Is a table in a database dynamic or static?</summary>
 
-- **View:** A view is a virtual table in SQL that is based on the result set of a SELECT query. It does not store the data physically; rather, it dynamically fetches data from the underlying tables whenever it is accessed. Views are useful for simplifying complex queries, providing security by restricting access to specific data, and presenting data in a specific format.
-- **Materialized View:** A materialized view, on the other hand, is a physical copy of the result set of a query that is stored in the database. It can be refreshed periodically or on-demand to ensure data consistency. Materialized views improve query performance by providing precomputed results, at the cost of potentially having outdated data between refreshes.
-
-</details>
-
-<details>
-<summary>What is the difference between the CHAR and VARCHAR data types?</summary>
-
-- **CHAR:** The CHAR data type is used to store fixed-length character strings. When data is stored in a CHAR column, it always uses the defined length, padding with spaces if necessary. This makes CHAR efficient for storing data of a consistent length but can waste space when storing shorter strings.
-- **VARCHAR:** The VARCHAR data type is used to store variable-length character strings. It only uses as much storage space as needed for the actual content plus a small overhead for storing the length of the string. VARCHAR is more flexible and space-efficient for data of varying lengths.
+A table is dynamic: its contents change over time through inserts, updates and deletes. Its structure can also change through DDL such as `ALTER TABLE`, although structural changes on production data are usually planned as migrations because existing rows and running applications must keep working.
 
 </details>
 
 <details>
-<summary>What is the difference between a unique constraint and a unique index?</summary>
+<summary>What are some common types of database management systems (DBMS), and how do they differ?</summary>
 
-- **Unique Constraint:** A unique constraint ensures that all values in one or more columns are unique across the table, preventing duplicate entries. It is primarily a logical constraint used for data integrity and is enforced by the database system.
-- **Unique Index:** A unique index physically implements the unique constraint by creating an index that enforces uniqueness. Besides ensuring unique values, it also improves query performance by allowing faster searches and lookups on the indexed columns.
+- **Relational** (PostgreSQL, MySQL, SQL Server): tables, SQL, constraints and transactions; strong at combining independently stored facts.
+- **Document** (MongoDB, Couchbase): flexible nested records; good when a bounded aggregate is read and written together.
+- **Key-value** (Redis): direct access by key; fast but limited querying.
+- **Wide-column** (Cassandra): tables designed around partition keys for known queries at large scale.
+- **Graph** (Neo4j): nodes and relationships for traversal-heavy queries.
+
+Memory-first systems such as Redis keep data in RAM for speed; Redis can persist to disk, while caches like Memcached do not persist at all. Guarantees depend on the product and configuration, not just the category.
+
+</details>
+
+## Relational Model and Design
+
+<details>
+<summary>What is a relational database model, and why is it called "relational"?</summary>
+
+The relational model organizes data into relations, which SQL presents as tables of rows and columns. Each table typically represents one entity type, and each row is one fact about an instance. The name comes from the mathematical term **relation** (a set of tuples), not from the relationships between tables. Relationships are represented by keys: a foreign key stores the identifier of a related row, and joins combine related rows at query time.
 
 </details>
 
 <details>
-<summary>What is the difference between the UNION and JOIN operators?</summary>
+<summary>In databases, what are the meanings of the terms "entities" and "attributes"?</summary>
 
-- **UNION:** The UNION operator combines the result sets of two or more SELECT statements vertically, appending rows from each SELECT to the result set. It removes duplicate rows by default unless UNION ALL is used. UNION is useful for combining results from multiple queries with the same structure.
-- **JOIN:** The JOIN operator combines columns from two or more tables horizontally based on a related column between them. Different types of joins (INNER JOIN, LEFT JOIN, RIGHT JOIN, etc.) determine how rows are matched and included in the result set. JOINS are used to retrieve related data from multiple tables in a single query.
+An entity is an object or concept the database tracks, such as a customer or an order; an entity type is the kind of thing, and an entity instance is one occurrence, such as the customer Alice. Attributes are the properties of an entity, such as a customer's name and email, and usually become columns.
 
 </details>
+
+<details>
+<summary>Differentiate between base and derived relations in a relational database.</summary>
+
+- **Base relations:** the actual stored tables defined by the schema.
+- **Derived relations:** results computed from base relations by operations such as selection, projection, join and union. Ordinary views are named derived relations: they store a query definition, not the data itself.
+
+</details>
+
+<details>
+<summary>Explain the two main principles of the relational database model and how they differ.</summary>
+
+Two goals are often emphasized:
+
+- **Data integrity:** the data must obey declared rules, such as keys, foreign keys and checks, so it stays valid and unambiguous.
+- **Data independence:** applications work with logical relations, so the physical storage (files, indexes, layout) can change without changing queries.
+
+Integrity is about what values are allowed; independence is about separating the logical model from storage choices. They are design goals rather than a complete definition: the model itself represents data as relations and manipulates them with relational operations.
+
+</details>
+
+<details>
+<summary>List some relational operations that can be performed on tables in a relational database.</summary>
+
+- **Selection (σ):** keep the rows that satisfy a condition; in SQL, the `WHERE` clause.
+- **Projection (π):** keep only some columns; in SQL, the `SELECT` list.
+- **Join:** combine rows from two tables based on related columns.
+- **Union:** rows from either input, without duplicates.
+- **Intersection:** rows present in both inputs (`INTERSECT`).
+- **Difference:** rows in the first input but not the second (`EXCEPT`, or `MINUS` in Oracle).
+- **Rename:** give a relation or attribute a new name; in SQL, aliases.
+
+Grouping and aggregate functions such as `COUNT`, `SUM` and `AVG` are common extensions of the basic relational algebra.
+
+</details>
+
+<details>
+<summary>What is normalization in the context of database design, and why is it important?</summary>
+
+Normalization organizes tables so each fact is stored once, with the entity it describes. It works by identifying functional dependencies and splitting tables losslessly, following forms such as 1NF, 2NF, 3NF and BCNF.
+
+- **Removes update anomalies:** renaming a customer changes one row instead of every order that repeated the name.
+- **Protects integrity:** keys and foreign keys can enforce the rules directly.
+- **Simplifies maintenance:** each fact has one authoritative place.
+
+Normalization is not automatically faster: reports may need more joins. Some systems later denormalize selected data, with an explicit plan for keeping copies in sync.
+
+</details>
+
+## Keys and Constraints
 
 <details>
 <summary>What is the difference between a primary key and a candidate key?</summary>
@@ -74,32 +126,24 @@ A candidate key is a minimal set of attributes that uniquely identifies a row. T
 </details>
 
 <details>
-<summary>What is the purpose of the ROW_NUMBER() function?</summary>
+<summary>What is the difference between a primary key and a foreign key?</summary>
 
-The ROW_NUMBER() function in SQL assigns a unique sequential integer to each row within a result set. This function is often used for pagination, ranking, and assigning unique identifiers to rows. It helps in generating row numbers dynamically based on the order specified in the OVER clause, allowing for flexible and efficient row manipulation and analysis.
-
-</details>
-
-<details>
-<summary>What is an ALIAS command?</summary>
-
-An alias is a temporary query name, not a separate SQL command. For example, `SELECT u.name AS display_name FROM users AS u;` gives the table and output column aliases. Whether `AS` is optional or supported for table aliases depends on the dialect.
+- **Primary key:** a column or set of columns that uniquely identifies each row in its table. It must be unique and cannot contain NULL.
+- **Foreign key:** a column or set of columns that references a primary key or unique key in a table (possibly the same table). The database rejects values with no matching referenced row, which maintains referential integrity. A nullable foreign key can be NULL to mean "no related row".
 
 </details>
 
 <details>
-<summary>How is data stored in memory or on a disk?</summary>
+<summary>Why can there be only one primary key in a table?</summary>
 
-Data storage varies depending on whether it is stored in memory (RAM) or on a disk (persistent storage):
-- **In Memory:** Data is stored as binary information in the form of bits (0s and 1s). Memory storage uses structures like arrays, linked lists, and trees to organize data for quick access and manipulation. Memory is volatile, meaning data is lost when the power is turned off.
-- **On Disk:** Data is stored persistently in files and folders within a specific file system format, such as NTFS, FAT32, or ext4. Disk storage uses sectors and tracks to organize data physically on the storage medium. Data management on disk involves addressing, organizing, and maintaining data to ensure efficient access and retrieval.
+SQL designates one candidate key as the primary key. Other candidate keys can remain as alternate keys, enforced with `UNIQUE` and `NOT NULL` constraints. The primary key can contain multiple columns; the one-primary-key convention does not imply that a row has only one possible identifier.
 
 </details>
 
 <details>
 <summary>Are all columns keys?</summary>
 
-No, not all columns in a database table are keys. A key is a column or a set of columns used to uniquely identify rows within a table. There are different types of keys, such as primary keys, foreign keys, and unique keys. While key columns are used for identification and establishing relationships between tables, many other columns contain non-unique data and serve other purposes, such as storing descriptive information.
+No. A key is a column or set of columns used to uniquely identify rows (primary, alternate/unique keys) or to reference another table (foreign keys). Most columns store descriptive, often non-unique facts such as a name, price or status, and are not part of any key.
 
 </details>
 
@@ -111,29 +155,102 @@ No. Keys express logical rules; indexes are access structures. Engines commonly 
 </details>
 
 <details>
-<summary>Why can there be only one primary key in a table?</summary>
+<summary>What is the difference between a unique constraint and a unique index?</summary>
 
-SQL designates one candidate key as the primary key. Other candidate keys can remain as alternate keys enforced with required unique columns. The primary key can contain multiple columns; the one-primary-key convention does not imply that a row has only one possible identifier.
+- **Unique constraint:** a logical rule that no two rows share the same values in the listed columns. It is part of the schema's meaning and can be referenced by foreign keys.
+- **Unique index:** a physical access structure that also rejects duplicates. Most engines enforce a unique constraint by creating a unique index, which also speeds up lookups on those columns.
 
-</details>
-
-<details>
-<summary>How does rolling back a transaction work?</summary>
-
-Rollback undoes that transaction’s transactional changes, not concurrent commits by other transactions. Some effects, such as PostgreSQL sequence increments or external API calls, are not undone. DDL rollback behavior also depends on the engine.
+Some engines allow unique indexes with extra features, such as partial or expression-based uniqueness, that cannot be declared as a plain constraint.
 
 </details>
 
 <details>
-<summary>How are indices formatted in a database?</summary>
+<summary>What are database constraints, and why do they matter?</summary>
 
-Indices in a database are formatted as data structures that provide efficient access paths to rows in a table. Common formats include:
-- **B-tree Indexes:** These are balanced tree structures that maintain sorted order of data, allowing quick searches, insertions, deletions, and sequential access.
-- **Hash Indexes:** These use a hash function to map key values to specific locations, providing fast access for equality comparisons.
-- **Bitmap Indexes:** These use bitmaps to represent the presence of values and are efficient for columns with a low number of distinct values.
+Constraints are rules the database enforces on every write, whichever application or tool performs it:
 
+- **Primary key:** each row is uniquely identifiable.
+- **Foreign key:** a referencing value must match an existing row's primary or unique key.
+- **Unique:** values in a column or column set are not repeated.
+- **Check:** each row must satisfy a condition, such as `price_cents >= 0`.
+- **Not null:** a column must always have a value.
 
-  Indices are crucial for improving the performance of data retrieval operations by reducing the amount of data the database engine needs to scan.
+Because the database rejects invalid data at the source, constraints close gaps that application checks leave open, such as two concurrent clients both passing a pre-insert check.
+
+</details>
+
+<details>
+<summary>Why are domain constraints important in a database?</summary>
+
+Domain constraints define the permissible values for an attribute through its data type, `NOT NULL`, and `CHECK` conditions on ranges or formats. For example, a date of birth must be a valid date and not in the future. They keep invalid values out regardless of which application writes the data. How strictly types are enforced is engine-specific: ordinary SQLite tables use type affinity unless declared `STRICT`.
+
+</details>
+
+<details>
+<summary>What is the purpose of ON DELETE CASCADE?</summary>
+
+`ON DELETE CASCADE` is a referential action on a foreign key, not a separate constraint. When a parent row is deleted, the database automatically deletes the child rows that reference it, so no orphaned rows remain. Choose it only when the children's lifecycle truly belongs to the parent, such as order lines belonging to an order. For data like historical orders, alternatives such as `RESTRICT` (reject the delete) or `SET NULL` may be safer.
+
+</details>
+
+## SQL Basics
+
+<details>
+<summary>What are DDL, DML, and DCL in SQL?</summary>
+
+- **DDL (Data Definition Language):** defines and changes structures, such as `CREATE TABLE`, `ALTER TABLE` and `DROP TABLE`.
+- **DML (Data Manipulation Language):** reads and changes rows, such as `SELECT`, `INSERT`, `UPDATE` and `DELETE`. `SELECT` is sometimes separated out as DQL.
+- **DCL (Data Control Language):** manages permissions, such as `GRANT` and `REVOKE`.
+
+Transaction control statements such as `COMMIT`, `ROLLBACK` and `SAVEPOINT` are often grouped as TCL.
+
+</details>
+
+<details>
+<summary>What is the purpose of the NULL value in SQL?</summary>
+
+NULL marks a missing or unknown value. It is distinct from zero, an empty string or any default. Comparing NULL with `=`, `<>` or `<` yields unknown rather than true, so `WHERE phone = NULL` matches nothing; use `IS NULL` and `IS NOT NULL` instead. Aggregates such as `SUM` and `AVG` ignore NULLs, and `COALESCE` substitutes a fallback value when one is appropriate.
+
+</details>
+
+<details>
+<summary>What is an alias in SQL?</summary>
+
+An alias is a temporary query name, not a separate SQL command. For example, `SELECT u.name AS display_name FROM users AS u;` gives the table and output column aliases. Whether `AS` is optional or supported for table aliases depends on the dialect.
+
+</details>
+
+<details>
+<summary>What is the difference between the CHAR and VARCHAR data types?</summary>
+
+- **CHAR(n):** a fixed-length string. Shorter values are padded with spaces to `n` characters.
+- **VARCHAR(n):** a variable-length string that stores only the actual characters plus a small length overhead, up to `n`.
+
+CHAR suits values that always have the same length, such as fixed codes. Storage and performance details are engine-specific: in PostgreSQL, for example, `char(n)` has no performance advantage over `varchar(n)` or `text`.
+
+</details>
+
+<details>
+<summary>What is the purpose of the CASE expression?</summary>
+
+`CASE` adds conditional logic inside a query and returns a value, much like if/else in a programming language. It can label rows (`CASE WHEN EXTRACT(HOUR FROM created_at) >= 12 THEN 'PM' ELSE 'AM' END`), map codes to names, or count conditions with `SUM(CASE WHEN ... THEN 1 ELSE 0 END)`. Because it is an expression, it can appear in `SELECT`, `WHERE`, `ORDER BY` and inside aggregates.
+
+</details>
+
+<details>
+<summary>How does the STUFF function differ from the REPLACE function in SQL Server?</summary>
+
+- **STUFF:** deletes a given number of characters at a given position and inserts another string there. `STUFF('abcdef', 2, 3, '123')` returns `'a123ef'`.
+- **REPLACE:** replaces every occurrence of a substring. `REPLACE('abcdefabc', 'abc', '123')` returns `'123def123'`.
+
+STUFF is position-based and T-SQL-specific; REPLACE is pattern-based and exists in most dialects.
+
+</details>
+
+<details>
+<summary>What are the similarities and differences between TRUNCATE and DELETE commands in SQL?</summary>
+
+Both remove rows and keep the table definition. `DELETE` can filter rows with `WHERE`; `TRUNCATE` removes the whole table's data using an engine-specific bulk operation. Logging, identity resets, triggers, and rollback differ. PostgreSQL and SQL Server can roll back a transactional `TRUNCATE`; MySQL `TRUNCATE` implicitly commits. PostgreSQL also supports `TRUNCATE` triggers.
 
 </details>
 
@@ -144,223 +261,40 @@ Prepared statements separate SQL structure from bound values; preparation and pl
 
 </details>
 
-<details>
-<summary>What are database constraints, and why do they matter?</summary>
-
-Database constraints are rules applied to columns or tables to enforce data integrity and consistency. Common types of constraints include:
-- **Primary Key Constraint:** Ensures each row in a table is uniquely identifiable.
-- **Foreign Key Constraint:** Maintains referential integrity by ensuring a column's values match values in another table's primary key.
-- **Unique Constraint:** Ensures all values in a column or set of columns are unique.
-- **Check Constraint:** Enforces a condition that each row must satisfy.
-- **Not Null Constraint:** Ensures a column cannot have NULL values.
-
-
-  Constraints are crucial for maintaining the accuracy, reliability, and integrity of data within a database.
-
-</details>
+## Joins and Set Operations
 
 <details>
-<summary>Is a table in a database dynamic or static?</summary>
+<summary>What is a join in SQL, and what are the different types?</summary>
 
-A table in a database is dynamic because its contents can change over time through various operations such as insertions, updates, and deletions. Tables are designed to store and manage data in a structured format and are continuously modified to reflect new information, evolving requirements, and data maintenance activities. The schema or structure of the table can also change, adding to its dynamic nature.
+A join combines rows from two or more tables based on a related condition.
 
-</details>
+- **INNER JOIN:** only pairs of rows that match.
+- **LEFT JOIN:** all rows from the left table, with NULLs where the right side has no match.
+- **RIGHT JOIN:** all rows from the right table, with NULLs where the left side has no match.
+- **FULL OUTER JOIN:** all rows from both tables, matched where possible and NULL-extended otherwise.
+- **CROSS JOIN:** every combination of rows (the Cartesian product).
 
-<details>
-<summary>What is SQL?</summary>
-
-SQL, which stands for Structured Query Language, is a specialized programming language designed for managing and manipulating relational databases. It allows users to perform various operations such as querying data, updating records, creating and modifying database structures, and controlling access to the data. SQL is essential for interacting with databases and is widely used in data management and analysis.
-
-</details>
-
-<details>
-<summary>What is a database?</summary>
-
-A database is a systematic collection of data that is stored electronically and can be accessed, managed, and updated efficiently. Databases enable the storage, organization, and retrieval of large amounts of information. They can vary in complexity from simple text files to sophisticated systems that handle vast quantities of data and support complex queries and transactions. Databases are fundamental in various applications, including business, research, and technology.
-
-</details>
-
-<details>
-<summary>What is the difference between a primary key and a foreign key?</summary>
-
-- **Primary Key:** A primary key is a column or set of columns in a table that uniquely identifies each row. It enforces uniqueness and ensures that no two rows have the same primary key value. Primary keys cannot contain NULL values.
-- **Foreign Key:** A foreign key is a column or set of columns in one table that references the primary key of another table. It establishes a relationship between the tables, ensuring referential integrity by enforcing that values in the foreign key column must match values in the referenced primary key column.
-
-</details>
-
-<details>
-<summary>What is a database schema, and why is it important?</summary>
-
-A database schema is the structured blueprint of a database, encompassing its tables, columns, relationships, indexes, and constraints. It defines how data is organized and the relationships between different parts of the data. A well-designed schema is crucial because it ensures data is stored efficiently, consistently, and securely. It also facilitates data retrieval and manipulation by providing a clear, logical structure, helping to enforce data integrity and improve query performance.
+Support varies: MySQL has no `FULL OUTER JOIN`, and SQLite added right and full joins in 3.39.0.
 
 </details>
 
 <details>
 <summary>Can you explain the differences between Inner Join and Left Join in SQL?</summary>
 
-- **Inner Join:** This type of join returns only the rows that have matching values in both tables. If there is no match, the row is excluded from the result set. Inner joins are used when you need to find records that have corresponding entries in both tables.
-- **Left Join:** Also known as a Left Outer Join, this join returns all rows from the left table and the matched rows from the right table. If there are no matches in the right table, NULL values are returned for columns from the right table. Left joins are useful when you need to include all records from the left table regardless of whether they have matching rows in the right table.
+- **Inner join:** returns only rows that have matching values in both tables. Unmatched rows are excluded.
+- **Left join:** returns every row from the left table plus matching rows from the right table. Where no match exists, the right table's columns are NULL.
+
+A filter on the right table placed in `WHERE` removes those NULL-extended rows and turns a left join back into an inner join; put it in the `ON` clause to keep unmatched left rows.
 
 </details>
 
 <details>
-<summary>What distinguishes WHERE and HAVING in SQL?</summary>
+<summary>What is the difference between a cross join and an inner join?</summary>
 
-The **WHERE** and **HAVING** clauses are both used to filter records in SQL, but they are applied at different stages of query processing:
-- **WHERE:** This clause is used to filter rows before any grouping or aggregation takes place. It applies to individual rows and is used to set conditions on the columns of the table.
-- **HAVING:** This clause is used to filter groups after the grouping and aggregation have been performed. It applies to the aggregated data and is typically used in conjunction with the GROUP BY clause.
+- **Cross join:** the Cartesian product of two tables, every row paired with every row, with no condition. Three customers and three products give nine rows.
+- **Inner join:** only the pairs that satisfy a join condition, usually on key columns.
 
-</details>
-
-<details>
-<summary>When should you use a subquery in SQL, and can you provide an example?</summary>
-
-Subqueries, or nested queries, are used when you need to use the results of one query within another query. They are particularly useful for filtering or manipulating data based on intermediate results.
-
-
-  Example: To find employees with salaries above the average salary, you can use a subquery as follows:
-  <pre>`SELECT * FROM employees WHERE salary > (SELECT AVG(salary) FROM employees);`</pre>
-  In this example, the subquery calculates the average salary, and the outer query selects employees whose salaries are greater than this average.
-
-</details>
-
-<details>
-<summary>How can you improve the performance of a slow SQL query?</summary>
-
-Several techniques can be used to improve the performance of a slow SQL query:
-- **Proper Indexing:** Create indexes on columns that are frequently used in WHERE clauses, joins, and order by clauses to speed up data retrieval.
-- **Optimize Joins:** Ensure that joins are based on indexed columns and consider using appropriate join types for the task.
-- **Use LIMIT and OFFSET Clauses:** Limit the number of rows returned by a query to reduce the amount of data processed.
-- **Avoid Unnecessary Columns:** Select only the columns you need rather than using SELECT * to reduce the amount of data processed and transferred.
-- **Simplify Complex Queries:** Break down complex queries into simpler parts and use temporary tables or subqueries to manage intermediate results.
-
-</details>
-
-<details>
-<summary>What is a relational database model, and why is it called "relational"?</summary>
-
-A relational database model organizes data into tables (also called relations) composed of rows and columns. Each table represents a specific entity type, and rows within a table correspond to individual records of that entity. It is called "relational" because it emphasizes the relationships between tables through the use of keys (primary and foreign keys) and joins. These relationships allow for complex queries and data manipulation across multiple tables, maintaining data integrity and consistency.
-
-</details>
-
-<details>
-<summary>Why are domain constraints important in a database?</summary>
-
-Domain constraints define the permissible values for a given attribute, ensuring that data entered into the database is valid and consistent. They enforce rules such as data types, ranges, and formats. For example, a domain constraint on a date of birth field might ensure that the value is a valid date and not in the future. These constraints help maintain data integrity by preventing invalid data from being entered and ensuring that the data adheres to the specified rules and business logic.
-
-</details>
-
-<details>
-<summary>Differentiate between base and derived relations in a relational database.</summary>
-
-- **Base Relations:** Also known as base tables, these are the actual tables in a database that store the data. They are the primary structures for data storage and are defined by the database schema.
-- **Derived Relations:** These are virtual tables created by querying one or more base relations. Derived relations are formed using operations like SELECT, JOIN, and UNION. Views are a common example of derived relations, as they do not store data physically but represent the results of a query applied to base tables.
-
-</details>
-
-<details>
-<summary>Explain the two main principles of the relational database model and how they differ.</summary>
-
-Data integrity and data independence are useful design goals rather than an exhaustive definition of the relational model. Integrity concerns valid data. Physical data independence separates logical relations from storage choices. The relational model represents data as relations and queries it through relational operations.
-
-</details>
-
-<details>
-<summary>Why are stored procedures considered executable code in a database?</summary>
-
-A stored procedure is a named routine executed by the database. It can accept parameters and contain SQL and procedural logic. Compilation and plan caching depend on the engine; a procedure is not automatically faster than equivalent parameterized SQL.
-
-</details>
-
-<details>
-<summary>List some relational operations that can be performed on tables in a relational database.</summary>
-
-Relational operations are fundamental for querying and manipulating data in a relational database. Some key relational operations include:
-- **SELECT:** Retrieves specific rows from one or more tables based on a specified condition.
-- **JOIN:** Combines rows from two or more tables based on a related column between them.
-- **UNION:** Combines the result sets of two or more SELECT statements into a single result set, removing duplicates.
-- **INTERSECT:** Returns the common rows from two SELECT statements.
-- **DIFFERENCE (EXCEPT):** Returns rows from the first SELECT statement that are not present in the second SELECT statement.
-- **PROJECT:** Selects specific columns from a table, effectively reducing the number of columns in the result set.
-- **AGGREGATE Functions:** Performs calculations on a set of values to return a single value, including functions like COUNT, SUM, AVG, MIN, and MAX.
-
-</details>
-
-<details>
-<summary>What is the difference between a clustered and a non-clustered index?</summary>
-
-A rowstore clustered index stores table rows in its leaf pages, logically ordered by its key. A nonclustered index is a separate structure with row locators or included data. Neither guarantees final query order or contiguous disk placement. Terminology and implementation differ by engine.
-
-</details>
-
-<details>
-<summary>What is normalization in the context of database design, and why is it important?</summary>
-
-Normalization is the process of organizing a database to minimize data redundancy and ensure data integrity. This is achieved by dividing large tables into smaller, more focused tables and establishing relationships between them. The importance of normalization includes:
-- **Data Redundancy Reduction:** Eliminates duplicate data, saving storage space and reducing the risk of data inconsistencies.
-- **Data Integrity:** Ensures that data dependencies are logical and consistent, maintaining accuracy and reliability.
-- **Improved Query Performance:** Smaller, well-structured tables can enhance query performance and make the database easier to maintain.
-- **Ease of Maintenance:** Normalized databases are simpler to update and extend, reducing the complexity of database modifications.
-
-</details>
-
-<details>
-<summary>What are the advantages of using stored procedures in a database?</summary>
-
-Stored procedures offer several advantages in a database environment:
-- **Plan reuse:** Some engines cache routine execution plans; parameterized queries can also reuse plans, and performance still needs measurement.
-- **Reduced Network Traffic:** Executing stored procedures reduces the amount of data transmitted between the database server and client by encapsulating multiple operations in a single call.
-- **Code Reuse:** Encapsulating complex logic in stored procedures promotes code reuse and simplifies maintenance.
-- **Enhanced Security:** Stored procedures can restrict direct access to data and enforce security measures by controlling user access to specific procedures.
-- **Consistency:** Centralizing business logic in stored procedures ensures that consistent operations are performed across different applications.
-
-</details>
-
-<details>
-<summary>Can you explain the concept of ACID properties in database systems?</summary>
-
-ACID properties are a set of principles that ensure reliable database transactions, maintaining the integrity and consistency of the data. The ACID properties are:
-- **Atomicity:** Ensures that a transaction is treated as a single unit of work. Either all operations within the transaction are completed successfully, or none are. This prevents partial updates to the database.
-- **Consistency:** Ensures that a transaction brings the database from one valid state to another, maintaining the integrity of the database according to predefined rules and constraints.
-- **Isolation:** Ensures that transactions are executed independently, preventing concurrent transactions from interfering with each other. This is achieved by managing locks and ensuring that intermediate transaction states are not visible to other transactions.
-- **Durability:** Ensures that once a transaction is committed, its changes are permanent and will survive system failures. This is typically achieved through mechanisms like transaction logs and backups.
-
-</details>
-
-<details>
-<summary>What is a transaction in a database, and why is it important?</summary>
-
-A transaction is a sequence of one or more database operations (such as inserts, updates, and deletes) that are executed as a single unit of work. Transactions are important because they ensure data consistency and integrity by adhering to the ACID properties. This means that:
-- All operations within a transaction are completed successfully, or none are, ensuring atomicity.
-- The database remains in a consistent state before and after the transaction.
-- Transactions are isolated from one another, preventing concurrent transactions from causing inconsistencies.
-- Once committed, the changes made by a transaction are durable and survive system failures.
-
-</details>
-
-<details>
-<summary>What is a trigger in a relational database?</summary>
-
-A trigger is a set of SQL statements that automatically executes in response to certain events on a specified table or view, such as inserts, updates, or deletes. Triggers are used to enforce business rules, maintain data integrity, and automate system tasks. They can be defined to execute before or after the triggering event, and can also be nested, meaning one trigger can initiate another. Triggers are managed by the database management system (DBMS) and help maintain consistent and reliable data.
-
-</details>
-
-<details>
-<summary>What is NOLOCK and how does it affect concurrency?</summary>
-
-In SQL Server, `WITH (NOLOCK)` requests Read Uncommitted behavior for data reads. It can return dirty, missing, or duplicated data. It neither releases another transaction’s locks nor avoids every lock: schema stability locking still applies. Consider row-versioned isolation when correct nonblocking reads are needed.
-
-</details>
-
-<details>
-<summary>How does the STUFF function differ from the REPLACE function in SQL?</summary>
-
-The STUFF and REPLACE functions in SQL are used to manipulate strings, but they operate differently:
-- **STUFF:** The STUFF function inserts a string into another string, replacing a specified number of characters. It is used to overwrite part of a string with another string starting at a specified position. For example, `STUFF('abcdef', 2, 3, '123')` results in 'a123ef'.
-- **REPLACE:** The REPLACE function replaces all occurrences of a specified substring within a string with another substring. It applies to all instances of the target substring. For example, `REPLACE('abcdefabc', 'abc', '123')` results in '123def123'.
-
-
-  STUFF is used for more targeted character modifications, while REPLACE applies globally to all specified instances in the string.
+Cross joins are useful when every combination is intended; an accidental one, from a missing join condition, can produce a huge result.
 
 </details>
 
@@ -372,11 +306,322 @@ A self join is used to join a table to itself, often using aliases to avoid conf
 </details>
 
 <details>
+<summary>What is a self-join?</summary>
+
+A self-join joins a table with itself, using different aliases for each copy. It compares rows within the same table, for example matching each employee's `manager_id` to another employee's `id` to list employees with their managers:
+
+```sql
+SELECT e.name AS employee, m.name AS manager
+FROM employees AS e
+LEFT JOIN employees AS m ON m.id = e.manager_id;
+```
+
+</details>
+
+<details>
+<summary>What is the difference between the UNION and JOIN operators?</summary>
+
+- **UNION:** combines the results of two queries vertically, appending rows. Both queries must return the same number of compatible columns. It removes duplicate rows unless `UNION ALL` is used.
+- **JOIN:** combines tables horizontally, placing columns from related rows side by side based on a condition.
+
+</details>
+
+<details>
+<summary>What is the difference between UNION and UNION ALL?</summary>
+
+Both combine the result sets of two or more `SELECT` statements with compatible columns.
+
+- **UNION:** removes duplicate rows, which usually requires a sort or hash step.
+- **UNION ALL:** keeps every row, including duplicates, and is cheaper.
+
+Use `UNION ALL` when duplicates are impossible or wanted.
+
+</details>
+
+<details>
+<summary>How do UNION, MINUS, UNION ALL, and INTERSECT differ in SQL?</summary>
+
+INTERSECT returns distinct rows common to both SELECT queries. MINUS returns distinct rows from the first query not found in the second query; MINUS is Oracle's name, while the SQL standard, PostgreSQL, SQL Server and SQLite use EXCEPT. UNION returns all distinct rows from either query. UNION ALL returns all rows from both queries, including duplicates.
+
+</details>
+
+## Subqueries
+
+<details>
+<summary>When should you use a subquery in SQL, and can you provide an example?</summary>
+
+Use a subquery when one query needs the result of another, such as comparing rows with a calculated value or testing whether related rows exist. For example, to find employees earning more than the average salary:
+
+```sql
+SELECT *
+FROM employees
+WHERE salary > (SELECT AVG(salary) FROM employees);
+```
+
+The inner query returns one value, the average, and the outer query keeps employees above it.
+
+</details>
+
+<details>
+<summary>What is the difference between correlated and nested subqueries in SQL?</summary>
+
+A subquery is nested inside another query. A correlated subquery additionally references an outer query’s columns. It is logically evaluated in the outer-row context, but the optimizer can decorrelate it; do not infer a fixed number of physical executions from the syntax.
+
+</details>
+
+<details>
 <summary>What is the difference between the IN and EXISTS operators?</summary>
 
 `IN` compares a value with a set; `EXISTS` tests whether a subquery returns any row. Optimizers can produce similar plans for equivalent forms, so neither is universally faster. `NOT IN` can evaluate to unknown if the subquery contains a null; correlated `NOT EXISTS` is often clearer for anti-joins.
 
 </details>
+
+<details>
+<summary>What is the difference between the EXISTS and NOT EXISTS operators?</summary>
+
+Both test whether a subquery returns rows; neither returns the matching rows themselves.
+
+- **EXISTS:** true when the subquery returns at least one row, for example customers who have an order.
+- **NOT EXISTS:** true when the subquery returns no rows, for example customers with no orders.
+
+They are usually correlated with the outer row. The engine can stop at the first matching row, but whether that is faster than a join or `IN` depends on the optimizer and plan.
+
+</details>
+
+## Aggregation and Window Functions
+
+<details>
+<summary>What is the purpose of the GROUP BY clause?</summary>
+
+`GROUP BY` puts rows with the same values in the listed columns into groups, so aggregate functions such as `COUNT`, `SUM`, `AVG`, `MIN` and `MAX` return one result per group. For example, `SELECT department_id, COUNT(*) FROM employees GROUP BY department_id;` counts employees in each department. Every selected column must either be grouped or aggregated (some engines relax this).
+
+</details>
+
+<details>
+<summary>What distinguishes WHERE and HAVING in SQL?</summary>
+
+The **WHERE** and **HAVING** clauses are both used to filter records in SQL, but they are applied at different stages of query processing:
+
+- **WHERE:** This clause is used to filter rows before any grouping or aggregation takes place. It applies to individual rows and is used to set conditions on the columns of the table.
+- **HAVING:** This clause is used to filter groups after the grouping and aggregation have been performed. It applies to the aggregated data and is typically used in conjunction with the GROUP BY clause.
+
+</details>
+
+<details>
+<summary>What is the purpose of the ROW_NUMBER() function?</summary>
+
+`ROW_NUMBER()` is a window function that assigns sequential integers 1, 2, 3... to rows within each partition, in the order given by its `OVER (... ORDER BY ...)` clause. Common uses are picking the latest row per group and deduplication. Tied rows still get different numbers, so add a unique tie-breaker column to the ordering if the result must be deterministic.
+
+</details>
+
+<details>
+<summary>What is the RANK function in SQL?</summary>
+
+`RANK()` is a window function that numbers rows within a partition according to the `ORDER BY` in its `OVER` clause. Tied rows receive the same rank, and the next rank skips ahead by the number of ties: values 100, 100, 200 get ranks 1, 1, 3. `DENSE_RANK()` gives 1, 1, 2 instead, and `ROW_NUMBER()` gives 1, 2, 3.
+
+</details>
+
+## Views, Procedures and Triggers
+
+<details>
+<summary>What is the purpose of a VIEW in a relational database?</summary>
+
+A VIEW in a relational database is a virtual table based on the result set of a SELECT query. Views serve several purposes:
+
+- **Simplify Complex Queries:** Views can encapsulate complex queries, making it easier for users to retrieve data without needing to understand the underlying query logic.
+- **Customized Data Representation:** Views can present data in a specific format or structure that is more useful for certain applications or user needs.
+- **Data Security:** Views can restrict access to specific columns or rows, ensuring that users see only the data they are authorized to view.
+- **Data Abstraction:** Views provide a level of abstraction, hiding the complexity and details of the underlying database schema.
+
+</details>
+
+<details>
+<summary>What is the difference between a view and a materialized view?</summary>
+
+- **View:** stores only the query definition. Each read runs the query against the current base tables, so results are always current.
+- **Materialized view:** stores the query's result physically. Reads are fast because the work is precomputed, but the data is only as fresh as the last refresh, which happens on demand, on a schedule or through engine-specific incremental maintenance.
+
+</details>
+
+<details>
+<summary>What is a stored procedure?</summary>
+
+A stored procedure is a named routine executed by the database. It can accept parameters and contain SQL and procedural logic. Compilation and plan caching depend on the engine; a procedure is not automatically faster than equivalent parameterized SQL.
+
+</details>
+
+<details>
+<summary>Why are stored procedures considered executable code in a database?</summary>
+
+A stored procedure is a program stored in the database and run by the database server. Besides SQL statements, it can use variables, conditions, loops and error handling written in a procedural language such as PL/pgSQL or T-SQL. It is invoked as a statement, for example `CALL cancel_order(101);` in PostgreSQL or `EXEC` in SQL Server, rather than being a passive data structure like a table or view.
+
+</details>
+
+<details>
+<summary>What are the advantages of using stored procedures in a database?</summary>
+
+Stored procedures offer several advantages in a database environment:
+
+- **Plan reuse:** Some engines cache routine execution plans; parameterized queries can also reuse plans, and performance still needs measurement.
+- **Reduced Network Traffic:** Executing stored procedures reduces the amount of data transmitted between the database server and client by encapsulating multiple operations in a single call.
+- **Code Reuse:** Encapsulating complex logic in stored procedures promotes code reuse and simplifies maintenance.
+- **Enhanced Security:** Stored procedures can restrict direct access to data and enforce security measures by controlling user access to specific procedures.
+- **Consistency:** Centralizing business logic in stored procedures ensures that consistent operations are performed across different applications.
+
+</details>
+
+<details>
+<summary>What is a trigger in a relational database?</summary>
+
+A trigger is database code that runs automatically when a specified event, such as an insert, update or delete, happens on a table (or, with `INSTEAD OF`, on a view). It can run before or after the change, per row or per statement depending on the engine. `AFTER` means after the row change, not after commit: trigger writes are part of the same transaction and roll back with it. Prefer constraints or defaults when they express the rule directly, because triggers add less visible behavior.
+
+</details>
+
+<details>
+<summary>What are cursors in SQL and when are they useful?</summary>
+
+A cursor exposes a query result for incremental fetching or row-by-row processing. It is useful when a procedure must handle each row individually or when a client streams a large result in batches instead of loading it all at once. Set-based SQL statements are usually simpler and faster than looping over rows. Cursor kinds, options and lifecycles differ between engines.
+
+</details>
+
+<details>
+<summary>What is the difference between a temporary table and a table variable?</summary>
+
+In SQL Server, temporary tables and table variables both can use tempdb; a table variable is not inherently memory-only. They differ in scope, statistics, and optimization behavior. Performance depends on row counts, queries, and version; benchmark rather than assuming table variables are faster.
+
+</details>
+
+## Transactions and Concurrency
+
+<details>
+<summary>What is a transaction in a database, and why is it important?</summary>
+
+A transaction is a group of one or more operations, such as inserts, updates and deletes, treated as a single unit of work. A checkout that reserves stock and creates an order should either do both or neither. Transactions provide the ACID properties:
+
+- All operations commit together or none do (atomicity).
+- Declared rules hold before and after the transaction (consistency).
+- Concurrent transactions are protected from each other's intermediate work to the degree set by the isolation level (isolation).
+- Committed changes survive crashes (durability).
+
+</details>
+
+<details>
+<summary>Can you explain the concept of ACID properties in database systems?</summary>
+
+- **Atomicity:** a transaction's changes are all applied or none are, so a failure cannot leave a partial update.
+- **Consistency:** a committed transaction moves the database from one valid state to another, respecting constraints and other declared rules.
+- **Isolation:** concurrent transactions do not see each other's uncommitted work, and the isolation level determines which other anomalies are prevented. Engines implement it with locks, MVCC snapshots or both.
+- **Durability:** once a commit is acknowledged, the change survives crashes, typically because the commit is recorded in a write-ahead log flushed to durable storage.
+
+</details>
+
+<details>
+<summary>What are COMMIT and ROLLBACK commands in SQL?</summary>
+
+`COMMIT` ends a transaction and makes its changes permanent and visible to other transactions. `ROLLBACK` ends a transaction and discards all of its uncommitted changes, returning the data to its state before the transaction began. Neither can undo the other: a committed change can only be reversed by a new transaction, and a rollback cannot recover data that was already committed and later lost.
+
+</details>
+
+<details>
+<summary>How does rolling back a transaction work?</summary>
+
+Rollback undoes that transaction’s transactional changes, not concurrent commits by other transactions. Some effects, such as PostgreSQL sequence increments or external API calls, are not undone. DDL rollback behavior also depends on the engine.
+
+</details>
+
+<details>
+<summary>What is a database transaction log, and why is it important?</summary>
+
+A transaction log (write-ahead log, redo log) records changes before the corresponding data pages are written to disk. A commit is durable once its log records are safely persisted, so after a crash the engine replays committed work and undoes incomplete work. The log also supports point-in-time recovery when archived with backups, and replication, which ships log records to replicas.
+
+</details>
+
+<details>
+<summary>What is NOLOCK and how does it affect concurrency?</summary>
+
+In SQL Server, `WITH (NOLOCK)` requests Read Uncommitted behavior for data reads. It can return dirty, missing, or duplicated data. It neither releases another transaction’s locks nor avoids every lock: schema stability locking still applies. Consider row-versioned isolation when correct nonblocking reads are needed.
+
+</details>
+
+<details>
+<summary>What is a deadlock in a database, and how can it be resolved?</summary>
+
+A deadlock is a cycle of waits: T1 holds a lock T2 needs while T2 holds a lock T1 needs, so neither can proceed. Databases such as PostgreSQL, MySQL and SQL Server detect the cycle and abort one transaction as the victim, which the application should retry as a whole transaction. To prevent deadlocks, acquire locks in a consistent order (for example, by account ID) and keep transactions short. Lock timeouts only limit waiting; they do not fix the design.
+
+</details>
+
+## Indexing and Performance
+
+<details>
+<summary>How is data stored in memory or on a disk?</summary>
+
+Databases store tables and indexes in files divided into fixed-size **pages** (for example, 8 KB in PostgreSQL), each holding several rows or index entries. To read a row, the engine loads its page into a memory cache called the buffer pool. A cache hit avoids storage I/O; a miss reads the page from disk. Memory is fast but volatile, so changes are first recorded in a durable log and changed pages are written back to disk later.
+
+</details>
+
+<details>
+<summary>How are indices formatted in a database?</summary>
+
+An index is a separate data structure that maps key values to row locations. Common formats include:
+
+- **B-tree:** a balanced tree that keeps keys sorted; the default in most engines, supporting equality, ranges and ordering.
+- **Hash:** maps keys to buckets; suits equality lookups only.
+- **Bitmap:** bitmaps marking which rows have each value; suits low-cardinality columns in read-heavy analytics.
+- **Inverted (GIN, full-text):** maps terms or array elements to the rows containing them.
+
+Indexes reduce the pages a query reads but add storage and work to every write.
+
+</details>
+
+<details>
+<summary>What is the difference between a clustered and a non-clustered index?</summary>
+
+A rowstore clustered index stores table rows in its leaf pages, logically ordered by its key. A nonclustered index is a separate structure with row locators or included data. Neither guarantees final query order or contiguous disk placement. Terminology and implementation differ by engine.
+
+</details>
+
+<details>
+<summary>How can you improve the performance of a slow SQL query?</summary>
+
+Start by measuring: run `EXPLAIN` (or `EXPLAIN ANALYZE`) and compare estimated with actual rows. Then:
+
+- **Index the access pattern:** match indexes to the filters, joins and ordering the query uses.
+- **Keep predicates sargable:** compare raw columns, for example a date range instead of `DATE(created_at) = ...`.
+- **Avoid row multiplication:** aggregate before joining one-to-many tables.
+- **Fetch less:** select only needed columns and paginate with keyset pagination rather than deep `OFFSET`.
+- **Refresh statistics:** stale statistics after bulk changes cause poor plans.
+
+Compare before and after on representative data.
+
+</details>
+
+<details>
+<summary>How can index tuning be used to improve query performance in SQL?</summary>
+
+Match indexes to measured filters, joins, and ordering. Inspect actual plans and representative parameter values, then compare latency, I/O, storage, and write overhead. Engine-specific advisors can suggest candidates, but their suggestions need workload validation.
+
+</details>
+
+<details>
+<summary>What are some reasons for poor query performance in SQL?</summary>
+
+Common causes include inefficient access paths, inaccurate row estimates, excessive result sizes, spills, blocking, and repeated application round trips. Inspect plans and wait information before changing the schema. Normalization, scalar functions, and temporary tables are not inherently the cause of slow queries.
+
+</details>
+
+## Distributed Databases
+
+<details>
+<summary>What is a distributed database, and what are its advantages and challenges?</summary>
+
+A distributed database stores data across multiple servers or locations, often by sharding (splitting data) and replication (copying it).
+
+- **Advantages:** more storage and throughput than one machine, fault tolerance through replicas, and lower latency when data is placed near its users.
+- **Challenges:** keeping replicas consistent, handling network latency and partitions (the CAP trade-off), routing queries that span shards, and coordinating distributed transactions, for example with two-phase commit.
+
+</details>
+
+## SQL Practice Exercises
 
 <details>
 <summary>Given the `users` and `cities` tables, write a query to return the list of cities without any users.</summary>
@@ -416,79 +661,6 @@ WHERE
 </details>
 
 <details>
-<summary>What is the RANK function in SQL?</summary>
-
-The RANK function assigns a rank to each row returned by a SELECT statement based on a specified column. Rows with equal values receive the same rank, and the rank is determined by the row's position in the result set, not the row's sequential number.
-
-</details>
-
-<details>
-<summary>What is the difference between a cross join and an inner join?</summary>
-
-- **Cross Join:** A cross join produces the Cartesian product of the two tables involved, meaning it returns all possible combinations of rows from the tables. It does not require any condition and is rarely used except for specific cases where all combinations are needed.
-- **Inner Join:** An inner join returns only the rows where there is a match between the tables based on a specified condition (usually a key column). It is one of the most commonly used joins, as it filters out unmatched rows, providing meaningful combined results from the related tables.
-
-</details>
-
-<details>
-<summary>What is the purpose of the CASE statement?</summary>
-
-The CASE statement in SQL is used to perform conditional logic and return different values based on specified conditions within a query. It works similarly to an if-else construct in programming languages. The CASE statement allows for more readable and flexible queries by enabling conditional output, making it useful for transforming data, handling multiple conditions, and creating calculated columns.
-
-</details>
-
-<details>
-<summary>What are cursors in SQL and when are they useful?</summary>
-
-A cursor exposes a query result for incremental fetching or row-by-row processing. Some procedural tasks need this, but set-based SQL often avoids repeated operations. Cursor types and lifecycle are engine-specific; Oracle’s implicit/explicit distinction should not be presented as SQL Server’s universal taxonomy.
-
-</details>
-
-<details>
-<summary>What are the similarities and differences between TRUNCATE and DELETE commands in SQL?</summary>
-
-`DELETE` can filter rows with `WHERE`; `TRUNCATE` removes the whole table’s data using an engine-specific bulk operation. Logging, identity resets, triggers, and rollback differ. PostgreSQL and SQL Server can roll back a transactional `TRUNCATE`; MySQL `TRUNCATE` implicitly commits. PostgreSQL also supports `TRUNCATE` triggers.
-
-</details>
-
-<details>
-<summary>What are COMMIT and ROLLBACK commands in SQL?</summary>
-
-COMMIT is used to permanently save changes made by a transaction, while ROLLBACK is used to undo changes made by a transaction. COMMIT makes the transaction irreversible, and ROLLBACK allows for data recovery if needed.
-
-</details>
-
-<details>
-<summary>What is the difference between UNION and UNION ALL?</summary>
-
-Both UNION and UNION ALL are SQL operations used to combine the result sets of two or more SELECT statements into a single result set. The key difference is how they handle duplicate rows:
-- **UNION:** Combines the results of the SELECT statements and removes any duplicate rows, ensuring that each row in the final result set is unique.
-- **UNION ALL:** Combines the results of the SELECT statements without removing duplicates, so the final result set may contain duplicate rows.
-
-</details>
-
-<details>
-<summary>What is the difference between a temporary table and a table variable?</summary>
-
-In SQL Server, temporary tables and table variables both can use tempdb; a table variable is not inherently memory-only. They differ in scope, statistics, and optimization behavior. Performance depends on row counts, queries, and version; benchmark rather than assuming table variables are faster.
-
-</details>
-
-<details>
-<summary>What is the purpose of the GROUP BY clause?</summary>
-
-The GROUP BY clause in SQL is used to arrange identical data into groups based on one or more columns. It is commonly used with aggregate functions such as SUM, AVG, COUNT, MIN, and MAX to perform operations on each group of data. This clause helps in summarizing and analyzing data by dividing it into manageable groups, facilitating easier reporting and data analysis.
-
-</details>
-
-<details>
-<summary>What is a distributed database, and what are its advantages and challenges?</summary>
-
-A distributed database is a database that is stored across multiple servers or locations, often geographically dispersed. Advantages of distributed databases include improved performance and availability, as well as increased fault tolerance and data redundancy. Challenges include managing data consistency and integrity across multiple nodes, handling network latency and partitioning, and implementing complex distributed algorithms for transaction management, replication, and concurrency control.
-
-</details>
-
-<details>
 <summary>Given the user transactions table, write a query to get the first purchase for each user.</summary>
 
 Consider a transactions table with columns user_id, created_at, and product. Write a query to obtain the first purchase (i.e., the purchase with the minimum created_at value) for each user.
@@ -503,7 +675,6 @@ Consider a transactions table with columns user_id, created_at, and product. Wri
 | 2 | 2025-01-04 08:00 | Bag |
 
 ```sql
-
 SELECT
   t.user_id, t.created_at, t.product
 FROM
@@ -513,6 +684,7 @@ FROM
     FROM transactions
     GROUP BY user_id
   ) AS t1 ON (t.user_id = t1.user_id AND t.created_at = t1.min_created_at)
+ORDER BY t.user_id
 ```
 
 This returns all purchases tied for the earliest timestamp. To choose exactly one, use `ROW_NUMBER()` ordered by `created_at` and a unique transaction ID.
@@ -521,74 +693,6 @@ This returns all purchases tied for the earliest timestamp. To choose exactly on
 | ---: | --- | --- |
 | 1 | 2025-01-02 10:00 | Book |
 | 2 | 2025-01-03 12:00 | Pen |
-
-</details>
-
-<details>
-<summary>What is a database transaction log, and why is it important?</summary>
-
-A database transaction log is a record of all modifications made to a database, including data changes, schema changes, and other transactions. It is important because it provides a mechanism for recovering data in case of system failures or user errors, allows for point-in-time recovery, and aids in maintaining data consistency and integrity by ensuring that transactions adhere to the ACID properties. Transaction logs can also be used for replication and auditing purposes.
-
-</details>
-
-<details>
-<summary>What is the difference between correlated and nested subqueries in SQL?</summary>
-
-A subquery is nested inside another query. A correlated subquery additionally references an outer query’s columns. It is logically evaluated in the outer-row context, but the optimizer can decorrelate it; do not infer a fixed number of physical executions from the syntax.
-
-</details>
-
-<details>
-<summary>How do UNION, MINUS, UNION ALL, and INTERSECT differ in SQL?</summary>
-
-INTERSECT returns distinct rows common to both SELECT queries. MINUS returns distinct rows from the first query not found in the second query. UNION returns all distinct rows from either query. UNION ALL returns all rows from both queries, including duplicates.
-
-</details>
-
-<details>
-<summary>What is a join in SQL, and what are the different types?</summary>
-
-A join in SQL is used to retrieve data from multiple tables by referencing columns or rows between them. Types of joins include: JOIN (returns rows with matching data in both tables), LEFT JOIN (returns all rows from the left table and matching rows from the right table), RIGHT JOIN (returns all rows from the right table and matching rows from the left table), and FULL JOIN (returns rows with matching data in either table).
-
-</details>
-
-<details>
-<summary>What are DDL, DML, and DCL in SQL?</summary>
-
-DDL (Data Definition Language) commands deal with database schemas and data structure, e.g., CREATE TABLE or ALTER TABLE. DML (Data Manipulation Language) commands handle data manipulation, e.g., SELECT, INSERT. DCL (Data Control Language) commands manage rights and permissions on the database, e.g., GRANT, REVOKE.
-
-</details>
-
-<details>
-<summary>What are some common types of database management systems (DBMS), and how do they differ?</summary>
-
-Some common types of DBMS include relational (e.g., MySQL, PostgreSQL, SQL Server), NoSQL (e.g., MongoDB, Couchbase, Cassandra), and in-memory (e.g., Redis, Memcached). Relational DBMS use tables and SQL for data storage and manipulation, emphasizing data consistency and relationships. NoSQL DBMS offer more flexible data models and are designed for handling unstructured or semi-structured data, often providing horizontal scaling and high availability. In-memory DBMS store data in memory rather than on disk, offering extremely fast data access and manipulation but typically having limited data persistence capabilities.
-
-</details>
-
-<details>
-<summary>What is the difference between the EXISTS and NOT EXISTS operators?</summary>
-
-The EXISTS and NOT EXISTS operators in SQL are used to test for the existence of rows returned by a subquery:
-- **EXISTS:** The EXISTS operator returns TRUE if the subquery returns one or more rows. It is often used in correlated subqueries to check for the presence of related data.
-- **NOT EXISTS:** The NOT EXISTS operator returns TRUE if the subquery returns no rows. It is useful for ensuring that certain data does not exist in a related table.
-
-
-  Both operators are used to improve query performance by allowing early termination of the subquery evaluation when a match is found (or not found).
-
-</details>
-
-<details>
-<summary>How can index tuning be used to improve query performance in SQL?</summary>
-
-Match indexes to measured filters, joins, and ordering. Inspect actual plans and representative parameter values, then compare latency, I/O, storage, and write overhead. Engine-specific advisors can suggest candidates, but their suggestions need workload validation.
-
-</details>
-
-<details>
-<summary>What are some reasons for poor query performance in SQL?</summary>
-
-Common causes include inefficient access paths, inaccurate row estimates, excessive result sizes, spills, blocking, and repeated application round trips. Inspect plans and wait information before changing the schema. Normalization, scalar functions, and temporary tables are not inherently the cause of slow queries.
 
 </details>
 
@@ -620,6 +724,7 @@ SELECT
 FROM
   transactions
 GROUP BY date, time_of_day
+ORDER BY date, time_of_day
 ```
 
 | date | time_of_day | count |
@@ -628,13 +733,6 @@ GROUP BY date, time_of_day
 | 2025-02-01 00:00:00 | PM | 2 |
 | 2025-02-02 00:00:00 | AM | 1 |
 | 2025-02-02 00:00:00 | PM | 1 |
-
-</details>
-
-<details>
-<summary>In databases, what are the meanings of the terms "entities" and "attributes"?</summary>
-
-Entities are objects or concepts represented in a database, and attributes are the properties or characteristics of those entities.
 
 </details>
 
@@ -681,13 +779,6 @@ WHERE
 </details>
 
 <details>
-<summary>What is a deadlock in a database, and how can it be resolved?</summary>
-
-A deadlock occurs when two or more transactions are waiting for each other to release a resource, causing a circular dependency that prevents any of the transactions from proceeding. Deadlocks can be resolved by implementing timeouts, setting a lock hierarchy to prevent circular dependencies, using optimistic concurrency control, or using a deadlock detection algorithm to identify and break the deadlock by rolling back one of the transactions.
-
-</details>
-
-<details>
 <summary>Write a query for the month-over-month percentage change in monthly active users.</summary>
 
 PostgreSQL example. Counts users active at least once in each observed month, not the average daily active users. For a calendar with missing months, join to a complete month series before applying `LAG`.
@@ -706,7 +797,6 @@ Assume you have a logins table with columns user_id and date. Write a query to c
 | 1 | 2025-11-08 |
 
 ```sql
-
 WITH monthly_active_users AS (
   SELECT
     DATE_TRUNC('month', date) AS month,
@@ -726,13 +816,14 @@ monthly_change AS (
 SELECT
   month,
   active_users,
-prev_month_active_users,
-ROUND(
-((active_users - prev_month_active_users) * 100.0) / NULLIF(prev_month_active_users, 0),
-2
-) AS percentage_change
+  prev_month_active_users,
+  ROUND(
+    ((active_users - prev_month_active_users) * 100.0)
+      / NULLIF(prev_month_active_users, 0),
+    2
+  ) AS percentage_change
 FROM
-monthly_change
+  monthly_change
 ORDER BY month;
 ```
 
@@ -741,19 +832,5 @@ ORDER BY month;
 | 2025-09-01 00:00:00 | 2 | NULL | NULL |
 | 2025-10-01 00:00:00 | 3 | 2 | 50.00 |
 | 2025-11-01 00:00:00 | 1 | 3 | -66.67 |
-
-</details>
-
-<details>
-<summary>What is the purpose of the CASCADE DELETE constraint?</summary>
-
-The CASCADE DELETE constraint in SQL ensures that when a row in a parent table is deleted, all related rows in the child tables are automatically deleted as well. This constraint maintains referential integrity by ensuring that no orphaned rows exist in the child tables. CASCADE DELETE is useful for managing dependent data and simplifying the deletion of related records.
-
-</details>
-
-<details>
-<summary>What is a self-join?</summary>
-
-A self-join is a join operation where a table is joined with itself. This type of join is useful when you need to compare rows within the same table or query hierarchical data. For example, a self-join can be used to find relationships between rows in a table, such as employees and their managers within the same employee table. The self-join is achieved by using table aliases to distinguish between the different instances of the table.
 
 </details>
