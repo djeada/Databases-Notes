@@ -479,5 +479,5 @@ Before sharding:
 
 - [Working with billion-row tables](06_working_with_billion_row_table.md)
 - [Partitioning](../06_distributed_databases/02_partitioning.md)
-- [Replication](../06_distributed_databases/03_replication.md)
+- [Replication](../09_database_replication/01_intro_to_replication.md)
 - [Query optimization](01_query_optimization_techniques.md)
