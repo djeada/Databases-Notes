@@ -1,10 +1,12 @@
 # B-Tree Index Internals and Page Splits
 
-B-tree-family indexes are the default general-purpose index in many relational databases because they support ordered search efficiently.
+B-tree-family indexes are commonly used for equality lookup, ranges, and ordered access because they keep keys in a balanced, page-oriented structure. Their cost has two parts: finding an entry and visiting enough leaf or table pages to return all qualifying rows. This chapter follows both search and update paths.
 
 They are useful for equality lookups, range predicates, ordered traversal, and top-N access paths. The important idea is not merely "lookup is logarithmic." A real B-tree is a set of storage pages that must stay balanced while rows are inserted, updated, and deleted.
 
-## Tree shape
+## How searches reach leaf pages
+
+### Tree shape
 
 A simplified B-tree:
 
@@ -19,7 +21,7 @@ A simplified B-tree:
 
 Internal pages guide navigation. Leaf pages contain index entries in key order.
 
-## Why trees stay shallow
+### Why trees stay shallow
 
 If one internal page can point to hundreds of child pages, even a very large index can have only a few levels.
 
@@ -32,7 +34,7 @@ Fan-out depends on:
 
 Narrow keys generally fit more entries per page.
 
-## Leaf entries and row locators
+### Leaf entries and row locators
 
 For an index on customer_id:
 
@@ -55,7 +57,7 @@ The locator differs by engine.
 
 That physical difference affects index size and lookup cost.
 
-## Equality lookup
+### Equality lookup
 
 Query:
 
@@ -81,7 +83,7 @@ table rows if required
 
 Finding the first matching leaf can be cheap while returning many matching rows is still expensive.
 
-## Range scan
+### Range scan
 
 Query:
 
@@ -101,7 +103,7 @@ Oct 1 -> Oct 2 -> ... -> Oct 31
                          stop
 ~~~
 
-## ORDER BY and LIMIT
+### ORDER BY and LIMIT
 
 Candidate index:
 
@@ -124,7 +126,9 @@ The engine may seek to customer 42 and return the first 20 entries without sorti
 
 Always verify with the execution plan.
 
-## Inserting into a leaf
+## How writes reshape the tree
+
+### Inserting into a leaf
 
 If a page has free space:
 
@@ -140,7 +144,7 @@ inserting 25 can produce:
 
 No structural change is needed.
 
-## Page split
+### Page split
 
 If a leaf is full:
 
@@ -169,7 +173,7 @@ A split can require:
 
 Splits are normal B-tree maintenance.
 
-## Root split
+### Root split
 
 If the root fills, the tree can gain another level:
 
@@ -185,7 +189,7 @@ old A  old B
 
 This keeps the tree balanced.
 
-## Sequential keys
+### Sequential keys
 
 An increasing identity or timestamp often inserts near the right edge.
 
@@ -201,7 +205,7 @@ Possible costs:
 
 The architecture matters.
 
-## Random keys
+### Random keys
 
 Random keys spread insert targets across more leaf pages.
 
@@ -215,7 +219,9 @@ But random distribution can be useful in some distributed systems.
 
 There is no universal "sequential good, random bad" rule.
 
-## Fill factor
+## Layout and performance trade-offs
+
+### Fill factor
 
 Some engines can intentionally leave free space in pages.
 
@@ -236,7 +242,7 @@ Trade-off:
 
 Tune only from measured behavior.
 
-## Key width matters
+### Key width matters
 
 Compare a narrow integer key with a long text or wide composite key.
 
@@ -251,7 +257,7 @@ That can increase:
 
 This matters especially in engines where secondary indexes also carry the clustered primary key.
 
-## Duplicate keys
+### Duplicate keys
 
 A non-unique index can contain many entries for the same value.
 
@@ -267,13 +273,13 @@ Finding the first entry is cheap. Reading almost the whole table is not.
 
 Low selectivity can make a table scan cheaper.
 
-## Engine-specific compression/deduplication
+### Engine-specific compression/deduplication
 
 Database engines can reduce repeated index-key storage with techniques such as prefix compression or deduplication.
 
 The conceptual B-tree model is useful, but physical entries are not necessarily naive full copies of every key.
 
-## Deletes and updates
+### Deletes and updates
 
 Deletes may leave reusable space without immediately shrinking the index file.
 
@@ -286,7 +292,7 @@ new key -> insert new entry
 
 Updating indexed columns therefore has write cost.
 
-## B-tree is not a binary search tree
+### B-tree is not a binary search tree
 
 A binary tree has two children per node.
 
@@ -302,7 +308,7 @@ many child pointers per storage page
 
 High fan-out reduces the number of page accesses.
 
-## B+ tree terminology
+### B+ tree terminology
 
 Many database implementations are technically B+ tree variants:
 
@@ -312,13 +318,13 @@ Many database implementations are technically B+ tree variants:
 
 Documentation often uses B-tree as the family name.
 
-## Buffer-cache interaction
+### Buffer-cache interaction
 
 Upper levels are small and frequently accessed, so they are often cached.
 
 A real lookup can therefore spend most of its I/O on leaf and table pages rather than repeatedly reading the root.
 
-## Clustered versus secondary B-tree
+### Clustered versus secondary B-tree
 
 Clustered/index-organized:
 
@@ -341,7 +347,7 @@ B-tree leaf
 
 The second layout can require an additional page lookup.
 
-## A split is not automatically "fragmentation"
+### A split is not automatically "fragmentation"
 
 Page splitting preserves order and balance.
 
@@ -355,7 +361,9 @@ Measure:
 - write rate,
 - engine diagnostics.
 
-## Runnable exercise
+## Verify the model with a database
+
+### Runnable exercise
 
 This chapter adds:
 

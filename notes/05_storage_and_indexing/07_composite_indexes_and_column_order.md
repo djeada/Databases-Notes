@@ -1,6 +1,6 @@
 # Composite Indexes and Column Order
 
-A composite index contains more than one key column.
+A **composite index** orders entries by a tuple of key columns. The leading equalities, range predicates, and requested sort determine which part of that ordering the engine can exploit. The purpose is not to index every filtered column, but to build a useful access path for a specific workload.
 
 Example:
 
@@ -11,7 +11,9 @@ ON orders(customer_id, status, order_date DESC);
 
 Column order is part of the data structure. The useful question is not merely which columns appear in WHERE, but which ordered access path the query needs.
 
-## Lexicographic ordering
+## How compound keys are ordered
+
+### Lexicographic ordering
 
 A B-tree on:
 
@@ -40,7 +42,7 @@ Example sequence:
 
 That ordering determines which predicates can narrow the scan efficiently.
 
-## Leading prefix
+### Leading prefix
 
 Query:
 
@@ -59,7 +61,7 @@ WHERE customer_id = 42
 
 uses a longer leading prefix.
 
-## Missing the leading column
+### Missing the leading column
 
 Query:
 
@@ -75,7 +77,9 @@ Modern engines can sometimes use skip-scan, bitmap combinations, or the index fo
 
 Do not assume every suffix predicate receives a direct seek.
 
-## Equality then range
+## Turn predicates and sorting into a key order
+
+### Equality then range
 
 Query:
 
@@ -94,7 +98,7 @@ ON orders(customer_id, order_date);
 
 The engine can seek to customer 42 and then walk that customer's date range.
 
-## Equality, equality, range
+### Equality, equality, range
 
 Query:
 
@@ -115,7 +119,7 @@ The equality columns establish a prefix; created_at defines the range.
 
 This is a useful heuristic, not a universal formula.
 
-## "Most selective first" is incomplete
+### "Most selective first" is incomplete
 
 A common rule says to put the most selective column first.
 
@@ -129,7 +133,7 @@ That ignores:
 
 A tenant_id column can correctly lead an index even if it is less selective than another predicate because every query must remain inside one tenant.
 
-## ORDER BY after equality
+### ORDER BY after equality
 
 Index:
 
@@ -150,7 +154,7 @@ Since customer_id is fixed, the remaining order already matches order_date DESC.
 
 This can eliminate a large sort.
 
-## Mixed sort directions
+### Mixed sort directions
 
 Some engines support mixed index ordering.
 
@@ -170,7 +174,7 @@ ORDER BY score DESC;
 
 Check engine-specific capabilities and the actual plan.
 
-## Range can end efficient prefix narrowing
+### Range can end efficient prefix narrowing
 
 Index:
 
@@ -198,7 +202,9 @@ A different candidate:
 
 may fit the workload better.
 
-## One index cannot optimize every query
+## Compare alternatives and workload trade-offs
+
+### One index cannot optimize every query
 
 Suppose two important queries are:
 
@@ -225,7 +231,7 @@ Every additional index costs write/storage work.
 
 Prioritize the important workload.
 
-## Composite versus separate indexes
+### Composite versus separate indexes
 
 Compare:
 
@@ -248,7 +254,7 @@ Separate indexes can better support independent queries.
 
 Use the actual query mix and execution plans.
 
-## Bitmap combination
+### Bitmap combination
 
 PostgreSQL can combine multiple indexes through bitmap operations for some queries.
 
@@ -266,7 +272,7 @@ Trade-offs:
 - a sort can still be needed,
 - a dedicated composite index may be cheaper for a hot query.
 
-## Key columns versus payload columns
+### Key columns versus payload columns
 
 Suppose the query filters/orders by:
 
@@ -288,7 +294,7 @@ In PostgreSQL, INCLUDE can store payload columns without making them part of the
 
 See the next note.
 
-## Unique composite index
+### Unique composite index
 
 ~~~sql
 CREATE UNIQUE INDEX ux_tenant_email
@@ -305,7 +311,7 @@ not globally.
 
 The whole tuple defines uniqueness, while column order still affects access patterns.
 
-## Tenant-first indexes
+### Tenant-first indexes
 
 For multi-tenant schemas:
 
@@ -324,7 +330,7 @@ tenant-first ordering can improve:
 
 This can matter more than global selectivity.
 
-## Search plus sort
+### Search plus sort
 
 Query:
 
@@ -357,7 +363,7 @@ ON posts(author_id, published_at DESC)
 WHERE published = true;
 ~~~
 
-## Join keys
+### Join keys
 
 Join:
 
@@ -369,7 +375,7 @@ An index beginning with order_items.order_id can make repeated join lookups chea
 
 Trailing columns can support additional filter/order requirements.
 
-## Low-cardinality leading column
+### Low-cardinality leading column
 
 Index:
 
@@ -387,7 +393,7 @@ ON customers(customer_id)
 WHERE deleted_at IS NULL;
 ~~~
 
-## Parameter skew
+### Parameter skew
 
 One composite index can work very differently for:
 
@@ -398,7 +404,9 @@ One composite index can work very differently for:
 
 Test representative and worst-case parameters.
 
-## Runnable demonstration
+## Inspect a real plan
+
+### Runnable demonstration
 
 This chapter adds:
 
@@ -422,7 +430,7 @@ against one composite index.
 
 The purpose is to make stored column order visible in the query plans.
 
-## Design workflow
+### Design workflow
 
 1. Write the exact WHERE predicates.
 2. Mark equality predicates.

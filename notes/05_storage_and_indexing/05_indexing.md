@@ -1,6 +1,6 @@
 # Database Indexing
 
-An index is an additional access path to data. It can reduce the rows and pages examined by a query, but it also consumes storage and must be maintained when indexed data changes. Start with the queries you need to support, then verify the resulting plans.
+An index trades extra storage and write maintenance for a potentially cheaper read path. Choose one only after identifying the query's filter, ordering, and columns to return; then compare its plan and measured cost with a scan. This chapter is an overview—the following notes cover individual structures and operational consequences.
 
 This page is the **indexing overview**. The focused notes that follow go deeper into:
 
@@ -49,9 +49,9 @@ A rowstore clustered index stores table rows in its leaf pages, logically organi
 
 Both clustered and secondary B-tree indexes can support range searches. A secondary lookup needs extra table access only when the query cannot be answered from the index and the engine's visibility rules require it.
 
-## Designing a composite index
+## Design an index from a query, not from a column list
 
-Assume PostgreSQL and this access pattern:
+Consider this **illustrative PostgreSQL** `orders` schema and access pattern; the rows show the logical input, but this section does not create the table or claim to be a standalone setup:
 
 Input (`orders`):
 
@@ -85,7 +85,7 @@ CREATE INDEX idx_orders_customer_date
 ON orders (customer_id, order_date);
 ```
 
-The equality predicate selects one customer; within that customer, the date keys support a range and ordering. An index on `(order_date, customer_id)` is a different access path and may be less effective for this query. Leading-column rules are useful guidance, but engines can have skip-scan and other optimizations: inspect the actual plan.
+The equality predicate selects one customer; within that customer, the date keys support a range and ordering. An index on `(order_date, customer_id)` is a different access path and may be less effective for this query. Leading-column rules are a starting point, not a universal ban on all other uses of the index. Query statistics, selective predicates, and engine-specific scans affect the chosen plan. Evaluate an index with the representative workload, not solely with the four illustrative rows.
 
 ### Covering a query
 

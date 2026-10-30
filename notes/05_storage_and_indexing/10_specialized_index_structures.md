@@ -2,7 +2,7 @@
 
 B-tree is the default general-purpose index for many relational workloads, but not every predicate is naturally ordered.
 
-Different index structures are designed for different questions.
+Different index structures accelerate different **operators**, not just different column types. Check the engine's supported operator class, what the plan can prune, and whether an exact recheck is required. The following mechanisms are alternatives, not a ranking from slow to fast.
 
 The correct starting point is:
 
@@ -12,7 +12,9 @@ not:
 
 > Which exotic index type sounds fastest?
 
-## Index structure follows operator semantics
+## Start from the query operator
+
+### Index structure follows operator semantics
 
 Examples:
 
@@ -27,7 +29,7 @@ timestamp on ordered table     -> block/range summary
 
 One index type does not optimize all of these.
 
-## B-tree recap
+### B-tree recap
 
 B-trees are good for data with useful ordering.
 
@@ -45,7 +47,9 @@ ORDER BY
 
 They are often right for identifiers, timestamps, numeric ranges, and composite equality/range access.
 
-## Hash indexes
+## Index families and their limits
+
+### Hash indexes
 
 Hash indexes map a key to a bucket.
 
@@ -65,7 +69,7 @@ x = ?
 
 fits, while ordered range access does not.
 
-## PostgreSQL hash index
+### PostgreSQL hash index
 
 PostgreSQL supports hash indexes for equality operators.
 
@@ -78,7 +82,7 @@ A B-tree also supports equality and is more versatile.
 
 Choose hash only from measured workload and engine behavior.
 
-## Bitmap indexes versus bitmap scans
+### Bitmap indexes versus bitmap scans
 
 These are different concepts.
 
@@ -99,7 +103,7 @@ index B -> bitmap of row locations
 
 Do not call every PostgreSQL bitmap scan a bitmap index.
 
-## Bitmap-style workloads
+### Bitmap-style workloads
 
 Low-cardinality analytical filters such as:
 
@@ -113,7 +117,7 @@ can combine well in read-heavy systems.
 
 Persistent bitmap structures can be expensive under frequent updates depending on the engine.
 
-## Inverted indexes
+### Inverted indexes
 
 An inverted index maps terms or elements to rows/documents.
 
@@ -129,7 +133,7 @@ Useful for:
 - JSON containment,
 - tags.
 
-## PostgreSQL GIN
+### PostgreSQL GIN
 
 GIN is a generalized inverted index.
 
@@ -155,7 +159,7 @@ CREATE INDEX idx_articles_search
 ON articles USING gin(search_vector);
 ~~~
 
-## GIN write trade-off
+### GIN write trade-off
 
 One row can contribute many postings.
 
@@ -168,7 +172,7 @@ Costs can include:
 - pending-list/maintenance behavior,
 - slower update-heavy workloads.
 
-## GiST
+### GiST
 
 GiST is a framework for tree-structured search strategies.
 
@@ -181,7 +185,7 @@ It is commonly used for:
 
 It is not simply "the spatial index," though spatial workloads are a major use.
 
-## Spatial example
+### Spatial example
 
 With suitable PostgreSQL/PostGIS types and operator classes, GiST can accelerate questions such as:
 
@@ -192,7 +196,7 @@ which points are nearest?
 
 The query operator must match the operator class.
 
-## Range types
+### Range types
 
 PostgreSQL range types can use GiST for overlap and containment relationships.
 
@@ -204,7 +208,7 @@ reservation period overlaps requested period
 
 This is different from indexing one scalar timestamp.
 
-## SP-GiST
+### SP-GiST
 
 SP-GiST supports space-partitioned search structures.
 
@@ -216,7 +220,7 @@ Depending on operator class, it can represent structures such as:
 
 Use it when the data/query type has a compatible operator class.
 
-## GIN versus GiST
+### GIN versus GiST
 
 Some workloads can use either family.
 
@@ -227,7 +231,7 @@ For PostgreSQL full text, general intuition is:
 
 Use current engine documentation and representative tests instead of memorizing one as universally superior.
 
-## BRIN
+### BRIN
 
 BRIN means Block Range INdex in PostgreSQL.
 
@@ -245,7 +249,7 @@ max timestamp = Jan 6
 
 A query for Jan 5 can skip page ranges whose summaries cannot contain Jan 5.
 
-## BRIN and physical correlation
+### BRIN and physical correlation
 
 BRIN is especially useful when the indexed value correlates with physical row order.
 
@@ -257,7 +261,7 @@ Examples:
 
 If values are randomly distributed across every page range, summaries become broad and less useful.
 
-## BRIN size advantage
+### BRIN size advantage
 
 Because BRIN summarizes page ranges rather than indexing every row, it can be much smaller than a B-tree on a huge correlated table.
 
@@ -267,7 +271,9 @@ Trade-off:
 - candidate page ranges still require checking,
 - it is weaker on uncorrelated data.
 
-## Runnable BRIN exercise
+## Hands-on plan inspection
+
+### Runnable BRIN exercise
 
 This chapter adds:
 
@@ -287,7 +293,7 @@ The exercise creates a time-ordered event table, builds B-tree and BRIN indexes,
 
 The exact plan depends on local statistics and table size.
 
-## Full-text indexing
+### Full-text indexing
 
 Searching:
 
@@ -311,13 +317,13 @@ rank/search
 
 Use the database's full-text feature or a search engine when appropriate.
 
-## Trigram indexes
+### Trigram indexes
 
 PostgreSQL's pg_trgm extension can support similarity and certain LIKE/ILIKE patterns through GiST or GIN operator classes.
 
 This is different from linguistic full-text search.
 
-## JSON indexing
+### JSON indexing
 
 Different JSON operations need different access structures.
 
@@ -333,7 +339,7 @@ Containment/membership may fit GIN.
 
 There is no universal JSON index.
 
-## Spatial indexes
+### Spatial indexes
 
 Spatial predicates include:
 
@@ -344,7 +350,7 @@ Spatial predicates include:
 
 A B-tree over raw latitude and longitude is not equivalent to a true spatial index for arbitrary geometry operations.
 
-## Zone maps and data skipping
+### Zone maps and data skipping
 
 Analytical systems often maintain min/max or other metadata per block.
 
@@ -358,7 +364,7 @@ A query for amount > 5000 can skip blocks 1 and 2.
 
 This resembles BRIN's summary idea but belongs to the analytical engine's implementation.
 
-## Bloom filters
+### Bloom filters
 
 A Bloom filter can answer:
 
@@ -374,7 +380,7 @@ Bloom filters are common in LSM/storage systems and some extensions.
 
 They do not support ordering or ranges.
 
-## Operator classes matter
+### Operator classes matter
 
 In PostgreSQL, index access methods rely on operator classes defining:
 
@@ -384,7 +390,9 @@ In PostgreSQL, index access methods rely on operator classes defining:
 
 So "use GIN" is incomplete without the data type and operator class.
 
-## Decision table
+## Choose from workload and operator support
+
+### Decision table
 
 | Query pattern | Candidate structure |
 | --- | --- |
@@ -398,7 +406,7 @@ So "use GIN" is incomplete without the data type and operator class.
 
 Always validate against the specific engine.
 
-## Index versus external system
+### Index versus external system
 
 A database index is not always the right answer.
 

@@ -10,9 +10,11 @@ More specialized index designs answer:
 - Can the index omit rows that are rarely useful?
 - Can it index a function or derived value?
 
-These patterns can make hot access paths much smaller or cheaper.
+These options solve different problems: covering indexes avoid extra column fetches, partial indexes omit rows outside a predicate, and expression indexes make a transformed value searchable. None is universally faster; start from the query and engine's supported operators.
 
-## Covering indexes
+## Covering indexes and index-only access
+
+### Covering indexes
 
 Suppose the query is:
 
@@ -38,7 +40,7 @@ total_cents
 
 A covering index stores all values required by the query.
 
-## PostgreSQL INCLUDE
+### PostgreSQL INCLUDE
 
 ~~~sql
 CREATE INDEX idx_orders_customer_date
@@ -55,7 +57,7 @@ Payload columns do not affect:
 - search ordering,
 - uniqueness semantics.
 
-## Unique index with INCLUDE
+### Unique index with INCLUDE
 
 ~~~sql
 CREATE UNIQUE INDEX ux_users_email
@@ -67,7 +69,7 @@ Uniqueness applies to email only.
 
 display_name is payload.
 
-## Index-only scans
+### Index-only scans
 
 Conceptually:
 
@@ -83,7 +85,7 @@ A covering index can make an index-only scan possible.
 
 But all values being present in the index does not guarantee zero table visits in every engine.
 
-## PostgreSQL visibility requirement
+### PostgreSQL visibility requirement
 
 PostgreSQL indexes do not contain full tuple visibility state.
 
@@ -99,7 +101,7 @@ no heap visits
 
 A frequently updated table may get less benefit than a mostly stable one.
 
-## Covering-index trade-off
+### Covering-index trade-off
 
 Payload columns make index leaves wider.
 
@@ -113,7 +115,7 @@ Costs:
 
 Do not INCLUDE every SELECT column mechanically.
 
-## SQLite covering index
+### SQLite covering index
 
 SQLite can report a covering-index plan when every requested value is available in the index.
 
@@ -126,7 +128,9 @@ ON orders(customer_id, order_date DESC, total_cents);
 
 SQLite does not use PostgreSQL's INCLUDE syntax here; total_cents is another index key column.
 
-## Partial indexes
+## Partial indexes for selected rows
+
+### Partial indexes
 
 A partial index stores only rows satisfying a predicate.
 
@@ -138,7 +142,7 @@ WHERE status = 'open';
 
 Only open orders occupy this index.
 
-## Why partial indexes help
+### Why partial indexes help
 
 Suppose:
 
@@ -167,7 +171,7 @@ Potential benefits:
 - less cache usage,
 - fewer index updates for unrelated rows.
 
-## Query must match the predicate
+### Query must match the predicate
 
 A partial index on:
 
@@ -186,7 +190,7 @@ It cannot safely answer a query for every status because closed rows are absent.
 
 The optimizer must prove the query condition implies the index predicate.
 
-## Parameterized queries and partial indexes
+### Parameterized queries and partial indexes
 
 Planner behavior can be subtle with parameterized predicates.
 
@@ -208,7 +212,7 @@ Behavior depends on engine and planning mode.
 
 Inspect the real plan.
 
-## Soft-delete pattern
+### Soft-delete pattern
 
 Table:
 
@@ -231,7 +235,7 @@ WHERE deleted_at IS NULL;
 
 Deleted rows are not carried in the active lookup index.
 
-## Partial unique index
+### Partial unique index
 
 A useful correctness pattern:
 
@@ -251,7 +255,9 @@ while keeping historical deleted rows.
 
 Use it only if that matches the business rule.
 
-## Expression indexes
+## Expression indexes for transformed predicates
+
+### Expression indexes
 
 An expression index stores the result of a function/expression.
 
@@ -270,7 +276,7 @@ WHERE lower(email) = lower($1);
 
 The engine can search the indexed expression instead of evaluating lower(email) over every candidate row.
 
-## Good expression-index use cases
+### Good expression-index use cases
 
 Examples:
 
@@ -282,7 +288,7 @@ Examples:
 
 The query expression still needs to align with what the optimizer can match to the index.
 
-## Determinism and immutability
+### Determinism and immutability
 
 Databases usually restrict indexed expressions to functions whose result is stable for the same stored row.
 
@@ -296,7 +302,7 @@ same row values -> same index key
 
 until the row changes.
 
-## Generated-column alternative
+### Generated-column alternative
 
 Instead of indexing:
 
@@ -319,7 +325,7 @@ Advantages:
 
 Trade-offs depend on engine and storage behavior.
 
-## JSON indexing
+### JSON indexing
 
 Suppose a JSON document contains:
 
@@ -338,7 +344,9 @@ Examples:
 
 There is no single "JSON index" that optimizes every JSON query.
 
-## Combining partial and covering
+## Combining techniques without over-indexing
+
+### Combining partial and covering
 
 PostgreSQL example:
 
@@ -357,7 +365,7 @@ This combines:
 
 Powerful, but specialized.
 
-## Combining expression and partial
+### Combining expression and partial
 
 ~~~sql
 CREATE INDEX idx_active_users_lower_email
@@ -373,7 +381,7 @@ normalized email of active users
 
 It can also be UNIQUE if that is the desired constraint.
 
-## Too-specialized indexes
+### Too-specialized indexes
 
 A narrowly optimized index may be used by only one rare query.
 
@@ -387,7 +395,7 @@ Costs remain:
 
 Track usage over a meaningful observation period.
 
-## Covering index versus composite key
+### Covering index versus composite key
 
 Suppose a query filters on x and returns y.
 
@@ -415,7 +423,9 @@ But in the second design:
 
 Use INCLUDE when y is payload rather than a search key.
 
-## Runnable SQLite demonstration
+## Check the implementation on sample queries
+
+### Runnable SQLite demonstration
 
 This chapter adds:
 
@@ -436,7 +446,7 @@ It compares:
 
 The script prints EXPLAIN QUERY PLAN output.
 
-## Runnable PostgreSQL demonstration
+### Runnable PostgreSQL demonstration
 
 This chapter also adds:
 
