@@ -208,6 +208,17 @@ ORDER BY contact_id;
 
 This returns contact 2. `IS NULL` tests the missing-value marker; `phone = NULL` does not provide the same test because ordinary comparison with null produces an unknown result. Contact 3 has a present but empty string.
 
+**Incorrect vs correct predicates for the sample:**
+
+| Predicate | Contacts returned | Why |
+|---|---|---|
+| `phone = NULL` | None | The comparison is unknown, not true |
+| `phone IS NULL` | 2 | Tests the missing-value marker |
+| `phone = ''` | 3 | Tests an actual empty string |
+| `phone IS NOT NULL` | 1 and 3 | Includes the empty string as a present value |
+
+To inspect the difference yourself, run `SELECT contact_id FROM glossary_contacts WHERE phone = ''; ` and compare it with the `IS NULL` query above. Neither `NULL` nor an empty string is proof of a valid phone number.
+
 ## Technology names and their roles
 
 A product name tells you which implementation to investigate; it does not stand in for a model definition or a performance guarantee.
