@@ -1,6 +1,6 @@
 # Hierarchical Data: Represent and Query a Tree
 
-A category hierarchy is a set of parent–child relationships. **Adjacency lists** store only the immediate parent, while recursive queries reconstruct ancestors or descendants. Later representations cache more traversal information in return for harder updates. The critical invariant is not just a valid parent reference: a tree must also have **no cycles**, and any single-root requirement must be explicit., and so on; its **ancestors** lie on the path toward the root.
+A category hierarchy is a set of parent–child relationships. **Adjacency lists** store only the immediate parent, while recursive queries reconstruct ancestors or descendants. Later representations cache more traversal information in return for harder updates. The critical invariant is not just a valid parent reference: a tree must also have **no cycles**, and any single-root requirement must be explicit. The **root** has no parent, **leaves** have no children, **ancestors** lead toward the root, and **descendants** lie beneath a node.
 
 Relational tables can represent trees. The main question is which relationships to store directly and which to calculate when querying. Start with [joins](06_joins_subqueries_and_views.md); this note introduces recursion through a complete SQLite example.
 
