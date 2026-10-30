@@ -2,7 +2,7 @@
 
 SQL presents a table as rows and columns. Storage works with chunks of bytes. In many database engines, a **page** is a fixed-size unit used to organize data and transfer it between storage and memory. A table or index usually spans many pages.
 
-This distinction helps explain query performance: finding one row may require reading a page containing several rows. The cost depends partly on which pages the engine must visit, not only on how many rows it returns.
+This distinction helps explain query performance: finding one row may require reading a page containing several rows. Cost depends on the pages the plan touches, how many of those pages are cached, and whether the query must fetch separate table pages after using an index. Counting returned rows alone cannot predict I/O.
 
 ## Follow a read from query to storage
 
@@ -32,7 +32,7 @@ The **header** stores bookkeeping information. A **slot** can identify a row's l
 
 Rows have different lengths, and one large value need not fit on one page. Engines may use overflow pages or separate storage for large values. Updates can create new row versions or change space requirements, so free space and cleanup matter as well.
 
-## Why an index can save page reads
+## Why fewer matching rows do not automatically mean fewer page reads
 
 Imagine a table spread across 1,000 data pages. A query for one customer's orders can follow either of two broad paths:
 
@@ -43,7 +43,7 @@ Imagine a table spread across 1,000 data pages. A query for one customer's order
 
 An index is useful when its route visits substantially fewer pages. It is not free: the index occupies pages, and inserts or updates may need to modify them. A query matching most of the table can make a scan cheaper than many separate row lookups.
 
-A **covering index** includes everything needed by a query, which can reduce table-page visits. Whether an engine actually avoids those visits also depends on its visibility rules and implementation. See [Indexing](05_indexing.md) for B-tree search and query-plan examples.
+A **covering index** contains the values needed by a particular query and can avoid extra row fetches. In PostgreSQL, visibility checks can still trigger heap access even if the index covers all selected columns; in SQLite, a covering plan can often read directly from index entries. Coverage is query- and engine-specific. See [Indexing](05_indexing.md) for B-tree search and query-plan examples.
 
 ## Writes, logs, and checkpoints
 
