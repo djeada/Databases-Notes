@@ -115,7 +115,7 @@ An **execution plan** shows how a query will or did access data. Use the chosen 
 
 **Incorrect:** assume that creating an index always improves the query just because its name sounds relevant.
 
-**Correct:** compare the same query before and after the index, then measure with realistic row counts. On the small SQLite bookstore, run `EXPLAIN QUERY PLAN SELECT order_id, order_date FROM orders WHERE customer_id = 1 ORDER BY order_date, order_id;` before creating `idx_design_customer_history` below, and again after. The first may scan, while the second can use a covering index; the exact chosen plan is an optimizer decision, not a fixed output to memorize. Some analysis commands execute the query, so understand the tool before applying it to a write.
+**Correct:** compare the same query before and after the index, then measure with realistic row counts. Start from a fresh SQLite bookstore **without any earlier optional index examples** (the indexes shown above are alternatives, not a sequence to accumulate). Run `EXPLAIN QUERY PLAN SELECT order_id, order_date FROM orders WHERE customer_id = 1 ORDER BY order_date, order_id;` before creating `idx_design_customer_history` below, and again after. Without a supporting index, a scan is expected; afterward the engine can use a covering index. The exact chosen plan remains an optimizer decision, not a fixed output to memorize. Some analysis commands execute the query, so understand the tool before applying it to a write.
 
 Compare the read improvement with insertion and update costs. Test customers with a few orders and customers with many; one convenient test value can hide a different workload.
 
