@@ -84,6 +84,23 @@ The count result is:
 
 It stays 1 because the `WHEN` condition is false.
 
+**Incorrect expectation:** because the trigger exists on `products`, every product update writes a price-history row.
+
+**Correct behavior:** the trigger watches updates **of `price_cents`** and records a row only when the old and new prices differ. This separate stock-only experiment does not add any price-history row:
+
+```sql
+BEGIN;
+UPDATE products SET stock = stock + 1 WHERE product_id = 10;
+SELECT COUNT(*) AS price_change_count FROM product_price_changes;
+ROLLBACK;
+```
+
+| price_change_count |
+|---:|
+| 1 |
+
+The rollback preserves the initial stock; the history count remains one because the stock update did not target the watched price column.
+
 ## Trigger changes participate in rollback
 
 Continue from the previous exercise, where the current price is 1600:

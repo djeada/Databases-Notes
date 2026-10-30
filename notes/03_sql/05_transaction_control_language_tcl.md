@@ -134,6 +134,15 @@ Two buyers can both read “one copy remains.” A transaction does not automati
 
 A transaction also does not undo an email or remote payment already sent. External effects need their own coordination or retry-safe design.
 
+| Checkout attempt | Incorrect assumption | Correct check |
+|---|---|---|
+| Two buyers both previously read stock = 1 | Both may safely write an order because they used transactions | Each must win a guarded stock decrement or another appropriate serialization mechanism |
+| `UPDATE ... WHERE stock > 0` changes zero rows | No exception means the purchase succeeded | Verify the affected-row count; roll back the checkout |
+| An insert fails after decrementing stock | Keep the earlier stock change | Roll back the complete transaction |
+| Payment provider accepted a charge, then the DB transaction failed | SQL `ROLLBACK` reverses the charge | Reconcile the external payment using an idempotent, documented recovery workflow |
+
+Transactions provide atomicity for **database changes in their scope**. They do not automatically give exactly-once behavior across unrelated systems.
+
 ## Follow a transfer all the way through failure
 
 Two updates can form one business operation. Use a separate pair of accounts:

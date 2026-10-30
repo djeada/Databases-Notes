@@ -116,6 +116,15 @@ One approach is to add an optional column, fill its values with a **backfill**, 
 
 The migration must describe the existing data, the new rule, how writers remain compatible during the transition, and how failures are handled. Merely showing a fresh `CREATE TABLE` does not explain changing a live system.
 
+| Unsafe shortcut | Safer progression |
+|---|---|
+| Add an immediately required column with no value for existing rows | Add a nullable column or an appropriate default, then backfill and validate |
+| Backfill once and assume all future rows will have the value | Update every active writer or provide compatible database-side behavior |
+| Drop the old column before readers are updated | Check application versions, dependent views and triggers, then remove the old field |
+| Assume a rollback undoes DDL in every DBMS | Rehearse failure and rollback behavior on the target engine |
+
+A correct migration preserves both **existing data** and **work in progress**. The examples below practice an expansion and backfill on a disposable table.
+
 ## Transaction behavior differs by engine
 
 SQLite supports transactional schema changes with documented restrictions. PostgreSQL supports rollback for most DDL, while commands such as `CREATE DATABASE` cannot run inside a transaction block. MySQL DDL commonly causes implicit commits.

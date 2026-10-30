@@ -100,7 +100,21 @@ The result is Alice with order 102, Bob with null, and Carol with null.
 | Bob | NULL |
 | Carol | NULL |
 
-If instead you write `WHERE o.status = 'open'`, the filter applies to the joined result. Bob and Carol have null on the order side, so they do not pass that condition and disappear. This is a frequent cause of a left join behaving like an inner join.
+**Incorrect for this requirement — move the right-side filter to `WHERE`:**
+
+```sql
+SELECT c.name, o.order_id
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+WHERE o.status = 'open'
+ORDER BY c.customer_id;
+```
+
+| name | order_id |
+|---|---:|
+| Alice | 102 |
+
+The `WHERE` predicate removes Bob and Carol because their nonmatching order rows contain `NULL`. The earlier **correct** `ON` predicate retains both customers with null order IDs. A filter in `WHERE` is appropriate when the goal really is “only customers with open orders”; it is incorrect when the goal is “every customer, optionally showing open orders.”
 
 ## A join can multiply rows
 

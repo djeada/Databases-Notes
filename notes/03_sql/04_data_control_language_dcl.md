@@ -48,6 +48,19 @@ The database connection may be shared by many bookstore customers through one ap
 
 The application must check whose order is being requested, or use a suitable database row-level policy. A **row-level policy** governs which rows may be accessed, rather than only whether the table as a whole can be queried. Its design must account for how authenticated customer identity reaches the database.
 
+**Incorrect:** “The application role has `SELECT` on `orders`, therefore customer 1 can safely query any row through that role.”
+
+**Correct:** enforce the *requesting customer's* authorization in trusted application code or an appropriately configured row-level-security policy, independently of the table-level grant. For example, an order-history query can be scoped to a customer ID **derived from the authenticated session**, not an untrusted ID supplied by the requester:
+
+```sql
+-- Shape of a parameterized, application-authorized query.
+SELECT order_id, customer_id, order_date
+FROM orders
+WHERE customer_id = ?;
+```
+
+The `?` placeholder is SQLite/driver-style syntax shown for the concept; PostgreSQL client libraries often use a different parameter convention. A filter alone is not authorization if the caller can choose someone else's customer ID. Database row-level security can enforce this boundary closer to the data when its identity mapping is correctly designed.
+
 ## Use least privilege
 
 **Least privilege** means granting only the access needed for a job. A reporting process usually does not need schema modification. A checkout application generally should not use the database administrator's identity.

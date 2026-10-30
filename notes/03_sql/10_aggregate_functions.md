@@ -426,6 +426,21 @@ An aggregate without `GROUP BY` still returns a result row on empty input: count
 
 Displaying zero may be appropriate for “no payroll entries this period.” It can be misleading for “payroll total unavailable,” so choose the fallback from the report's meaning. `AVG(COALESCE(Salary, 0))` treats unknown salaries as actual zero salaries and changes the denominator. `COALESCE(AVG(Salary), 0)` leaves unknown salaries out of the calculation and only replaces an absent final average. These expressions answer different questions.
 
+**See the incorrect assumption numerically.** After inserting Susan with a null salary, department 1 has two known salaries (60000 and 65000) and one unknown salary:
+
+```sql
+SELECT ROUND(AVG(Salary), 2) AS average_known,
+       ROUND(AVG(COALESCE(Salary, 0)), 2) AS average_if_missing_means_zero
+FROM Employees
+WHERE DepartmentID = 1;
+```
+
+| average_known | average_if_missing_means_zero |
+|---:|---:|
+| 62500.0 | 41666.67 |
+
+**Correct** for “average of known salaries” is `AVG(Salary)`. **Incorrect** for that question is `AVG(COALESCE(Salary, 0))`, which silently treats missing pay as zero. It is appropriate only if zero is genuinely the chosen meaning of missing in this report.
+
 ## Count known and missing values together
 
 Continue after the earlier null-value section has inserted Susan, whose salary is null. A conditional aggregate makes completeness visible beside the report:
