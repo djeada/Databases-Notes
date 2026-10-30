@@ -95,6 +95,44 @@ After rollback, the stored order and line return to:
 
 For a server database, concurrent edits can require locking the owning order, applying safe deltas, or serializable transactions with retries. A trigger can centralize maintenance but must handle inserts, updates, deletes, moves between orders, and multi-row operations. A trigger that updates only for inserts would leave deletions wrong.
 
+A maintenance review should explicitly cover all of these changes:
+
+| Source change | Required cache behavior |
+|---|---|
+| Insert an item | Include its quantity × charged price |
+| Increase, decrease, or correct quantity/price | Replace the old contribution with the new one |
+| Delete an item | Remove its contribution |
+| Move an item to another order | Reconcile **both** the old and new order |
+| Retry an event or import | Avoid applying the same change twice |
+
+No single example transaction proves the system is correct unless *every* allowed write path follows the same rule.
+
+### Contrast an incorrect write that leaves a stale total
+
+The *correct* transaction above changes the line and recomputes its cache together. This independent experiment intentionally performs **only the line update**. Run it after the backfill, and use the rollback so the starting data stays unchanged:
+
+```sql
+BEGIN;
+-- Incorrect if committed: the source line changes, but the cache does not.
+UPDATE order_items
+SET quantity = 3
+WHERE order_id = 101 AND line_number = 1;
+
+SELECT o.cached_total_cents,
+       COALESCE(SUM(i.quantity * i.unit_price_cents), 0) AS actual_total_cents
+FROM orders AS o
+LEFT JOIN order_items AS i ON i.order_id = o.order_id
+WHERE o.order_id = 101
+GROUP BY o.order_id, o.cached_total_cents;
+ROLLBACK;
+```
+
+| cached_total_cents | actual_total_cents |
+|---:|---:|
+| 5500 | 7000 |
+
+If committed without repairing the total, this would create **1500 cents of drift**. Rolling back keeps the demonstration safe. Compare the two values to prove the inconsistency instead of trusting the cached column merely because it is quick to read.
+
 ### Detect drift and rebuild
 
 ```sql

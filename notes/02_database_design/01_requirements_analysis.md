@@ -42,6 +42,16 @@ An **entity** is a kind of record, such as a customer or product. An **attribute
 
 This prevents storing a fact in a convenient but misleading place. If an order has several products, a single `product_id` column on the order cannot represent the whole purchase.
 
+**Incorrect → correct requirement translation:**
+
+| Vague or misleading assumption | Clarified requirement | Modeling consequence |
+|---|---|---|
+| “Keep the price of every purchased book.” | Preserve what was **charged at checkout**, even if the catalog price later changes. | Store `unit_price_cents` on each order line, separate from `products.price_cents`. |
+| “One order has a product.” | An order can have several lines, and the same product might appear on different lines. | Give each line its own `(order_id, line_number)` identifier and product reference. |
+| “The customer can cancel.” | Decide whether partial cancellation is allowed and what happens to stock and refunds. | Specify order/line states and transition rules before choosing columns. |
+
+A schema is not correct merely because its SQL executes. It is correct only relative to the agreed business rules.
+
 ## State the relationships and optional cases
 
 “One customer can place many orders” is incomplete until you ask whether a customer can have zero orders and whether an order can have no customer.
@@ -132,7 +142,10 @@ CREATE TABLE uni_enrollments (
 );
 INSERT INTO uni_students VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Carol');
 INSERT INTO uni_professors VALUES (10, 'Dr Lee'), (20, 'Dr Rao');
-INSERT INTO uni_courses VALUES (101, 'Databases', 10), (102, 'Networks', 20);
+INSERT INTO uni_courses VALUES
+    (101, 'Databases', 10),
+    (102, 'Networks', 20),
+    (103, 'Data Ethics', 10);
 INSERT INTO uni_enrollments VALUES (1, 101, 88), (2, 101, NULL), (1, 102, 91);
 
 SELECT s.name, e.grade
@@ -148,6 +161,19 @@ ORDER BY s.student_id;
 | Bob | NULL |
 
 The roster returns Bob despite his missing grade. Interpreting null as zero would incorrectly turn “not graded yet” into a failing result. The pair key prevents duplicate enrollment under the stated rule, while foreign keys prevent missing students and courses.
+
+**Negative acceptance cases** are just as important as the successful roster. With foreign keys enabled, each of these statements should be tested *separately* and rejected:
+
+```sql
+-- Incorrect: Alice is already enrolled in course 101.
+INSERT INTO uni_enrollments VALUES (1, 101, 95);
+-- Incorrect: student 99 does not exist.
+INSERT INTO uni_enrollments VALUES (99, 101, NULL);
+-- Incorrect: a supplied grade must stay in the allowed range.
+INSERT INTO uni_enrollments VALUES (3, 102, 105);
+```
+
+The first fails the composite primary key, the second fails the foreign key, and the third fails the grade check. Use a fresh setup if you change the data while experimenting; these are examples of expected failures, not a single script that runs uninterrupted.
 
 Ask the professor how they would use this roster. Do they need withdrawn students, a preferred name, or a section number? Each answer can change the required schema or filter. A working query is a way to validate a requirement, not proof that the entire domain has been understood.
 
@@ -165,8 +191,13 @@ ORDER BY c.course_id;
 |---|---|
 | Databases | 2 |
 | Networks | 1 |
+| Data Ethics | 0 |
 
-A left join lets an empty course remain in the report. Counting the non-null enrollment identifier would give it zero; `COUNT(*)` would count its unmatched result row instead. That distinction should be established before a report is used for staffing or capacity decisions.
+**Correct:** `COUNT(e.student_id)` counts only real enrollment rows, so the empty Data Ethics course stays visible with zero students.
+
+**Incorrect:** replacing it with `COUNT(*)` counts the one null-extended row produced by the `LEFT JOIN`, falsely reporting **1** student for Data Ethics. Changing the join to an inner join would omit Data Ethics altogether.
+
+This is why testing the empty case is more informative than running the same report only against courses that already have students.
 
 ## Resolve priorities and disagreements explicitly
 
