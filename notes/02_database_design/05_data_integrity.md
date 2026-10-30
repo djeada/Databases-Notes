@@ -238,9 +238,9 @@ SQLite 3.37 or later is required. Even strict typing does not prove the amount i
 
 **Correct:** stage records, validate them, report rejected rows, and load accepted records through a controlled transaction policy. In SQLite, check any data loaded without enforcement with `PRAGMA foreign_key_check` after re-enabling foreign keys; investigate each reported row instead of treating the pragma as an automatic repair.
 
-For imports, stage records in a separate area, validate them, report rejected rows, and load accepted records through a controlled transaction policy. Decide whether the batch is all-or-nothing or whether partial acceptance is allowed and recorded. Do not disable constraints and assume that turning them on afterward validates everything already loaded.
+Decide whether the batch is all-or-nothing or whether partial acceptance is allowed and recorded. Enabling constraints after an unchecked import is not a substitute for validating rows that were already written.
 
-If data was written while checks were absent, use engine-supported integrity checks and explicit reconciliation queries. SQLite provides `PRAGMA foreign_key_check`; it reports violations rather than repairing them. Record the rule being checked, the affected identifiers, and an owner for remediation.
+If data was written while checks were absent, use engine-supported integrity checks and explicit reconciliation queries. Record the rule being checked, the affected identifiers, and an owner for remediation.
 
 Constraints use work: foreign-key checks, uniqueness searches, and cascading operations can need indexes and acquire locks. Measure those costs, but first preserve the correctness requirement. An appropriate index on referencing columns can make related checks and deletions much cheaper than repeatedly scanning the child table.
 
