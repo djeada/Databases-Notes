@@ -151,6 +151,10 @@ On this simple setup, the earlier plan can report `SCAN orders`, while the later
 
 The index does not change which orders satisfy the query. It changes an available way to find them. With three rows, either approach is inexpensive; with many orders and a selective customer filter, fewer page visits can matter.
 
+**Incorrect conclusion:** “The second plan says `SEARCH`, so the query must always be faster.”
+
+**Correct interpretation:** an index creates an alternative access path. Check the number of qualifying rows, the time and I/O spent, and the write cost of maintaining the index on a representative dataset. `EXPLAIN QUERY PLAN` describes the chosen access strategy; it is not itself a speed benchmark.
+
 ### Estimates and measurements are different
 
 PostgreSQL uses `EXPLAIN` for an estimated plan. On the independent `server_products` table above:
@@ -239,6 +243,14 @@ Updates can modify memory-resident pages before those changes reach their final 
 Crash recovery reconstructs the appropriate accepted state after an interrupted process or machine failure. It uses the engine's recovery information and configured durability behavior. A transaction log is not the same thing as application diagnostic output.
 
 A committed accidental deletion presents a different problem: crash recovery does not infer that the deletion was unwanted. A backup or a suitable earlier recovery point supplies a historical state to restore.
+
+| Failure | Incorrect expectation | Correct recovery approach |
+|---|---|---|
+| Process crashes during an unfinished transaction | Manually repair half an accepted transaction | Let the engine use its configured transactional recovery, then inspect the resulting state |
+| Operator commits the deletion of required rows | Restart the DBMS to undo the committed deletion | Restore from a tested backup or a suitable point-in-time recovery mechanism |
+| Application writes a logically wrong but constraint-valid amount | A constraint or log automatically detects the business mistake | Apply validation, auditing, and an explicit correction workflow |
+
+Atomic commit, business correctness, and restoration of historical data are separate responsibilities.
 
 ### Take and inspect a SQLite backup
 
