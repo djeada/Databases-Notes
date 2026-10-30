@@ -122,6 +122,20 @@ WHERE product_id = 30 AND stock > 0;
 
 Product 30 has zero stock, so this affects **zero rows**. It is not a SQL error. The application must inspect the affected-row count and avoid recording a sale when the decrement did not happen.
 
+In SQLite, execute the following immediately after the guarded update to inspect the statement's result:
+
+```sql
+SELECT changes() AS rows_updated;
+```
+
+| rows_updated |
+|---:|
+| 0 |
+
+**Incorrect:** update `stock = stock - 1` without the `stock > 0` condition. On this schema that attempts to make product 30's stock negative and fails the `CHECK (stock >= 0)` constraint. Depending on the schema, a less-protected table might accept the invalid stock instead.
+
+**Correct:** keep the stock condition in the database update, inspect the affected-row count on the same connection, and create the order only if the checkout's stock reservation succeeds within the intended transaction. A zero-row result is not permission to proceed.
+
 ## Remove a row with DELETE
 
 Try deletion on a newly inserted practice customer:
