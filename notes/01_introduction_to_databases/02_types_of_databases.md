@@ -110,7 +110,7 @@ Input (`products`):
 | _id | title | format | price_cents | attributes.language |
 | ---: | --- | --- | ---: | --- |
 | 10 | Database Basics | print | 1500 | en |
-| 20 | SQL on the Move | audio | 2500 | NULL |
+| 20 | SQL on the Move | audio | 2500 | *(field absent)* |
 
 Result:
 
@@ -123,6 +123,8 @@ The matching result document is:
 ```json
 { "_id": 10, "title": "Database Basics" }
 ```
+
+The audiobook's `attributes` has no `language` property; the input table displays **field absent**, not SQL `NULL`. A missing BSON field and a field explicitly set to BSON `null` are different representations, even though some MongoDB queries match both. The shown equality filter selects only the book whose nested language is `"en"`.
 
 `use` is a `mongosh` command selecting the database, rather than ordinary JavaScript. The insertion creates the collection if necessary. `_id` identifies each document. Dot notation accesses the nested language field, and the second argument selects returned fields.
 
@@ -137,6 +139,14 @@ The `1` specifies ascending index order. This makes a language-field access path
 ### Embedding is a modeling decision
 
 An order document can embed its bounded list of purchased lines because they are often read together. Embedding a customer's entire lifelong order history is different: that array can grow without bound, and independent order queries become awkward.
+
+| Workload | Better starting boundary | Less suitable starting boundary |
+|---|---|---|
+| Fetch one order and its few purchased lines | Order document with its bounded lines | Separate lookups for each line without a demonstrated need |
+| Search or update a customer's growing order history | Independently identified orders with `customer_id` | One customer document containing every past order forever |
+| Change a product's current catalog price | Update the authoritative product record | Copy the current price into every customer's stored profile |
+
+These are modeling starting points, not universal rules: actual document size limits, query patterns, consistency needs, and indexing decide the final design.
 
 **Embedding** places related values inside a document; **referencing** stores another record's identifier. Repeating a current price in many documents creates an update obligation. A price charged in a historical order is intentionally a separate fact and should not follow later catalog edits.
 
