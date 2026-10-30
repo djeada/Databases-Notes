@@ -1,6 +1,6 @@
 # Hierarchical Data: Represent and Query a Tree
 
-A bookstore's categories form a hierarchy: Books contains Computing, and Computing contains Databases and Programming. A **tree** represents that structure using nodes and parent–child relationships. A **root** has no parent. A **leaf** has no children. A node's **descendants** are its children, their children, and so on; its **ancestors** lie on the path toward the root.
+A category hierarchy is a set of parent–child relationships. **Adjacency lists** store only the immediate parent, while recursive queries reconstruct ancestors or descendants. Later representations cache more traversal information in return for harder updates. The critical invariant is not just a valid parent reference: a tree must also have **no cycles**, and any single-root requirement must be explicit., and so on; its **ancestors** lie on the path toward the root.
 
 Relational tables can represent trees. The main question is which relationships to store directly and which to calculate when querying. Start with [joins](06_joins_subqueries_and_views.md); this note introduces recursion through a complete SQLite example.
 
@@ -199,7 +199,7 @@ Result:
 
 This calculates a display path; it does not store another copy of every ancestor's name. A rename is reflected on the next query. If names contain the chosen separator, a UI should format a structured list of nodes rather than treat this string as an unambiguous identifier encoding.
 
-## A parent reference does not guarantee a tree
+## Enforce acyclicity, not just a valid parent identifier
 
 To move a branch, an adjacency list often changes only the moved node's parent. But the new parent must not be that node or one of its descendants. Otherwise the move creates a cycle.
 
@@ -261,7 +261,7 @@ This avoids revisiting a node along a path; it does not repair invalid parent re
 
 References: [SQLite recursive CTEs](https://www.sqlite.org/lang_with.html) and [PostgreSQL ltree](https://www.postgresql.org/docs/current/ltree.html).
 
-## Compare other representations after understanding adjacency
+## Compare traversal work with maintenance cost
 
 | Model | What is stored | Useful property | Maintenance cost |
 |---|---|---|---|
@@ -638,7 +638,7 @@ The query result inside the transaction is:
 
 This algorithm uses the example's unconstrained boundary columns and one coordinated writer. A production implementation must handle concurrent structural writes and any additional uniqueness rules.
 
-## Choose from the workload, then validate maintenance
+## Choose representation and verify subtree updates
 
 For an organizational chart with frequent reporting-line changes, adjacency keeps a move small, and recursive queries can calculate reporting chains. For a largely static category taxonomy with frequent subtree reports, nested sets can make reads simple. For breadcrumb and ancestor checks that dominate traffic, closure tables precompute exactly those relationships. Materialized paths fit prefix-based navigation, especially when paths are supported by a dedicated type such as PostgreSQL `ltree`.
 
