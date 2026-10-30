@@ -19,6 +19,10 @@ order_id,customer_name,customer_email,order_date
 
 It is readable and easy to export. It is also repeating Alice's email. Correcting that address means finding every relevant row. If one row is missed, the file contains conflicting answers to “what is Alice's email?”
 
+**Incorrect outcome:** order 101 still says `alice@example.com` while order 102 says `alice.smith@example.com`. Both rows refer to the same customer, but a reader cannot know which address is authoritative.
+
+**Correct direction:** represent Alice once in `customers(customer_id, name, email)`, and refer to her from `orders(order_id, customer_id, order_date)`. The next section builds exactly this separation. The improvement comes from the *data model*, not merely converting CSV rows into an SQL table.
+
 Now imagine two programs each load the entire file. One adds an order while the other corrects an email. If both save their own complete version, the later save can overwrite the other's work. A file format does not provide a transaction or a concurrency protocol by itself.
 
 A DBMS supplies mechanisms for these problems:
@@ -75,6 +79,16 @@ customer_id = 2  <----------------  order_id = 103, customer_id = 2
 ```
 
 A **foreign key** declares that the reference must match an existing eligible key. It can reject an order for a nonexistent customer. It does not automatically retrieve the customer's name; that is the query's job.
+
+**Do not confuse three different operations:**
+
+| Question | Correct mechanism | Incorrect assumption |
+|---|---|---|
+| Does customer 1 exist when an order is inserted? | Foreign-key constraint (when enforced) | A join automatically validates future writes |
+| Which name belongs beside order 101? | Join `orders.customer_id` to `customers.customer_id` | Store a duplicate name on every order |
+| How can the engine find one customer's orders efficiently? | Consider an index on `orders.customer_id` | A foreign key automatically provides the best index on every engine |
+
+A constraint defines an allowed state, a join produces an answer, and an index provides an access path.
 
 ## Create the database and its first tables
 
