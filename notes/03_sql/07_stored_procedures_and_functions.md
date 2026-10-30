@@ -65,7 +65,20 @@ Read the definition in order:
 - `::BIGINT` converts the price before multiplication, avoiding the smaller integer type's multiplication range.
 - `COALESCE(..., 0)` chooses zero when `SUM` has no input values.
 
-This function also returns zero for an identifier with no items. That policy does **not** distinguish a missing order from an existing empty order. A production design must choose the intended behavior, perhaps checking an orders table or returning null.
+This function also returns zero for an identifier with no items. For example:
+
+```sql
+SELECT bookstore_order_total(101) AS existing_order_total,
+       bookstore_order_total(999) AS unknown_id_total;
+```
+
+| existing_order_total | unknown_id_total |
+|---:|---:|
+| 5500 | 0 |
+
+**Incorrect assumption:** a zero returned by this function proves order 999 exists and has no purchases. It proves only that no item rows matched.
+
+**Correct contract:** distinguish “known order with zero items” from “order does not exist” *if the caller needs that distinction*. A production design can check an authoritative `orders` table and return `NULL` or raise an explicitly documented error for a missing identifier. The small teaching table has only items, so it cannot make that decision by itself.
 
 PostgreSQL functions can return scalars or sets and can do more than arithmetic. Their allowed effects and declarations matter; do not assume every function is pure or evaluated just once. See the official [function documentation](https://www.postgresql.org/docs/current/sql-createfunction.html).
 
