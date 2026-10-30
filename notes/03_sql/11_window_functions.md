@@ -1,8 +1,10 @@
 # Window Functions in SQL
 
-A window function calculates a value across rows related to the current row while retaining those rows in the result. Use it for rankings, running totals, and comparisons with earlier or later rows. `OVER` defines the partition, order, and, where applicable, frame.
+A **window function** calculates a value over related rows **without collapsing the result into one row per group**. `PARTITION BY` chooses the group, `ORDER BY` establishes the calculation order, and the frame (where applicable) controls which neighboring rows contribute. The most common errors come from ambiguous ties and implicit frames, so this chapter tests both explicitly.
 
-## Read the window in three parts
+## The core model: partitions, order, and frames
+
+### Read the window in three parts
 
 An aggregate with `GROUP BY ProductID` produces one result row per product. A windowed sum can put that same product total beside **each original sale**. It calculates across related rows without collapsing them.
 
@@ -10,7 +12,9 @@ Inside `OVER`, `PARTITION BY` chooses related rows, `ORDER BY` puts them in calc
 
 Read [aggregate functions](10_aggregate_functions.md) first. Start here with row numbering and running totals, then compare ranks, earlier/later values, and moving averages. The sales example below is a separate practice database.
 
-## Common Window Functions
+## Functions and shared sample data
+
+### Common Window Functions
 
 Here are some of the most commonly used window functions in SQL:
 
@@ -22,7 +26,7 @@ Here are some of the most commonly used window functions in SQL:
 - **`LAG()`**: Provides access to a preceding row’s data without the need for a self-join.
 - **Aggregate Window Functions**: Such as `SUM()`, `AVG()`, `COUNT()`, which perform aggregate calculations over a window.
 
-## Setting Up Example Tables
+### Setting Up Example Tables
 
 Run this setup once in a **fresh SQLite database** with window-function support. Continue using this database throughout the chapter; the null-value section adds sale 11 explicitly.
 
@@ -83,13 +87,13 @@ INSERT INTO Sales VALUES
 | 103       | Gizmo C         | Widgets        |
 | 104       | Gizmo D         | Widgets        |
 
-## Ordering and dialect assumptions
+### Ordering and dialect assumptions
 
 Examples use window-capable SQL engines. Date-range `RANGE` frames and interval syntax are engine-specific. With tied dates, `ROW_NUMBER`, `LAG`, and `LEAD` need an additional unique ordering column such as `SaleID` for deterministic results. Preserve ties deliberately when demonstrating `RANK` and `DENSE_RANK`. A window's `ORDER BY` does not sort the final result.
 
 For running totals, specify a `ROWS` frame when you want one row at a time; the default ordered frame can include all peers sharing the ordering value. The later nullable-quantity examples assume sale 11 has been added to the initial sample.
 
-## Understanding the `OVER` Clause
+### Understanding the `OVER` Clause
 
 Window functions use the `OVER` clause to define the window or the set of rows the function should operate on. The `OVER` clause can include:
 
@@ -97,11 +101,13 @@ Window functions use the `OVER` clause to define the window or the set of rows t
 - **`ORDER BY`**: Defines the logical order of rows within each partition.
 - **Window Frame Specification**: Specifies the subset of rows within the partition for frame-based calculations (e.g., `ROWS BETWEEN`).
 
-## ROW_NUMBER Function
+## Ranks, row numbers, and neighbor rows
+
+### ROW_NUMBER Function
 
 The `ROW_NUMBER()` function assigns a unique sequential integer to rows within a partition, starting at 1 for the first row in each partition.
 
-### Example: Assigning Row Numbers to Sales per Product
+#### Example: Assigning Row Numbers to Sales per Product
 
 ```sql
 SELECT
@@ -110,7 +116,7 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate) AS RowNum
+    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) AS RowNum
 FROM
     Sales
 ORDER BY
@@ -136,14 +142,14 @@ ORDER BY
 - The `ROW_NUMBER()` function assigns a unique row number to each sale within its `ProductID` partition based on the `SaleDate`.
 - Useful for tasks like pagination or identifying specific rows within partitions.
 
-## RANK and DENSE_RANK Functions
+### RANK and DENSE_RANK Functions
 
 Both `RANK()` and `DENSE_RANK()` assign a rank to each row within a partition. The difference lies in how they handle ties.
 
 - **`RANK()`**: Assigns the same rank to tied rows but leaves gaps in the ranking sequence.
 - **`DENSE_RANK()`**: Assigns the same rank to tied rows without leaving gaps.
 
-### Example: Ranking Sales by Quantity per Product
+#### Example: Ranking Sales by Quantity per Product
 
 ```sql
 SELECT
@@ -178,11 +184,11 @@ ORDER BY
 
 - **`RANK()`** and `DENSE_RANK()` are useful for identifying the position of rows within partitions, especially when dealing with ties.
 
-## NTILE Function
+### NTILE Function
 
 The `NTILE()` function distributes the rows in an ordered partition into a specified number of roughly equal groups.
 
-### Example: Dividing Sales into Quartiles per Product
+#### Example: Dividing Sales into Quartiles per Product
 
 ```sql
 SELECT
@@ -217,11 +223,11 @@ ORDER BY
 - The `NTILE(4)` function divides each `ProductID` partition into four quartiles based on `Quantity`.
 - Useful for categorizing data into percentile-based groups.
 
-## LEAD and LAG Functions
+### LEAD and LAG Functions
 
 `LEAD()` and `LAG()` functions allow you to access subsequent and preceding rows' data without the need for self-joins.
 
-### Example: Comparing Current Sale with Previous Sale Quantity per Product
+#### Example: Comparing Current Sale with Previous Sale Quantity per Product
 
 ```sql
 SELECT
@@ -258,11 +264,13 @@ ORDER BY
 - **`LEAD()`** can similarly retrieve data from subsequent rows.
 - Useful for trend analysis and calculating differences between consecutive rows.
 
-## Aggregate Window Functions
+## Running totals and moving frames
+
+### Aggregate Window Functions
 
 Aggregate functions like `SUM()`, `AVG()`, and `COUNT()` can also be used as window functions to perform calculations across a window of rows.
 
-### Example: Calculating Running Total of Sales Amount per Product
+#### Example: Calculating Running Total of Sales Amount per Product
 
 ```sql
 SELECT
@@ -298,11 +306,11 @@ ORDER BY
 - **`SUM(Quantity * Price) OVER (...)`** calculates a running total of sales amounts within each `ProductID` partition ordered by `SaleDate`.
 - The window frame `ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW` defines the range from the first row to the current row for cumulative calculations.
 
-## Handling NULL Values in Window Functions
+### Handling NULL Values in Window Functions
 
 Window functions typically handle `NULL` values based on the specific function's behavior. For example, `SUM()` ignores `NULL` values, while `ROW_NUMBER()` assigns a unique number regardless of `NULL`s.
 
-### Example: Assigning Row Numbers with NULL Quantities
+#### Example: Assigning Row Numbers with NULL Quantities
 
 Suppose we have an additional sale with a `NULL` quantity.
 
@@ -327,7 +335,7 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate) AS RowNum
+    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) AS RowNum
 FROM
     Sales
 ORDER BY
@@ -348,7 +356,7 @@ ORDER BY
 - The `ROW_NUMBER()` function assigns a row number to the sale with `NULL` quantity without any issues.
 - Other window functions may handle `NULL` values differently, depending on their logic.
 
-## Readability and filtering
+### Readability and filtering
 
 Give calculated columns clear aliases, such as `RowNum` or `RunningTotal`. Use the same partition and ordering consistently when the calculations describe the same sequence. Add a unique tie-breaker for row numbering and earlier/later comparisons, but preserve ties deliberately for ranking.
 
@@ -356,7 +364,9 @@ To filter by a window result, calculate it in a CTE or subquery and filter in an
 
 A window may require sorting many rows. Inspect the execution plan on representative data rather than assuming a shorter query must run faster.
 
-## Window Functions vs. Aggregate Functions
+## Windows inside larger queries
+
+### Window Functions vs. Aggregate Functions
 
 While both window functions and aggregate functions perform calculations over sets of rows, they differ in key ways:
 
@@ -368,7 +378,7 @@ While both window functions and aggregate functions perform calculations over se
   - **Aggregate Functions**: Use `GROUP BY` for multiple groups; without it, aggregate over the entire input.
   - **Window Functions**: Use the `OVER` clause to define partitions and ordering without collapsing rows.
 
-### Example: Comparing Aggregate and Window Functions
+#### Example: Comparing Aggregate and Window Functions
 
 **Aggregate Function Example: Total Sales per Product**
 
@@ -427,11 +437,11 @@ Result:
 - The aggregate function provides a summarized view with one row per `ProductID`.
 - The window function adds the total sales per product to each individual sale row without reducing the number of rows.
 
-## Combining Multiple Window Functions
+### Combining Multiple Window Functions
 
 You can use multiple window functions within a single query to perform various analyses simultaneously.
 
-### Example: Sales Analysis with Multiple Window Functions
+#### Example: Sales Analysis with Multiple Window Functions
 
 ```sql
 SELECT
@@ -440,7 +450,7 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate) AS RowNum,
+    ROW_NUMBER() OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) AS RowNum,
     RANK() OVER (PARTITION BY ProductID ORDER BY CASE WHEN Quantity IS NULL THEN 1 ELSE 0 END, Quantity DESC) AS QuantityRank,
     SUM(Quantity * Price) OVER (PARTITION BY ProductID ORDER BY SaleDate ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS RunningTotal
 FROM
@@ -470,11 +480,13 @@ ORDER BY
 - **`RANK()`** assigns ranks based on `Quantity` within each `ProductID`.
 - **`SUM() OVER (...)`** calculates a running total of sales amounts per `ProductID`.
 
-## Window Frames
+## Make the frame boundary explicit
+
+### Window Frames
 
 Window frames define the subset of rows within the partition to be used for calculations in window functions. They are specified using the `ROWS BETWEEN` or `RANGE BETWEEN` clauses.
 
-### Example: Calculating a Moving Average of Quantity
+#### Example: Calculating a Moving Average of Quantity
 
 ```sql
 SELECT
@@ -514,7 +526,7 @@ ORDER BY
 - The `AVG(Quantity)` function calculates the average quantity over the current row and the two preceding rows within each `ProductID` partition.
 - Useful for trend analysis and smoothing out short-term fluctuations.
 
-## Practical Use Cases for Window Functions
+### Practical Use Cases for Window Functions
 
 - **Pagination**: Assign row numbers to implement pagination in queries.
 - **Running Totals and Moving Averages**: Calculate cumulative sums or averages over a specified window.
@@ -522,11 +534,11 @@ ORDER BY
 - **Comparative Analysis**: Compare current row values with previous or next rows without self-joins.
 - **Data Transformation**: Restructure data for reporting and analytics purposes.
 
-## Combining Window Functions with Other SQL Features
+### Combining Window Functions with Other SQL Features
 
 Window functions can be combined with Common Table Expressions (CTEs), subqueries, and other SQL constructs to perform complex data transformations and analyses.
 
-### Example: Identifying Top 2 Sales per Product
+#### Example: Identifying Top 2 Sales per Product
 
 ```sql
 WITH RankedSales AS (
@@ -592,11 +604,11 @@ ORDER BY row_position;
 
 Filtering by `sale_rank <= 2` retains **three** rows. Filtering by `row_position <= 2` retains **exactly two** rows, using `sale_id` to choose deterministically among tied quantities. Use `RANK` when ties should be preserved and `ROW_NUMBER` when the requirement is a fixed row count.
 
-## Comparing Window Functions with Self-Joins
+### Comparing Window Functions with Self-Joins
 
 Before window functions were widely supported, similar analyses often required complex self-joins. Window functions simplify these operations, making queries more readable and efficient.
 
-### Example: Using Window Functions vs. Self-Joins to Compare Current and Previous Sales
+#### Example: Using Window Functions vs. Self-Joins to Compare Current and Previous Sales
 
 **Using Window Functions**
 
@@ -607,7 +619,7 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS PreviousQuantity
+    LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) AS PreviousQuantity
 FROM
     Sales
 ORDER BY
@@ -678,14 +690,16 @@ Result:
 - The window function directly expresses the previous-row operation and is usually easier to read. Compare plans to determine its performance benefit.
 - The self-join approach is more complex and can be less efficient, especially on large datasets.
 
-## Limitations and Considerations
+### Limitations and Considerations
 
 - **Performance**: The ranking examples put null quantities last explicitly so the result is independent of the engine’s default null ordering. Window functions can be resource-intensive on large datasets. Proper indexing and query optimization are crucial.
 - **Compatibility**: Ensure that your SQL database system supports the window functions you intend to use (e.g., PostgreSQL, SQL Server, Oracle, MySQL 8.0+).
 - **Complexity**: While window functions simplify many operations, overusing them or using them in overly complex ways can make queries harder to maintain.
 - **Understanding Window Frames**: Properly defining window frames is essential for accurate calculations, especially for running totals and moving averages.
 
-## Further frame choices
+## Tricky frames, ties, and temporal semantics
+
+### Further frame choices
 
 `ROWS` counts positions in the ordered sequence. For example, `ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING` includes the previous row, current row, and next row where present. It does not mean “the previous and next day.” The existing moving-average query shows a runnable row-based frame.
 
@@ -693,7 +707,7 @@ Result:
 
 Before using a more advanced frame, state which rows should contribute for a concrete current row, then compare that prediction with the result. Frame clauses affect aggregate windows differently from ranking and offset functions.
 
-## Example Use Case: Sales Trend Analysis
+### Example Use Case: Sales Trend Analysis
 
 Suppose you want to analyze sales trends by calculating the percentage change in quantity compared to the previous sale for each product.
 
@@ -704,11 +718,11 @@ SELECT
     SaleDate,
     Quantity,
     Price,
-    LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) AS PreviousQuantity,
+    LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) AS PreviousQuantity,
     CASE
-        WHEN LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) IS NULL
-          OR LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate) = 0 THEN NULL
-        ELSE ((Quantity - LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate)) * 100.0) / LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate)
+        WHEN LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) IS NULL
+          OR LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID) = 0 THEN NULL
+        ELSE ((Quantity - LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID)) * 100.0) / LAG(Quantity) OVER (PARTITION BY ProductID ORDER BY SaleDate, SaleID)
     END AS PercentageChange
 FROM
     Sales
@@ -736,7 +750,7 @@ ORDER BY
 - This query calculates the percentage change in `Quantity` compared to the previous sale for each `ProductID`.
 - Useful for identifying trends, growth, or decline in sales over time.
 
-## See ties change a running total
+### See ties change a running total
 
 An independent three-row example makes frame differences visible without changing Sales:
 
@@ -770,7 +784,7 @@ Both 100-valued rows are peers under `ORDER BY amount`. The range frame includes
 
 The outer `ORDER BY` controls presentation. The orders inside `OVER` control calculations. A result may display newest-first while computing a cumulative total oldest-first; make both choices explicit.
 
-## Ask what “last” means for LAST_VALUE
+### Ask what “last” means for LAST_VALUE
 
 The default ordered frame commonly ends at the current row's peer group, rather than the end of the partition. That can make `LAST_VALUE` look unexpectedly like the current value:
 
@@ -804,7 +818,7 @@ Result:
 
 `UNBOUNDED FOLLOWING` is necessary when the desired answer lies after the current row. `LAG` and `LEAD` have different offset semantics and should not be explained as though they simply aggregate the same frame.
 
-## A time interval is different from a fixed number of rows
+### A time interval is different from a fixed number of rows
 
 Three recent sale rows might cover three minutes or three months. For a time-based report, use the engine's supported time-range syntax. This **PostgreSQL** example is independent of the SQLite Sales table:
 
@@ -849,7 +863,7 @@ On January 10, the seven-day range includes January 3 at the boundary and Januar
 
 An offset range frame in PostgreSQL requires a single ordering expression. Its timestamp interval does not use the same spelling as SQLite's numeric `RANGE` offsets. For SQLite, a suitable numeric time expression such as `julianday(...)` can be used with a deliberately chosen numeric-day offset; do not paste PostgreSQL's interval literal into it.
 
-## Build the partition at the right stage
+### Build the partition at the right stage
 
 Window functions operate on the rows supplied by the query after its relevant filtering and grouping. If `WHERE` removes cancelled orders, a later windowed total excludes them too. If `GROUP BY` produces one row per month, a window can calculate a running total across those monthly summaries. It is not operating on the original order lines at that stage.
 
