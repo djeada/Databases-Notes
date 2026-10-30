@@ -1,6 +1,6 @@
 # DML: Read, Add, Change, and Remove Rows
 
-**Data Manipulation Language (DML)** works with table data. `SELECT` reads rows, `INSERT` adds them, `UPDATE` changes them, and `DELETE` removes them. The table's structure remains in place unless a separate schema-changing command alters it.
+**DML** changes rows with `INSERT`, `UPDATE`, and `DELETE`; `SELECT` reads data and is sometimes classified separately as query language. This chapter treats them together because applications must reason about both the targeted rows and the outcome. A successfully executed statement may affect **zero** rows, which is often a business failure rather than a SQL error.
 
 Use the SQLite bookstore setup from the [SQL introduction](01_intro_to_sql.md). The write examples below are independent exercises wrapped in a transaction and rolled back, so they do not leave the sample database changed. A transaction is a group of database work; [TCL](05_transaction_control_language_tcl.md) explains it in detail.
 
@@ -159,7 +159,7 @@ The select result has no rows:
 
 The customer table still exists. Deleting a customer with referenced orders is different: the foreign-key policy decides whether the deletion is rejected or another declared action happens.
 
-## Distinguish the common outcomes
+## Interpret the outcome before committing a workflow
 
 | Outcome | Meaning | Application response |
 | --- | --- | --- |
@@ -349,7 +349,7 @@ A null phone does not satisfy `phone <> '12345'`; that comparison is unknown. If
 
 The same issue affects `NOT IN` when its list or subquery contains a null. An anti-match with `NOT EXISTS` is often clearer, as demonstrated in the joins note.
 
-## Bind values and check the write's outcome
+## Parameterize input and verify the write result
 
 This Python helper assumes an existing SQLite connection containing the bookstore. Call it when that connection has no unrelated transaction in progress:
 

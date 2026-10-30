@@ -1,6 +1,6 @@
 # Joins, Subqueries, and Views
 
-The bookstore's tables separate customers, orders, products, and order lines. A query puts the relevant facts together without permanently copying them. This note explains three tools: a **join** combines matching rows, a **subquery** uses another query inside a statement, and a **view** names a reusable query.
+The bookstore keeps customers, orders, products, and lines as separate facts. This chapter shows how to **combine without copying** them: joins pair related rows, subqueries express dependent tests and calculations, and views name reusable queries. The central skill is keeping track of **result grain**—whether one output row represents a customer, order, or order line.
 
 Use a fresh copy of the SQLite [introductory setup](01_intro_to_sql.md). In particular, Alice has two orders, Bob has one, and Carol has none. If you committed extra orders during the transaction exercises, reset the sample before comparing these results.
 
@@ -80,7 +80,7 @@ Carol's row is retained. Since there is no order to supply right-side values, th
 
 “Left” refers to the table written before the join. Reversing the table positions changes which unmatched rows are preserved.
 
-## Put a filter where its meaning belongs
+## Place outer-join filters according to their meaning
 
 To keep every customer but attach only open orders, include that condition in the matching rule:
 
@@ -116,7 +116,7 @@ ORDER BY c.customer_id;
 
 The `WHERE` predicate removes Bob and Carol because their nonmatching order rows contain `NULL`. The earlier **correct** `ON` predicate retains both customers with null order IDs. A filter in `WHERE` is appropriate when the goal really is “only customers with open orders”; it is incorrect when the goal is “every customer, optionally showing open orders.”
 
-## A join can multiply rows
+## Decide the result grain before joining
 
 Joining order 101 to its items returns two rows because the order has two lines. Joining each line to its product supplies the title:
 
@@ -474,7 +474,7 @@ Result:
 
 Each CTE has at most one row per customer, so the final joins preserve that report's grain. Adding `DISTINCT` to a multiplied result is not a general repair: it can discard genuinely separate rows or leave a duplicated monetary sum.
 
-## A view has a definition, dependencies, and a write policy
+## Treat a view as a contract with dependencies
 
 The existing order-total view is a saved calculation, not stored totals. When order lines change, a later query through the view reflects the underlying rows visible to that query. A materialized view is different: its stored results need the engine's refresh or maintenance mechanism.
 

@@ -1,6 +1,6 @@
 # Triggers: Run Database Logic When Data Changes
 
-A **trigger** is database logic invoked automatically by a specified event. Unlike a procedure, which a caller explicitly invokes, a trigger can run because an application inserts, updates, or deletes rows.
+A **trigger** runs automatically in response to specified writes; its effects are part of the database write, not a separate background job. This chapter makes the hidden work visible: first log a real price change, then test an unchanged value, rollback, and a rejected state transition. Prefer an ordinary constraint when the rule needs no trigger.
 
 This note uses **SQLite** and the fresh [bookstore setup](01_intro_to_sql.md). We will record changes to product prices, then see what happens when the surrounding transaction rolls back.
 
@@ -146,7 +146,7 @@ Consequently, this history table records accepted changes, not every attempted c
 
 SQLite provides row triggers; other engines have different combinations and syntax. Do not paste a MySQL `SET NEW.column = ...` body into SQLite, or assume PostgreSQL trigger-function syntax works in every engine.
 
-## Prefer the simplest rule mechanism
+## Use a constraint before writing a trigger
 
 Use `NOT NULL`, `UNIQUE`, `CHECK`, or a foreign key when they express the rule directly. Use a column default for a straightforward initial timestamp. A trigger is useful when a data change genuinely requires additional database work.
 
@@ -328,7 +328,7 @@ Result:
 
 The join assumes product IDs are stable during the update. A mutable primary key requires a different matching policy. The trigger handles the statement's full set without a cursor.
 
-## Manage trigger lifecycle and cost
+## Audit all write paths and side effects
 
 SQLite changes an existing trigger by dropping and recreating it. PostgreSQL and SQL Server provide different replace or alter mechanisms. For the SQLite practice rule, cleanup is:
 
