@@ -6,7 +6,7 @@ A **transaction** groups database operations so they can be committed together o
 
 ## Follow one checkout
 
-Use the fresh bookstore database from [Introduction to SQL](../03_sql/01_intro_to_sql.md). Product 10 starts with five copies in stock. This example records one copy for Bob, customer 2.
+Use a **fresh** bookstore database from [Introduction to SQL](../03_sql/01_intro_to_sql.md). Product 10 starts with five copies in stock. This is a *happy-path demonstration*, not a safe production checkout: the SQL below does not inspect the affected-row count and would continue inserting the order even if the stock update matched no row. The complete application must abort on that condition.
 
 ```sql
 BEGIN;
@@ -25,11 +25,11 @@ VALUES (104, 1, 10, 1, 1500);
 COMMIT;
 ```
 
-On the starting data, the update changes one row, stock becomes four, and order 104 has one item. The application must check that the update changed exactly one row **before continuing**. Zero changed rows means the product is missing or unavailable; it is not a SQL error. In that case, roll back instead of creating the order. The [transaction control note](../03_sql/05_transaction_control_language_tcl.md) implements this check in Python.
+On the stated starting data, the update matches one row, stock becomes four, and order 104 has one item. **Do not commit if the stock reservation affects zero rows.** That result is not a SQL exception; application code must check it before executing the inserts. The [transaction control note](../03_sql/05_transaction_control_language_tcl.md) implements this missing step with Python. Test failure branches separately, rather than treating an example script containing an unconditional `COMMIT` as a complete checkout implementation.
 
 If an insert fails, the application must also roll back the whole checkout. Engines differ in whether an error cancels a statement or leaves the transaction unusable. Do not assume that catching an exception makes earlier changes disappear.
 
-## Four questions behind ACID
+## ACID: four different guarantees
 
 **ACID** names four properties used to reason about transactions. Each addresses a different problem.
 
@@ -126,7 +126,7 @@ In a SQLite shell with no enclosing transaction, the initial insert commits as i
 
 A driver might implicitly begin a transaction for that first insert. Before reproducing the shell behavior through Python, commit the setup and initial insert, or configure explicit transaction handling. A script is a sequence of commands, while a transaction is a database boundary. They are not synonyms.
 
-## Follow the transaction's states
+## Understand the transaction lifecycle
 
 A useful conceptual lifecycle is:
 
