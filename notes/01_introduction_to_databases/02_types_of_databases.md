@@ -1,10 +1,10 @@
 # Database Types: Compare the Operations, Not Just the Names
 
-The first note used tables to connect customers and orders. Other databases represent data as documents, keyed values, or graph relationships. Each representation changes what is easy to read, what must be maintained during a write, and which operations need additional structures.
+The first note connected customers and orders through relational keys. Other systems organize access around nested documents, exact keys, partitions, graph edges, or analytical columns. These are **model and workload choices**, not a ranking of modernity or scalability. Compare a concrete read and its update/failure behavior before choosing a product.
 
 This note compares database families through named technologies and concrete operations. Each executable example has its own setup. The SQL examples use SQLite unless another engine is named; MongoDB, Redis, Cassandra, and Neo4j examples require their respective services and clients. You can understand the comparisons without installing every product.
 
-## Relational databases: combine independently stored facts
+## Relational model: shared facts and flexible joins
 
 **SQLite, PostgreSQL, MySQL, SQL Server, and Oracle Database** are relational DBMSs. They expose tables, keys, constraints, and SQL. Their deployment and storage details differ, but they can express relationships and calculations without forcing the application to fetch every record and combine it itself.
 
@@ -364,7 +364,7 @@ The main operational examples above are not an exhaustive taxonomy. **IBM IMS** 
 
 The [data-models note](04_data_models.md) explains hierarchical, network, entity-relationship, and object-oriented structures with examples and distinguishes them from modern documents and graphs. Do not interpret “NoSQL” as a synonym for every non-relational historical system.
 
-## Keep model, deployment, and workload separate
+## Separate logical model, storage layout, and deployment
 
 A product can fit several descriptions at once:
 
@@ -379,7 +379,7 @@ A product can fit several descriptions at once:
 
 “In-memory,” “distributed,” and “time-series” are not mutually exclusive alternatives to “relational.” PostgreSQL can use JSON fields, a graph can run on a server, and an analytical engine can be embedded. **NoSQL** groups several model families; it does not establish one universal transaction, scaling, or consistency guarantee.
 
-## Choose using one complete workflow
+## Choose by tracing a complete workflow
 
 For checkout, identify the reads, stock reservation, order writes, immediate confirmation, and failure cases together. Ask what must be atomic and what a retry can duplicate. For reporting, identify scan volume, required freshness, joins, and the cost of loading analytical data.
 
