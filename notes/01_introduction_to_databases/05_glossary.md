@@ -1,8 +1,8 @@
 # Database Glossary
 
-Use this page as a reference when a term interrupts your reading. You do not need to memorize it before starting SQL. The groups follow the learning path: data, queries, transactions, storage, distributed systems, and analytics.
+Use this as a **lookup reference**, not a lesson to memorize linearly. Start with data and keys, then SQL, transactions, storage, distribution, and analytics. A term describes a specific role: a key, constraint, index, and join are not interchangeable simply because all four appear in one query.
 
-## Use a term in a concrete example
+## Start from one customer-order relationship
 
 In `orders.customer_id`, **table** means the collection named `orders`, **column** means the field named `customer_id`, and **value** means a particular identifier such as `1`. The **schema** declares that this field is required and references an existing customer. A **row** is one order containing that value alongside its identifier and date.
 
@@ -177,7 +177,7 @@ See [database types](02_types_of_databases.md) and [distributed databases](../06
 
 Product names are introduced in the [engine chapters](../../README.md#database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
 
-## Work through missing values instead of memorizing the definition
+## Apply SQL null semantics to real values
 
 Run this standalone SQLite example in a fresh database:
 
@@ -219,7 +219,7 @@ This returns contact 2. `IS NULL` tests the missing-value marker; `phone = NULL`
 
 To inspect the difference yourself, run `SELECT contact_id FROM glossary_contacts WHERE phone = ''; ` and compare it with the `IS NULL` query above. Neither `NULL` nor an empty string is proof of a valid phone number.
 
-## Technology names and their roles
+## Keep product names separate from model definitions
 
 A product name tells you which implementation to investigate; it does not stand in for a model definition or a performance guarantee.
 
