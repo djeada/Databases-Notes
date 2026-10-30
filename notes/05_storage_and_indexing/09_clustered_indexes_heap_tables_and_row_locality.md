@@ -1,6 +1,6 @@
 # Clustered Indexes, Heap Tables, and Row Locality
 
-A table's primary key does not imply one universal physical layout.
+A table's primary key does not determine one universal physical layout. This chapter separates the **logical key**, the physical location of base rows, and the row locator used by secondary indexes. Those decisions affect read locality, key width, and write amplification.
 
 Different engines organize base-table rows differently, and that changes how secondary indexes behave.
 
@@ -18,7 +18,9 @@ clustered/index-organized table
 
 Understanding the difference explains why the same schema can have different storage and performance characteristics across PostgreSQL, InnoDB, SQL Server, and SQLite.
 
-## Heap table
+## Where the base rows live
+
+### Heap table
 
 In a heap-style table, rows are stored independently of a particular logical index order.
 
@@ -39,7 +41,7 @@ The index locates a row; the table stores the full row separately.
 
 PostgreSQL normally uses this model.
 
-## Clustered/index-organized table
+### Clustered/index-organized table
 
 In a clustered structure, the row data is organized by an index key.
 
@@ -58,7 +60,7 @@ SQLite WITHOUT ROWID tables are organized by their primary key.
 
 SQL Server allows one clustered index per table; it does not have to be the primary key.
 
-## Why "clustered" is overloaded
+### Why "clustered" is overloaded
 
 Different products use the term differently.
 
@@ -68,7 +70,9 @@ In SQL Server and InnoDB, clustered indexing is a persistent storage organizatio
 
 Always read the engine-specific meaning.
 
-## PostgreSQL heap layout
+## How common engines implement that choice
+
+### PostgreSQL heap layout
 
 PostgreSQL index:
 
@@ -90,7 +94,7 @@ An ordinary index lookup can require:
 
 Index-only scans can avoid some heap visits when the index covers the query and visibility-map conditions are satisfied.
 
-## InnoDB clustered primary key
+### InnoDB clustered primary key
 
 InnoDB's clustered index leaf stores the row.
 
@@ -117,7 +121,7 @@ clustered lookup
 
 This makes primary-key width relevant to every secondary index.
 
-## Wide primary-key cost in clustered engines
+### Wide primary-key cost in clustered engines
 
 Suppose primary key is:
 
@@ -135,7 +139,7 @@ If every secondary index stores that primary-key value, wider keys can multiply 
 
 Primary-key design can therefore affect the entire index set.
 
-## SQL Server clustered index
+### SQL Server clustered index
 
 SQL Server permits one clustered index because table rows can only be physically ordered through one clustered structure at a time.
 
@@ -143,7 +147,7 @@ A primary key constraint may create a clustered index by default in some common 
 
 A table without a clustered index is a heap.
 
-## SQL Server nonclustered row locator
+### SQL Server nonclustered row locator
 
 For a clustered table, a nonclustered index uses the clustering key to locate rows.
 
@@ -158,7 +162,7 @@ or
   -> heap row locator
 ~~~
 
-## SQLite rowid table
+### SQLite rowid table
 
 Most SQLite tables are rowid tables.
 
@@ -172,7 +176,7 @@ id becomes an alias for rowid.
 
 Secondary indexes can use rowid to locate the table row.
 
-## SQLite WITHOUT ROWID
+### SQLite WITHOUT ROWID
 
 A WITHOUT ROWID table stores rows according to the declared PRIMARY KEY.
 
@@ -191,7 +195,7 @@ This can avoid maintaining a separate hidden rowid for schemas whose natural pri
 
 It is not always faster; row width and query patterns matter.
 
-## Runnable SQLite comparison
+### Runnable SQLite comparison
 
 This chapter adds:
 
@@ -213,7 +217,9 @@ The script creates equivalent rowid and WITHOUT ROWID tables with a composite pr
 
 The numbers are local measurements only.
 
-## Locality
+## Why locality changes query cost
+
+### Locality
 
 If related rows are physically close, range scans can need fewer pages.
 
@@ -233,7 +239,7 @@ That can improve:
 
 But maintaining strict physical order during arbitrary writes has cost.
 
-## Secondary lookup cost
+### Secondary lookup cost
 
 Heap model:
 
@@ -265,7 +271,7 @@ Whether that is expensive depends on:
 - result count,
 - key width.
 
-## Primary-key lookup advantage
+### Primary-key lookup advantage
 
 In a clustered table, primary-key lookup lands directly on the row-containing leaf.
 
@@ -273,7 +279,7 @@ That is excellent for workloads dominated by primary-key access.
 
 But secondary-key workloads can pay for the second lookup.
 
-## Range access advantage
+### Range access advantage
 
 Clustering by a range key can make related rows contiguous.
 
@@ -289,7 +295,9 @@ But a single table only has one primary clustering order.
 
 Other access paths need secondary indexes or separate projections.
 
-## Random identifiers
+## Choosing a stable and useful clustering key
+
+### Random identifiers
 
 Random clustered keys can spread insertion across many pages.
 
@@ -303,7 +311,7 @@ Sequential clustered keys can do the reverse.
 
 The right choice depends on concurrency and engine behavior.
 
-## Clustering key stability
+### Clustering key stability
 
 Changing a clustered/index-organized primary key can require moving the row and updating secondary references.
 
@@ -311,7 +319,7 @@ Therefore clustered keys should usually be stable.
 
 A mutable natural identifier is often a poor clustering key.
 
-## Surrogate versus natural key
+### Surrogate versus natural key
 
 A narrow surrogate key can reduce clustered and secondary index width.
 
@@ -327,7 +335,7 @@ Consider:
 
 There is no universal winner.
 
-## Physical clustering in PostgreSQL
+### Physical clustering in PostgreSQL
 
 PostgreSQL can reorder a table with:
 
@@ -341,7 +349,7 @@ Later inserts/updates do not automatically preserve that physical order.
 
 Therefore PostgreSQL CLUSTER is not equivalent to an InnoDB clustered index.
 
-## Re-clustering cost
+### Re-clustering cost
 
 Physically rewriting a large table can consume:
 
@@ -353,7 +361,7 @@ Physically rewriting a large table can consume:
 
 Use it only when measured locality benefits justify the operational cost.
 
-## Correlation statistics
+### Correlation statistics
 
 PostgreSQL tracks correlation between physical row order and column values.
 
@@ -361,7 +369,7 @@ High physical correlation can make an index range scan cheaper because heap visi
 
 This is one reason physical locality can influence the optimizer.
 
-## Row locality versus columnar storage
+### Row locality versus columnar storage
 
 Clustering rows by key is still row-oriented organization.
 
@@ -379,7 +387,9 @@ with:
 column-oriented analytical storage
 ~~~
 
-## Choosing a clustering key
+## Apply the choice to the workload
+
+### Choosing a clustering key
 
 Ask:
 
