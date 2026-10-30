@@ -1,12 +1,12 @@
-# Durability
+# Durability: What a Successful Commit Really Promises
 
-Durability means that a successfully committed transaction survives the failures covered by the database's configuration and storage assumptions. It is the reason an application can rely on a successful commit acknowledgment after a crash. It does not promise survival after every durable copy is destroyed.
+**Durability** means that an acknowledged commit survives the failure classes covered by the configured logging, synchronization, replication, and storage assumptions. A successful reply is not a guarantee against simultaneous destruction of all durable copies or against an administrator durably committing a mistake. State the failure model before describing a durability guarantee.
 
 ## Follow an acknowledged order
 
 The bookstore commits order 104 and tells Bob that the order was accepted. If the database process crashes immediately afterward, Bob expects the order to exist when service returns. Durability is the guarantee that connects that acknowledgement to recovery.
 
-A process crash, an operating-system crash, and loss of every storage device are different failures. A database can protect against some without surviving all of them. Backups and replicated copies expand recovery options, with their own limits.
+A process crash, an operating-system crash, and loss of every storage device are different failure models. Database process recovery, storage synchronization, replication, and tested backups protect against different subsets. Backups and replicated copies expand recovery options, with their own limits.
 
 **Persistent storage** retains information when the process or machine stops, subject to the device's guarantees. **Buffered data** is a working copy in memory. A **log** stores recovery information; it is distinct from diagnostic messages written by application code. The next section explains why committing need not immediately copy every changed data page from memory to its final file location.
 
@@ -38,7 +38,7 @@ With normal durable settings, PostgreSQL flushes the commit's WAL before acknowl
 
 Disabling `fsync` is a different, more dangerous change: it can allow storage ordering failures that leave the database unrecoverably corrupted after an operating-system crash. Do not treat these settings as interchangeable performance switches. See [PostgreSQL WAL reliability](https://www.postgresql.org/docs/current/wal-reliability.html).
 
-## Replication and backups
+## Replicas and backups solve different recovery problems
 
 Replication can preserve another copy, but asynchronous replicas may lack a recently acknowledged commit. Synchronous replication protects the configured acknowledgment targets and failure model; it does not make every replica equally safe to promote.
 
@@ -142,7 +142,7 @@ A normally durable local configuration commonly reports each setting as `on`. `f
 
 Do not infer a complete disaster-recovery policy from those three values. Storage must honor synchronization, replicas need explicit acknowledgment targets, and backups need restore testing. PostgreSQL can also override `synchronous_commit` for particular transactions; a service that relaxes it for disposable analytics should not accidentally use that policy for accepted orders.
 
-## Decide how much loss and downtime the service can tolerate
+## Specify recovery point and recovery time objectives
 
 Two operational targets make the durability discussion concrete:
 
