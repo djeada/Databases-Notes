@@ -1,6 +1,6 @@
 # Consistency: Preserve the Rules That Make Data Valid
 
-In ACID, **consistency** means that correct transactions take the database from a valid state to another valid state. A valid state satisfies the system's required rules. The database enforces declared constraints; the application must correctly implement rules that are not fully expressed by those constraints.
+In ACID, **consistency** means a transaction preserves the invariants that define valid states. The DBMS enforces invariants it knows, such as declared keys and checks; it cannot enforce an unexpressed business rule simply because a transaction commits. Correct application logic and suitable concurrency control are also needed for cross-row or cross-system invariants.
 
 This use of “consistency” concerns valid data. [Eventual consistency](../06_distributed_databases/07_eventual_consistency.md) concerns when separate copies agree. The same word describes different questions.
 
@@ -52,7 +52,7 @@ The engine cannot infer that every stock reduction must correspond to a sale: st
 
 **Atomicity** makes changes an all-or-nothing unit. **Consistency** asks whether that unit performs a valid change. A transaction can atomically deduct the wrong quantity.
 
-## A check followed by a write can race
+## Why checking before writing can race
 
 Suppose one copy remains. Two transactions each read stock 1 and independently decide that a sale is allowed. Their decisions were based on data that can change before they write.
 
@@ -184,7 +184,7 @@ Result:
 | ---: | ---: |
 | 10 | 6 |
 
-This ledger preserves reasons and provides a way to reconstruct quantity. It does not yet prevent a dispatch that drives the total negative: an ordinary check on one movement cannot sum the other rows safely under concurrent writers.
+This ledger records movements and can reconstruct a quantity, but it is **not an inventory constraint**: a negative movement can make the sum negative. A row-level `CHECK` on one movement cannot enforce a sum over other rows, especially under concurrent writers.
 
 One approach retains a current-stock row and conditionally decrements it in the same transaction that inserts a dispatch movement. Receipts increment the current-stock row and insert their movement together. A reconciliation query compares the cache with the ledger sum. This adds a redundancy invariant, so every writing path must maintain both representations. Another design derives stock entirely from movements but needs a concurrency strategy for admitting new dispatches.
 
