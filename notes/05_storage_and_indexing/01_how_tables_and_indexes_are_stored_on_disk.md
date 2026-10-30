@@ -1,6 +1,6 @@
 # How Tables and Indexes Reach Storage
 
-The SQL table is a logical view of data. The engine must represent its rows, indexes, and recovery information as bytes. Understanding that representation helps explain why returning a few rows can require many reads, why indexes cost space, and why committed data can survive a crash.
+SQL exposes tables and indexes as logical objects, but the DBMS reads and writes pages, files, and recovery records. This chapter follows a single row lookup through those layers. The key distinction is that **rows returned**, **pages touched**, and **physical disk reads** are different quantities; the cache and access path determine how much work occurs.
 
 Read [transactions](../04_acid_properties_and_transactions/01_transactions_intro.md) first. This chapter introduces the main layers; the later [page](04_database_pages.md) and [index](05_indexing.md) notes explain their details.
 
@@ -51,7 +51,7 @@ That route still costs work. A non-covering index may lead to additional table-p
 
 A **secondary index** supplies another access path, such as finding customers by email rather than their identifier. The [key comparison](03_primary_key_vs_secondary_key.md) separates the logical meaning of a key from the physical role of an index.
 
-## Memory changes the read cost
+## Page cache changes the cost of an access path
 
 Database engines commonly keep pages in a **buffer pool** or **page cache**. Repeated access can reuse a page already in memory. A new or larger workload may need to load pages that are absent.
 
@@ -61,7 +61,7 @@ An application's cache of query results is a different layer. It can skip a data
 
 ## Writes involve recovery information
 
-The engine may modify a page in memory before writing that page back to a data file. A **dirty page** is a modified cached page whose changes have not yet been flushed to its persistent data location.
+A write commonly changes a cached page before the page's next data-file flush. Such a **dirty page** has a newer in-memory state than its current persisted data-page image. That is not necessarily an uncommitted transaction: the commit can already be durable through the log. Keep *committed*, *logged*, and *data page flushed* separate.
 
 With **write-ahead logging (WAL)**, the engine persists the required recovery information before the corresponding data-page changes. Durable commit can depend on persisting log records rather than immediately flushing every changed data page. Recovery uses that information to reconstruct the accepted state after a crash.
 
