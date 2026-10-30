@@ -1,6 +1,6 @@
 # Data Models: From Business Rules to Structures You Can Query
 
-A **data model** describes which facts exist, how they relate, and which rules apply. Choosing a DBMS does not automatically create that model. PostgreSQL can store an excellent design or a confused one; a MongoDB document can group a useful record or duplicate facts that are difficult to maintain.
+A **data model** specifies facts, identity, relationships, and invariants before those decisions become SQL tables, documents, or graph edges. A DBMS cannot infer a good model from product choice alone: the same bookstore can be modeled well or poorly in PostgreSQL, MongoDB, or another engine. Start with business rules, then examine the representation and its access patterns.
 
 This note develops the bookstore into a complete relational example, then compares the hierarchical, network, entity-relationship, object-oriented, document, column-family, and graph models. The goal is to see how each represents the same kinds of questions, not to memorize a product taxonomy.
 
@@ -429,7 +429,7 @@ public class ObjectModelDemo {
 }
 ```
 
-After `persist`, the example's `Book` table contains:
+After `persist`, the database contains one stored `Book` object, whose attributes can be summarized as:
 
 | productId | title | priceCents |
 | ---: | --- | ---: |
@@ -443,7 +443,7 @@ The JPQL query returns and prints:
 
 `@Entity` marks persistable state, `@Id` declares identity, and `persist` schedules storage within the transaction. The query uses **JPQL**, referring to the entity and its Java fields rather than a SQL table declaration.
 
-Objects are not stored together with executable method code. Their persistent state is stored, and the application supplies behavior through its classes. This approach can fit an object-centered workload but still needs transaction, schema-evolution, query, and integration decisions. See ObjectDB's [entity](https://www.objectdb.com/java/jpa/start/entity), [connection](https://www.objectdb.com/java/jpa/start/connection), and [CRUD](https://www.objectdb.com/java/jpa/start/crud) tutorials for the provider-specific setup and APIs.
+Persistent object state is stored; the Java method code remains in the application. The table-shaped display above is **only a readable summary** of stored attributes, not evidence that ObjectDB created an SQL table. This approach can fit an object-centered workload but still needs transaction, schema-evolution, query, and integration decisions. See ObjectDB's [entity](https://www.objectdb.com/java/jpa/start/entity), [connection](https://www.objectdb.com/java/jpa/start/connection), and [CRUD](https://www.objectdb.com/java/jpa/start/crud) tutorials for the provider-specific setup and APIs.
 
 ## Document models: choose a useful record boundary
 
@@ -509,7 +509,7 @@ A purchase relationship may have a quantity and a timestamp, but an order often 
 
 The [Neo4j example](02_types_of_databases.md#graph-databases-make-traversal-a-first-class-operation) creates this graph and runs a Cypher pattern query. Multi-hop traversal is the motivating operation; identity, uniqueness, indexes, and path-expansion limits still require a design.
 
-## Decide which rules each representation preserves
+## Compare representations by the rules they preserve
 
 | Business requirement | Relational example | Question in another representation |
 |---|---|---|
