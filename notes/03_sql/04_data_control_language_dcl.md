@@ -1,6 +1,6 @@
 # DCL: Decide Who May Access the Data
 
-**Data Control Language (DCL)** manages database privileges through statements such as `GRANT` and `REVOKE`. A **privilege** is permission to perform a particular operation on a particular resource.
+**DCL** describes database privileges, such as `GRANT` and `REVOKE`. This chapter uses **PostgreSQL**, not SQLite: table privileges, role membership, object ownership, and application-user authorization are distinct layers. The goal is to trace *effective access*, not to assume a single grant is the whole security policy.
 
 The bookstore might need an application that creates orders and a reporting job that only reads them. They should not necessarily have the same permissions.
 
@@ -32,7 +32,7 @@ GRANT report_reader TO reporting_login;
 
 No insert, update, or delete privilege is granted by these statements. However, the login may obtain additional privileges through other roles, ownership, or privileges granted to `PUBLIC`. PostgreSQL `PUBLIC` means all roles; it is different from the `public` schema.
 
-## Revoke a grant and understand the remaining paths
+## Trace effective access before calling a revoke complete
 
 ```sql
 REVOKE SELECT ON TABLE public.orders FROM report_reader;
@@ -61,7 +61,7 @@ WHERE customer_id = ?;
 
 The `?` placeholder is SQLite/driver-style syntax shown for the concept; PostgreSQL client libraries often use a different parameter convention. A filter alone is not authorization if the caller can choose someone else's customer ID. Database row-level security can enforce this boundary closer to the data when its identity mapping is correctly designed.
 
-## Use least privilege
+## Separate runtime, reporting, and migration credentials
 
 **Least privilege** means granting only the access needed for a job. A reporting process usually does not need schema modification. A checkout application generally should not use the database administrator's identity.
 
