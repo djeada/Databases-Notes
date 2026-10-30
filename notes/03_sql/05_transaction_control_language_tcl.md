@@ -1,6 +1,6 @@
 # Transactions: Make Related Changes Succeed Together
 
-A checkout involves more than one write. The bookstore must record an order, record its lines, and reduce stock. If an application stops between those operations, a partially recorded purchase can be misleading.
+A checkout combines stock reservation, order creation, and line items. A transaction supplies an atomic commit boundary, **not** a complete checkout algorithm: the caller must still check affected-row counts, handle errors, and coordinate external effects. This lesson distinguishes what `COMMIT`, `ROLLBACK`, and `SAVEPOINT` actually guarantee.
 
 A **transaction** groups database work. `COMMIT` accepts its transactional changes; `ROLLBACK` undoes them. This all-or-nothing property is called **atomicity**. It protects the group, but the application must still decide which statements belong together and when the workflow has failed.
 
@@ -66,7 +66,7 @@ The query after rollback returns:
 
 A transaction reads its own changes before committing them. Rollback does not undo commits made by unrelated transactions.
 
-## Handle the failure explicitly
+## Check business failures as well as SQL exceptions
 
 An application should start the transaction, perform the steps and required checks, then commit only when all succeed. On a relevant error or invalid result, it should roll back.
 
@@ -128,7 +128,7 @@ A savepoint is not an independently durable commit. If the outer transaction rol
 
 Know which behavior your connection uses. Starting a transaction on one connection and doing the next write on another does not create one shared transaction. Returning an unfinished transaction to a connection pool can also surprise the next borrower.
 
-## Atomicity does not mean complete isolation
+## Isolation and external effects need separate controls
 
 Two buyers can both read “one copy remains.” A transaction does not automatically make every read-and-later-write pattern safe against that race. Use conditional updates, constraints, locking, or suitable isolation to protect the relevant decision.
 
@@ -255,7 +255,7 @@ A transaction that waits for a customer to click a button or for an email server
 
 An email is not undone by `ROLLBACK`. If an order and a notification request must persist together, insert the order and an outbox row in one transaction. A separate worker sends the message after commit and records its progress. That worker still needs duplicate-handling because it might send successfully and fail before marking the row sent.
 
-## Retry the operation, with a way to recognize it
+## Retry with an operation identity to avoid duplicate orders
 
 A deadlock or serialization failure may require rerunning the complete transaction against fresh state. Repeating only the last statement can reuse decisions made from an obsolete read. Use bounded retries for errors the driver identifies as retriable; do not retry a bad email address or an insufficient balance as though it were temporary.
 
