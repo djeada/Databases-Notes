@@ -1,6 +1,6 @@
 # Stored Procedures and Functions: Name Reusable Database Work
 
-A view names a query. A **stored routine** names database code that can accept inputs and perform work. Two common kinds are procedures and functions. Their syntax, return values, transaction rules, and privileges depend on the engine.
+A **stored routine** gives database logic a callable interface. Use a function when a query needs a calculated value or set; use a procedure for an explicitly invoked operation. This chapter uses PostgreSQL because routine signatures, privileges, side effects, and transaction behavior are **dialect-specific**. Start with the ordinary query before introducing a reusable wrapper.
 
 Read [joins, subqueries, and views](06_joins_subqueries_and_views.md) first. This note uses **PostgreSQL**, because SQLite does not provide SQL `CREATE PROCEDURE` or `CREATE FUNCTION` commands. SQLite applications can register functions through their programming-language API, which is a different mechanism.
 
@@ -192,13 +192,13 @@ Result:
 
 Run the failing call separately. If it occurs inside a transaction, recover with rollback before continuing. PL/pgSQL's `BEGIN ... END` groups procedural statements; it does not commit the update on its own. The caller can still roll back a successful call.
 
-## A routine is not a transaction boundary by itself
+## Keep routine execution separate from transaction ownership
 
 Calling a routine happens within database transaction rules. These examples do not contain an internal `COMMIT`; callers can group their calls with other statements using a transaction.
 
 Procedural languages add variables, branches, loops, and error handling. PostgreSQL's **PL/pgSQL** is one such language. Its `BEGIN ... END` groups code; it is distinct from the SQL `BEGIN` that starts a transaction. PostgreSQL permits transaction control inside procedures only under specified calling conditions. See the official [procedure documentation](https://www.postgresql.org/docs/current/sql-createprocedure.html).
 
-## Decide whether the database is the right home
+## Decide when server-side code is worth maintaining
 
 A routine can centralize behavior used by several applications and reduce network round trips. It also introduces database code to version, deploy, debug, and test. An ordinary parameterized query or view may already be enough.
 
