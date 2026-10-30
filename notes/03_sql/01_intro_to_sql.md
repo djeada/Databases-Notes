@@ -225,6 +225,25 @@ ORDER BY order_id;
 
 The required columns in this setup reject nulls. Later, a left join can still produce nulls in its result when one side has no matching row. That does not insert nulls into the base table.
 
+**Incorrect vs correct: finding customers with no orders**
+
+```sql
+-- Incorrect: = NULL never evaluates to true.
+SELECT c.name
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+WHERE o.order_id = NULL;
+
+-- Correct: test the unmatched join side with IS NULL.
+SELECT c.name
+FROM customers AS c
+LEFT JOIN orders AS o ON o.customer_id = c.customer_id
+WHERE o.order_id IS NULL
+ORDER BY c.customer_id;
+```
+
+The incorrect query returns no rows. The corrected query returns **Carol**, who has no order in the sample data. `NULL` is not a special value to compare using `=`; `IS NULL` is the intended predicate.
+
 ## Understand the command families
 
 | Family | Purpose | Examples |
