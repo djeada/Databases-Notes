@@ -1,6 +1,6 @@
 # Isolation in Database Transactions
 
-Isolation defines how concurrent transactions interact. The strongest common level, Serializable, makes their committed outcome equivalent to some serial execution. Lower levels permit certain anomalies to reduce coordination costs; simply wrapping statements in `BEGIN` and `COMMIT` does not make all races safe.
+**Isolation** describes what overlapping transactions can observe and how their effects interact. At **Serializable**, committed transactions have an outcome equivalent to some serial order (not necessarily the order they started). Lower levels permit additional interaction to reduce coordination costs. `BEGIN` and `COMMIT` alone do not make an unsafe read–then–write sequence safe.
 
 ## Picture two checkouts running together
 
@@ -10,7 +10,7 @@ An **anomaly** is an interaction that breaks the workflow's expected behavior. A
 
 Read [Transactions](01_transactions_intro.md) first. The table below names common anomalies; the isolation levels then describe protections against them.
 
-## Recognizing anomalies
+## Recognize anomalies by their transaction schedule
 
 | Anomaly | Example |
 | --- | --- |
@@ -178,13 +178,11 @@ Another design locks one shared coordination row for the duty roster before read
 
 Serializable avoids making the application manually identify every such dependency, but introduces retry requirements and can add overhead. A uniqueness constraint is often simpler for “one booking per seat,” while a conditional update fits “reserve one unit from this row.” Choose the narrow mechanism that actually expresses and protects the workflow's invariant.
 
-## SQLite has its own concurrency model
+## SQLite is not a miniature PostgreSQL isolation implementation
 
 SQLite normally isolates separate connections and serializes writes. WAL mode permits readers to retain a snapshot while another connection writes. A reader trying to upgrade an obsolete WAL snapshot into a writer can get `SQLITE_BUSY_SNAPSHOT`; it should finish the old transaction and retry against current state. A busy timeout helps some lock waits, but does not make an obsolete snapshot valid.
 
-Shared-cache connections with `read_uncommitted` enabled are a special case; do not use that exception to describe ordinary SQLite reads. PostgreSQL, InnoDB, and SQL Server have different snapshot and locking rules. Record the engine, level, session schedule, and final invariant when testing concurrency.
-
-References: [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html), [PostgreSQL explicit locking](https://www.postgresql.org/docs/current/explicit-locking.html), and [SQLite isolation](https://www.sqlite.org/isolation.html).
+Shared-cache connections with `read_uncommitted` enabled are a special case; do not use that exception to describe ordinary SQLite reads. PostgreSQL, InnoDB, and SQL Server have different snapshot and locking rules. Record the engine, level, session schedule, and final invariant when testing concurrency. The engine references below are the appropriate source for the precise exception and locking behavior.
 
 ## References
 
