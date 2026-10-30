@@ -1,6 +1,6 @@
 # Introduction to SQL
 
-SQL, or **Structured Query Language**, lets you describe the data you want or the change you want to make. For example, “show Alice's orders” becomes a `SELECT` query; “record a new customer” becomes an `INSERT` statement.
+**SQL (Structured Query Language)** expresses database requests and changes declaratively. Start by reading a result set, then work through filters, joins, groups, missing values, and controlled writes. This chapter uses **SQLite** so the examples can be run locally; it does not claim every syntax choice works in PostgreSQL or MySQL.
 
 The DBMS chooses how to carry out the request. You specify the result, not a loop that reads each disk location yourself. This is why SQL is called a **declarative language**.
 
@@ -244,7 +244,7 @@ ORDER BY c.customer_id;
 
 The incorrect query returns no rows. The corrected query returns **Carol**, who has no order in the sample data. `NULL` is not a special value to compare using `=`; `IS NULL` is the intended predicate.
 
-## Understand the command families
+## Distinguish queries, schema changes, writes, and transactions
 
 | Family | Purpose | Examples |
 | --- | --- | --- |
@@ -255,7 +255,7 @@ The incorrect query returns no rows. The corrected query returns **Carol**, who 
 
 Some classifications place `SELECT` in a separate query-language group. Understanding what a statement does matters more than remembering one taxonomy.
 
-## Read conditions as questions about each row
+## Combine predicates without changing the requested question
 
 The bookstore asks three different questions: which books fall in a price band, which selected books are available, and which titles contain a word. Each has a direct SQL expression:
 
@@ -482,7 +482,7 @@ The inner query returns an average of about 1933.33 cents. The outer query's res
 
 Later notes explain subqueries that refer to the current outer row and queries that test whether any matching row exists.
 
-## Make changes without losing the practice data
+## Use a rollback to keep later examples reproducible
 
 Reading with `SELECT` does not reserve a book. A change must use a writing statement. This exercise inserts a customer, updates their name, and removes the row inside one transaction:
 
