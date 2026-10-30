@@ -1,6 +1,6 @@
 # Database Management Systems: Follow a Request Through the Engine
 
-A database is the stored data and its definitions. A **database management system (DBMS)** is the software that accepts requests, checks rules, chooses execution strategies, coordinates concurrent work, and manages storage and recovery. A database driver, command-line client, and cloud hosting service surround the DBMS but do not replace these engine responsibilities.
+A **database** is stored data plus its definitions; a **DBMS** is the engine responsible for interpreting requests, enforcing declared rules, executing queries, coordinating concurrent work, and recovering state. Drivers, clients, hosting, and storage services surround that engine, but do not replace its guarantees. This chapter traces one request through the layers before comparing products.
 
 The [first note](01_databases_intro.md) showed the SQL an application sends. The [database-types note](02_types_of_databases.md) compared models. Here we follow those requests through SQLite and PostgreSQL, then connect the responsibilities to other DBMS families.
 
@@ -84,7 +84,7 @@ The rows are managed by the server; exiting `psql` does not remove them. The cli
 
 A managed PostgreSQL service still runs a database engine and accepts database connections. The provider can operate infrastructure, patching, or automated backups, while the application team still controls its schema, workload, data-access logic, and many configuration decisions. “Managed” is a division of operational responsibilities, not a different logical data model.
 
-## Follow parsing, planning, and execution
+## Trace the query from SQL text to returned rows
 
 Use the fresh two-table SQLite setup from sections 3 and 4 of the [introduction](01_databases_intro.md). This is a separate SQLite exercise from the PostgreSQL session above:
 
@@ -238,7 +238,7 @@ This is why a repeated query can run faster without any SQL change: the pages it
 
 Updates can modify memory-resident pages before those changes reach their final data-file locations. Engines use recovery mechanisms to make the persistence sequence safe. PostgreSQL uses a **write-ahead log (WAL)**: required log information is persisted before corresponding changed data pages. SQLite has rollback-journal and WAL modes with their own details. The [storage chapter](../05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) develops these mechanisms.
 
-## Recover from a crash and from a bad change
+## Distinguish crash recovery from historical restoration
 
 Crash recovery reconstructs the appropriate accepted state after an interrupted process or machine failure. It uses the engine's recovery information and configured durability behavior. A transaction log is not the same thing as application diagnostic output.
 
@@ -395,7 +395,7 @@ Real code must check both records, validate authorization and available credit, 
 
 There is no universal row saying “SQL scales vertically” and “NoSQL has eventual consistency.” Scaling, transaction scope, replica freshness, and deployment are separate properties. Likewise, an informal NewSQL label does not prove low cost or simple operations.
 
-## Evaluate a DBMS beyond a feature list
+## Evaluate a DBMS with a complete operation
 
 Return to the bookstore's actual workload. One offline terminal and a shared website face different deployment and concurrency questions. A catalog page and a revenue report read different portions of the data.
 
