@@ -18,7 +18,7 @@ A **primary key** identifies the row. A **foreign key** validates a reference. N
 
 ## Run a small example
 
-Use a fresh SQLite database for these statements. Prices are stored as integer cents, so `1500` means 15.00 in the chosen currency.
+Use a fresh SQLite database for these statements. Prices are stored as integer cents, so `1500` means 15.00 in the chosen currency. SQLite's `PRAGMA foreign_keys = ON` must be enabled on **each connection**, outside an active transaction; declaring a reference alone is not a reliable test that foreign-key enforcement is enabled.
 
 ```sql
 PRAGMA foreign_keys = ON;
@@ -75,6 +75,33 @@ The failure message identifies the violated rule. A rejected statement is differ
 `NULL` is SQL's marker for a missing or unknown value. An empty string, zero, and `NULL` are different values in many engines. A `NOT NULL` text column can still contain an empty string unless another rule prevents it.
 
 A `CHECK` rejects an expression that evaluates to false. If the expression is unknown because of `NULL`, it generally passes. That is why required positive quantities need both `NOT NULL` and `CHECK (quantity > 0)`.
+
+**Incorrect — a `CHECK` alone permits a missing quantity:**
+
+```sql
+CREATE TABLE integrity_weak_quantities (
+    line_id INTEGER PRIMARY KEY,
+    quantity INTEGER CHECK (quantity > 0)
+);
+INSERT INTO integrity_weak_quantities VALUES (1, NULL);
+SELECT line_id, quantity FROM integrity_weak_quantities;
+```
+
+| line_id | quantity |
+|---:|---|
+| 1 | NULL |
+
+**Correct for a required quantity — combine `NOT NULL` and `CHECK`:**
+
+```sql
+CREATE TABLE integrity_required_quantities (
+    line_id INTEGER PRIMARY KEY,
+    quantity INTEGER NOT NULL CHECK (quantity > 0)
+);
+INSERT INTO integrity_required_quantities VALUES (1, 2);
+```
+
+An attempt to insert `NULL` or `0` into `integrity_required_quantities.quantity` is rejected; the valid value `2` is accepted. Likewise, `email TEXT NOT NULL` still permits `''` (an empty string). If nonblank email is a requirement, add a rule such as `CHECK (length(trim(email)) > 0)` **alongside** `NOT NULL`. This checks for blank text, not whether an address is deliverable.
 
 Also consider the chosen type's behavior. SQLite's ordinary type declarations are permissive; stricter type validation needs an appropriate strict-table or application validation design. Constraints do not turn every SQLite type declaration into PostgreSQL-style type enforcement.
 
@@ -175,7 +202,19 @@ SELECT screening_id, seat_number FROM integrity_bookings ORDER BY screening_id;
 | 100 | A1 |
 | 101 | A1 |
 
-The pair is unique, not each field individually. Two concurrent attempts to reserve `(100, A1)` must pass the same database rule, so only one can be accepted under the constraint. A preliminary application check for availability is useful for messaging but cannot replace the unique constraint: another writer can act after the check.
+The pair is unique, not each field individually. The **correct** second booking is `(101, 'A1')`, because it belongs to a different screening.
+
+**Incorrect — the following separate attempt should fail:**
+
+```sql
+-- Run this independently after the valid booking inserts:
+INSERT INTO integrity_bookings
+VALUES (3, 100, 'A1', 'Carol');
+-- UNIQUE constraint failed: integrity_bookings.screening_id,
+-- integrity_bookings.seat_number
+```
+
+Two concurrent attempts to reserve `(100, A1)` must pass the same database rule, so only one can be accepted under the constraint. A preliminary application check for availability is useful for messaging but cannot replace the unique constraint: another writer can act after the check.
 
 A global rule such as “at most ten active reservations per customer” is more complex. A row-level check normally cannot count other rows safely. Consider a redesigned counter or allocation structure, locking the owning entity, or serializable transactions with retry, according to the engine.
 
@@ -194,6 +233,10 @@ INSERT INTO integrity_strict_amounts VALUES (1, 1500);
 SQLite 3.37 or later is required. Even strict typing does not prove the amount is the correct price or uses the correct currency. Syntax validation, domain checks, and business calculation are different layers. See [SQLite strict tables](https://www.sqlite.org/stricttables.html).
 
 ## Import, repair, and monitor without silently weakening the model
+
+**Incorrect:** turn off foreign-key enforcement to load an import, switch it back on, and assume the previously imported rows have now been validated.
+
+**Correct:** stage records, validate them, report rejected rows, and load accepted records through a controlled transaction policy. In SQLite, check any data loaded without enforcement with `PRAGMA foreign_key_check` after re-enabling foreign keys; investigate each reported row instead of treating the pragma as an automatic repair.
 
 For imports, stage records in a separate area, validate them, report rejected rows, and load accepted records through a controlled transaction policy. Decide whether the batch is all-or-nothing or whether partial acceptance is allowed and recorded. Do not disable constraints and assume that turning them on afterward validates everything already loaded.
 
