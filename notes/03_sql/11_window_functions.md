@@ -569,7 +569,28 @@ ORDER BY
 | 10     | 104       | 2024-01-30 | 10       | 20.00 |
 
 - The CTE `RankedSales` assigns a rank to each sale based on `Quantity` within each `ProductID`.
-- The outer query filters to include only the top 2 sales per product.
+- The outer query filters to include the top 2 **ranks** per product. If quantities tie at the cutoff, `RANK() <= 2` can return more than two rows for that product.
+
+**Incorrect if exactly two rows are required:** treat `RANK()` as a fixed-size top-N selector. For example, these independent SQLite rows contain a tie for second place:
+
+```sql
+WITH scored(sale_id, quantity) AS (
+    VALUES (1, 10), (2, 9), (3, 9)
+)
+SELECT sale_id, quantity,
+       RANK() OVER (ORDER BY quantity DESC) AS sale_rank,
+       ROW_NUMBER() OVER (ORDER BY quantity DESC, sale_id) AS row_position
+FROM scored
+ORDER BY row_position;
+```
+
+| sale_id | quantity | sale_rank | row_position |
+|---:|---:|---:|---:|
+| 1 | 10 | 1 | 1 |
+| 2 | 9 | 2 | 2 |
+| 3 | 9 | 2 | 3 |
+
+Filtering by `sale_rank <= 2` retains **three** rows. Filtering by `row_position <= 2` retains **exactly two** rows, using `sale_id` to choose deterministically among tied quantities. Use `RANK` when ties should be preserved and `ROW_NUMBER` when the requirement is a fixed row count.
 
 ## Comparing Window Functions with Self-Joins
 
