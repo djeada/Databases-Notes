@@ -154,6 +154,16 @@ Orders and products are many-to-many through `order_items`. One order can refer 
 
 This key deliberately permits the same product on separate lines of one order. If the business requires one line per product, that is another uniqueness rule, not a consequence of the current key.
 
+**Compare the rules before adding a constraint:**
+
+| Insert | With only `PRIMARY KEY (order_id, line_number)` | If the business also requires `UNIQUE (order_id, product_id)` |
+|---|---|---|
+| Order 101, line 3, product 10 | Valid: a different line number | Rejected: product 10 already appears on order 101 |
+| Order 102, line 2, product 20 | Valid | Valid: this product has not appeared on order 102 |
+| Order 101, line 1, product 20 | Rejected: line 1 already exists | Rejected: line 1 already exists |
+
+A uniqueness rule should reflect the business contract, not be guessed from a sample where no products repeat. To test the alternative constraint, use a **fresh** schema with the rule; do not add it blindly to production.
+
 ### Query the model, not a hand-built display
 
 ```sql
@@ -209,7 +219,21 @@ WHERE i.order_id = 101 AND i.line_number = 1;
 |---|---|
 | 1700 | 1500 |
 
-The old order still charged 1500 per unit. This is intentional historical recording, not an accidental copy of the current price. If an invoice also needs the title as it appeared at purchase time, that may require a separate historical title. The correct ownership follows the business meaning of each fact.
+The old order still charged 1500 per unit. This is intentional historical recording, not an accidental copy of the current price.
+
+**Incorrect:** calculate a past receipt by joining each item to the *current* `products.price_cents`; the receipt would change when catalog prices change.
+
+**Correct:** calculate the receipt from `order_items.unit_price_cents` and `quantity`, which record what the customer actually bought and paid:
+
+```sql
+SELECT order_id,
+       SUM(quantity * unit_price_cents) AS charged_total_cents
+FROM order_items
+WHERE order_id = 101
+GROUP BY order_id;
+```
+
+This returns `5500` even after changing product 10's catalog price to `1700`. If an invoice also needs the title as it appeared at purchase time, that may require a separate historical title. The correct ownership follows the business meaning of each fact.
 
 ## Hierarchical models: navigate parent–child structure
 
