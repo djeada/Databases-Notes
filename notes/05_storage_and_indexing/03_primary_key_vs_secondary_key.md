@@ -1,6 +1,6 @@
 # Primary Keys, Alternate Keys, and Secondary Indexes
 
-A **key** expresses an identification rule. An **index** is a physical access structure. The two are related because engines often use indexes to enforce keys, but they are not interchangeable.
+A **key** is a logical uniqueness/identity rule; an **index** is a physical route to rows. Engines often create indexes to enforce keys, but an additional index does not create a new business identifier. This note separates primary and alternate candidate keys from non-unique lookup indexes.
 
 ## Terminology
 
@@ -15,7 +15,7 @@ A **key** expresses an identification rule. An **index** is a physical access st
 
 “Secondary key” is used inconsistently: some texts mean an alternate identifier, others mean a search attribute. Prefer the precise terms above.
 
-## Example schema
+## One schema with two identifiers and a search index
 
 The following runs in PostgreSQL and SQLite. Enable `PRAGMA foreign_keys = ON` on each SQLite connection when using foreign keys.
 
@@ -53,7 +53,7 @@ Result:
 | 1 | alice@example.com |
 | 2 | bob@example.com |
 
-The optimizer can use the secondary index but may prefer a scan for a small table or a predicate matching many rows. An index does not guarantee a particular query plan or output order; add `ORDER BY` when order matters.
+The optimizer may use `idx_users_last_name` or scan the two-row table. The index is intentionally **non-unique**: two Smiths are valid. The `UNIQUE` rule on `email` is a separate integrity requirement; an index alone on `last_name` never makes the names unique. `ORDER BY` (not an index's internal order) defines the query result order.
 
 ## Nullability and composite keys
 
