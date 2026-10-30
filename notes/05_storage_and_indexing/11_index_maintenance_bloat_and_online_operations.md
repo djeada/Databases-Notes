@@ -14,9 +14,11 @@ maintain
 replace or drop
 ~~~
 
-The difficult part is not creating an index. It is knowing whether the index still earns its write, storage, and operational cost.
+The difficult decision is whether an index still justifies its write, storage, and operational cost. Measure use and growth, verify why a redundant-looking index exists, and rehearse changes under realistic traffic. A rebuild is not routine housekeeping unless the engine and workload support that conclusion.
 
-## Index maintenance is workload-specific
+## Observe before maintaining
+
+### Index maintenance is workload-specific
 
 Avoid rules such as:
 
@@ -41,7 +43,7 @@ Different databases expose different concepts:
 
 The same percentage does not mean the same thing everywhere.
 
-## Index bloat
+### Index bloat
 
 Bloat broadly means an index occupies substantially more space than its useful entries require.
 
@@ -61,7 +63,7 @@ large index != bloated index
 
 A large healthy index can be completely justified.
 
-## Why files do not shrink immediately
+### Why files do not shrink immediately
 
 Deletes can make space reusable inside an index without returning the underlying file space to the operating system.
 
@@ -79,13 +81,13 @@ does not imply:
 index file becomes small immediately
 ~~~
 
-## PostgreSQL and MVCC
+### PostgreSQL and MVCC
 
 PostgreSQL indexes can contain entries pointing to row versions that are no longer visible to normal queries until cleanup can remove or recycle them.
 
 Long transactions can delay cleanup because old snapshots may still need row versions.
 
-## Monitor object size
+### Monitor object size
 
 PostgreSQL example:
 
@@ -102,7 +104,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 Size and scan count are clues, not verdicts.
 
-## Zero scans does not automatically mean unused
+### Zero scans does not automatically mean unused
 
 Index statistics can reset.
 
@@ -116,7 +118,7 @@ An index may still be needed for:
 
 Understand the observation period and purpose before dropping it.
 
-## Constraint-backed indexes
+### Constraint-backed indexes
 
 Primary keys and unique constraints are often enforced by indexes.
 
@@ -130,7 +132,7 @@ does this index enforce correctness?
 
 before treating it as optional.
 
-## Redundant indexes
+### Redundant indexes
 
 Examples:
 
@@ -153,7 +155,7 @@ Differences include:
 
 Use plans and workload evidence.
 
-## Duplicate indexes
+### Duplicate indexes
 
 Two indexes with identical key, predicate, and operator behavior can appear after migrations or tooling mistakes.
 
@@ -161,7 +163,7 @@ They create duplicate write and storage cost.
 
 Inventory schema definitions periodically.
 
-## Write amplification
+### Write amplification
 
 Every index can add work to:
 
@@ -174,7 +176,9 @@ Every index can add work to:
 
 This is why "just add another index" is not free.
 
-## Building an index on a live table
+## Building and replacing indexes under traffic
+
+### Building an index on a live table
 
 A normal index build may block writes depending on engine.
 
@@ -188,7 +192,7 @@ On a large table, the build can also consume:
 
 Plan index deployment as an operational change.
 
-## PostgreSQL CREATE INDEX CONCURRENTLY
+### PostgreSQL CREATE INDEX CONCURRENTLY
 
 PostgreSQL supports:
 
@@ -208,7 +212,7 @@ Trade-offs include:
 
 It cannot run inside a transaction block.
 
-## Failed concurrent build
+### Failed concurrent build
 
 A failed concurrent PostgreSQL build can leave an invalid index object.
 
@@ -222,7 +226,7 @@ After failure:
 
 Do not assume failure cleaned up everything.
 
-## Progress monitoring
+### Progress monitoring
 
 PostgreSQL exposes:
 
@@ -234,7 +238,7 @@ for index-build progress.
 
 Production migrations should monitor long-running builds instead of treating them as a black box.
 
-## REINDEX
+### REINDEX
 
 PostgreSQL can rebuild an index:
 
@@ -250,7 +254,7 @@ Use cases include:
 
 REINDEX is not a routine cure for every slow query.
 
-## REINDEX CONCURRENTLY
+### REINDEX CONCURRENTLY
 
 For production systems where blocking writes is unacceptable:
 
@@ -262,7 +266,7 @@ This performs more work and has additional restrictions, but reduces write block
 
 It cannot run inside a transaction block.
 
-## Rebuild versus drop/create
+### Rebuild versus drop/create
 
 A rebuild can preserve the logical definition while writing a fresh physical structure.
 
@@ -270,7 +274,7 @@ Drop/create can introduce an interval where the access path or constraint is abs
 
 For unique or constraint-backed indexes, correctness implications matter.
 
-## Replace-index migration pattern
+### Replace-index migration pattern
 
 A safe production pattern can be:
 
@@ -286,7 +290,7 @@ drop old index safely
 
 This avoids an all-at-once replacement.
 
-## Fillfactor changes
+### Fillfactor changes
 
 Changing an index storage parameter does not necessarily rewrite existing pages immediately.
 
@@ -294,7 +298,7 @@ A rebuild may be required for the new layout to apply fully.
 
 Do not change fillfactor without a measured write or page-density problem.
 
-## Online operations are not free
+### Online operations are not free
 
 Online or concurrent usually means foreground reads and writes can continue, not that the operation has zero impact.
 
@@ -308,7 +312,7 @@ It can still increase:
 
 Run large builds during controlled periods and monitor them.
 
-## Replica impact
+### Replica impact
 
 Index creation or rebuild can generate changes that replicas must receive or replay depending on engine.
 
@@ -316,7 +320,7 @@ Large maintenance can increase replication lag.
 
 Check failover and read-replica health during the operation.
 
-## Indexes and backups
+### Indexes and backups
 
 More indexes increase backup size or restore/rebuild time depending on backup method.
 
@@ -326,13 +330,13 @@ For physical backups, index files are often included.
 
 Storage cost extends beyond the primary server.
 
-## Statistics after index creation
+### Statistics after index creation
 
 A new ordinary index can be considered immediately, but table and expression statistics still influence plan choice.
 
 After major data/index changes, ensure statistics describe the current workload.
 
-## Validate with plans
+### Validate with plans
 
 After creating an index:
 
@@ -359,7 +363,7 @@ If the optimizer ignores the index, investigate:
 
 Do not force the index automatically.
 
-## Dropping an index
+### Dropping an index
 
 Before dropping:
 
@@ -371,7 +375,7 @@ Before dropping:
 
 On large tables, recreating a dropped index can be expensive.
 
-## PostgreSQL DROP INDEX CONCURRENTLY
+### PostgreSQL DROP INDEX CONCURRENTLY
 
 PostgreSQL supports concurrent index drop for eligible cases:
 
@@ -383,7 +387,9 @@ This can reduce blocking on a live system.
 
 Restrictions apply, so use current engine documentation for production migrations.
 
-## Index inventory
+## Audit before removing or rebuilding
+
+### Index inventory
 
 A useful inventory records:
 
@@ -399,7 +405,7 @@ A useful inventory records:
 
 This helps prevent years of accidental index accumulation.
 
-## Migration review checklist
+### Migration review checklist
 
 When a pull request adds an index, ask:
 
@@ -414,7 +420,7 @@ When a pull request adds an index, ask:
 9. How is rollback handled?
 10. How will usefulness be measured after deployment?
 
-## Runnable PostgreSQL inventory exercise
+### Runnable PostgreSQL inventory exercise
 
 This chapter adds:
 
