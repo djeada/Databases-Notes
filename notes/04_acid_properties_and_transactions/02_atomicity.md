@@ -1,6 +1,6 @@
 # Atomicity: Commit the Whole Operation or None of It
 
-**Atomicity** means that a transaction's changes are committed as one unit. If the transaction is rolled back, none of those changes remain committed. The operations still execute one after another; atomicity does not mean they take place at the same instant.
+**Atomicity** means that the database makes a transaction's effects visible as a committed unit or leaves none of those effects committed. The statements still execute in sequence; atomicity does **not** mean simultaneous execution, nor does it guarantee that application logic is correct. A statement error is not necessarily an automatic rollback of the entire transaction.
 
 Read [Transactions](01_transactions_intro.md) first. Its checkout groups a stock reduction, an order, and an order item.
 
@@ -75,7 +75,7 @@ For example, sending a confirmation email before commit risks announcing an orde
 
 A **savepoint** marks a place for partial rollback inside a transaction. It helps recover from an optional step, but releasing it does not commit the surrounding transaction. The [SQL transaction control note](../03_sql/05_transaction_control_language_tcl.md) includes a runnable example.
 
-## Make a later constraint failure undo an earlier successful write
+## Exercise: roll back a successful write after a later constraint error
 
 An invalid operation provides a stronger demonstration than rolling back a successful update by choice. This Python exercise creates its own in-memory database, so it does not depend on the bookstore:
 
@@ -212,14 +212,14 @@ The unique request key helps recognize a retried checkout. It does not automatic
 
 For multiple workers, use the engine's appropriate claim or locking mechanism so they do not all process the same pending row at once. This SQLite example shows transactional recording, not a complete concurrent delivery queue.
 
-## Two-phase commit coordinates multiple participants
+## When one transaction spans multiple participants: two-phase commit
 
 A local transaction cannot ordinarily make two unrelated databases commit together. **Two-phase commit (2PC)** adds a coordinator and a durable decision:
 
 1. Ask each participant to prepare. It records enough state to commit later and retains the necessary resources.
 2. If all participants prepare, record and distribute the commit decision. Otherwise resolve the participants with an abort decision.
 
-A participant that has prepared cannot simply guess the decision when the coordinator disappears. In-doubt prepared transactions can hold locks until recovery resolves them. This is a major operational cost, not merely two extra SQL statements.
+After preparing, a participant cannot safely guess the missing coordinator's decision. In-doubt transactions may hold locks or other resources until the decision is recovered. **Two-phase commit provides atomic coordination, not nonblocking availability**: the ability to finish still depends on coordinator recovery or an equivalent durable decision mechanism.
 
 PostgreSQL exposes a participant mechanism through prepared transactions. This optional example requires a disposable PostgreSQL instance configured with `max_prepared_transactions` greater than zero; it is commonly disabled by default. It demonstrates one participant, **not a complete distributed coordinator**:
 
