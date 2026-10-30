@@ -205,6 +205,28 @@ To move a branch, an adjacency list often changes only the moved node's parent. 
 
 For example, setting Computing's parent to SQL would create `Computing → Databases → SQL → Computing`. The foreign key still points to existing rows, and the immediate-self-parent check still passes. A recursive query using `UNION ALL` can then keep expanding instead of terminating normally.
 
+**Incorrect tree move (do not execute against the teaching data):**
+
+```sql
+-- Would introduce a cycle: 2 -> 4 -> 6 -> 2.
+UPDATE categories SET parent_id = 6 WHERE category_id = 2;
+```
+
+**Valid move for this sample:** SQL (node 6) can instead move from Databases to Programming (node 5). Demonstrate it inside a rollback so later examples still use the original tree:
+
+```sql
+BEGIN;
+UPDATE categories SET parent_id = 5 WHERE category_id = 6;
+SELECT category_id, parent_id FROM categories WHERE category_id = 6;
+ROLLBACK;
+```
+
+| category_id | parent_id |
+|---:|---:|
+| 6 | 5 |
+
+The example is valid because Programming is not a descendant of SQL. **A successful SQL update alone is not proof** that an arbitrary move is safe: actual applications must prevent cycles under concurrent moves too.
+
 A production design needs cycle prevention or detection, an appropriate traversal bound, and transaction logic that handles concurrent moves. A “check, then update” sequence can race with another move. Do not assume replacing `UNION ALL` with `UNION` always solves cycles: if a changing depth or path is included, repeated visits can still produce distinct rows.
 
 This schema also allows more than one root, which represents a **forest**. If the business requires exactly one root, that is an additional rule.
