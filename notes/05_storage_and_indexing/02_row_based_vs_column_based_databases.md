@@ -1,6 +1,6 @@
 # Row Storage and Column Storage
 
-A table's logical shape does not determine its physical layout. Both row-oriented and column-oriented systems can expose rows and columns to SQL. The difference is which values they keep together in storage.
+A SQL table is a logical relation, not a promise about disk layout. A row store groups many columns of a record together; a column store groups values from the same field across records. This changes the work of reconstructing one row versus scanning a few columns across many rows. Real engines also mix layouts, compression, indexes, and buffered writes.
 
 Consider a small sales table:
 
@@ -36,13 +36,13 @@ quantity:      2,   1,   2
 amount_cents: 3000, 2500, 5000
 ```
 
-A report asking for `SUM(amount_cents)` needs the amount column, not every customer's identifier or product field. For a much larger table, reading only the relevant columns can avoid substantial work.
+A report asking for `SUM(amount_cents)` primarily needs the amount column. A columnar layout can avoid fetching unrelated fields across a large scan. Filtering or joining may still require additional columns, so “one aggregate” does not universally imply one-column I/O.
 
 Similar values stored together also often compress well. **Compression** represents data with fewer bytes; for example, repeated customer identifiers can be encoded compactly. Less data to read can improve throughput, though decoding has a cost too.
 
 This pattern is common in **online analytical processing (OLAP)**: reports and aggregations that examine many records. Engines may process groups of column values in batches, often called **vectorized execution**.
 
-## Compare the work, not just the label
+## Compare access patterns rather than product labels
 
 | Request | Why row storage may suit it | Why column storage may suit it |
 |---|---|---|
