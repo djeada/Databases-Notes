@@ -4,7 +4,7 @@ A bookstore needs to remember its customers, books, orders, and remaining stock.
 
 A **database** is an organized collection of data. A **database management system (DBMS)** is the software that stores and manages that collection. SQLite, PostgreSQL, MySQL, and MongoDB are DBMSs. When someone says “we use PostgreSQL as our database,” they are naming the software as well as implying the data it manages.
 
-This note starts with a small relational database: one that represents facts in tables and connects them through keys. You will create it, insert records, query related tables, update and delete data, and try a rollback. Later notes compare other database models and explain the machinery behind these operations.
+This note follows one small **SQLite** bookstore from requirements to tables, a join, a constraint violation, and rollback. Work through the SQL in order on a fresh database, skipping statements explicitly marked as expected failures. The next chapters explain other models and what the DBMS does underneath SQL.
 
 ## Why a file is not always enough
 
@@ -38,7 +38,7 @@ A DBMS supplies mechanisms for these problems:
 | Recover from failures | Journals or logs, plus backup tools | Recover after a crash or restore an earlier copy |
 | Limit access | Engine or platform access controls | Let a reporting account read orders without editing them |
 
-These capabilities have boundaries. A database cannot decide that a supplied postal address is true, and a backup must still be taken and tested. A spreadsheet or append-only file remains useful for small manual tasks, exports, or simple logs. The reason to use a DBMS is the set of operations and guarantees the application needs.
+These guarantees have boundaries: a database cannot verify that a supplied postal address is true or restore data from a backup that was never tested. A unique email constraint enforces uniqueness, not proof that the customer controls the email address. A spreadsheet or append-only file remains useful for small manual tasks, exports, or simple logs. The reason to use a DBMS is the set of operations and guarantees the application needs.
 
 ### A technology that uses this approach
 
@@ -46,7 +46,7 @@ SQLite runs as a library inside an application and manages a local database, rat
 
 Android's Room library builds on SQLite for local structured storage. An app can keep records locally and show them while offline; Room supplies an application-facing layer for entities and queries. This is a concrete example of database storage being useful even without a remote service. See [Android's Room overview](https://developer.android.com/training/data-storage/room).
 
-## Read the structure before writing commands
+## Separate identities from repeated order facts
 
 Separate customer details from order details:
 
@@ -343,7 +343,7 @@ The exact IDs and detail text depend on the SQLite version and planner.
 
 SQLite uses B-tree structures for its indexes: ordered keys guide lookup toward matching entries. Maintaining those entries costs space and additional work when relevant rows change. That tradeoff is why an index should answer a real access pattern instead of being added to every column. The [DBMS note](03_database_management_systems_dbms_.md) follows planning and execution in more detail.
 
-## Put the database behind an application
+## Keep database rules behind the application boundary
 
 A website usually has this request path:
 
