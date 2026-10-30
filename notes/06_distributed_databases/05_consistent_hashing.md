@@ -108,68 +108,36 @@ To enhance data distribution and fault tolerance, consistent hashing often uses 
 - **Easier scaling** is possible because adding or removing a physical node only requires redistributing its associated virtual nodes, minimizing disruption.
 - Supporting heterogeneous nodes allows nodes with greater capacity to have more virtual nodes, enabling them to handle a proportionally larger share of data and requests.
 
-## Implementing Consistent Hashing
+## Implement a deterministic lookup
 
-Let's walk through how you might implement consistent hashing in practice.
-
-### Step 1: Hash Function Selection
-
-Choose a stable hash with good distribution. The SHA-1 example below is for placement, not cryptographic security. All participants must agree on the hash, key encoding, and ring membership.
-
-### Step 2: Mapping Nodes to the Ring
-
-Assign each node (or virtual node) a hash value to determine its position on the ring.
-
-### Step 3: Mapping Keys to Nodes
-
-For each data key:
-
-1. Compute its hash value.
-2. Locate the first node on the ring whose hash value is greater than or equal to the key's hash.
-3. If no such node exists (the key's hash is higher than any node's hash), wrap around to the first node on the ring.
-
-### Sample Code Snippet (Pseudocode)
+A practical ring needs a stable hash function, a stable key encoding, virtual-node membership, and an efficient successor lookup. This runnable Python example uses SHA-1 **only for placement**, not to authenticate data, and binary search to avoid walking all 300 virtual nodes for every key.
 
 ```python
-# Import a reliable hash function
-import hashlib
+from bisect import bisect_left
+from hashlib import sha1
 
-# Function to compute hash value
-def compute_hash(key):
-    return int(hashlib.sha1(key.encode()).hexdigest(), 16)
+def position(value: str) -> int:
+    return int.from_bytes(sha1(value.encode("utf-8")).digest(), "big")
 
-# Nodes in the system
-nodes = ['NodeA', 'NodeB', 'NodeC']
+def build_ring(nodes: list[str], replicas: int = 100):
+    if not nodes or replicas < 1 or len(nodes) != len(set(nodes)):
+        raise ValueError("provide distinct nodes and at least one virtual node")
+    entries = sorted(
+        (position(f"{node}:{i}"), node)
+        for node in nodes for i in range(replicas)
+    )
+    positions = [hash_value for hash_value, _ in entries]
+    return entries, positions
 
-# Create the ring with virtual nodes
-ring = {}
-virtual_nodes = 100  # Number of virtual nodes per physical node
+def owner(key: str, entries, positions) -> str:
+    index = bisect_left(positions, position(key)) % len(entries)
+    return entries[index][1]
 
-for node in nodes:
-    for i in range(virtual_nodes):
-        vnode_key = f"{node}:{i}"
-        hash_val = compute_hash(vnode_key)
-        ring[hash_val] = node
-
-# Sort the hash ring
-sorted_hashes = sorted(ring.keys())
-
-# Function to find the node for a given key
-def get_node(key):
-    hash_val = compute_hash(key)
-    for node_hash in sorted_hashes:
-        if hash_val <= node_hash:
-            return ring[node_hash]
-    return ring[sorted_hashes[0]]  # Wrap around
-
-# Example usage
-key = 'my_data_key'
-assigned_node = get_node(key)
-print(f"Key '{key}' is assigned to {assigned_node}")
+ring, positions = build_ring(["NodeA", "NodeB", "NodeC"])
+print(owner("my_data_key", ring, positions))
 ```
 
-- The key `'my_data_key'` is assigned to a node based on its hash value.
-- If you add or remove nodes, only the keys that map to the affected virtual nodes need to change assignments.
+Building the ring sorts `N × replicas` virtual nodes; lookup uses binary search over the sorted positions. The output is deterministic for a given membership list, hash, and encoding, but the assigned node is not important to memorize. Real implementations must also resolve the astronomically unlikely hash collision and coordinate **membership changes**: different clients using different ring versions can disagree about ownership. The ring does not provide replication or durable rebalancing by itself.
 
 ## Real‑World Uses & Challenges
 
@@ -182,25 +150,16 @@ print(f"Key '{key}' is assigned to {assigned_node}")
 
 Implementation challenges include choosing a non‑biased hash function, deciding how many VNodes per server, and coordinating ring state changes across clients.
 
-## Advantages of Consistent Hashing
+## What consistent hashing solves—and what it does not
 
-- The scalability of consistent hashing allows nodes to be added or removed with minimal impact on existing data placement.
-- **Efficiency** is enhanced by reducing cache misses and lowering database load in distributed caching systems.
-- Hashing defines ownership; replication, failure detection, and routing are needed to preserve data and service after a node failure.
-- Virtual nodes improve expected key distribution, but a single hot key can still overload its owner.
+| Mechanism | Benefit | Remaining responsibility |
+|---|---|---|
+| Ring lookup | Deterministic mapping from key to a current owner | Agree on hash encoding and membership version |
+| Virtual nodes | Better expected balance and smoother movement when capacity changes | One exceptionally hot key can still dominate its owner |
+| Adding or removing nodes | Only a fraction of keys normally change primary ownership | Move or re-fetch data without losing writes during transition |
+| Replication around the ring | Can place copies on distinct owners when deliberately implemented | Failure domains, quorum rules, repair, and anti-entropy are separate designs |
 
-## Challenges and Considerations
-
-- **Hotspots** can arise if the hash function or data keys do not distribute data uniformly, leading to overloaded nodes.
-- Choosing the right hash function is critical to ensure a good spread of hash values across nodes.
-- The complexity of implementing virtual nodes and managing the hash ring can increase system overhead.
-
-## Best Practices
-
-- Incorporating virtual nodes improves load distribution and minimizes hotspots.
-- Regularly monitor system performance to identify and address uneven load or emerging bottlenecks.
-- Selecting a consistent hash function that avoids clustering of values ensures better distribution of data.
-- Designing for scaling from the outset helps the system accommodate growth and handle additional nodes smoothly.
+Monitor actual key skew, traffic, and migration progress; the number of virtual nodes is a capacity/metadata trade-off, not a universal constant. Unlike consistent hashing, naïve modulo hashing such as `hash(key) % number_of_nodes` commonly remaps most keys when the modulus changes.
 
 ## Review questions
 

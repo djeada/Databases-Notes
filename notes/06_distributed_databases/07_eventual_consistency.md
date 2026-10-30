@@ -1,6 +1,6 @@
 # Eventual Consistency
 
-Imagine a distributed system with multiple nodes—servers or databases—that share data. When an update occurs on one node, it doesn't instantly reflect on the others due to factors like network latency or processing delays. Eventual consistency requires convergence when writes stop and communication and reconciliation can complete. It does not set a fixed convergence deadline or guarantee that every conflicting update survives.
+**Eventual consistency** is a convergence guarantee: if updates stop and replicas can communicate and repair their states, they eventually agree on the value selected by the system's reconciliation policy. It does not promise a maximum delay, a read-your-writes experience, or preservation of every concurrent update. Propagation and conflict resolution are part of the contract, not details to assume away.
 
 ```
 Initial State:
@@ -83,29 +83,25 @@ When multiple nodes update the same data simultaneously, conflicts can arise. Th
 - **Merge functions** employ application-specific logic to combine or reconcile conflicting updates.
 - **CRDTs (Conflict-Free Replicated Data Types)** leverage specialized data structures to handle concurrent updates without introducing conflicts.
 
-## Practical Examples of Eventual Consistency
+## Where delayed propagation can be acceptable
 
-Eventual consistency is well-suited for applications where immediate consistency is not critical, but high availability and responsiveness are essential.
+Consider three **generic** workloads, rather than assuming the internals of a particular product:
 
-### Social Media Platforms
+| Workload | What readers might observe | Design question |
+|---|---|---|
+| Social feed projection | A new post appears to some viewers before others | Is delayed visibility acceptable, and can the feed catch up after replay? |
+| Replicated collaborative state | Two edits arrive in different orders | What merge semantics preserve intended user changes? |
+| Edge content cache | An old asset remains until refresh or invalidation | What maximum staleness, purge, and versioning contract is offered? |
 
-On platforms like Twitter or Facebook, when a user posts a new update, it might not appear instantly on all friends' feeds due to propagation delays. However, the post will eventually become visible to everyone. This delay is generally acceptable in exchange for the ability to handle millions of users simultaneously.
-
-### Collaborative Editing Tools
-
-In tools like Google Docs, multiple users can edit the same document concurrently. Changes made by one user might not appear immediately to others, but over time, all edits are synchronized, and the document reflects all contributions. The system ensures eventual consistency while allowing users to work without interruption.
-
-### Content Delivery Networks (CDNs)
-
-CDNs cache content at various nodes around the world to serve users with low latency. When content is updated, the new version needs to propagate to all cache nodes. Until the update reaches a particular node, users served by that node might receive the older version. Over time, as caches refresh, all users receive the updated content.
+Some collaborative editors use stronger coordination, operational transformation, or CRDTs for particular features; **eventual consistency alone does not explain their conflict behavior**. Likewise, a CDN cache is not automatically an eventually consistent database with the same API guarantees.
 
 ## Benefits of Eventual Consistency
 
-Embracing eventual consistency allows distributed systems to achieve:
+Eventual consistency can support these goals **when the replication and failure model permits them**:
 
-- **High throughput** is achieved as the system avoids immediate synchronization, allowing for a greater volume of operations.
-- **Fault tolerance** enables the system to remain operational even when some nodes are unreachable, with updates propagating once connectivity is restored.
-- **User experience** improves through continuous availability, particularly in scenarios where slight delays in achieving data consistency are acceptable.
+- **Throughput and latency:** acknowledging writes before all replicas coordinate may reduce write latency, at the cost of stale reads and reconciliation work.
+- **Availability during failures:** some requests can continue at reachable replicas, but this depends on routing, write durability, conflict handling, and how the system behaves when capacity is lost.
+- **User experience:** eventual consistency fits workflows that tolerate delayed visibility; it is not appropriate by default for decisions requiring a current authoritative value, such as unique seat allocation.
 
 ## Considerations When Using Eventual Consistency
 
@@ -132,18 +128,18 @@ Implementing eventual consistency involves designing systems that can handle del
 Updates can be propagated using various methods:
 
 - **Gossip protocols** enable nodes to randomly share information with peers, gradually disseminating updates across the network.
-- **Asynchronous replication** allows updates to be sent to other nodes without waiting for acknowledgments, ensuring the originating node can continue handling requests.
-- **Publish-subscribe systems** ensure nodes receive updates by subscribing to changes, with updates broadcast to all subscribers.
+- **Asynchronous replication** can acknowledge a local write before other replicas receive it. This lowers coordination but risks lag or loss of a recent write if the acknowledged copy fails before durable propagation, depending on failure and durability policy.
+- **Publish-subscribe systems** distribute change events to subscribers, but delivery, replay, duplicate handling, and durable consumer progress must be implemented; subscription alone does not guarantee eventual convergence.
 
 ### Handling Conflicts with Version Vectors
 
-Version vectors help track the history of data updates to resolve conflicts.
+Version vectors summarize observed causal history. They can distinguish “this version followed that one” from “these updates were concurrent,” but **they do not select a winner or merge values**. Resolution is a separate application or storage-policy decision.
 
 #### Example of Version Vectors:
 
 - **Node A** updates the data, creating a version vector `[A:1, B:0, C:0]`, indicating its update.
 - **Node B** simultaneously updates the same data, resulting in a version vector `[A:0, B:1, C:0]`.
-- During synchronization, the nodes compare version vectors to identify conflicting updates and merge changes according to predefined rules.
+- During synchronization, the vectors reveal that neither version causally dominates the other. A defined merge function, retained sibling versions, or a deliberate last-writer-wins rule must then resolve the concurrent values.
 
 ## Review questions
 

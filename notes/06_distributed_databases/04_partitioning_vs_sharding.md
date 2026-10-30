@@ -1,6 +1,6 @@
 # Partitioning vs. Sharding
 
-Partitioning divides data into pieces. Sharding is horizontal partitioning across separate database nodes, with routing to the node responsible for each key. Local table partitions can improve pruning and maintenance without distributing work across servers.
+**Partitioning** divides a logical dataset into pieces. **Sharding** places horizontal pieces on separate nodes or clusters and introduces distributed routing and coordination. They are not mutually exclusive terms: a sharded system may also use date partitions inside each shard. The operational boundary—one engine versus multiple independently failing participants—is usually the useful comparison.
 
 ## Partitioning
 
@@ -196,27 +196,31 @@ Shard shard0001: 55% data
 | `--chunkSize` in `mongos` config | Maximum chunk (sub-shard) size in MB                          | Smaller chunks migrate more smoothly |
 | `balancerStopped`                | Boolean to pause automatic rebalancing                        | Handy during peak traffic windows    |
 
-## Side-by-Side Comparison
+## Side-by-side comparison
 
-| Dimension              | Partitioning                                       | Sharding                                                  |
-| ---------------------- | -------------------------------------------------- | --------------------------------------------------------- |
-| Where data lives       | One database engine, multiple internal segments    | Many engines, each a self-contained database              |
-| Primary goal           | Speed up queries and maintenance                   | Add capacity beyond a single server                       |
-| Transaction scope      | Usually local and ACID-compliant across partitions | Cross-shard transactions require 2PC or application logic |
-| Operational complexity | Moderate—DDL and monitoring remain centralized     | Higher—orchestration, failover, and backups multiply      |
-| Growth path            | Vertical (bigger box) until vertical limits hit    | Horizontal from day one                                   |
+| Dimension | Local table partitioning | Sharding across nodes |
+|---|---|---|
+| Data location | Partitions managed by one database instance or coordinated engine | Partition owners spread across separate nodes; a routing layer locates them |
+| Primary benefit | Pruning, retention, and manageability of a large table | Distribute capacity and isolate some resource demands |
+| Transaction scope | Often supported within the same engine's normal transaction model | Cross-shard transactions require engine support or application coordination; **not every operation needs 2PC** |
+| Failure behavior | The database can still be one failure domain | Individual shards can fail independently; availability depends on replication and routing |
+| Key constraint | Unique keys and partitioning rules may interact (engine-specific) | Global uniqueness, joins, and cross-shard invariants may need extra design |
+| Ongoing cost | Partition boundaries, metadata, pruning, and maintenance | Rebalancing, routing, multi-shard backups, fan-out, and operational overhead |
+
+**Neither technique guarantees lower latency.** A query without the relevant partition or shard key may still visit all pieces; a hot key may overload one shard even when total bytes are balanced.
 
 ## Blending the Two
 
 Large platforms often partition *inside* every shard, marrying the easy pruning of partitions with the elastic headroom of shards. For example, an e-commerce company might hash-shard by user ID and range-partition each shard’s `orders` table by month, yielding fast user look-ups *and* swift archival of old months.
 
-## Practical Guidance
+## Choose using the bottleneck and failure model
 
-* Start with partitioning if the bottleneck is query latency over a single giant table or if maintenance tasks have become unwieldy.
-* Plan for sharding once you foresee the primary server exhausting resources even after aggressive tuning.
-* Prototype tooling and disaster-recovery workflows early; complexity compounds quickly once dozens of shards are in play.
-* Keep the sharding key stable—re-sharding live traffic is far more painful than migrating partitions.
-* Monitor chunk or partition skew by calculating the coefficient of variation ${\sigma}/{\mu}$; when that value drifts upward, rebalance before hotspots burn users.
+1. If the problem is **retention or scanning dated data on one engine**, prototype date partitioning and verify pruning with the engine's plan tool.
+2. If the problem is **total write capacity or storage beyond one node**, identify a routing key, estimate per-key skew, and test cross-shard reads before sharding.
+3. If the problem is **availability**, first specify replica placement, election, and failover behavior; sharding alone does not replicate a lost row.
+4. Before either migration, inventory primary/unique constraints, backup/recovery steps, and application queries that do not carry the chosen key.
+
+Monitor bytes **and** requests per partition or shard, hot keys, and migration latency. A single coefficient of variation of partition sizes does not reveal read hot spots or determine an automatic rebalance threshold.
 
 ## Review questions
 
