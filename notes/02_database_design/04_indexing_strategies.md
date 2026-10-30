@@ -32,6 +32,8 @@ Result:
 
 Without a suitable index, the engine may examine the orders table to find matching rows. With millions of orders and only a few belonging to this customer, avoiding that work can matter. With three rows, a scan may be simpler and faster.
 
+The query intentionally sorts **oldest first**. For a newest-first order-history page, use `ORDER BY order_date DESC, order_id DESC`. An ordered B-tree can often be scanned backward for a matching reverse order; a separate descending index is not automatically necessary.
+
 The **optimizer** is the part of the DBMS that chooses an execution strategy. Declaring an index makes another strategy possible; it does not force the engine to use it.
 
 ## Start with one useful index
@@ -59,6 +61,31 @@ Imagine an address book sorted first by country and then by surname. It is easy 
 
 Similarly, `(customer_id, order_date)` and `(order_date, customer_id)` are different indexes. The first fits one customer's date range; the second may fit all orders in a date range. Engine-specific optimizations can help with other patterns, but the order is still a design decision.
 
+## Keep indexed columns usable in a predicate
+
+For the SQLite bookstore, `order_date` is ISO-formatted `YYYY-MM-DD` text. With an index on `(customer_id, order_date, order_id)`, both of these queries ask for customer 1's orders from January 2025, but they expose different access opportunities.
+
+**Less index-friendly — transform the date for each matching customer row:**
+
+```sql
+SELECT order_id, order_date
+FROM orders
+WHERE customer_id = 1
+  AND substr(order_date, 1, 7) = '2025-01';
+```
+
+**Better for this schema — compare the indexed value directly:**
+
+```sql
+SELECT order_id, order_date
+FROM orders
+WHERE customer_id = 1
+  AND order_date >= '2025-01-01'
+  AND order_date < '2025-02-01';
+```
+
+Both return orders 101 and 102 from the sample. The second predicate lets an ordinary composite B-tree use the customer equality followed by a date **range**; the first can still use the customer prefix but generally cannot use the date portion for a range without an appropriate expression index. Confirm with `EXPLAIN QUERY PLAN` on your actual engine. The lexical range works here because the sample stores consistently formatted ISO dates; timestamps with times or zones require correctly chosen boundaries.
+
 ## Match the amount of data requested
 
 A query returning one email match may benefit greatly from an index. A query returning almost every customer may benefit little: it still needs to retrieve almost every row.
@@ -84,7 +111,11 @@ A primary or unique constraint may already have a supporting index. Check the ex
 
 ## Verify with a plan and a representative workload
 
-An **execution plan** shows how a query will or did access data. Use the chosen engine's plan tools to check rows examined, sorting, estimates, and elapsed time. Some analysis commands execute the query, so understand the tool before applying it to a write.
+An **execution plan** shows how a query will or did access data. Use the chosen engine's plan tools to check rows examined, sorting, estimates, and elapsed time.
+
+**Incorrect:** assume that creating an index always improves the query just because its name sounds relevant.
+
+**Correct:** compare the same query before and after the index, then measure with realistic row counts. On the small SQLite bookstore, run `EXPLAIN QUERY PLAN SELECT order_id, order_date FROM orders WHERE customer_id = 1 ORDER BY order_date, order_id;` before creating `idx_design_customer_history` below, and again after. The first may scan, while the second can use a covering index; the exact chosen plan is an optimizer decision, not a fixed output to memorize. Some analysis commands execute the query, so understand the tool before applying it to a write.
 
 Compare the read improvement with insertion and update costs. Test customers with a few orders and customers with many; one convenient test value can hide a different workload.
 
@@ -123,7 +154,7 @@ The result is the same two order rows shown at the start of this note. An illust
 | ---: | ---: | ---: | --- |
 | 3 | 0 | 0 | SEARCH orders USING COVERING INDEX idx_design_customer_history (customer_id=?) |
 
-Plan wording and identifiers vary by SQLite version. PostgreSQL's index-only scans have additional visibility requirements; containing the columns alone does not guarantee zero heap visits. The source of the result remains the table's logical data, not a new authoritative customer history.
+Plan wording and identifiers vary by SQLite version. SQLite's `INTEGER PRIMARY KEY` is a rowid alias in this sample, so the rowid can already be carried by a secondary index; explicit inclusion of `order_id` is mainly pedagogical here. PostgreSQL's index-only scans have additional visibility requirements; containing the columns alone does not guarantee zero heap visits. The source of the result remains the table's logical data, not a new authoritative customer history.
 
 If the application primarily needs open orders, a partial index can omit completed and cancelled orders:
 
