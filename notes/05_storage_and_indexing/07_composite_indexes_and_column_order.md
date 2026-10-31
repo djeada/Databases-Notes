@@ -454,7 +454,7 @@ The purpose is to make stored column order visible in the query plans.
 
 ## Related notes
 
-- [Database indexing](05_indexing.md)
-- [B-tree internals](06_btree_internals_and_page_splits.md)
-- [Covering, partial, and expression indexes](08_covering_partial_and_expression_indexes.md)
-- [Execution plans and cardinality](../08_database_performance/07_execution_plans_statistics_and_cardinality.md)
+- [Database indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [B-tree internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md)
+- [Covering, partial, and expression indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/08_covering_partial_and_expression_indexes.md)
+- [Execution plans and cardinality](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md)

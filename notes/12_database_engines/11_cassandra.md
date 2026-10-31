@@ -182,7 +182,7 @@ write multiple query-shaped copies -> simple keyed reads
 
 The repository includes:
 
-[`scripts/cassandra/docker-compose.yml`](../../scripts/cassandra/docker-compose.yml)
+[`scripts/cassandra/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cassandra/docker-compose.yml)
 
 Start the local node:
 
@@ -214,7 +214,7 @@ docker compose down
 
 The repository also includes:
 
-[`scripts/cassandra/demo.cql`](../../scripts/cassandra/demo.cql)
+[`scripts/cassandra/demo.cql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cassandra/demo.cql)
 
 Load it:
 
@@ -786,8 +786,8 @@ For every feature:
 
 ## Related notes
 
-- [Redis](10_redis.md)
-- [Choosing a database](07_choosing_database.md)
-- [Distributed SQL](14_distributed_sql.md)
-- [Partitioning](../06_distributed_databases/02_partitioning.md)
-- [Eventual consistency](../06_distributed_databases/07_eventual_consistency.md)
+- [Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Distributed SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/14_distributed_sql.md)
+- [Partitioning](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md)
+- [Eventual consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md)

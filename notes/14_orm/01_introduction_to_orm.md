@@ -108,7 +108,7 @@ A session is not necessarily one permanent database connection. Connection pools
 ## Runnable SQLAlchemy example
 
 The repository includes a complete example:
-[`scripts/orm/sqlalchemy_demo.py`](../../scripts/orm/sqlalchemy_demo.py).
+[`scripts/orm/sqlalchemy_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/orm/sqlalchemy_demo.py).
 
 It uses SQLAlchemy 2.x with SQLite so no database server is required.
 
@@ -623,10 +623,10 @@ Before merging ORM code, ask:
 
 ## Related notes
 
-- [ORM tools and their trade-offs](02_popular_orm_tools.md)
-- [Schema migrations](03_schema_migrations.md)
-- [Relationship loading and query performance](04_relationship_loading_and_query_performance.md)
-- [Transactions, concurrency, and unit of work](05_transactions_concurrency_and_unit_of_work.md)
-- [Accessing a database in code](../08_database_performance/05_accessing_database_in_code.md)
-- [Transactions and ACID](../04_acid_properties_and_transactions/)
-- [SQL injection](../11_security_best_practices/06_sql_injection.md)
+- [ORM tools and their trade-offs](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/02_popular_orm_tools.md)
+- [Schema migrations](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/03_schema_migrations.md)
+- [Relationship loading and query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)
+- [Transactions, concurrency, and unit of work](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/05_transactions_concurrency_and_unit_of_work.md)
+- [Accessing a database in code](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/05_accessing_database_in_code.md)
+- [Transactions and ACID](https://github.com/djeada/Databases-Notes/tree/main/notes/04_acid_properties_and_transactions)
+- [SQL injection](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md)

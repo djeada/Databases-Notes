@@ -394,8 +394,8 @@ NoSQL databases offer a range of characteristics that make them suitable for mod
 
 The model categories above become useful only when connected to concrete access patterns:
 
-- [Document modeling](05_document_modeling.md) — embedding, references, bounded aggregates, schema evolution.
-- [Key-value modeling](06_key_value_modeling.md) — key design, TTL, caching, atomic operations, hotspots.
-- [Wide-column modeling](07_wide_column_modeling.md) — query-first tables, partition keys, bucketing, denormalization.
-- [Graph modeling](08_graph_modeling.md) — nodes, relationships, traversal depth, supernodes, projections.
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md) — guarantees that are separate from the data model.
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md) — embedding, references, bounded aggregates, schema evolution.
+- [Key-value modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md) — key design, TTL, caching, atomic operations, hotspots.
+- [Wide-column modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md) — query-first tables, partition keys, bucketing, denormalization.
+- [Graph modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/08_graph_modeling.md) — nodes, relationships, traversal depth, supernodes, projections.
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md) — guarantees that are separate from the data model.

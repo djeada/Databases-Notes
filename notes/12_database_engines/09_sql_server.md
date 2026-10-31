@@ -152,7 +152,7 @@ Result:
 
 This repository already contains a multiline SQL Server console:
 
-[`scripts/sqlserver/sql_docker_console.py`](../../scripts/sqlserver/sql_docker_console.py)
+[`scripts/sqlserver/sql_docker_console.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/sqlserver/sql_docker_console.py)
 
 It keeps one `sqlcmd` session alive between submitted scripts, which makes it useful for transaction, temporary-table, and session-state experiments.
 
@@ -163,7 +163,7 @@ python3 -m pip install prompt-toolkit
 python3 sqlserver/sql_docker_console.py --container sqlserver-notes
 ```
 
-See [`scripts/README.md`](../../scripts/README.md) for usage.
+See [`scripts/README.md`](https://github.com/djeada/Databases-Notes/blob/main/scripts/README.md) for usage.
 
 ## Schemas
 
@@ -559,9 +559,9 @@ Use least privilege.
 
 ## Related notes
 
-- [PostgreSQL](03_postgresql.md)
-- [MySQL](02_mysql.md)
-- [Choosing a database](07_choosing_database.md)
-- [Azure database services](15_azure_services.md)
-- [Transactions and ACID](../04_acid_properties_and_transactions/)
-- [Database performance](../08_database_performance/)
+- [PostgreSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md)
+- [MySQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/02_mysql.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Azure database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/15_azure_services.md)
+- [Transactions and ACID](https://github.com/djeada/Databases-Notes/tree/main/notes/04_acid_properties_and_transactions)
+- [Database performance](https://github.com/djeada/Databases-Notes/tree/main/notes/08_database_performance)

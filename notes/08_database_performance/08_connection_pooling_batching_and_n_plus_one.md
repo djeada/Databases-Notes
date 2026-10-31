@@ -413,8 +413,8 @@ Pair it with total database time and pool wait.
 
 ## Related notes
 
-- [Accessing databases in code](05_accessing_database_in_code.md)
-- [Query optimization](01_query_optimization_techniques.md)
-- [Pagination and large result sets](09_pagination_and_large_result_sets.md)
-- [ORM relationship loading](../14_orm/04_relationship_loading_and_query_performance.md)
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Accessing databases in code](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/05_accessing_database_in_code.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Pagination and large result sets](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/09_pagination_and_large_result_sets.md)
+- [ORM relationship loading](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)

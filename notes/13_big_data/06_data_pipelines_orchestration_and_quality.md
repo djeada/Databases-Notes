@@ -911,7 +911,7 @@ Keep business transformations in testable SQL or application code, not buried in
 
 ## Related notes
 
-- [Data warehousing](01_data_warehousing.md)
-- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
-- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
-- [Spark SQL](03_spark_sql.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Data lakes and lakehouses](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/04_data_lakes_and_lakehouses.md)
+- [Streaming, Kafka, and CDC](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/05_streaming_kafka_and_cdc.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)

@@ -202,12 +202,12 @@ The query visually resembles the graph pattern.
 
 The repository already contains:
 
-- [`scripts/neo4j/merge_full_pattern_duplicates_nodes.py`](../../scripts/neo4j/merge_full_pattern_duplicates_nodes.py)
-- [`scripts/neo4j/detach_delete_vs_delete.py`](../../scripts/neo4j/detach_delete_vs_delete.py)
+- [`scripts/neo4j/merge_full_pattern_duplicates_nodes.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/neo4j/merge_full_pattern_duplicates_nodes.py)
+- [`scripts/neo4j/detach_delete_vs_delete.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/neo4j/detach_delete_vs_delete.py)
 
 This NoSQL chapter adds:
 
-[`scripts/neo4j/nosql_traversal_demo.py`](../../scripts/neo4j/nosql_traversal_demo.py)
+[`scripts/neo4j/nosql_traversal_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/neo4j/nosql_traversal_demo.py)
 
 Start Neo4j and run it:
 
@@ -623,8 +623,8 @@ Synchronization failures become permanent.
 
 ## Related notes
 
-- [Types of NoSQL databases](02_types_of_nosql_databases.md)
-- [Querying NoSQL databases](03_querying_nosql_databases.md)
-- [Document modeling](05_document_modeling.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
-- [Neo4j engine note](../12_database_engines/05_neo4j.md)
+- [Types of NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/02_types_of_nosql_databases.md)
+- [Querying NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md)
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)
+- [Neo4j engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/05_neo4j.md)

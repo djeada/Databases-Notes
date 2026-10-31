@@ -302,7 +302,7 @@ ORDER BY depth, category_id;
 | 4 | Databases | 1 |
 | 5 | Programming | 1 |
 
-The first query starts the branch; the second repeatedly adds children. The schema prevents an immediate self-parent but not a longer cycle. Safe moves need additional rules and concurrency handling. The [hierarchical-data note](../03_sql/09_hierarchical_data.md) covers those cases and alternative representations.
+The first query starts the branch; the second repeatedly adds children. The schema prevents an immediate self-parent but not a longer cycle. Safe moves need additional rules and concurrency handling. The [hierarchical-data note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/09_hierarchical_data.md) covers those cases and alternative representations.
 
 ## Network models: follow predefined record connections
 
@@ -465,7 +465,7 @@ The record is shaped around “load one order with all its lines.” MongoDB can
 
 Embedding trades independent row relationships for an aggregate record boundary. Ask whether lines grow within a manageable limit, whether they are edited together, and what reports need to search across them. Referencing other documents can avoid copying shared facts, but those references do not become SQL-style foreign keys merely because they look like identifiers.
 
-The [types note](02_types_of_databases.md#document-databases-retrieve-a-record-with-nested-detail) provides a MongoDB insertion, query, and index example. A document model does not eliminate the need to define required fields, accepted types, or migration behavior.
+The [types note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md#document-databases-retrieve-a-record-with-nested-detail) provides a MongoDB insertion, query, and index example. A document model does not eliminate the need to define required fields, accepted types, or migration behavior.
 
 ## Column-family models: plan the partition and ordering
 
@@ -477,7 +477,7 @@ Partition: customer 1, month 2025-01
   2025-01-10 10:00 -> viewed product 10
 ```
 
-This is a query-oriented logical model. An additional query by product across customers may need another representation. Key design must consider skew, growth, and the application's ability to maintain repeated facts. The [Cassandra example](02_types_of_databases.md#wide-column-databases-design-partitions-around-known-queries) supplies a complete CQL definition and inserts.
+This is a query-oriented logical model. An additional query by product across customers may need another representation. Key design must consider skew, growth, and the application's ability to maintain repeated facts. The [Cassandra example](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md#wide-column-databases-design-partitions-around-known-queries) supplies a complete CQL definition and inserts.
 
 ### See column families directly in HBase
 
@@ -507,7 +507,7 @@ Alice --FOLLOWS--> Bob --LIKES--> Database Basics
 
 A purchase relationship may have a quantity and a timestamp, but an order often still deserves its own node because it groups several lines and has its own lifecycle. Choosing a graph does not imply every business event should be squeezed into one generic edge.
 
-The [Neo4j example](02_types_of_databases.md#graph-databases-make-traversal-a-first-class-operation) creates this graph and runs a Cypher pattern query. Multi-hop traversal is the motivating operation; identity, uniqueness, indexes, and path-expansion limits still require a design.
+The [Neo4j example](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md#graph-databases-make-traversal-a-first-class-operation) creates this graph and runs a Cypher pattern query. Multi-hop traversal is the motivating operation; identity, uniqueness, indexes, and path-expansion limits still require a design.
 
 ## Compare representations by the rules they preserve
 
@@ -537,4 +537,4 @@ Model expected edge cases before optimizing: guest checkout, split shipments, re
 9. Which request motivates embedding order lines, and which new request might make the design harder?
 10. Identify a conceptual, logical, and physical decision in the example.
 
-Continue with [requirements analysis](../02_database_design/01_requirements_analysis.md) to discover these rules systematically, then [normalization](../02_database_design/02_normalization.md) to reason about dependencies and repeated facts. Use the [glossary](05_glossary.md) to look up terms from this chapter.
+Continue with [requirements analysis](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/01_requirements_analysis.md) to discover these rules systematically, then [normalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/02_normalization.md) to reason about dependencies and repeated facts. Use the [glossary](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/05_glossary.md) to look up terms from this chapter.

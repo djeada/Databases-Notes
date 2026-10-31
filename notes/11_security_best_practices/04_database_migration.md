@@ -240,7 +240,7 @@ either the source or final destination.
 
 ## Related notes
 
-- [Identity and access control](08_identity_authentication_and_access_control.md)
-- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
-- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
-- [Backup and recovery](01_backup_and_recovery_strategies.md)
+- [Identity and access control](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)

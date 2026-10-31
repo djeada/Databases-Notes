@@ -2,7 +2,7 @@
 
 A **stored routine** gives database logic a callable interface. Use a function when a query needs a calculated value or set; use a procedure for an explicitly invoked operation. This chapter uses PostgreSQL because routine signatures, privileges, side effects, and transaction behavior are **dialect-specific**. Start with the ordinary query before introducing a reusable wrapper.
 
-Read [joins, subqueries, and views](06_joins_subqueries_and_views.md) first. This note uses **PostgreSQL**, because SQLite does not provide SQL `CREATE PROCEDURE` or `CREATE FUNCTION` commands. SQLite applications can register functions through their programming-language API, which is a different mechanism.
+Read [joins, subqueries, and views](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md) first. This note uses **PostgreSQL**, because SQLite does not provide SQL `CREATE PROCEDURE` or `CREATE FUNCTION` commands. SQLite applications can register functions through their programming-language API, which is a different mechanism.
 
 ## Start with the work you want to reuse
 
@@ -286,4 +286,4 @@ References: [PostgreSQL function volatility](https://www.postgresql.org/docs/cur
 3. Why does the cancellation procedure not guarantee a complete business cancellation?
 4. Why does storing code in the database not guarantee better performance?
 
-Next: [Triggers](08_triggers.md) explains code invoked automatically by data changes.
+Next: [Triggers](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/08_triggers.md) explains code invoked automatically by data changes.

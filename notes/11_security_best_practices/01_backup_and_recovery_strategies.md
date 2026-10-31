@@ -261,7 +261,7 @@ backup command.
 
 The repository includes a disposable PostgreSQL exercise:
 
-[`scripts/security/postgres_restore_drill.sh`](../../scripts/security/postgres_restore_drill.sh)
+[`scripts/security/postgres_restore_drill.sh`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/postgres_restore_drill.sh)
 
 After starting the local PostgreSQL container:
 
@@ -301,7 +301,7 @@ extensions, application connectivity, recovery point, and the measured RTO.
 
 ## Related notes
 
-- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
-- [Crash recovery](07_crash_recovery_in_databases.md)
-- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
-- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
+- [Incident response and disaster recovery drills](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md)
+- [Crash recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md)
+- [Encryption, secrets, and key management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md)

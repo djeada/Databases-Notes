@@ -432,8 +432,8 @@ Large analytics may benefit more from columnar storage and data skipping than fr
 
 ## Related notes
 
-- [Indexing](05_indexing.md)
-- [Covering, partial, and expression indexes](08_covering_partial_and_expression_indexes.md)
-- [Row vs column storage](02_row_based_vs_column_based_databases.md)
-- [Query optimization](../08_database_performance/01_query_optimization_techniques.md)
-- [OpenSearch and Elasticsearch](../12_database_engines/12_elasticsearch_and_opensearch.md)
+- [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [Covering, partial, and expression indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/08_covering_partial_and_expression_indexes.md)
+- [Row vs column storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [OpenSearch and Elasticsearch](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/12_elasticsearch_and_opensearch.md)

@@ -324,7 +324,7 @@ A backup should be tested by restoring it.
 
 The repository includes:
 
-[`scripts/security/postgres_restore_drill.sh`](../../scripts/security/postgres_restore_drill.sh)
+[`scripts/security/postgres_restore_drill.sh`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/postgres_restore_drill.sh)
 
 It uses the local `postgres-local` container and a disposable database named:
 
@@ -696,8 +696,8 @@ The key is continuous evidence, not a specific calendar rule.
 
 ## Related notes
 
-- [Backup and recovery](01_backup_and_recovery_strategies.md)
-- [Crash recovery](07_crash_recovery_in_databases.md)
-- [Auditing and data governance](10_auditing_compliance_and_data_governance.md)
-- [Database hardening](11_database_hardening_and_patch_management.md)
-- [Database security overview](02_database_security.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)
+- [Crash recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md)
+- [Auditing and data governance](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md)
+- [Database hardening](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [Database security overview](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)

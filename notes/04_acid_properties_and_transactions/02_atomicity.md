@@ -2,11 +2,11 @@
 
 **Atomicity** means that the database makes a transaction's effects visible as a committed unit or leaves none of those effects committed. The statements still execute in sequence; atomicity does **not** mean simultaneous execution, nor does it guarantee that application logic is correct. A statement error is not necessarily an automatic rollback of the entire transaction.
 
-Read [Transactions](01_transactions_intro.md) first. Its checkout groups a stock reduction, an order, and an order item.
+Read [Transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) first. Its checkout groups a stock reduction, an order, and an order item.
 
 ## See rollback undo an earlier change
 
-Use the fresh [bookstore setup](../03_sql/01_intro_to_sql.md). Product 10 begins with stock 5.
+Use the fresh [bookstore setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). Product 10 begins with stock 5.
 
 ```sql
 BEGIN;
@@ -65,7 +65,7 @@ A condition that is false can also be a business failure without a database erro
 
 A crash can interrupt a transaction after some writes have reached storage. Databases use recovery information, such as a transaction log, to distinguish committed work from incomplete work. On restart, the engine applies its recovery procedure so unfinished transactions do not become partially committed results.
 
-The exact mechanism depends on the engine. A **log** records recovery information; it is not the same thing as an application debug log. [Crash recovery](../11_security_best_practices/07_crash_recovery_in_databases.md) explains the storage details after the ACID foundations.
+The exact mechanism depends on the engine. A **log** records recovery information; it is not the same thing as an application debug log. [Crash recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md) explains the storage details after the ACID foundations.
 
 ## Define what is inside the transaction
 
@@ -73,7 +73,7 @@ A database transaction generally covers the transactional operations on its part
 
 For example, sending a confirmation email before commit risks announcing an order that later rolls back. Sending it after commit avoids that particular error, but a crash between commit and sending can leave the email unsent. A common design records a pending notification in the same transaction as the order, then lets a worker deliver it with retry and duplicate handling. This is often called a **transactional outbox**.
 
-A **savepoint** marks a place for partial rollback inside a transaction. It helps recover from an optional step, but releasing it does not commit the surrounding transaction. The [SQL transaction control note](../03_sql/05_transaction_control_language_tcl.md) includes a runnable example.
+A **savepoint** marks a place for partial rollback inside a transaction. It helps recover from an optional step, but releasing it does not commit the surrounding transaction. The [SQL transaction control note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) includes a runnable example.
 
 ## Exercise: roll back a successful write after a later constraint error
 
@@ -151,7 +151,7 @@ The example uses Python's default SQLite transaction handling. It proves that th
 
 If an update matches zero rows, the database usually treats the statement as successful execution. An absent product is not a syntax error. Likewise, transferring to a missing account can credit zero rows. The application must check affected-row counts or returned rows and raise a business failure that triggers rollback.
 
-The [transaction control note](../03_sql/05_transaction_control_language_tcl.md) includes a complete transfer helper that checks both the debit and the credit. It also rejects nonpositive amounts and transfers to the same account. Atomicity supplies a unit of acceptance for that helper; those validations determine what the unit means.
+The [transaction control note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) includes a complete transfer helper that checks both the debit and the credit. It also rejects nonpositive amounts and transfers to the same account. Atomicity supplies a unit of acceptance for that helper; those validations determine what the unit means.
 
 A sequence or identity counter is another important boundary. PostgreSQL sequence increments are not rolled back with a failed transaction, and SQL Server identity values can also have gaps. Atomicity of the business rows does not imply that every internal counter returns to its previous value. Do not use missing order IDs as evidence that rows disappeared or that a transaction partially committed.
 
@@ -260,4 +260,4 @@ References: [PostgreSQL prepared transactions](https://www.postgresql.org/docs/c
 3. Why can zero affected rows require rollback even when no exception was raised?
 4. What does an outbox record put inside the transaction, and what work remains outside it?
 
-Next: [Consistency](03_consistency.md) asks whether the complete operation leaves valid data.
+Next: [Consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/03_consistency.md) asks whether the complete operation leaves valid data.

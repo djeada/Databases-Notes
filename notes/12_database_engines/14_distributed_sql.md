@@ -153,7 +153,7 @@ Region placement matters.
 
 The repository includes:
 
-[`scripts/cockroach/docker-compose.yml`](../../scripts/cockroach/docker-compose.yml)
+[`scripts/cockroach/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cockroach/docker-compose.yml)
 
 Start:
 
@@ -188,7 +188,7 @@ docker compose down
 
 The repository includes:
 
-[`scripts/cockroach/demo.sql`](../../scripts/cockroach/demo.sql)
+[`scripts/cockroach/demo.sql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cockroach/demo.sql)
 
 Run:
 
@@ -694,8 +694,8 @@ Before choosing distributed SQL:
 
 ## Related notes
 
-- [PostgreSQL](03_postgresql.md)
-- [Cassandra](11_cassandra.md)
-- [Choosing a database](07_choosing_database.md)
-- [Distributed databases](../06_distributed_databases/)
-- [Concurrency control](../07_concurrency_control/)
+- [PostgreSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md)
+- [Cassandra](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Distributed databases](https://github.com/djeada/Databases-Notes/tree/main/notes/06_distributed_databases)
+- [Concurrency control](https://github.com/djeada/Databases-Notes/tree/main/notes/07_concurrency_control)

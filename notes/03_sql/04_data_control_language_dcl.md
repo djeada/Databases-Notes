@@ -231,4 +231,4 @@ References: [PostgreSQL privileges](https://www.postgresql.org/docs/current/ddl-
 3. Why might revoking one role's grant leave a user's access intact?
 4. Why does a shared application connection still need a customer-level access policy?
 
-Continue with [transaction control](05_transaction_control_language_tcl.md) to decide which authorized changes must succeed together.
+Continue with [transaction control](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) to decide which authorized changes must succeed together.

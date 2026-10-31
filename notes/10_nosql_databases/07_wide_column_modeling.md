@@ -82,11 +82,11 @@ That shape supports ordered range reads within one customer.
 
 The repository already contains:
 
-[`scripts/cassandra/demo.cql`](../../scripts/cassandra/demo.cql)
+[`scripts/cassandra/demo.cql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cassandra/demo.cql)
 
 This chapter adds:
 
-[`scripts/cassandra/nosql_bucketed_events.cql`](../../scripts/cassandra/nosql_bucketed_events.cql)
+[`scripts/cassandra/nosql_bucketed_events.cql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/cassandra/nosql_bucketed_events.cql)
 
 The additional demo shows a time-bucketed partition key.
 
@@ -678,9 +678,9 @@ The wrong engine is doing the work.
 
 ## Related notes
 
-- [Types of NoSQL databases](02_types_of_nosql_databases.md)
-- [Querying NoSQL databases](03_querying_nosql_databases.md)
-- [Key-value modeling](06_key_value_modeling.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
-- [Cassandra engine note](../12_database_engines/11_cassandra.md)
-- [Partitioning](../06_distributed_databases/02_partitioning.md)
+- [Types of NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/02_types_of_nosql_databases.md)
+- [Querying NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md)
+- [Key-value modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)
+- [Cassandra engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md)
+- [Partitioning](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md)

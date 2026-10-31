@@ -79,6 +79,6 @@ Choose identifiers for stability and correct uniqueness rules; choose additional
 
 ## Related notes
 
-- [Storage on disk](01_how_tables_and_indexes_are_stored_on_disk.md)
-- [Indexing](05_indexing.md)
+- [Storage on disk](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md)
+- [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
 - [SQLite primary-key behavior](https://www.sqlite.org/lang_createtable.html#the_primary_key)

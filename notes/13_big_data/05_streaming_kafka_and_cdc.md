@@ -95,7 +95,7 @@ The trade-off is that a very hot key can create partition skew.
 
 The repository includes a single-node development configuration:
 
-[`scripts/big_data/kafka/docker-compose.yml`](../../scripts/big_data/kafka/docker-compose.yml)
+[`scripts/big_data/kafka/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/big_data/kafka/docker-compose.yml)
 
 It uses Apache Kafka in KRaft mode. It is for learning, not production.
 
@@ -538,7 +538,7 @@ Store large blobs in object storage and put references/metadata in Kafka when ap
 
 ## Related notes
 
-- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
-- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
-- [Spark SQL](03_spark_sql.md)
-- [Transactions](../04_acid_properties_and_transactions/)
+- [Data lakes and lakehouses](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/04_data_lakes_and_lakehouses.md)
+- [Pipelines, orchestration, and data quality](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)
+- [Transactions](https://github.com/djeada/Databases-Notes/tree/main/notes/04_acid_properties_and_transactions)

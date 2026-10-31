@@ -172,7 +172,7 @@ Result:
 
 Notice that the fact table stores keys and numeric measures, while category and calendar year come from dimensions. This is the core pattern behind many BI models.
 
-See the runnable example: [`scripts/big_data/warehouse_demo.py`](../../scripts/big_data/warehouse_demo.py).
+See the runnable example: [`scripts/big_data/warehouse_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/big_data/warehouse_demo.py).
 
 ## Slowly changing dimensions
 
@@ -392,10 +392,10 @@ Start with the smallest architecture that meets the workload. Distributed system
 
 ## Related notes
 
-- [Row and column storage](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md)
-- [Materialized views](../08_database_performance/04_materialized_views.md)
-- [Hadoop and HDFS](02_hadoop_and_hdfs.md)
-- [Spark SQL](03_spark_sql.md)
-- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
-- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
-- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
+- [Row and column storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md)
+- [Materialized views](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md)
+- [Hadoop and HDFS](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/02_hadoop_and_hdfs.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)
+- [Data lakes and lakehouses](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/04_data_lakes_and_lakehouses.md)
+- [Streaming, Kafka, and CDC](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/05_streaming_kafka_and_cdc.md)
+- [Pipelines, orchestration, and data quality](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)

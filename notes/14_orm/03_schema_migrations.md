@@ -537,8 +537,8 @@ ORM portability does not imply migration portability.
 
 ## Related notes
 
-- [Introduction to ORM](01_introduction_to_orm.md)
-- [ORM tools and their trade-offs](02_popular_orm_tools.md)
-- [Relationship loading and query performance](04_relationship_loading_and_query_performance.md)
-- [Transactions, concurrency, and unit of work](05_transactions_concurrency_and_unit_of_work.md)
-- [Transactions and ACID](../04_acid_properties_and_transactions/)
+- [Introduction to ORM](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)
+- [ORM tools and their trade-offs](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/02_popular_orm_tools.md)
+- [Relationship loading and query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)
+- [Transactions, concurrency, and unit of work](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/05_transactions_concurrency_and_unit_of_work.md)
+- [Transactions and ACID](https://github.com/djeada/Databases-Notes/tree/main/notes/04_acid_properties_and_transactions)

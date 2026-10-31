@@ -498,7 +498,7 @@ The exercise creates:
 
 ## Related notes
 
-- [Composite indexes and column order](07_composite_indexes_and_column_order.md)
-- [Database indexing](05_indexing.md)
-- [Specialized index structures](10_specialized_index_structures.md)
-- [Execution plans](../08_database_performance/07_execution_plans_statistics_and_cardinality.md)
+- [Composite indexes and column order](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/07_composite_indexes_and_column_order.md)
+- [Database indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [Specialized index structures](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/10_specialized_index_structures.md)
+- [Execution plans](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md)

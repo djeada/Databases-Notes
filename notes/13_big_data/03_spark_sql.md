@@ -101,7 +101,7 @@ The choice between SQL and DataFrames is often about readability and team prefer
 ## Runnable local example
 
 The repository contains a complete example at
-[`scripts/big_data/spark_sql_demo.py`](../../scripts/big_data/spark_sql_demo.py).
+[`scripts/big_data/spark_sql_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/big_data/spark_sql_demo.py).
 
 ### Check Java
 
@@ -535,10 +535,10 @@ When a Spark SQL job is slow:
 
 ## Related notes
 
-- [Data warehousing](01_data_warehousing.md)
-- [Hadoop and HDFS](02_hadoop_and_hdfs.md)
-- [Data lakes and lakehouses](04_data_lakes_and_lakehouses.md)
-- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
-- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
-- [Aggregate functions](../03_sql/10_aggregate_functions.md)
-- [Window functions](../03_sql/11_window_functions.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Hadoop and HDFS](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/02_hadoop_and_hdfs.md)
+- [Data lakes and lakehouses](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/04_data_lakes_and_lakehouses.md)
+- [Streaming, Kafka, and CDC](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/05_streaming_kafka_and_cdc.md)
+- [Pipelines, orchestration, and data quality](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)
+- [Aggregate functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/10_aggregate_functions.md)
+- [Window functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/11_window_functions.md)

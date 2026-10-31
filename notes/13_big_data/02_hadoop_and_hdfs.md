@@ -393,6 +393,6 @@ It is usually a poor fit for:
 
 ## Related notes
 
-- [Data warehousing](01_data_warehousing.md)
-- [Spark SQL](03_spark_sql.md)
-- [Distributed databases](../06_distributed_databases/)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)
+- [Distributed databases](https://github.com/djeada/Databases-Notes/tree/main/notes/06_distributed_databases)

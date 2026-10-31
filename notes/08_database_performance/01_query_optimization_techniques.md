@@ -2,7 +2,7 @@
 
 A query can return the correct result and still do far more work than necessary. **Optimization** means reducing that work while preserving the result the application needs. Start with one measured problem, not a checklist of indexes to add everywhere.
 
-Before this note, practice [joins](../03_sql/06_joins_subqueries_and_views.md) and understand [indexes](../05_storage_and_indexing/05_indexing.md). We will use the bookstore's order lookup to connect SQL, access paths, and measurements.
+Before this note, practice [joins](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md) and understand [indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md). We will use the bookstore's order lookup to connect SQL, access paths, and measurements.
 
 The query examples use these bookstore rows:
 
@@ -32,7 +32,7 @@ Use representative data. A three-row tutorial table teaches syntax; it cannot de
 
 ## Read a plan for the actual query
 
-Use the fresh [SQLite bookstore setup](../03_sql/01_intro_to_sql.md):
+Use the fresh [SQLite bookstore setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md):
 
 ```sql
 EXPLAIN QUERY PLAN
@@ -72,7 +72,7 @@ The query fixes the first two columns to one customer's open orders, then reques
 
 Run the plan query again. The optimizer may still choose another route, especially for a tiny table. An index is an available option, not an instruction that the engine must use it.
 
-Do not add every column “just in case.” Each index uses space and increases relevant write work. [Performance indexing strategies](02_indexing_strategies.md) covers composite, partial, and covering indexes in more detail.
+Do not add every column “just in case.” Each index uses space and increases relevant write work. [Performance indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md) covers composite, partial, and covering indexes in more detail.
 
 ## Keep predicates usable by the available index
 
@@ -147,7 +147,7 @@ Keep the data, parameters, and load comparable. Measure more than one run and di
 
 For production changes, compare against the actual workload and watch for regressions. A hint that forces a plan can become inappropriate when data changes; hints should follow a diagnosis rather than substitute for one.
 
-If an expensive calculation must be reused, consider a [materialized view](04_materialized_views.md) or [cache](03_database_caching.md). Both introduce freshness and maintenance requirements. Distributed execution also adds data-transfer costs: moving rows across nodes can dominate the local SQL work.
+If an expensive calculation must be reused, consider a [materialized view](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md) or [cache](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md). Both introduce freshness and maintenance requirements. Distributed execution also adds data-transfer costs: moving rows across nodes can dominate the local SQL work.
 
 ## Check your understanding
 
@@ -157,4 +157,4 @@ If an expensive calculation must be reused, consider a [materialized view](04_ma
 4. What does a large estimated-versus-actual row mismatch suggest?
 5. Which correctness checks belong beside a before-and-after timing?
 
-Continue with [indexing strategies](02_indexing_strategies.md), then [caching](03_database_caching.md). For ongoing diagnosis, see [performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md).
+Continue with [indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md), then [caching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md). For ongoing diagnosis, see [performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md).

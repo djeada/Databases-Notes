@@ -426,9 +426,9 @@ Write/storage cost may exceed benefit.
 
 ## Related notes
 
-- [Primary keys and secondary indexes](03_primary_key_vs_secondary_key.md)
-- [Database pages](04_database_pages.md)
-- [B-tree internals](06_btree_internals_and_page_splits.md)
-- [Row versus column storage](02_row_based_vs_column_based_databases.md)
-- [MySQL/InnoDB engine note](../12_database_engines/02_mysql.md)
-- [PostgreSQL engine note](../12_database_engines/03_postgresql.md)
+- [Primary keys and secondary indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md)
+- [Database pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md)
+- [B-tree internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md)
+- [Row versus column storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md)
+- [MySQL/InnoDB engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/02_mysql.md)
+- [PostgreSQL engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md)

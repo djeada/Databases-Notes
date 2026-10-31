@@ -180,6 +180,6 @@ References: [SQLite WAL](https://www.sqlite.org/wal.html), [SQLite synchronous p
 
 ## Related notes
 
-- [Crash recovery](../11_security_best_practices/07_crash_recovery_in_databases.md)
-- [Synchronous and asynchronous replication](../09_database_replication/04_synchronous_vs_asynchronous_replication.md)
-- [Backup and recovery](../11_security_best_practices/01_backup_and_recovery_strategies.md)
+- [Crash recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md)
+- [Synchronous and asynchronous replication](https://github.com/djeada/Databases-Notes/blob/main/notes/09_database_replication/04_synchronous_vs_asynchronous_replication.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)

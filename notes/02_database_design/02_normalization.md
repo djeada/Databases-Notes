@@ -2,7 +2,7 @@
 
 Normalization is a way to organize related facts so a change does not require editing many copies of the same information. Begin with the problems in a combined table, then use the normal forms to explain how to separate it safely.
 
-You should already understand rows, primary keys, and foreign keys from [data models](../01_introduction_to_databases/04_data_models.md).
+You should already understand rows, primary keys, and foreign keys from [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md).
 
 ## Start with a table that repeats facts
 
@@ -195,7 +195,7 @@ ORDER BY o.order_id, i.line_number;
 
 The *join output* repeats names and titles to display each purchase, but the **stored data** has only one customer name and one title per product. `norm_order_items` owns each line's historical price, while `norm_products` owns the current catalog price.
 
-The corrected name was chosen deliberately; blindly using `SELECT DISTINCT` on contradictory source records cannot decide which name is authoritative. A migration must resolve conflicts before adding keys and populating these tables. For a broader bookstore schema, see [data models](../01_introduction_to_databases/04_data_models.md).
+The corrected name was chosen deliberately; blindly using `SELECT DISTINCT` on contradictory source records cannot decide which name is authoritative. A migration must resolve conflicts before adding keys and populating these tables. For a broader bookstore schema, see [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md).
 
 ## Purchase price is not unnecessary duplication
 
@@ -359,4 +359,4 @@ Normalization protects representation; concurrency control protects overlapping 
 3. Why should purchase price remain on the order item?
 4. What could go wrong if a decomposition loses the columns connecting its pieces?
 
-Continue with [denormalization](03_denormalization.md) to learn when a measured read workload justifies deliberate duplication.
+Continue with [denormalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/03_denormalization.md) to learn when a measured read workload justifies deliberate duplication.

@@ -2,7 +2,7 @@
 
 The bookstore keeps customers, orders, products, and lines as separate facts. This chapter shows how to **combine without copying** them: joins pair related rows, subqueries express dependent tests and calculations, and views name reusable queries. The central skill is keeping track of **result grain**—whether one output row represents a customer, order, or order line.
 
-Use a fresh copy of the SQLite [introductory setup](01_intro_to_sql.md). In particular, Alice has two orders, Bob has one, and Carol has none. If you committed extra orders during the transaction exercises, reset the sample before comparing these results.
+Use a fresh copy of the SQLite [introductory setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). In particular, Alice has two orders, Bob has one, and Carol has none. If you committed extra orders during the transaction exercises, reset the sample before comparing these results.
 
 These are the input rows used by the bookstore queries in this note:
 
@@ -523,4 +523,4 @@ References: [SQLite SELECT and join support](https://www.sqlite.org/lang_select.
 4. Why might `EXISTS` be clearer than a join when you only want customers with an order?
 5. Does creating `order_totals` store an independent snapshot of the totals?
 
-Continue with [stored procedures and functions](07_stored_procedures_and_functions.md) for reusable database logic. [Aggregate functions](10_aggregate_functions.md) and [window functions](11_window_functions.md) develop reporting calculations.
+Continue with [stored procedures and functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/07_stored_procedures_and_functions.md) for reusable database logic. [Aggregate functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/10_aggregate_functions.md) and [window functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/11_window_functions.md) develop reporting calculations.

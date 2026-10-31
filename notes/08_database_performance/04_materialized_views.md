@@ -563,8 +563,8 @@ Poor fit:
 
 ## Related notes
 
-- [Query optimization](01_query_optimization_techniques.md)
-- [Database caching](03_database_caching.md)
-- [Write performance and maintenance](12_write_performance_vacuum_and_bloat.md)
-- [Data warehousing](../13_big_data/01_data_warehousing.md)
-- [Data pipelines](../13_big_data/06_data_pipelines_orchestration_and_quality.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Database caching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md)
+- [Write performance and maintenance](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/12_write_performance_vacuum_and_bloat.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Data pipelines](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)

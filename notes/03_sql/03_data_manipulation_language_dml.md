@@ -2,7 +2,7 @@
 
 **DML** changes rows with `INSERT`, `UPDATE`, and `DELETE`; `SELECT` reads data and is sometimes classified separately as query language. This chapter treats them together because applications must reason about both the targeted rows and the outcome. A successfully executed statement may affect **zero** rows, which is often a business failure rather than a SQL error.
 
-Use the SQLite bookstore setup from the [SQL introduction](01_intro_to_sql.md). The write examples below are independent exercises wrapped in a transaction and rolled back, so they do not leave the sample database changed. A transaction is a group of database work; [TCL](05_transaction_control_language_tcl.md) explains it in detail.
+Use the SQLite bookstore setup from the [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). The write examples below are independent exercises wrapped in a transaction and rolled back, so they do not leave the sample database changed. A transaction is a group of database work; [TCL](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) explains it in detail.
 
 The bookstore rows used by these examples are:
 
@@ -379,4 +379,4 @@ References: [SQLite UPSERT](https://www.sqlite.org/lang_upsert.html) and [SQLite
 3. What happens if an update intended for product 10 has no `WHERE` clause?
 4. Why must a sale attempt check the affected-row count?
 
-Continue with [permissions](04_data_control_language_dcl.md) to decide who may perform these operations, and [transactions](05_transaction_control_language_tcl.md) to group related changes.
+Continue with [permissions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/04_data_control_language_dcl.md) to decide who may perform these operations, and [transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) to group related changes.

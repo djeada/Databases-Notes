@@ -102,7 +102,7 @@ The database may spend more time on network latency, parsing, planning, and conn
 
 The repository includes:
 
-[`scripts/orm/n_plus_one_demo.py`](../../scripts/orm/n_plus_one_demo.py)
+[`scripts/orm/n_plus_one_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/orm/n_plus_one_demo.py)
 
 Run:
 
@@ -773,8 +773,8 @@ Most ORM bottlenecks are database/network behavior.
 
 ## Related notes
 
-- [Introduction to ORM](01_introduction_to_orm.md)
-- [ORM tools and their trade-offs](02_popular_orm_tools.md)
-- [Schema migrations](03_schema_migrations.md)
-- [Transactions, concurrency, and unit of work](05_transactions_concurrency_and_unit_of_work.md)
-- [Database performance](../08_database_performance/)
+- [Introduction to ORM](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)
+- [ORM tools and their trade-offs](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/02_popular_orm_tools.md)
+- [Schema migrations](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/03_schema_migrations.md)
+- [Transactions, concurrency, and unit of work](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/05_transactions_concurrency_and_unit_of_work.md)
+- [Database performance](https://github.com/djeada/Databases-Notes/tree/main/notes/08_database_performance)

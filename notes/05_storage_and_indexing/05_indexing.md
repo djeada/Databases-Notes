@@ -4,14 +4,14 @@ An index trades extra storage and write maintenance for a potentially cheaper re
 
 This page is the **indexing overview**. The focused notes that follow go deeper into:
 
-- [B-tree internals and page splits](06_btree_internals_and_page_splits.md),
-- [composite index column order](07_composite_indexes_and_column_order.md),
-- [covering, partial, and expression indexes](08_covering_partial_and_expression_indexes.md),
-- [clustered indexes, heaps, and row locality](09_clustered_indexes_heap_tables_and_row_locality.md),
-- [specialized index structures](10_specialized_index_structures.md),
-- [maintenance, bloat, and online index operations](11_index_maintenance_bloat_and_online_operations.md).
+- [B-tree internals and page splits](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md),
+- [composite index column order](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/07_composite_indexes_and_column_order.md),
+- [covering, partial, and expression indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/08_covering_partial_and_expression_indexes.md),
+- [clustered indexes, heaps, and row locality](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/09_clustered_indexes_heap_tables_and_row_locality.md),
+- [specialized index structures](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/10_specialized_index_structures.md),
+- [maintenance, bloat, and online index operations](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/11_index_maintenance_bloat_and_online_operations.md).
 
-The performance chapter then shows how to validate these structures with [execution plans and cardinality estimates](../08_database_performance/07_execution_plans_statistics_and_cardinality.md).
+The performance chapter then shows how to validate these structures with [execution plans and cardinality estimates](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md).
 
 ## How a B-tree lookup works
 
@@ -202,8 +202,8 @@ Measure whether maintenance improves the workload. Rebuilds consume I/O, CPU, lo
 
 ## Related notes
 
-- [Storage on disk](01_how_tables_and_indexes_are_stored_on_disk.md)
-- [Primary keys and secondary indexes](03_primary_key_vs_secondary_key.md)
-- [Index access methods](../08_database_performance/02_indexing_strategies.md)
-- [SQL Server indexing walkthrough](../../projectes/indexes_in_microsoft_sql_server.md)
+- [Storage on disk](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md)
+- [Primary keys and secondary indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md)
+- [Index access methods](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md)
+- [SQL Server indexing walkthrough](https://github.com/djeada/Databases-Notes/blob/main/projectes/indexes_in_microsoft_sql_server.md)
 - [PostgreSQL indexes](https://www.postgresql.org/docs/current/indexes.html)

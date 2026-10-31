@@ -759,9 +759,9 @@ That exercise reveals much more than a synthetic "ORM benchmark".
 
 ## Related notes
 
-- [Introduction to ORM](01_introduction_to_orm.md)
-- [Schema migrations](03_schema_migrations.md)
-- [Relationship loading and query performance](04_relationship_loading_and_query_performance.md)
-- [Transactions, concurrency, and unit of work](05_transactions_concurrency_and_unit_of_work.md)
-- [Accessing a database in code](../08_database_performance/05_accessing_database_in_code.md)
-- [SQL injection](../11_security_best_practices/06_sql_injection.md)
+- [Introduction to ORM](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)
+- [Schema migrations](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/03_schema_migrations.md)
+- [Relationship loading and query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)
+- [Transactions, concurrency, and unit of work](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/05_transactions_concurrency_and_unit_of_work.md)
+- [Accessing a database in code](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/05_accessing_database_in_code.md)
+- [SQL injection](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md)

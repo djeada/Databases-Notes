@@ -69,7 +69,7 @@ For an exam question, identify the explicit requirement and deployment type. “
 
 ## Related notes
 
-- [Choosing a database](07_choosing_database.md)
-- [Google Cloud database services](08_gcp_services.md)
-- [Azure database services](15_azure_services.md)
-- [Synchronous and asynchronous replication](../09_database_replication/04_synchronous_vs_asynchronous_replication.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Google Cloud database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/08_gcp_services.md)
+- [Azure database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/15_azure_services.md)
+- [Synchronous and asynchronous replication](https://github.com/djeada/Databases-Notes/blob/main/notes/09_database_replication/04_synchronous_vs_asynchronous_replication.md)

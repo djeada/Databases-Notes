@@ -2,7 +2,7 @@
 
 A **distributed database** places related data and computation across independently failing nodes while exposing a usable database interface. Distribution is not a single feature: placement, replication, transaction coordination, and failure handling make different promises.
 
-**Reading path:** first distinguish partitioning from replication; then follow data placement, quorum and transaction protocols, network failures, and distributed queries. Later sections compare product mechanisms and trace an end-to-end order. This is an architectural survey, not a command tutorial. For deeper follow-up, use [partitioning](02_partitioning.md), [sharding](03_sharding.md), [CAP](06_cap_theorem.md), and [eventual consistency](07_eventual_consistency.md).
+**Reading path:** first distinguish partitioning from replication; then follow data placement, quorum and transaction protocols, network failures, and distributed queries. Later sections compare product mechanisms and trace an end-to-end order. This is an architectural survey, not a command tutorial. For deeper follow-up, use [partitioning](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md), [sharding](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/03_sharding.md), [CAP](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/06_cap_theorem.md), and [eventual consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md).
 
 A simple picture might be:
 

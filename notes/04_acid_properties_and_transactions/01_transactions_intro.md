@@ -6,7 +6,7 @@ A **transaction** groups database operations so they can be committed together o
 
 ## Follow one checkout
 
-Use a **fresh** bookstore database from [Introduction to SQL](../03_sql/01_intro_to_sql.md). Product 10 starts with five copies in stock. This is a *happy-path demonstration*, not a safe production checkout: the SQL below does not inspect the affected-row count and would continue inserting the order even if the stock update matched no row. The complete application must abort on that condition.
+Use a **fresh** bookstore database from [Introduction to SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). Product 10 starts with five copies in stock. This is a *happy-path demonstration*, not a safe production checkout: the SQL below does not inspect the affected-row count and would continue inserting the order even if the stock update matched no row. The complete application must abort on that condition.
 
 ```sql
 BEGIN;
@@ -25,7 +25,7 @@ VALUES (104, 1, 10, 1, 1500);
 COMMIT;
 ```
 
-On the stated starting data, the update matches one row, stock becomes four, and order 104 has one item. **Do not commit if the stock reservation affects zero rows.** That result is not a SQL exception; application code must check it before executing the inserts. The [transaction control note](../03_sql/05_transaction_control_language_tcl.md) implements this missing step with Python. Test failure branches separately, rather than treating an example script containing an unconditional `COMMIT` as a complete checkout implementation.
+On the stated starting data, the update matches one row, stock becomes four, and order 104 has one item. **Do not commit if the stock reservation affects zero rows.** That result is not a SQL exception; application code must check it before executing the inserts. The [transaction control note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) implements this missing step with Python. Test failure branches separately, rather than treating an example script containing an unconditional `COMMIT` as a complete checkout implementation.
 
 If an insert fails, the application must also roll back the whole checkout. Engines differ in whether an error cancels a statement or leaves the transaction unusable. Do not assume that catching an exception makes earlier changes disappear.
 
@@ -48,7 +48,7 @@ Suppose one copy remains. Alice and Bob both read `stock = 1`, then both create 
 
 The conditional update above makes the stock check part of the write. Depending on the engine and isolation level, competing transactions may wait, observe that no stock remains, or fail and require a retry. More complicated rules can need locks or serializable isolation.
 
-**Concurrent** means operations overlap in time. An **isolation level** specifies which interactions concurrent transactions may observe. Serializable isolation promises an outcome equivalent to some serial order of successful transactions; weaker levels offer fewer guarantees. See [Isolation](04_isolation.md) for concrete read anomalies.
+**Concurrent** means operations overlap in time. An **isolation level** specifies which interactions concurrent transactions may observe. Serializable isolation promises an outcome equivalent to some serial order of successful transactions; weaker levels offer fewer guarantees. See [Isolation](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/04_isolation.md) for concrete read anomalies.
 
 ## Keep the transaction boundary deliberate
 
@@ -209,4 +209,4 @@ Continue through each ACID property by asking what could go wrong in this exact 
 4. Can rolling back the database cancel an email that has already been sent?
 5. Why can a missing commit response require more care than an ordinary rejected statement?
 
-Continue with [Atomicity](02_atomicity.md), then [Consistency](03_consistency.md), [Isolation](04_isolation.md), and [Durability](05_durability.md).
+Continue with [Atomicity](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/02_atomicity.md), then [Consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/03_consistency.md), [Isolation](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/04_isolation.md), and [Durability](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/05_durability.md).

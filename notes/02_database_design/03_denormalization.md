@@ -1,6 +1,6 @@
 # Denormalization: Add Redundancy with a Maintenance Plan
 
-[Normalization](02_normalization.md) separates facts so each has a clear home. **Denormalization** deliberately stores an additional copy or precomputed result to make a particular read cheaper. It creates a new responsibility: keep that copy correct, or explicitly allow it to lag.
+[Normalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/02_normalization.md) separates facts so each has a clear home. **Denormalization** deliberately stores an additional copy or precomputed result to make a particular read cheaper. It creates a new responsibility: keep that copy correct, or explicitly allow it to lag.
 
 Start with a concrete slow read, not with the assumption that joins are always expensive.
 
@@ -35,7 +35,7 @@ The performance benefit therefore has to include both sides:
 
 ## Implement a stored total and its maintenance path
 
-Use the fresh [SQLite bookstore setup](../03_sql/01_intro_to_sql.md). This example adds a derived field to orders while leaving line items authoritative:
+Use the fresh [SQLite bookstore setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). This example adds a derived field to orders while leaving line items authoritative:
 
 ```sql
 ALTER TABLE orders ADD COLUMN cached_total_cents INTEGER;
@@ -266,4 +266,4 @@ Document the source, refresh or update mechanism, permitted delay, ownership, an
 3. When would a daily sales summary allow delayed refresh, while a checkout amount would not?
 4. Why is purchase price different from a duplicated current price?
 
-Continue with [indexing strategies](04_indexing_strategies.md) for a way to improve access without adding business facts. [Materialized views](../08_database_performance/04_materialized_views.md) develops the stored-summary approach.
+Continue with [indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/04_indexing_strategies.md) for a way to improve access without adding business facts. [Materialized views](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md) develops the stored-summary approach.

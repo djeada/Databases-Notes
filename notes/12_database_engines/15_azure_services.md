@@ -645,11 +645,11 @@ One relational database can support many applications for a long time.
 
 ## Related notes
 
-- [SQL Server](09_sql_server.md)
-- [PostgreSQL](03_postgresql.md)
-- [MySQL](02_mysql.md)
-- [Redis](10_redis.md)
-- [Cassandra](11_cassandra.md)
-- [AWS database services](06_aws_services.md)
-- [Google Cloud database services](08_gcp_services.md)
-- [Choosing a database](07_choosing_database.md)
+- [SQL Server](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/09_sql_server.md)
+- [PostgreSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md)
+- [MySQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/02_mysql.md)
+- [Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)
+- [Cassandra](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md)
+- [AWS database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/06_aws_services.md)
+- [Google Cloud database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/08_gcp_services.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)

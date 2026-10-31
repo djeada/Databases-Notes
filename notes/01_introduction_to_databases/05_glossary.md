@@ -8,7 +8,7 @@ In `orders.customer_id`, **table** means the collection named `orders`, **column
 
 A **primary key** identifies the order itself. A **foreign key** checks its customer reference. A **join** uses the matching values to assemble a result. An **index** offers a way to find matching rows with less search work. These are four different mechanisms, even when they involve the same identifier.
 
-If a term remains unclear, use the examples in the [introduction](01_databases_intro.md), [technology comparisons](02_types_of_databases.md), [DBMS walkthrough](03_database_management_systems_dbms_.md), or [modeling exercise](04_data_models.md). The tables below are a lookup aid, not a replacement for those explanations.
+If a term remains unclear, use the examples in the [introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/01_databases_intro.md), [technology comparisons](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md), [DBMS walkthrough](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/03_database_management_systems_dbms_.md), or [modeling exercise](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md). The tables below are a lookup aid, not a replacement for those explanations.
 
 ## Data and structure
 
@@ -40,7 +40,7 @@ If a term remains unclear, use the examples in the [introduction](01_databases_i
 | Normalization | Organizing tables around their dependencies to avoid repeated facts and update anomalies |
 | Denormalization | Deliberately storing derived or repeated information, often to reduce measured read costs; copies need maintenance |
 
-For examples, see [data models](04_data_models.md), [normalization](../02_database_design/02_normalization.md), and [data integrity](../02_database_design/05_data_integrity.md).
+For examples, see [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md), [normalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/02_normalization.md), and [data integrity](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/05_data_integrity.md).
 
 ## SQL and queries
 
@@ -72,7 +72,7 @@ For examples, see [data models](04_data_models.md), [normalization](../02_databa
 | SQL injection | Untrusted input changes SQL structure because it was assembled into executable query text |
 | DDL / DML / DCL / TCL | Common labels for defining objects, working with rows, controlling access, and controlling transactions |
 
-Start with the runnable [SQL introduction](../03_sql/01_intro_to_sql.md). For injection prevention, see [SQL injection](../11_security_best_practices/06_sql_injection.md).
+Start with the runnable [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). For injection prevention, see [SQL injection](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md).
 
 ## Transactions and concurrency
 
@@ -95,7 +95,7 @@ Start with the runnable [SQL introduction](../03_sql/01_intro_to_sql.md). For in
 | Serializable | Successful transactions have an outcome equivalent to some serial execution order; failures can require retries |
 | Invariant | A condition that must remain true, such as stock never becoming negative |
 
-See [transactions](../04_acid_properties_and_transactions/01_transactions_intro.md) before [concurrency control](../07_concurrency_control/01_shared_vs_exclusive_locks.md).
+See [transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) before [concurrency control](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/01_shared_vs_exclusive_locks.md).
 
 ## Storage and performance
 
@@ -116,7 +116,7 @@ See [transactions](../04_acid_properties_and_transactions/01_transactions_intro.
 | Vertical scaling | Increase the resources of a machine, such as memory or CPU |
 | Horizontal scaling | Add machines; useful work must still be distributed among them |
 
-See [row and column storage](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md), [pages](../05_storage_and_indexing/04_database_pages.md), and [indexing](../05_storage_and_indexing/05_indexing.md).
+See [row and column storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md), [pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md), and [indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md).
 
 ## Distribution and database models
 
@@ -156,7 +156,7 @@ See [row and column storage](../05_storage_and_indexing/02_row_based_vs_column_b
 | TTL | Time to live: the configured lifetime of an entry; Redis can expire a session key after a chosen interval |
 | Eviction | Removal of cached entries to make room, distinct from expiry due to age |
 
-See [database types](02_types_of_databases.md) and [distributed databases](../06_distributed_databases/01_distributed_database_systems.md).
+See [database types](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md) and [distributed databases](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/01_distributed_database_systems.md).
 
 ## Analytics, operations, and tools
 
@@ -175,7 +175,7 @@ See [database types](02_types_of_databases.md) and [distributed databases](../06
 | RPO / RTO | Recovery point objective: acceptable data-loss window / recovery time objective: acceptable time to restore service |
 | Migration | A controlled change to schema or data between application versions or systems |
 
-Product names are introduced in the [engine chapters](../../README.md#database-engines), where their capabilities have context. Start [data warehousing](../13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
+Product names are introduced in the [engine chapters](https://github.com/djeada/Databases-Notes/blob/main/README.md#database-engines), where their capabilities have context. Start [data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md) after practicing aggregates and joins.
 
 ## Apply SQL null semantics to real values
 
@@ -246,7 +246,7 @@ A product name tells you which implementation to investigate; it does not stand 
 | Elasticsearch | Search and analytics engine using indexes to retrieve and aggregate matching documents; distinct from a relational table index |
 | Hadoop / Spark | Distributed storage/processing ecosystem / processing engine; covered in the Big Data chapter |
 
-The [Couchbase document guide](https://docs.couchbase.com/go-sdk/current/concept-docs/documents.html) explains its key/document distinction. AWS's [database decision guide](https://docs.aws.amazon.com/decision-guides/latest/decision-guides/databases-on-aws-how-to-choose.html) identifies the cloud-service families; the repository's [engine chapters](../../README.md#database-engines) develop them further.
+The [Couchbase document guide](https://docs.couchbase.com/go-sdk/current/concept-docs/documents.html) explains its key/document distinction. AWS's [database decision guide](https://docs.aws.amazon.com/decision-guides/latest/decision-guides/databases-on-aws-how-to-choose.html) identifies the cloud-service families; the repository's [engine chapters](https://github.com/djeada/Databases-Notes/blob/main/README.md#database-engines) develop them further.
 
 ## Check your understanding
 

@@ -378,7 +378,7 @@ Prefer accurate statistics, suitable indexes, clear predicates, and representati
 
 ## Related notes
 
-- [Query optimization](01_query_optimization_techniques.md)
-- [Indexing strategies](02_indexing_strategies.md)
-- [Database indexing internals](../05_storage_and_indexing/05_indexing.md)
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md)
+- [Database indexing internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)

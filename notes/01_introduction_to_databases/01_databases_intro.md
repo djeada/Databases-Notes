@@ -211,7 +211,7 @@ This example is an inner join: it returns matching pairs. A customer with no ord
 
 One-to-one means each record corresponds to at most one record on the other side: a customer might have one separate preference record. Enforcing that relationship requires more than calling it one-to-one; the reference needs an appropriate uniqueness rule.
 
-Many-to-many means records on both sides can have several matches: one order contains several books, and one book appears in several orders. A relational design normally introduces an `order_items` table to represent these pairings and their quantity and purchase price. The [data-models note](04_data_models.md) creates and queries all three relationship types.
+Many-to-many means records on both sides can have several matches: one order contains several books, and one book appears in several orders. A relational design normally introduces an `order_items` table to represent these pairings and their quantity and purchase price. The [data-models note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md) creates and queries all three relationship types.
 
 ## Update a fact without rewriting its references
 
@@ -316,7 +316,7 @@ The query after rollback returns:
 
 The transaction can read its own uncommitted change, and rollback removes that change. Her earlier email correction remains because this rollback does not undo previously committed work.
 
-For checkout, the same grouping can cover stock reduction, order creation, and purchased-item insertion. The application must check failures and choose a correct concurrency strategy. A transaction does not automatically reserve stock that was merely read, and rolling it back cannot unsend an email or reverse an external payment. Those details are developed in the [ACID chapter](../04_acid_properties_and_transactions/01_transactions_intro.md).
+For checkout, the same grouping can cover stock reduction, order creation, and purchased-item insertion. The application must check failures and choose a correct concurrency strategy. A transaction does not automatically reserve stock that was merely read, and rolling it back cannot unsend an email or reverse an external payment. Those details are developed in the [ACID chapter](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md).
 
 ## Add an access structure for a recurring query
 
@@ -341,7 +341,7 @@ An illustrative plan result is:
 
 The exact IDs and detail text depend on the SQLite version and planner.
 
-SQLite uses B-tree structures for its indexes: ordered keys guide lookup toward matching entries. Maintaining those entries costs space and additional work when relevant rows change. That tradeoff is why an index should answer a real access pattern instead of being added to every column. The [DBMS note](03_database_management_systems_dbms_.md) follows planning and execution in more detail.
+SQLite uses B-tree structures for its indexes: ordered keys guide lookup toward matching entries. Maintaining those entries costs space and additional work when relevant rows change. That tradeoff is why an index should answer a real access pattern instead of being added to every column. The [DBMS note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/03_database_management_systems_dbms_.md) follows planning and execution in more detail.
 
 ## Keep database rules behind the application boundary
 
@@ -383,7 +383,7 @@ The returned rows are:
 
 This is an alternative way to run the initial setup, not a program to run on top of an already populated file. SQLite's connection opens a local file, so no database server is required.
 
-The `?` placeholder is a **bound parameter**. The driver supplies the customer identifier separately from SQL structure. Application code should bind untrusted values instead of building query text by concatenating them. The [SQL injection note](../11_security_best_practices/06_sql_injection.md) explains why.
+The `?` placeholder is a **bound parameter**. The driver supplies the customer identifier separately from SQL structure. Application code should bind untrusted values instead of building query text by concatenating them. The [SQL injection note](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md) explains why.
 
 ## Where other technologies fit
 
@@ -409,4 +409,4 @@ These are possible designs, not claims about a particular company's deployment. 
 6. Which command changes a row, which removes a row, and which removes a table?
 7. Why is a cache of “one copy remaining” insufficient to authorize a purchase?
 
-Continue with [database types](02_types_of_databases.md) for concrete SQL, MongoDB, Redis, Cassandra, and Neo4j examples. The [glossary](05_glossary.md) is a reference for unfamiliar terms.
+Continue with [database types](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md) for concrete SQL, MongoDB, Redis, Cassandra, and Neo4j examples. The [glossary](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/05_glossary.md) is a reference for unfamiliar terms.

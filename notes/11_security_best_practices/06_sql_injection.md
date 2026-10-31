@@ -60,7 +60,7 @@ That makes it possible for the input to alter the predicate.
 
 The repository includes:
 
-[`scripts/security/sql_injection_demo.py`](../../scripts/security/sql_injection_demo.py)
+[`scripts/security/sql_injection_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/sql_injection_demo.py)
 
 Run:
 
@@ -713,8 +713,8 @@ Attack syntax and encodings vary; fix the code.
 
 ## Related notes
 
-- [Database security overview](02_database_security.md)
-- [Identity and access control](08_identity_authentication_and_access_control.md)
-- [Database hardening](11_database_hardening_and_patch_management.md)
-- [Database access in code](../08_database_performance/05_accessing_database_in_code.md)
-- [ORM introduction](../14_orm/01_introduction_to_orm.md)
+- [Database security overview](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)
+- [Identity and access control](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/08_identity_authentication_and_access_control.md)
+- [Database hardening](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [Database access in code](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/05_accessing_database_in_code.md)
+- [ORM introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)

@@ -10,7 +10,7 @@ An aggregate with `GROUP BY ProductID` produces one result row per product. A wi
 
 Inside `OVER`, `PARTITION BY` chooses related rows, `ORDER BY` puts them in calculation order, and a **frame** selects which of those rows participate in the current calculation. A running total uses an expanding frame; a moving average can use a small frame around the current row. Ranking and offset functions use the partition and order with their own rules, rather than all behaving like framed sums.
 
-Read [aggregate functions](10_aggregate_functions.md) first. Start here with row numbering and running totals, then compare ranks, earlier/later values, and moving averages. The sales example below is a separate practice database.
+Read [aggregate functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/10_aggregate_functions.md) first. Start here with row numbering and running totals, then compare ranks, earlier/later values, and moving averages. The sales example below is a separate practice database.
 
 ## Functions and shared sample data
 

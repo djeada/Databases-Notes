@@ -2,7 +2,7 @@
 
 An **index** is an additional structure that helps the database find selected rows. It is comparable to a book's index: look up a topic, find its location, and then read the relevant pages. The database still has to retrieve and return the answer.
 
-Assume you know tables and basic `SELECT` queries. The [SQL introduction](../03_sql/01_intro_to_sql.md) provides that starting point.
+Assume you know tables and basic `SELECT` queries. The [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md) provides that starting point.
 
 ## Begin with the question the application asks
 
@@ -136,7 +136,7 @@ A **leaf** is the tree level containing indexed entries. Depending on the engine
 
 ## Implement a covering and a partial index
 
-Use the fresh [SQLite bookstore](../03_sql/01_intro_to_sql.md). This index contains the filter and the columns returned by an order-history query:
+Use the fresh [SQLite bookstore](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). This index contains the filter and the columns returned by an order-history query:
 
 ```sql
 CREATE INDEX idx_design_customer_history
@@ -301,4 +301,4 @@ Statistics maintenance helps planning; rebuild or reorganization is a separate o
 3. Why would an index help one email lookup more than a query returning every customer?
 4. What work does an extra index add to an order insert?
 
-[Database Indexing](../05_storage_and_indexing/05_indexing.md) explains the storage structures and engine-specific maintenance. Continue with [data integrity](05_data_integrity.md) to separate finding data quickly from enforcing its rules.
+[Database Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md) explains the storage structures and engine-specific maintenance. Continue with [data integrity](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/05_data_integrity.md) to separate finding data quickly from enforcing its rules.

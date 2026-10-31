@@ -503,12 +503,12 @@ This prevents future teams from treating a derived cache as irreplaceable busine
 
 Use the focused engine notes for concrete implementations:
 
-- [MongoDB](../12_database_engines/04_mongodb.md) — document database,
-- [Neo4j](../12_database_engines/05_neo4j.md) — graph database,
-- [Redis](../12_database_engines/10_redis.md) — key-value/data-structure store,
-- [Cassandra](../12_database_engines/11_cassandra.md) — wide-column database,
-- [OpenSearch/Elasticsearch](../12_database_engines/12_elasticsearch_and_opensearch.md) — search projection,
-- [ClickHouse](../12_database_engines/13_clickhouse.md) — analytical projection.
+- [MongoDB](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/04_mongodb.md) — document database,
+- [Neo4j](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/05_neo4j.md) — graph database,
+- [Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md) — key-value/data-structure store,
+- [Cassandra](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md) — wide-column database,
+- [OpenSearch/Elasticsearch](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/12_elasticsearch_and_opensearch.md) — search projection,
+- [ClickHouse](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/13_clickhouse.md) — analytical projection.
 
 ## Production checklist
 
@@ -531,9 +531,9 @@ Before introducing another NoSQL database:
 
 ## Related notes
 
-- [NoSQL introduction](01_nosql_databases_intro.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
-- [Database security](../11_security_best_practices/02_database_security.md)
-- [Backup and recovery](../11_security_best_practices/01_backup_and_recovery_strategies.md)
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
-- [Choosing a database](../12_database_engines/07_choosing_database.md)
+- [NoSQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/01_nosql_databases_intro.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)
+- [Database security](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)

@@ -249,6 +249,6 @@ V. Validate recovery settings in staging environments to confirm that the databa
 
 ## Related notes
 
-- [Backup and recovery](01_backup_and_recovery_strategies.md)
-- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
-- [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)
+- [Incident response and disaster recovery drills](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md)
+- [Performance monitoring and tuning](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)

@@ -2,7 +2,7 @@
 
 An **aggregate** reduces qualifying rows to a summary, either once for the whole input or once per `GROUP BY` key. `COUNT(*)` counts rows, while aggregates such as `AVG(column)` generally skip `NULL` inputs. Before writing a report, identify its **grain** (one result per what?), which rows qualify, and whether missing values mean unknown or zero.
 
-For example, the bookstore's order items become one total per order when grouped by `order_id`. In this chapter, a separate employee dataset makes grouped salary calculations and missing values easy to inspect. Read [joins and subqueries](06_joins_subqueries_and_views.md) first.
+For example, the bookstore's order items become one total per order when grouped by `order_id`. In this chapter, a separate employee dataset makes grouped salary calculations and missing values easy to inspect. Read [joins and subqueries](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md) first.
 
 Work through `COUNT`, `SUM`, and `AVG` before combining them with joins and `HAVING`. `WHERE` filters input rows; `HAVING` filters the resulting groups. The final window-function example prepares for the next chapter.
 

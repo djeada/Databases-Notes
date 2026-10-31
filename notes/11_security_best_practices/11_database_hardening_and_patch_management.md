@@ -590,8 +590,8 @@ One accidental query becomes an availability incident.
 
 ## Related notes
 
-- [Database security overview](02_database_security.md)
-- [Identity and access control](08_identity_authentication_and_access_control.md)
-- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
-- [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)
-- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [Database security overview](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)
+- [Identity and access control](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/09_encryption_secrets_and_key_management.md)
+- [Performance monitoring and tuning](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Incident response and disaster recovery drills](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md)

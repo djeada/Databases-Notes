@@ -20,7 +20,7 @@ commit or rollback
 return connection to pool
 ~~~
 
-This note focuses on correct and efficient driver use. For deeper discussion of pools, batching, and N+1 queries, see [Connection Pooling, Batching, Round Trips, and N+1](08_connection_pooling_batching_and_n_plus_one.md).
+This note focuses on correct and efficient driver use. For deeper discussion of pools, batching, and N+1 queries, see [Connection Pooling, Batching, Round Trips, and N+1](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md).
 
 ## Drivers and abstractions
 
@@ -492,8 +492,8 @@ This reduces accidental DDL and security blast radius.
 
 ## Related notes
 
-- [Connection pooling, batching, and N+1](08_connection_pooling_batching_and_n_plus_one.md)
-- [Pagination and large result sets](09_pagination_and_large_result_sets.md)
-- [SQL injection](../11_security_best_practices/06_sql_injection.md)
-- [ORM introduction](../14_orm/01_introduction_to_orm.md)
-- [ORM query performance](../14_orm/04_relationship_loading_and_query_performance.md)
+- [Connection pooling, batching, and N+1](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md)
+- [Pagination and large result sets](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/09_pagination_and_large_result_sets.md)
+- [SQL injection](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md)
+- [ORM introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)
+- [ORM query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)

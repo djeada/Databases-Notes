@@ -334,7 +334,7 @@ A managed secret store is usually better for production.
 
 The repository includes:
 
-[`scripts/security/connect_with_env.py`](../../scripts/security/connect_with_env.py)
+[`scripts/security/connect_with_env.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/connect_with_env.py)
 
 Run against the local PostgreSQL demo:
 
@@ -654,7 +654,7 @@ Before production:
 
 ## Related notes
 
-- [Identity and access control](08_identity_authentication_and_access_control.md)
-- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
-- [Backup and recovery](01_backup_and_recovery_strategies.md)
-- [Database security overview](02_database_security.md)
+- [Identity and access control](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/08_identity_authentication_and_access_control.md)
+- [Auditing, compliance, and data governance](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md)
+- [Backup and recovery](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/01_backup_and_recovery_strategies.md)
+- [Database security overview](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)

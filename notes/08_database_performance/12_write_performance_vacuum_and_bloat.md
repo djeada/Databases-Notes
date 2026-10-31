@@ -424,8 +424,8 @@ Test duration on representative data.
 
 ## Related notes
 
-- [Indexing strategies](02_indexing_strategies.md)
-- [Materialized views](04_materialized_views.md)
-- [Partitioning and sharding](10_partitioning_sharding_and_data_locality.md)
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
-- [PostgreSQL engine note](../12_database_engines/03_postgresql.md)
+- [Indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md)
+- [Materialized views](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md)
+- [Partitioning and sharding](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/10_partitioning_sharding_and_data_locality.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [PostgreSQL engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md)

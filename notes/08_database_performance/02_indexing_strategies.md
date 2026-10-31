@@ -1,6 +1,6 @@
 # Indexing Strategies
 
-Index access methods suit different operations. This note compares B-tree, bitmap, hash, and full-text indexes using named engines. For composite index design, covering queries, and maintenance, see [Database Indexing](../05_storage_and_indexing/05_indexing.md).
+Index access methods suit different operations. This note compares B-tree, bitmap, hash, and full-text indexes using named engines. For composite index design, covering queries, and maintenance, see [Database Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md).
 
 ## B-tree Indexing Strategy
 
@@ -300,7 +300,7 @@ It inserts the same synthetic workload into a minimally indexed SQLite database 
 
 ## Related notes
 
-- [Execution plans, statistics, and cardinality](07_execution_plans_statistics_and_cardinality.md)
-- [Write performance, vacuum, and bloat](12_write_performance_vacuum_and_bloat.md)
-- [Query optimization](01_query_optimization_techniques.md)
-- [Database indexing internals](../05_storage_and_indexing/05_indexing.md)
+- [Execution plans, statistics, and cardinality](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md)
+- [Write performance, vacuum, and bloat](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/12_write_performance_vacuum_and_bloat.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Database indexing internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)

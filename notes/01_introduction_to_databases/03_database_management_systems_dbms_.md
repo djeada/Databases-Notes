@@ -2,7 +2,7 @@
 
 A **database** is stored data plus its definitions; a **DBMS** is the engine responsible for interpreting requests, enforcing declared rules, executing queries, coordinating concurrent work, and recovering state. Drivers, clients, hosting, and storage services surround that engine, but do not replace its guarantees. This chapter traces one request through the layers before comparing products.
 
-The [first note](01_databases_intro.md) showed the SQL an application sends. The [database-types note](02_types_of_databases.md) compared models. Here we follow those requests through SQLite and PostgreSQL, then connect the responsibilities to other DBMS families.
+The [first note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/01_databases_intro.md) showed the SQL an application sends. The [database-types note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/02_types_of_databases.md) compared models. Here we follow those requests through SQLite and PostgreSQL, then connect the responsibilities to other DBMS families.
 
 ## Connect the application to the right process
 
@@ -86,7 +86,7 @@ A managed PostgreSQL service still runs a database engine and accepts database c
 
 ## Trace the query from SQL text to returned rows
 
-Use the fresh two-table SQLite setup from sections 3 and 4 of the [introduction](01_databases_intro.md). This is a separate SQLite exercise from the PostgreSQL session above:
+Use the fresh two-table SQLite setup from sections 3 and 4 of the [introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/01_databases_intro.md). This is a separate SQLite exercise from the PostgreSQL session above:
 
 ```sql
 SELECT order_id, order_date
@@ -228,7 +228,7 @@ A transaction groups related work, but the application must choose the boundary 
 
 PostgreSQL uses MVCC: an ordinary reader can see an appropriate committed version without reading another transaction's unfinished changes. Competing writers still need coordination, and stronger guarantees can require waiting or retrying. SQLite also supports transactions and concurrent access, but normally serializes writes to a database. These are different implementations, not a difference between “real database” and “just a file.”
 
-For the final copy of a book, an application can condition the decrement on stock being available and check that one row changed. It must then create the order in the same transaction. The [transaction-control note](../03_sql/05_transaction_control_language_tcl.md) provides a complete implementation; [isolation](../04_acid_properties_and_transactions/04_isolation.md) explains the concurrency cases.
+For the final copy of a book, an application can condition the decrement on stock being available and check that one row changed. It must then create the order in the same transaction. The [transaction-control note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/05_transaction_control_language_tcl.md) provides a complete implementation; [isolation](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/04_isolation.md) explains the concurrency cases.
 
 ## Manage memory, pages, and persistent storage
 
@@ -236,7 +236,7 @@ A **page** is a storage chunk containing row or index information. A **buffer po
 
 This is why a repeated query can run faster without any SQL change: the pages it needs may already be available. The operating system can add another cache layer. A page-cache hit is different from an application cache that returns an earlier query result without executing SQL at all.
 
-Updates can modify memory-resident pages before those changes reach their final data-file locations. Engines use recovery mechanisms to make the persistence sequence safe. PostgreSQL uses a **write-ahead log (WAL)**: required log information is persisted before corresponding changed data pages. SQLite has rollback-journal and WAL modes with their own details. The [storage chapter](../05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) develops these mechanisms.
+Updates can modify memory-resident pages before those changes reach their final data-file locations. Engines use recovery mechanisms to make the persistence sequence safe. PostgreSQL uses a **write-ahead log (WAL)**: required log information is persisted before corresponding changed data pages. SQLite has rollback-journal and WAL modes with their own details. The [storage chapter](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/01_how_tables_and_indexes_are_stored_on_disk.md) develops these mechanisms.
 
 ## Distinguish crash recovery from historical restoration
 
@@ -322,7 +322,7 @@ GRANT SELECT ON TABLE public.server_products TO chapter1_report_reader;
 
 This grants a read capability; it does not create a new password-authenticated login or automatically assign an existing user to the role. A login needs suitable database-connect permissions, authentication configuration, and role membership. `USAGE` on the schema allows object access through that namespace; `SELECT` permits reading the table.
 
-Table-read permission also does not mean an application user may see every customer's orders. When many people share one application's database account, the application must enforce the user's allowed scope, or use an appropriate row-level policy. The [DCL note](../03_sql/04_data_control_language_dcl.md) completes the role example.
+Table-read permission also does not mean an application user may see every customer's orders. When many people share one application's database account, the application must enforce the user's allowed scope, or use an appropriate row-level policy. The [DCL note](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/04_data_control_language_dcl.md) completes the role example.
 
 For SQLite, protecting the database file and controlling which application operations are exposed is central. For a cloud-hosted engine, provider identity and network controls add layers while database privileges still matter.
 
@@ -341,7 +341,7 @@ A DBMS's data model is separate from whether it runs embedded, on a server, or a
 | Network | IDMS | Record navigation through owner/member sets | Existing systems with multiple predefined relationship paths |
 | Object-oriented | ObjectDB | Persistence through an object model and object-oriented APIs | A Java application persisting domain objects |
 
-The [next note](04_data_models.md) shows the hierarchical, network, and object structures, develops entity-relationship modeling, and distinguishes an object database from an ORM using relational storage.
+The [next note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md) shows the hierarchical, network, and object structures, develops entity-relationship modeling, and distinguishes an object database from an ORM using relational storage.
 
 ## Distributed SQL and the “NewSQL” label
 
@@ -428,4 +428,4 @@ A product's advertised “scalability” is not a substitute for a concrete capa
 7. What does the reporting-role example grant, and what setup does it not perform?
 8. How do object-oriented, hierarchical, and network DBMSs differ from relational storage?
 
-Continue with [data models](04_data_models.md) to turn a business rule into a concrete structure and executable schema.
+Continue with [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md) to turn a business rule into a concrete structure and executable schema.

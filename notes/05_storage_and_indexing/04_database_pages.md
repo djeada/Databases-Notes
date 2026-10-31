@@ -43,7 +43,7 @@ Imagine a table spread across 1,000 data pages. A query for one customer's order
 
 An index is useful when its route visits substantially fewer pages. It is not free: the index occupies pages, and inserts or updates may need to modify them. A query matching most of the table can make a scan cheaper than many separate row lookups.
 
-A **covering index** contains the values needed by a particular query and can avoid extra row fetches. In PostgreSQL, visibility checks can still trigger heap access even if the index covers all selected columns; in SQLite, a covering plan can often read directly from index entries. Coverage is query- and engine-specific. See [Indexing](05_indexing.md) for B-tree search and query-plan examples.
+A **covering index** contains the values needed by a particular query and can avoid extra row fetches. In PostgreSQL, visibility checks can still trigger heap access even if the index covers all selected columns; in SQLite, a covering plan can often read directly from index entries. Coverage is query- and engine-specific. See [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md) for B-tree search and query-plan examples.
 
 ## Writes, logs, and checkpoints
 
@@ -51,7 +51,7 @@ Changing a row generally changes a page in memory. A changed page is often calle
 
 With **write-ahead logging**, recovery information reaches durable storage before the corresponding data-page changes do. This can let the engine acknowledge a durable commit using the log and recover the data pages after a crash. A **checkpoint** advances the recovery process by recording a recovery boundary and, depending on the engine, flushing or coordinating relevant data.
 
-These are engine-specific mechanisms, not a promise that every commit rewrites every affected data page. Read [Durability](../04_acid_properties_and_transactions/05_durability.md) before the detailed [crash recovery note](../11_security_best_practices/07_crash_recovery_in_databases.md).
+These are engine-specific mechanisms, not a promise that every commit rewrites every affected data page. Read [Durability](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/05_durability.md) before the detailed [crash recovery note](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/07_crash_recovery_in_databases.md).
 
 ## Page size is a tradeoff, not a speed setting
 
@@ -66,4 +66,4 @@ For a beginner, understanding the access path is more useful than changing the p
 3. Why might a scan beat an index lookup for a query matching most rows?
 4. How can a commit be durable before all changed data pages are flushed?
 
-Next: [Indexing](05_indexing.md) builds a search structure from these storage units. Then [B-tree internals](06_btree_internals_and_page_splits.md) shows how index pages split and remain balanced, while [clustered indexes and heaps](09_clustered_indexes_heap_tables_and_row_locality.md) shows where the table row lives relative to those pages.
+Next: [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md) builds a search structure from these storage units. Then [B-tree internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md) shows how index pages split and remain balanced, while [clustered indexes and heaps](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/09_clustered_indexes_heap_tables_and_row_locality.md) shows where the table row lives relative to those pages.

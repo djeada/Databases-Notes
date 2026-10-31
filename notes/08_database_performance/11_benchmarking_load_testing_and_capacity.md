@@ -466,7 +466,7 @@ trade-offs:
 
 ## Related notes
 
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
-- [Capacity planning](../11_security_best_practices/03_capacity_planning.md)
-- [Query optimization](01_query_optimization_techniques.md)
-- [Connection pooling and batching](08_connection_pooling_batching_and_n_plus_one.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Capacity planning](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/03_capacity_planning.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Connection pooling and batching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md)

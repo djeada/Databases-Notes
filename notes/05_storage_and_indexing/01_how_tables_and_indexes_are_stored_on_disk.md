@@ -2,7 +2,7 @@
 
 SQL exposes tables and indexes as logical objects, but the DBMS reads and writes pages, files, and recovery records. This chapter follows a single row lookup through those layers. The key distinction is that **rows returned**, **pages touched**, and **physical disk reads** are different quantities; the cache and access path determine how much work occurs.
 
-Read [transactions](../04_acid_properties_and_transactions/01_transactions_intro.md) first. This chapter introduces the main layers; the later [page](04_database_pages.md) and [index](05_indexing.md) notes explain their details.
+Read [transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) first. This chapter introduces the main layers; the later [page](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md) and [index](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md) notes explain their details.
 
 ## Start with the path of a product lookup
 
@@ -41,7 +41,7 @@ A **clustered** or **index-organized** table stores its main row data in an inde
 | MySQL InnoDB | Main row data is organized by a clustered key; secondary indexes identify rows through that key |
 | SQLite | Ordinary rowid tables use table B-trees keyed by rowid; an `INTEGER PRIMARY KEY` aliases that rowid; `WITHOUT ROWID` tables use a different primary-key organization |
 
-These descriptions introduce the differences rather than specifying every file-format detail. Column-oriented analytical engines organize values differently, as the [next note](02_row_based_vs_column_based_databases.md) explains.
+These descriptions introduce the differences rather than specifying every file-format detail. Column-oriented analytical engines organize values differently, as the [next note](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md) explains.
 
 ## An index is stored data too
 
@@ -49,7 +49,7 @@ A B-tree-family index keeps searchable keys in a tree of pages. Upper levels gui
 
 That route still costs work. A non-covering index may lead to additional table-page reads. Matching many rows can make those reads more expensive than scanning. Changes to indexed values require maintaining the index and can sometimes split a full page into additional pages.
 
-A **secondary index** supplies another access path, such as finding customers by email rather than their identifier. The [key comparison](03_primary_key_vs_secondary_key.md) separates the logical meaning of a key from the physical role of an index.
+A **secondary index** supplies another access path, such as finding customers by email rather than their identifier. The [key comparison](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md) separates the logical meaning of a key from the physical role of an index.
 
 ## Page cache changes the cost of an access path
 
@@ -57,7 +57,7 @@ Database engines commonly keep pages in a **buffer pool** or **page cache**. Rep
 
 This is why the same query can take different times with a cold cache and a warm cache. An operating-system cache adds another layer, so a database's reported storage read does not always imply a physical device access.
 
-An application's cache of query results is a different layer. It can skip a database request, but needs its own freshness policy. See [caching](../08_database_performance/03_database_caching.md).
+An application's cache of query results is a different layer. It can skip a database request, but needs its own freshness policy. See [caching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md).
 
 ## Writes involve recovery information
 
@@ -65,7 +65,7 @@ A write commonly changes a cached page before the page's next data-file flush. S
 
 With **write-ahead logging (WAL)**, the engine persists the required recovery information before the corresponding data-page changes. Durable commit can depend on persisting log records rather than immediately flushing every changed data page. Recovery uses that information to reconstruct the accepted state after a crash.
 
-The implementation differs by engine, and some engines use other journal arrangements. Do not infer a universal on-disk sequence from the high-level idea. [Durability](../04_acid_properties_and_transactions/05_durability.md) connects persistence ordering to transaction guarantees.
+The implementation differs by engine, and some engines use other journal arrangements. Do not infer a universal on-disk sequence from the high-level idea. [Durability](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/05_durability.md) connects persistence ordering to transaction guarantees.
 
 ## Space needs maintenance over time
 
@@ -81,4 +81,4 @@ Deletes and updates do not always make file sizes shrink immediately. Engines ma
 4. Why does a warm cache change timing without changing the result?
 5. Why need a deleted row not immediately shrink a database file?
 
-Next: [row-oriented versus column-oriented storage](02_row_based_vs_column_based_databases.md), followed by [keys](03_primary_key_vs_secondary_key.md), [pages](04_database_pages.md), and the [indexing overview](05_indexing.md). For physical index behavior, continue to [B-tree internals](06_btree_internals_and_page_splits.md) and [clustered versus heap storage](09_clustered_indexes_heap_tables_and_row_locality.md).
+Next: [row-oriented versus column-oriented storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md), followed by [keys](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md), [pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md), and the [indexing overview](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md). For physical index behavior, continue to [B-tree internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md) and [clustered versus heap storage](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/09_clustered_indexes_heap_tables_and_row_locality.md).

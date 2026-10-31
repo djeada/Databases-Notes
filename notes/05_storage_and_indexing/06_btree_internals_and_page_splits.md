@@ -402,8 +402,8 @@ The exercise demonstrates storage consequences of entry width; it is not a unive
 
 ## Related notes
 
-- [Database pages](04_database_pages.md)
-- [Database indexing](05_indexing.md)
-- [Composite indexes and column order](07_composite_indexes_and_column_order.md)
-- [Clustered indexes and heap tables](09_clustered_indexes_heap_tables_and_row_locality.md)
-- [Index maintenance and bloat](11_index_maintenance_bloat_and_online_operations.md)
+- [Database pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md)
+- [Database indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [Composite indexes and column order](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/07_composite_indexes_and_column_order.md)
+- [Clustered indexes and heap tables](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/09_clustered_indexes_heap_tables_and_row_locality.md)
+- [Index maintenance and bloat](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/11_index_maintenance_bloat_and_online_operations.md)

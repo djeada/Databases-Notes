@@ -63,7 +63,7 @@ Similarly, choosing row storage does not mean queries are limited to one row, an
 
 For the bookstore's checkout system, ask how individual orders are written and retrieved. For its annual revenue dashboard, ask which columns reports scan and how fresh the reports must be. It can be sensible to keep operational data in a transactional database and load a separate analytical store.
 
-That separation introduces a data pipeline: a process that copies or transforms data between systems. The report may lag behind recent sales, so freshness becomes part of the requirements. [Data warehousing](../13_big_data/01_data_warehousing.md) develops this design.
+That separation introduces a data pipeline: a process that copies or transforms data between systems. The report may lag behind recent sales, so freshness becomes part of the requirements. [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md) develops this design.
 
 ## Check your understanding
 
@@ -72,4 +72,4 @@ That separation introduces a data pipeline: a process that copies or transforms 
 3. How does OLTP differ from OLAP in its typical work?
 4. Why is a wide-column database not simply a columnar SQL engine?
 
-Continue with [primary and secondary keys](03_primary_key_vs_secondary_key.md), then [database pages](04_database_pages.md).
+Continue with [primary and secondary keys](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/03_primary_key_vs_secondary_key.md), then [database pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md).

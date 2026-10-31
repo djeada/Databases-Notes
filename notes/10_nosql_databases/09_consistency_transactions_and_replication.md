@@ -492,11 +492,11 @@ Can violate correctness.
 
 ## Related notes
 
-- [NoSQL introduction](01_nosql_databases_intro.md)
-- [Document modeling](05_document_modeling.md)
-- [Key-value modeling](06_key_value_modeling.md)
-- [Wide-column modeling](07_wide_column_modeling.md)
-- [Graph modeling](08_graph_modeling.md)
-- [CAP theorem](../06_distributed_databases/06_cap_theorem.md)
-- [Eventual consistency](../06_distributed_databases/07_eventual_consistency.md)
-- [Transactions](../04_acid_properties_and_transactions/01_transactions_intro.md)
+- [NoSQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/01_nosql_databases_intro.md)
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md)
+- [Key-value modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md)
+- [Wide-column modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md)
+- [Graph modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/08_graph_modeling.md)
+- [CAP theorem](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/06_cap_theorem.md)
+- [Eventual consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md)
+- [Transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md)

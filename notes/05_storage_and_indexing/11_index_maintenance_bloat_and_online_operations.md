@@ -452,8 +452,8 @@ The exercise is read-only.
 
 ## Related notes
 
-- [B-tree internals](06_btree_internals_and_page_splits.md)
-- [Composite indexes](07_composite_indexes_and_column_order.md)
-- [Covering, partial, and expression indexes](08_covering_partial_and_expression_indexes.md)
-- [Write performance, vacuum, and bloat](../08_database_performance/12_write_performance_vacuum_and_bloat.md)
-- [Performance monitoring](../11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [B-tree internals](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/06_btree_internals_and_page_splits.md)
+- [Composite indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/07_composite_indexes_and_column_order.md)
+- [Covering, partial, and expression indexes](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/08_covering_partial_and_expression_indexes.md)
+- [Write performance, vacuum, and bloat](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/12_write_performance_vacuum_and_bloat.md)
+- [Performance monitoring](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)

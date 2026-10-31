@@ -2,7 +2,7 @@
 
 A category hierarchy is a set of parent–child relationships. **Adjacency lists** store only the immediate parent, while recursive queries reconstruct ancestors or descendants. Later representations cache more traversal information in return for harder updates. The critical invariant is not just a valid parent reference: a tree must also have **no cycles**, and any single-root requirement must be explicit. The **root** has no parent, **leaves** have no children, **ancestors** lead toward the root, and **descendants** lie beneath a node.
 
-Relational tables can represent trees. The main question is which relationships to store directly and which to calculate when querying. Start with [joins](06_joins_subqueries_and_views.md); this note introduces recursion through a complete SQLite example.
+Relational tables can represent trees. The main question is which relationships to store directly and which to calculate when querying. Start with [joins](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md); this note introduces recursion through a complete SQLite example.
 
 ## Store each node's immediate parent
 
@@ -654,4 +654,4 @@ Useful validation includes detecting cycles, checking parent existence, checking
 4. Which invalid structure can pass the schema's foreign key and check?
 5. Why can moving a branch be more expensive with materialized paths?
 
-Next: [aggregate functions](10_aggregate_functions.md) summarize groups; [window functions](11_window_functions.md) retain rows while calculating across related records.
+Next: [aggregate functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/10_aggregate_functions.md) summarize groups; [window functions](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/11_window_functions.md) retain rows while calculating across related records.

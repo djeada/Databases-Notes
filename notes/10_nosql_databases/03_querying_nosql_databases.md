@@ -308,7 +308,7 @@ Document queries may distinguish a missing field from an explicit null.
 
 The repository includes:
 
-[`scripts/mongo/null_vs_missing_fields.py`](../../scripts/mongo/null_vs_missing_fields.py)
+[`scripts/mongo/null_vs_missing_fields.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/mongo/null_vs_missing_fields.py)
 
 Run it against the local MongoDB setup to observe the difference.
 
@@ -318,7 +318,7 @@ MongoDB provides both whole-document replacement and operator-based updates.
 
 Repository demo:
 
-[`scripts/mongo/replace_one_vs_update_one.py`](../../scripts/mongo/replace_one_vs_update_one.py)
+[`scripts/mongo/replace_one_vs_update_one.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/mongo/replace_one_vs_update_one.py)
 
 A replacement can remove fields not included in the new document. `$set` updates selected paths.
 
@@ -326,7 +326,7 @@ A replacement can remove fields not included in the new document. `$set` updates
 
 The NoSQL chapter adds:
 
-[`scripts/mongo/nosql_document_modeling.py`](../../scripts/mongo/nosql_document_modeling.py)
+[`scripts/mongo/nosql_document_modeling.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/mongo/nosql_document_modeling.py)
 
 It demonstrates an embedded order aggregate and shows that a historical purchase price remains unchanged after the current product price changes.
 
@@ -842,11 +842,11 @@ For each query:
 
 ## Related notes
 
-- [NoSQL introduction](01_nosql_databases_intro.md)
-- [Types of NoSQL databases](02_types_of_nosql_databases.md)
-- [CRUD in SQL vs NoSQL](04_crud_in_sql_vs_nosql.md)
-- [Document modeling](05_document_modeling.md)
-- [Key-value modeling](06_key_value_modeling.md)
-- [Wide-column modeling](07_wide_column_modeling.md)
-- [Graph modeling](08_graph_modeling.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
+- [NoSQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/01_nosql_databases_intro.md)
+- [Types of NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/02_types_of_nosql_databases.md)
+- [CRUD in SQL vs NoSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/04_crud_in_sql_vs_nosql.md)
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md)
+- [Key-value modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md)
+- [Wide-column modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md)
+- [Graph modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/08_graph_modeling.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)

@@ -477,7 +477,7 @@ Before sharding:
 
 ## Related notes
 
-- [Working with billion-row tables](06_working_with_billion_row_table.md)
-- [Partitioning](../06_distributed_databases/02_partitioning.md)
-- [Replication](../09_database_replication/01_intro_to_replication.md)
-- [Query optimization](01_query_optimization_techniques.md)
+- [Working with billion-row tables](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/06_working_with_billion_row_table.md)
+- [Partitioning](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/02_partitioning.md)
+- [Replication](https://github.com/djeada/Databases-Notes/blob/main/notes/09_database_replication/01_intro_to_replication.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)

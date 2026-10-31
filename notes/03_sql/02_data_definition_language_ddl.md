@@ -2,7 +2,7 @@
 
 **Data Definition Language (DDL)** changes database structure, not just the current rows. Schema work must protect existing data and dependent code: `CREATE TABLE` on an empty database is straightforward, while changing a populated table is a migration with compatibility, validation, and rollback requirements.
 
-This note assumes you have worked through the [SQL introduction](01_intro_to_sql.md). Examples use SQLite unless another engine is named. The existing bookstore tables remain available.
+This note assumes you have worked through the [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). Examples use SQLite unless another engine is named. The existing bookstore tables remain available.
 
 ## Read a table definition
 
@@ -88,7 +88,7 @@ CREATE INDEX idx_orders_customer ON orders (customer_id);
 
 An index helps some queries find rows. It does not add a new business record or change what an order means. It also consumes space and adds maintenance work during writes.
 
-Use [indexing strategies](../02_database_design/04_indexing_strategies.md) to decide whether an index supports a measured access pattern.
+Use [indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/04_indexing_strategies.md) to decide whether an index supports a measured access pattern.
 
 ## Distinguish deleting rows from removing a table
 
@@ -347,4 +347,4 @@ References: [SQLite ALTER TABLE](https://www.sqlite.org/lang_altertable.html), [
 3. How is deleting every row different from dropping the table?
 4. Why is adding a required column to existing data harder than defining it on a new empty table?
 
-Continue with [DML](03_data_manipulation_language_dml.md), which works with rows under these definitions.
+Continue with [DML](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/03_data_manipulation_language_dml.md), which works with rows under these definitions.

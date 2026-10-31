@@ -2,7 +2,7 @@
 
 In ACID, **consistency** means a transaction preserves the invariants that define valid states. The DBMS enforces invariants it knows, such as declared keys and checks; it cannot enforce an unexpressed business rule simply because a transaction commits. Correct application logic and suitable concurrency control are also needed for cross-row or cross-system invariants.
 
-This use of “consistency” concerns valid data. [Eventual consistency](../06_distributed_databases/07_eventual_consistency.md) concerns when separate copies agree. The same word describes different questions.
+This use of “consistency” concerns valid data. [Eventual consistency](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/07_eventual_consistency.md) concerns when separate copies agree. The same word describes different questions.
 
 ## Name the rules before choosing a mechanism
 
@@ -20,7 +20,7 @@ A **constraint** is a rule declared in the schema that the database checks when 
 
 ## Test a declared rule
 
-Use the fresh [bookstore setup](../03_sql/01_intro_to_sql.md). Product 10 starts with stock 5 and has a nonnegative-stock constraint.
+Use the fresh [bookstore setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). Product 10 starts with stock 5 and has a nonnegative-stock constraint.
 
 ```sql
 UPDATE products SET stock = -1 WHERE product_id = 10;
@@ -66,7 +66,7 @@ WHERE product_id = 10 AND stock >= 1;
 
 Continue only if one row changed. Handle any concurrency failure according to the engine and retry policy. Keep the order inserts in the same transaction. This avoids relying on an earlier, separate availability check.
 
-More complex invariants can span multiple rows. For example, limiting a customer's total unpaid orders cannot generally be enforced by an ordinary row-level `CHECK`. The design may require a different schema, explicit locking, or serializable isolation with retries. See [Isolation](04_isolation.md) and the [double booking problem](../07_concurrency_control/04_double_booking_problem.md).
+More complex invariants can span multiple rows. For example, limiting a customer's total unpaid orders cannot generally be enforced by an ordinary row-level `CHECK`. The design may require a different schema, explicit locking, or serializable isolation with retries. See [Isolation](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/04_isolation.md) and the [double booking problem](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/04_double_booking_problem.md).
 
 ## Translate a seat rule into a unique key
 
@@ -192,7 +192,7 @@ Do not assume a trigger that reads a sum is automatically safe against another s
 
 ## Distinguish transaction-end validity from intermediate work
 
-A workflow may temporarily create a reference before its target is inserted. With a deferrable foreign key, the database can check that relationship at commit rather than immediately. The [integrity note](../02_database_design/05_data_integrity.md) shows a complete SQLite example. Deferral changes the checking time; it does not mean the final state may contain missing parents.
+A workflow may temporarily create a reference before its target is inserted. With a deferrable foreign key, the database can check that relationship at commit rather than immediately. The [integrity note](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/05_data_integrity.md) shows a complete SQLite example. Deferral changes the checking time; it does not mean the final state may contain missing parents.
 
 Likewise, a transfer temporarily reduces one account before increasing the other. Other sessions should not observe an accepted half-transfer, and the application must not commit before both results are validated. A sum-of-balances invariant also needs a defined scope: fees, external deposits, and withdrawals can legitimately change that sum if they are part of the model.
 
@@ -211,4 +211,4 @@ A consistent state is defined by the model and its invariants. If the model forg
 3. What changes when the stock test becomes part of the update?
 4. How does ACID consistency differ from replicas eventually agreeing?
 
-Next: [Isolation](04_isolation.md) explains what concurrent transactions can observe.
+Next: [Isolation](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/04_isolation.md) explains what concurrent transactions can observe.

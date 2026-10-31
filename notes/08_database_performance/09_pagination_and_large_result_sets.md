@@ -372,7 +372,7 @@ For feeds and very large tables, implement cursor/keyset pagination deliberately
 
 ## Related notes
 
-- [Query optimization](01_query_optimization_techniques.md)
-- [Indexing strategies](02_indexing_strategies.md)
-- [Connection pooling and batching](08_connection_pooling_batching_and_n_plus_one.md)
-- [Working with billion-row tables](06_working_with_billion_row_table.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Indexing strategies](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/02_indexing_strategies.md)
+- [Connection pooling and batching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md)
+- [Working with billion-row tables](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/06_working_with_billion_row_table.md)

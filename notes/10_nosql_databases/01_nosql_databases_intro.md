@@ -2,7 +2,7 @@
 
 **NoSQL** is an umbrella label for databases built around models such as documents, key-value pairs, wide-column records, and graphs. It is not one query language or one set of guarantees. Some products support transactions, joins, validation, or SQL-like queries; others expose different operations.
 
-Read [data models](../01_introduction_to_databases/04_data_models.md) and [transactions](../04_acid_properties_and_transactions/01_transactions_intro.md) first. We will revisit the bookstore and ask which facts are read together, which change together, and which relationships need traversal.
+Read [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md) and [transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) first. We will revisit the bookstore and ask which facts are read together, which change together, and which relationships need traversal.
 
 ## Start with an access pattern
 
@@ -35,7 +35,7 @@ A bookstore product document might be:
 
 A different product can have different attributes. That flexibility does not remove the schema: applications still expect types and required fields, and the database may enforce validation rules.
 
-**Embedding** puts related values inside the document. **Referencing** stores an identifier pointing elsewhere. Embedding can make one read convenient, but repeated copies of shared facts need updates. If every order embeds the customer's current display name, a name change creates multiple copies to maintain. A historical billing name may intentionally remain unchanged. The same ownership question appeared in [normalization](../02_database_design/02_normalization.md).
+**Embedding** puts related values inside the document. **Referencing** stores an identifier pointing elsewhere. Embedding can make one read convenient, but repeated copies of shared facts need updates. If every order embeds the customer's current display name, a name change creates multiple copies to maintain. A historical billing name may intentionally remain unchanged. The same ownership question appeared in [normalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/02_normalization.md).
 
 ## Key-value access begins with a known key
 
@@ -49,7 +49,7 @@ A wide-column database often uses a **partition key** to group related records a
 
 That structure can suit “this customer's events this month.” It does not automatically make “all customers' events matching any attribute” efficient. Partition size, skew, and supported queries become central modeling concerns.
 
-Wide-column storage is distinct from the [column-oriented analytical layout](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md). Similar names describe different choices.
+Wide-column storage is distinct from the [column-oriented analytical layout](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md). Similar names describe different choices.
 
 ## Graphs make connections explicit
 
@@ -68,7 +68,7 @@ Choosing documents instead of rows does not answer any of these questions:
 - How are conflicts detected and retries handled?
 - Which indexes support the actual queries, and what does maintaining them cost?
 
-Likewise, NoSQL does not imply eventual consistency, and relational does not imply one machine. Model, distribution, transaction scope, and consistency settings are separate dimensions. Review [CAP](../06_distributed_databases/06_cap_theorem.md) for partition-time guarantees rather than using “choose any two” as a product-selection shortcut.
+Likewise, NoSQL does not imply eventual consistency, and relational does not imply one machine. Model, distribution, transaction scope, and consistency settings are separate dimensions. Review [CAP](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/06_cap_theorem.md) for partition-time guarantees rather than using “choose any two” as a product-selection shortcut.
 
 ## Validate a choice with one complete workflow
 
@@ -83,4 +83,4 @@ Use representative data and skew. Examine the difficult case as well as the happ
 3. Why does an embedded current customer name create a different maintenance problem from a historical billing name?
 4. Which guarantees remain undecided after choosing a document database?
 
-Continue with [types of NoSQL databases](02_types_of_nosql_databases.md) and the multi-model [querying guide](03_querying_nosql_databases.md). Then go deeper into [document](05_document_modeling.md), [key-value](06_key_value_modeling.md), [wide-column](07_wide_column_modeling.md), and [graph](08_graph_modeling.md) modeling before reviewing [consistency and replication](09_consistency_transactions_and_replication.md) and [production/polyglot operation](10_operating_nosql_and_polyglot_persistence.md).
+Continue with [types of NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/02_types_of_nosql_databases.md) and the multi-model [querying guide](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md). Then go deeper into [document](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md), [key-value](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md), [wide-column](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md), and [graph](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/08_graph_modeling.md) modeling before reviewing [consistency and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md) and [production/polyglot operation](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/10_operating_nosql_and_polyglot_persistence.md).

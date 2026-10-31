@@ -44,7 +44,7 @@ Redis removes repeated work from the hot path.
 
 The repository includes:
 
-[`scripts/redis/docker-compose.yml`](../../scripts/redis/docker-compose.yml)
+[`scripts/redis/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/redis/docker-compose.yml)
 
 Start Redis:
 
@@ -830,8 +830,8 @@ A full keyspace scan can be disruptive. Prefer cursor-based `SCAN` for administr
 
 ## Related notes
 
-- [Choosing a database](07_choosing_database.md)
-- [Cassandra](11_cassandra.md)
-- [OpenSearch and Elasticsearch](12_elasticsearch_and_opensearch.md)
-- [Database caching](../08_database_performance/03_database_caching.md)
-- [Distributed databases](../06_distributed_databases/)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Cassandra](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md)
+- [OpenSearch and Elasticsearch](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/12_elasticsearch_and_opensearch.md)
+- [Database caching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md)
+- [Distributed databases](https://github.com/djeada/Databases-Notes/tree/main/notes/06_distributed_databases)

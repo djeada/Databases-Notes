@@ -2,7 +2,7 @@
 
 Before choosing tables, find out what the application must do. A requirement is a statement about a needed behavior or rule. “Use PostgreSQL” is a technology choice; “an order must retain the price originally charged” is a requirement that the design must support.
 
-We will use a bookstore so that the requirements connect to the [data-modeling example](../01_introduction_to_databases/04_data_models.md).
+We will use a bookstore so that the requirements connect to the [data-modeling example](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md).
 
 ## Begin with a real workflow
 
@@ -220,4 +220,4 @@ Deliver a conceptual diagram, a logical schema, representative data, a query lis
 3. Why does “every item references an order” not ensure every order contains an item?
 4. Write an expected outcome for two customers buying the last copy.
 
-Continue with [normalization](02_normalization.md), which organizes these facts without unnecessary duplication.
+Continue with [normalization](https://github.com/djeada/Databases-Notes/blob/main/notes/02_database_design/02_normalization.md), which organizes these facts without unnecessary duplication.

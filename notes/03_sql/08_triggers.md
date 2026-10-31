@@ -2,7 +2,7 @@
 
 A **trigger** runs automatically in response to specified writes; its effects are part of the database write, not a separate background job. This chapter makes the hidden work visible: first log a real price change, then test an unchanged value, rollback, and a rejected state transition. Prefer an ordinary constraint when the rule needs no trigger.
 
-This note uses **SQLite** and the fresh [bookstore setup](01_intro_to_sql.md). We will record changes to product prices, then see what happens when the surrounding transaction rolls back.
+This note uses **SQLite** and the fresh [bookstore setup](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). We will record changes to product prices, then see what happens when the surrounding transaction rolls back.
 
 The product rows used by these examples are:
 
@@ -351,4 +351,4 @@ References: [PostgreSQL trigger functions](https://www.postgresql.org/docs/curre
 4. Does this table preserve a price change that was rolled back?
 5. When would a default or constraint be clearer than a trigger?
 
-Next: [hierarchical data](09_hierarchical_data.md) extends the table model to trees.
+Next: [hierarchical data](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/09_hierarchical_data.md) extends the table model to trees.

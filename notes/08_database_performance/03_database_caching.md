@@ -2,7 +2,7 @@
 
 A **cache** keeps a reusable copy of data or a computed result. Reading the copy can avoid repeating a more expensive operation. The difficulty is knowing whether that copy is still appropriate for the request.
 
-Read [query optimization](01_query_optimization_techniques.md) first. A cache can reduce repeated work, but cache misses still need an efficient path to the source data.
+Read [query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md) first. A cache can reduce repeated work, but cache misses still need an efficient path to the source data.
 
 ## Separate two different layers
 
@@ -11,7 +11,7 @@ Read [query optimization](01_query_optimization_techniques.md) first. A cache ca
 | Database page cache | Storage pages used while executing queries | The database engine coordinates page versions and transactions |
 | Application result cache | Values or objects returned by earlier reads | The application must define keys, freshness, and invalidation |
 
-A page being in memory does not mean the database skips SQL execution. An application result cache can skip a query entirely, but its contents can be older than the current database state. See [database pages](../05_storage_and_indexing/04_database_pages.md) for the first layer; this note focuses on the second.
+A page being in memory does not mean the database skips SQL execution. An application result cache can skip a query entirely, but its contents can be older than the current database state. See [database pages](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/04_database_pages.md) for the first layer; this note focuses on the second.
 
 ## Follow a cache-aside read
 
@@ -94,11 +94,11 @@ Start with one frequently reused, expensive read whose staleness policy is clear
 4. What inputs must a customer-specific cache key include?
 5. Why can a cache outage overload a previously healthy database?
 
-Next: [materialized views](04_materialized_views.md) provide another way to reuse calculated results with explicit maintenance rules.
+Next: [materialized views](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md) provide another way to reuse calculated results with explicit maintenance rules.
 
 ## Related notes
 
-- [Materialized views](04_materialized_views.md)
-- [Connection pooling, batching, and N+1](08_connection_pooling_batching_and_n_plus_one.md)
-- [Key-value modeling and Redis cache patterns](../10_nosql_databases/06_key_value_modeling.md)
-- [Redis engine note](../12_database_engines/10_redis.md)
+- [Materialized views](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/04_materialized_views.md)
+- [Connection pooling, batching, and N+1](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/08_connection_pooling_batching_and_n_plus_one.md)
+- [Key-value modeling and Redis cache patterns](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md)
+- [Redis engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)

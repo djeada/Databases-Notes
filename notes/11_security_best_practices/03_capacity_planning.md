@@ -384,7 +384,7 @@ Configure AWS Auto Scaling to maintain a desired performance level by adding or 
 
 ## Related notes
 
-- [Performance monitoring and tuning](05_performance_monitoring_and_tuning.md)
-- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
-- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
-- [Choosing a database](../12_database_engines/07_choosing_database.md)
+- [Performance monitoring and tuning](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/05_performance_monitoring_and_tuning.md)
+- [Database hardening and patch management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [Incident response and disaster recovery drills](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)

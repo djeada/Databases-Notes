@@ -277,7 +277,7 @@ The application can then:
 
 The repository includes:
 
-[`scripts/orm/optimistic_concurrency_demo.py`](../../scripts/orm/optimistic_concurrency_demo.py)
+[`scripts/orm/optimistic_concurrency_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/orm/optimistic_concurrency_demo.py)
 
 Run:
 
@@ -871,8 +871,8 @@ It detects stale writes; it does not block another transaction from editing.
 
 ## Related notes
 
-- [Introduction to ORM](01_introduction_to_orm.md)
-- [Schema migrations](03_schema_migrations.md)
-- [Relationship loading and query performance](04_relationship_loading_and_query_performance.md)
-- [ACID properties and transactions](../04_acid_properties_and_transactions/)
-- [Concurrency control](../07_concurrency_control/)
+- [Introduction to ORM](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/01_introduction_to_orm.md)
+- [Schema migrations](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/03_schema_migrations.md)
+- [Relationship loading and query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)
+- [ACID properties and transactions](https://github.com/djeada/Databases-Notes/tree/main/notes/04_acid_properties_and_transactions)
+- [Concurrency control](https://github.com/djeada/Databases-Notes/tree/main/notes/07_concurrency_control)

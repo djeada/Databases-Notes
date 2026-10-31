@@ -624,4 +624,4 @@ The following notes develop this foundation in order: DDL defines the rules, DML
 3. Change the total query to count the lines in each order. Expected counts: 2, 1, and 1.
 4. Explain why Carol is missing from the inner-join result.
 
-Continue with [DDL](02_data_definition_language_ddl.md) to understand the setup definitions, then [DML](03_data_manipulation_language_dml.md) to change rows. The [joins chapter](06_joins_subqueries_and_views.md) develops the matching behavior.
+Continue with [DDL](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/02_data_definition_language_ddl.md) to understand the setup definitions, then [DML](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/03_data_manipulation_language_dml.md) to change rows. The [joins chapter](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md) develops the matching behavior.

@@ -63,8 +63,8 @@ For exam revision, a large reporting warehouse suggests BigQuery; conventional m
 
 ## Related notes
 
-- [Choosing a database](07_choosing_database.md)
-- [AWS database services](06_aws_services.md)
-- [Azure database services](15_azure_services.md)
-- [Data warehousing](../13_big_data/01_data_warehousing.md)
-- [Partitioning and sharding](../06_distributed_databases/04_partitioning_vs_sharding.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [AWS database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/06_aws_services.md)
+- [Azure database services](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/15_azure_services.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Partitioning and sharding](https://github.com/djeada/Databases-Notes/blob/main/notes/06_distributed_databases/04_partitioning_vs_sharding.md)

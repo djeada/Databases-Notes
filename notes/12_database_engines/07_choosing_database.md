@@ -688,15 +688,15 @@ Cost:
 
 Use the focused engine notes when a workload category becomes a serious candidate:
 
-- [SQLite](01_sqlite.md) — embedded and local relational storage.
-- [MySQL](02_mysql.md) — common transactional web/database workloads.
-- [PostgreSQL](03_postgresql.md) — extensible general-purpose relational database.
-- [MongoDB](04_mongodb.md) — document-oriented application data.
-- [Neo4j](05_neo4j.md) — graph traversal and relationship-heavy models.
-- [SQL Server](09_sql_server.md) — Microsoft enterprise relational ecosystem.
-- [Redis](10_redis.md) — cache, session, rate-limit, and low-latency data structures.
-- [Cassandra](11_cassandra.md) — partition-key-oriented distributed wide-column workloads.
-- [OpenSearch and Elasticsearch](12_elasticsearch_and_opensearch.md) — full-text and document search.
-- [ClickHouse](13_clickhouse.md) — columnar real-time analytics and large aggregations.
-- [Distributed SQL](14_distributed_sql.md) — relational transactions with horizontal distribution.
-- [AWS](06_aws_services.md), [GCP](08_gcp_services.md), and [Azure](15_azure_services.md) — managed-service selection.
+- [SQLite](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/01_sqlite.md) — embedded and local relational storage.
+- [MySQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/02_mysql.md) — common transactional web/database workloads.
+- [PostgreSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/03_postgresql.md) — extensible general-purpose relational database.
+- [MongoDB](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/04_mongodb.md) — document-oriented application data.
+- [Neo4j](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/05_neo4j.md) — graph traversal and relationship-heavy models.
+- [SQL Server](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/09_sql_server.md) — Microsoft enterprise relational ecosystem.
+- [Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md) — cache, session, rate-limit, and low-latency data structures.
+- [Cassandra](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/11_cassandra.md) — partition-key-oriented distributed wide-column workloads.
+- [OpenSearch and Elasticsearch](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/12_elasticsearch_and_opensearch.md) — full-text and document search.
+- [ClickHouse](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/13_clickhouse.md) — columnar real-time analytics and large aggregations.
+- [Distributed SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/14_distributed_sql.md) — relational transactions with horizontal distribution.
+- [AWS](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/06_aws_services.md), [GCP](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/08_gcp_services.md), and [Azure](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/15_azure_services.md) — managed-service selection.

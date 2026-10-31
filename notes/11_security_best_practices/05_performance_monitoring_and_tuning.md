@@ -179,7 +179,7 @@ The annotation can turn a vague incident into a clear correlation.
 
 The repository includes:
 
-[`scripts/security/postgres_health_check.sql`](../../scripts/security/postgres_health_check.sql)
+[`scripts/security/postgres_health_check.sql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/postgres_health_check.sql)
 
 Start the local PostgreSQL environment:
 
@@ -1034,8 +1034,8 @@ It executes the statement.
 
 ## Related notes
 
-- [Capacity planning](03_capacity_planning.md)
-- [Database hardening](11_database_hardening_and_patch_management.md)
-- [Query optimization](../08_database_performance/01_query_optimization_techniques.md)
-- [Indexing](../05_storage_and_indexing/05_indexing.md)
-- [ORM query performance](../14_orm/04_relationship_loading_and_query_performance.md)
+- [Capacity planning](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/03_capacity_planning.md)
+- [Database hardening](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [Query optimization](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/01_query_optimization_techniques.md)
+- [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)
+- [ORM query performance](https://github.com/djeada/Databases-Notes/blob/main/notes/14_orm/04_relationship_loading_and_query_performance.md)

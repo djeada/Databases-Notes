@@ -111,7 +111,7 @@ may be queried only for `country` and `revenue`. A columnar reader can avoid loa
 
 The repository includes:
 
-[`scripts/big_data/parquet_lake_demo.py`](../../scripts/big_data/parquet_lake_demo.py)
+[`scripts/big_data/parquet_lake_demo.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/big_data/parquet_lake_demo.py)
 
 Install the Big Data demo dependencies:
 
@@ -455,8 +455,8 @@ All writers must understand the same table format and catalog semantics.
 
 ## Related notes
 
-- [Data warehousing](01_data_warehousing.md)
-- [Hadoop and HDFS](02_hadoop_and_hdfs.md)
-- [Spark SQL](03_spark_sql.md)
-- [Streaming, Kafka, and CDC](05_streaming_kafka_and_cdc.md)
-- [Pipelines, orchestration, and data quality](06_data_pipelines_orchestration_and_quality.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Hadoop and HDFS](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/02_hadoop_and_hdfs.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)
+- [Streaming, Kafka, and CDC](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/05_streaming_kafka_and_cdc.md)
+- [Pipelines, orchestration, and data quality](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)

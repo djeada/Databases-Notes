@@ -96,7 +96,7 @@ For selected critical tables, a trigger can store old/new values.
 
 The repository includes:
 
-[`scripts/security/postgres_audit_trigger_demo.sql`](../../scripts/security/postgres_audit_trigger_demo.sql)
+[`scripts/security/postgres_audit_trigger_demo.sql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/postgres_audit_trigger_demo.sql)
 
 Run:
 
@@ -615,7 +615,7 @@ Controls should run continuously.
 
 ## Related notes
 
-- [Identity and access control](08_identity_authentication_and_access_control.md)
-- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
-- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
-- [Incident response and disaster recovery drills](12_incident_response_and_disaster_recovery_drills.md)
+- [Identity and access control](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/08_identity_authentication_and_access_control.md)
+- [Encryption, secrets, and key management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/09_encryption_secrets_and_key_management.md)
+- [Database hardening and patch management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [Incident response and disaster recovery drills](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/12_incident_response_and_disaster_recovery_drills.md)

@@ -253,4 +253,4 @@ Translate failures into useful application outcomes: duplicate email, missing re
 3. Why does a foreign key not prove that an order contains at least one item?
 4. Should deleting a customer automatically delete their financial history? Explain the policy your application needs.
 
-Continue with the [SQL introduction](../03_sql/01_intro_to_sql.md) to practice querying and changing these structures.
+Continue with the [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md) to practice querying and changing these structures.

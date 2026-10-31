@@ -2,7 +2,7 @@
 
 Comparing common CRUD operations in SQL (relational databases) and MongoDB (a NoSQL document store) provides valuable insights into the differences between relational and non-relational databases. Understanding these differences is crucial for developers and database administrators when designing and implementing data storage solutions tailored to specific application requirements.
 
-> **Scope:** this page compares a conventional relational table model with MongoDB's document model. It is not a comparison between every SQL database and every NoSQL system. Redis, Cassandra, and Neo4j expose different data models and operations; see the multi-model [querying guide](03_querying_nosql_databases.md).
+> **Scope:** this page compares a conventional relational table model with MongoDB's document model. It is not a comparison between every SQL database and every NoSQL system. Redis, Cassandra, and Neo4j expose different data models and operations; see the multi-model [querying guide](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md).
 
 ## Overview
 
@@ -344,9 +344,9 @@ XVI. SQL databases frequently carry out *partitioning* strategies to handle vast
 
 ## Related modeling notes
 
-- [Querying NoSQL databases](03_querying_nosql_databases.md)
-- [Document modeling](05_document_modeling.md)
-- [Key-value modeling](06_key_value_modeling.md)
-- [Wide-column modeling](07_wide_column_modeling.md)
-- [Graph modeling](08_graph_modeling.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
+- [Querying NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md)
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md)
+- [Key-value modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/06_key_value_modeling.md)
+- [Wide-column modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md)
+- [Graph modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/08_graph_modeling.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)

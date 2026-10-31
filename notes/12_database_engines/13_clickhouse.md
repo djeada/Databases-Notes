@@ -99,7 +99,7 @@ Columnar layouts also compress similar values efficiently.
 
 The repository includes:
 
-[`scripts/clickhouse/docker-compose.yml`](../../scripts/clickhouse/docker-compose.yml)
+[`scripts/clickhouse/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/clickhouse/docker-compose.yml)
 
 Start:
 
@@ -139,7 +139,7 @@ Use `docker compose down -v` only if you want to remove the demo volume.
 
 The repository includes:
 
-[`scripts/clickhouse/demo.sql`](../../scripts/clickhouse/demo.sql)
+[`scripts/clickhouse/demo.sql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/clickhouse/demo.sql)
 
 Run:
 
@@ -776,8 +776,8 @@ Before creating a table:
 
 ## Related notes
 
-- [OpenSearch and Elasticsearch](12_elasticsearch_and_opensearch.md)
-- [Data warehousing](../13_big_data/01_data_warehousing.md)
-- [Spark SQL](../13_big_data/03_spark_sql.md)
-- [Data lakes and lakehouses](../13_big_data/04_data_lakes_and_lakehouses.md)
-- [Choosing a database](07_choosing_database.md)
+- [OpenSearch and Elasticsearch](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/12_elasticsearch_and_opensearch.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)
+- [Spark SQL](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/03_spark_sql.md)
+- [Data lakes and lakehouses](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/04_data_lakes_and_lakehouses.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)

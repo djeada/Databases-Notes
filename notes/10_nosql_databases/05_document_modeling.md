@@ -418,7 +418,7 @@ middle_name null    -> explicitly no value
 
 The repository already contains a MongoDB demonstration:
 
-[`scripts/mongo/null_vs_missing_fields.py`](../../scripts/mongo/null_vs_missing_fields.py)
+[`scripts/mongo/null_vs_missing_fields.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/mongo/null_vs_missing_fields.py)
 
 Use it to inspect how those cases behave in queries.
 
@@ -433,7 +433,7 @@ Those operations have different risks.
 
 Repository demo:
 
-[`scripts/mongo/replace_one_vs_update_one.py`](../../scripts/mongo/replace_one_vs_update_one.py)
+[`scripts/mongo/replace_one_vs_update_one.py`](https://github.com/djeada/Databases-Notes/blob/main/scripts/mongo/replace_one_vs_update_one.py)
 
 A replacement can accidentally remove fields the caller did not include.
 
@@ -779,9 +779,9 @@ models.
 
 ## Related notes
 
-- [NoSQL introduction](01_nosql_databases_intro.md)
-- [Types of NoSQL databases](02_types_of_nosql_databases.md)
-- [Querying NoSQL databases](03_querying_nosql_databases.md)
-- [CRUD in SQL vs NoSQL](04_crud_in_sql_vs_nosql.md)
-- [MongoDB engine note](../12_database_engines/04_mongodb.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
+- [NoSQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/01_nosql_databases_intro.md)
+- [Types of NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/02_types_of_nosql_databases.md)
+- [Querying NoSQL databases](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/03_querying_nosql_databases.md)
+- [CRUD in SQL vs NoSQL](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/04_crud_in_sql_vs_nosql.md)
+- [MongoDB engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/04_mongodb.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)

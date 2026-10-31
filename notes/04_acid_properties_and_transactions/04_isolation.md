@@ -8,7 +8,7 @@
 
 An **anomaly** is an interaction that breaks the workflow's expected behavior. A **snapshot** is the set of row versions a read is allowed to see. Depending on the engine and isolation level, a new statement can get a new snapshot or reuse one established for the transaction. Reading a snapshot is not the same thing as locking every row against changes.
 
-Read [Transactions](01_transactions_intro.md) first. The table below names common anomalies; the isolation levels then describe protections against them.
+Read [Transactions](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) first. The table below names common anomalies; the isolation levels then describe protections against them.
 
 ## Recognize anomalies by their transaction schedule
 
@@ -33,7 +33,7 @@ The SQL standard specifies minimum protections. Actual engines can be stronger.
 | Repeatable Read | Also prevents non-repeatable reads. | The standard permits phantoms and serialization anomalies; implementations differ. |
 | Serializable | Committed transactions must be equivalent to a serial order. | Blocking or transaction aborts can require retries. |
 
-PostgreSQL Repeatable Read uses a transaction snapshot and prevents phantoms, but can permit write skew. InnoDB ordinary Repeatable Read reads also use a stable snapshot; locking reads and writes have additional rules. SQL Server Repeatable Read uses locks on existing read rows and can permit phantoms. See [Serializable and Repeatable Read](../07_concurrency_control/05_serializable_vs_repeatable_read.md) for the detailed comparison.
+PostgreSQL Repeatable Read uses a transaction snapshot and prevents phantoms, but can permit write skew. InnoDB ordinary Repeatable Read reads also use a stable snapshot; locking reads and writes have additional rules. SQL Server Repeatable Read uses locks on existing read rows and can permit phantoms. See [Serializable and Repeatable Read](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/05_serializable_vs_repeatable_read.md) for the detailed comparison.
 
 ## How engines enforce isolation
 
@@ -187,5 +187,5 @@ Shared-cache connections with `read_uncommitted` enabled are a special case; do 
 ## References
 
 - [PostgreSQL transaction isolation](https://www.postgresql.org/docs/current/transaction-iso.html)
-- [Double booking](../07_concurrency_control/04_double_booking_problem.md)
-- [Two-phase locking](../07_concurrency_control/03_two_phase_locking.md)
+- [Double booking](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/04_double_booking_problem.md)
+- [Two-phase locking](https://github.com/djeada/Databases-Notes/blob/main/notes/07_concurrency_control/03_two_phase_locking.md)

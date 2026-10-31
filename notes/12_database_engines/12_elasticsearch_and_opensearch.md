@@ -136,7 +136,7 @@ Fields have mappings that define how values are indexed and searched.
 
 The repository includes:
 
-[`scripts/opensearch/docker-compose.yml`](../../scripts/opensearch/docker-compose.yml)
+[`scripts/opensearch/docker-compose.yml`](https://github.com/djeada/Databases-Notes/blob/main/scripts/opensearch/docker-compose.yml)
 
 Start it:
 
@@ -168,7 +168,7 @@ OpenSearch's official Docker quickstart also documents single-node development m
 
 The repository includes:
 
-[`scripts/opensearch/demo.sh`](../../scripts/opensearch/demo.sh)
+[`scripts/opensearch/demo.sh`](https://github.com/djeada/Databases-Notes/blob/main/scripts/opensearch/demo.sh)
 
 Run after the container is healthy:
 
@@ -808,8 +808,8 @@ Before introducing OpenSearch/Elasticsearch:
 
 ## Related notes
 
-- [Redis](10_redis.md)
-- [ClickHouse](13_clickhouse.md)
-- [Choosing a database](07_choosing_database.md)
-- [Data pipelines](../13_big_data/06_data_pipelines_orchestration_and_quality.md)
-- [Indexing](../05_storage_and_indexing/05_indexing.md)
+- [Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)
+- [ClickHouse](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/13_clickhouse.md)
+- [Choosing a database](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/07_choosing_database.md)
+- [Data pipelines](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/06_data_pipelines_orchestration_and_quality.md)
+- [Indexing](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/05_indexing.md)

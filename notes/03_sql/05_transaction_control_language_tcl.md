@@ -4,7 +4,7 @@ A checkout combines stock reservation, order creation, and line items. A transac
 
 A **transaction** groups database work. `COMMIT` accepts its transactional changes; `ROLLBACK` undoes them. This all-or-nothing property is called **atomicity**. It protects the group, but the application must still decide which statements belong together and when the workflow has failed.
 
-Use the SQLite bookstore from the [SQL introduction](01_intro_to_sql.md). Keep one connection open for each transaction example.
+Use the SQLite bookstore from the [SQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/01_intro_to_sql.md). Keep one connection open for each transaction example.
 
 ## Follow a successful purchase
 
@@ -270,4 +270,4 @@ References: [Python SQLite transaction control](https://docs.python.org/3/librar
 3. What happens to stock if an order insert fails in `buy_one`?
 4. Can a savepoint preserve a change after the outer transaction rolls back?
 
-Continue with [joins and views](06_joins_subqueries_and_views.md) for richer reads. The [ACID introduction](../04_acid_properties_and_transactions/01_transactions_intro.md) explains the broader transaction guarantees.
+Continue with [joins and views](https://github.com/djeada/Databases-Notes/blob/main/notes/03_sql/06_joins_subqueries_and_views.md) for richer reads. The [ACID introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/04_acid_properties_and_transactions/01_transactions_intro.md) explains the broader transaction guarantees.

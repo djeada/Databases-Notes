@@ -383,9 +383,9 @@ process_large_dataset.delay(data_chunk)
 
 ## Related performance notes
 
-- [Execution plans, statistics, and cardinality](07_execution_plans_statistics_and_cardinality.md)
-- [Pagination and large result sets](09_pagination_and_large_result_sets.md)
-- [Partitioning, sharding, and data locality](10_partitioning_sharding_and_data_locality.md)
-- [Benchmarking, load testing, and capacity](11_benchmarking_load_testing_and_capacity.md)
-- [Write performance, vacuum, and bloat](12_write_performance_vacuum_and_bloat.md)
-- [Data warehousing](../13_big_data/01_data_warehousing.md)
+- [Execution plans, statistics, and cardinality](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/07_execution_plans_statistics_and_cardinality.md)
+- [Pagination and large result sets](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/09_pagination_and_large_result_sets.md)
+- [Partitioning, sharding, and data locality](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/10_partitioning_sharding_and_data_locality.md)
+- [Benchmarking, load testing, and capacity](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/11_benchmarking_load_testing_and_capacity.md)
+- [Write performance, vacuum, and bloat](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/12_write_performance_vacuum_and_bloat.md)
+- [Data warehousing](https://github.com/djeada/Databases-Notes/blob/main/notes/13_big_data/01_data_warehousing.md)

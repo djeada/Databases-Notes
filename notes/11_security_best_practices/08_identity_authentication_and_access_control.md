@@ -137,7 +137,7 @@ The credentials are intentionally simple for local learning. They are not a prod
 
 The repository includes:
 
-[`scripts/security/postgres_least_privilege.sql`](../../scripts/security/postgres_least_privilege.sql)
+[`scripts/security/postgres_least_privilege.sql`](https://github.com/djeada/Databases-Notes/blob/main/scripts/security/postgres_least_privilege.sql)
 
 Run it inside the local PostgreSQL container:
 
@@ -751,8 +751,8 @@ Before production:
 
 ## Related notes
 
-- [Database security overview](02_database_security.md)
-- [Encryption, secrets, and key management](09_encryption_secrets_and_key_management.md)
-- [Auditing, compliance, and data governance](10_auditing_compliance_and_data_governance.md)
-- [Database hardening and patch management](11_database_hardening_and_patch_management.md)
-- [SQL injection](06_sql_injection.md)
+- [Database security overview](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/02_database_security.md)
+- [Encryption, secrets, and key management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/09_encryption_secrets_and_key_management.md)
+- [Auditing, compliance, and data governance](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/10_auditing_compliance_and_data_governance.md)
+- [Database hardening and patch management](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/11_database_hardening_and_patch_management.md)
+- [SQL injection](https://github.com/djeada/Databases-Notes/blob/main/notes/11_security_best_practices/06_sql_injection.md)

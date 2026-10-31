@@ -309,7 +309,7 @@ Input (`sales`):
 
 The analytical benefit comes from the storage and execution design, not from the SQL spelling: a row-oriented engine can run this query too. Similar column values can compress well, and engines can process batches efficiently. A tiny three-row example shows the result but cannot prove a performance advantage.
 
-A transactional store with frequent small updates and an analytical store scanning broad history have different workloads. DuckDB is commonly embedded for analytics; ClickHouse offers a different operational architecture. DuckDB's [architecture overview](https://www.duckdb.org/why_duckdb) and [FAQ](https://duckdb.org/faq) explain its in-process operation and columnar representation; ClickHouse describes its own [columnar design](https://clickhouse.com/resources/engineering/what-is-columnar-database). The [row-versus-column note](../05_storage_and_indexing/02_row_based_vs_column_based_databases.md) explains the layout tradeoff.
+A transactional store with frequent small updates and an analytical store scanning broad history have different workloads. DuckDB is commonly embedded for analytics; ClickHouse offers a different operational architecture. DuckDB's [architecture overview](https://www.duckdb.org/why_duckdb) and [FAQ](https://duckdb.org/faq) explain its in-process operation and columnar representation; ClickHouse describes its own [columnar design](https://clickhouse.com/resources/engineering/what-is-columnar-database). The [row-versus-column note](https://github.com/djeada/Databases-Notes/blob/main/notes/05_storage_and_indexing/02_row_based_vs_column_based_databases.md) explains the layout tradeoff.
 
 ## Graph databases: make traversal a first-class operation
 
@@ -362,7 +362,7 @@ High-degree nodes and broad path expansion can still produce expensive work. Ide
 
 The main operational examples above are not an exhaustive taxonomy. **IBM IMS** uses a hierarchical segment model, and **IDMS** is associated with the network model. **ObjectDB** persists Java objects through object-oriented APIs. These families matter when maintaining an existing system or evaluating a workload organized around their structures.
 
-The [data-models note](04_data_models.md) explains hierarchical, network, entity-relationship, and object-oriented structures with examples and distinguishes them from modern documents and graphs. Do not interpret “NoSQL” as a synonym for every non-relational historical system.
+The [data-models note](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md) explains hierarchical, network, entity-relationship, and object-oriented structures with examples and distinguishes them from modern documents and graphs. Do not interpret “NoSQL” as a synonym for every non-relational historical system.
 
 ## Separate logical model, storage layout, and deployment
 
@@ -404,4 +404,4 @@ A small bookstore may use one relational database for nearly everything. Add ano
 6. What path does the Neo4j query match, and why might it need duplicate handling?
 7. Why can a relational engine and a columnar engine both execute an aggregate query?
 
-Continue with [DBMS responsibilities](03_database_management_systems_dbms_.md) to follow how requests are executed, secured, and recovered.
+Continue with [DBMS responsibilities](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/03_database_management_systems_dbms_.md) to follow how requests are executed, secured, and recovered.

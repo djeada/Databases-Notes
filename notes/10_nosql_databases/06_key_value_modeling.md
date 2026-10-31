@@ -162,7 +162,7 @@ Redis provides richer server-side data structures:
 
 The engine chapter contains a complete Redis note:
 
-[Redis](../12_database_engines/10_redis.md)
+[Redis](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)
 
 This chapter focuses on modeling choices.
 
@@ -887,11 +887,11 @@ A high hit ratio does not prove value if misses are extremely expensive.
 
 The engine chapter already includes:
 
-[`scripts/redis/demo.redis`](../../scripts/redis/demo.redis)
+[`scripts/redis/demo.redis`](https://github.com/djeada/Databases-Notes/blob/main/scripts/redis/demo.redis)
 
 This NoSQL chapter adds a key-design exercise:
 
-[`scripts/redis/nosql_key_design.redis`](../../scripts/redis/nosql_key_design.redis)
+[`scripts/redis/nosql_key_design.redis`](https://github.com/djeada/Databases-Notes/blob/main/scripts/redis/nosql_key_design.redis)
 
 It demonstrates:
 
@@ -948,9 +948,9 @@ Stale owner can corrupt protected resource.
 
 ## Related notes
 
-- [NoSQL introduction](01_nosql_databases_intro.md)
-- [Document modeling](05_document_modeling.md)
-- [Wide-column modeling](07_wide_column_modeling.md)
-- [Consistency, transactions, and replication](09_consistency_transactions_and_replication.md)
-- [Redis engine note](../12_database_engines/10_redis.md)
-- [Database caching](../08_database_performance/03_database_caching.md)
+- [NoSQL introduction](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/01_nosql_databases_intro.md)
+- [Document modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/05_document_modeling.md)
+- [Wide-column modeling](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/07_wide_column_modeling.md)
+- [Consistency, transactions, and replication](https://github.com/djeada/Databases-Notes/blob/main/notes/10_nosql_databases/09_consistency_transactions_and_replication.md)
+- [Redis engine note](https://github.com/djeada/Databases-Notes/blob/main/notes/12_database_engines/10_redis.md)
+- [Database caching](https://github.com/djeada/Databases-Notes/blob/main/notes/08_database_performance/03_database_caching.md)
