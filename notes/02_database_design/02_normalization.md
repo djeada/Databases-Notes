@@ -726,6 +726,26 @@ For example, even in a normalized `inventory(product_id, stock_count)` table, tw
 
 Two items were sold, so the correct result is 8, but the final stored value is 9. That lost update cannot be repaired by moving columns into additional tables; it needs appropriate transactional update logic, locking, or other concurrency control.
 
+## Summary
+
+| Normal Form | Main Rule                                                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| 1NF         | Each column contains atomic (single) values; no repeating groups or lists in a cell.                                         |
+| 2NF         | Must be in 1NF + no partial dependencies (every non-key attribute depends on the entire candidate key, not just part of it). |
+| 3NF         | Must be in 2NF + no transitive dependencies of non-key attributes on keys (in the usual simplified rule).                    |
+| BCNF        | Must be in 3NF + every determinant is a superkey (for every non-trivial functional dependency X → Y, X must be a superkey).  |
+| 4NF         | Must be in BCNF + no non-trivial multivalued dependencies unless the determinant is a superkey.                              |
+| 5NF         | Must be in 4NF + no non-trivial join dependencies unless implied by candidate keys.                                          |
+
+### Easy way to remember (1NF–BCNF)
+
+- 1NF: One value per cell.
+- 2NF: No partial dependencies.
+- 3NF: No transitive dependencies (simplified).
+- BCNF: Every determinant must be a superkey.
+
+Remember: Each higher normal form automatically satisfies all lower normal forms.
+
 ## Check your understanding
 
 1. Which anomaly appears when Alice has different names on different order lines?
