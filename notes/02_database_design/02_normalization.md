@@ -1,18 +1,18 @@
 # Normalization: Store Each Fact in the Right Place
 
-Normalization is a way to organize related facts so a change does not require editing many copies of the same information. Begin with the problems in a combined table, then use the normal forms to explain how to separate it safely.
+Normalization is a way to organize related facts so a change does not require editing many copies of the same information. Begin with the problems in a combined table, then use the normal forms to explain how to separate it safely. Each split should keep the same facts: changing the table design should not change who ordered a product, its quantity, or the price charged.
 
 You should already understand rows, primary keys, and foreign keys from [data models](https://github.com/djeada/Databases-Notes/blob/main/notes/01_introduction_to_databases/04_data_models.md).
 
 ## Start with a table that repeats facts
 
-Suppose every order line stores the customer's details and the product's title:
+Suppose every order line stores the customer's details and the product's title, along with the quantity and price charged. Prices are integer cents throughout the examples:
 
-| order_id | line_number | customer_id | customer_name | product_id | product_title | quantity |
-| --- | --- | --- | --- | --- | --- | --- |
-| 101 | 1 | 1 | Alice | 10 | Database Basics | 2 |
-| 101 | 2 | 1 | Alice | 20 | SQL Practice | 1 |
-| 102 | 1 | 1 | Alice | 10 | Database Basics | 1 |
+| order_id | line_number | customer_id | customer_name | product_id | product_title | quantity | purchase_price_cents |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 101 | 1 | 1 | Alice | 10 | Database Basics | 2 | 1500 |
+| 101 | 2 | 1 | Alice | 20 | SQL Practice | 1 | 2500 |
+| 102 | 1 | 1 | Alice | 10 | Database Basics | 1 | 1500 |
 
 The row's identifier is the pair `(order_id, line_number)`. Alice's name is repeated, even though it describes a customer rather than a particular line.
 
@@ -62,12 +62,13 @@ CREATE TABLE norm_raw_lines (
     product_id INTEGER NOT NULL,
     product_title TEXT NOT NULL,
     quantity INTEGER NOT NULL,
+    purchase_price_cents INTEGER NOT NULL,
     PRIMARY KEY (order_id, line_number)
 );
 INSERT INTO norm_raw_lines VALUES
-    (101, 1, 1, 'Alice', 10, 'Database Basics', 2),
-    (101, 2, 1, 'Alice', 20, 'SQL Practice', 1),
-    (102, 1, 1, 'Alice', 10, 'Database Basics', 1);
+    (101, 1, 1, 'Alice', 10, 'Database Basics', 2, 1500),
+    (101, 2, 1, 'Alice', 20, 'SQL Practice', 1, 2500),
+    (102, 1, 1, 'Alice', 10, 'Database Basics', 1, 1500);
 UPDATE norm_raw_lines SET customer_name = 'Alice Smith' WHERE order_id = 102;
 
 SELECT customer_id, COUNT(DISTINCT customer_name) AS stored_names
@@ -79,17 +80,13 @@ GROUP BY customer_id;
 |---|---|
 | 1 | 2 |
 
-The update succeeded because the raw table has no rule connecting the repeated names. Yet the business rule `customer_id → customer_name` has been broken. Normalization changes the representation so this fact is stored at its proper owner rather than trusting every writer to repair every copy.
+The update succeeded because the raw table has no rule connecting the repeated names. Yet the business rule `customer_id → customer_name` has been broken. Normalization changes the representation so this fact is stored at its proper owner rather than trusting every writer to repair every copy. This experiment deliberately leaves conflicting names; the normal-form walkthrough below uses the consistent opening data so each split can be compared without also changing values.
 
 ## First normal form: represent separate facts separately
 
 Suppose the bookstore needs to find each ordered product and record its quantity. A column such as `products = '10,20,30'` bundles several independently meaningful product references into one value. Parsing this string to find product 20 or attach quantities is a warning sign.
 
-An order with a repeating list inside one column might look like this:
-
-| order_id | customer_id | products |
-|---|---|---|
-| 101 | 1 | `10,20` |
+For this first step, focus on order 101 and leave names, titles, and prices aside. In the table below, each entry inside `products` is a `(product_id, quantity)` pair. This makes the quantities part of the input rather than introducing them during the split.
 
 Separating the order from its individual lines gives two tables:
 
@@ -98,22 +95,30 @@ orders(order_id, customer_id)
 order_items(order_id, line_number, product_id, quantity)
 ```
 
-The `orders` table records which customer placed the order:
+The `orders` table records which customer placed the order. The `order_items` table records each product and its quantity on a separate line. Each line can be identified by `(order_id, line_number)` without parsing a list or relying on its position in a comma-separated string.
+
+Each cell then carries one value *for this model*, and each row has an identifiable key. This is the practical idea behind **first normal form (1NF)**. Removing the repeating group does not, by itself, guarantee 2NF or 3NF: the opening combined table already has single values in every cell and still repeats customer and product facts. The two small tables in this focused example also happen to meet the higher forms under our stated rules; later sections return to the full combined table to show the remaining problems.
+
+“Atomic” does not mean physically indivisible: a date can remain one value despite containing a year, month, and day. A list or JSON document can also be a legitimate opaque value for a different requirement. The problem here is that the application treats its elements as independently related products.
+
+Before 1NF, `products` contains a repeating group:
+
+| order_id | customer_id | products |
+| --- | --- | --- |
+| 101 | 1 | `(10, 2), (20, 1)` |
+
+After removing the repeating group, `orders` (key: `order_id`):
 
 | order_id | customer_id |
 | --- | --- |
 | 101 | 1 |
 
-The `order_items` table records each product and its quantity on a separate line. Each line can be identified without parsing a list or relying on its position in a comma-separated string.
+`order_items` (key: `(order_id, line_number)`; `order_id` references `orders`):
 
 | order_id | line_number | product_id | quantity |
 |---|---|---|---|
 | 101 | 1 | 10 | 2 |
 | 101 | 2 | 20 | 1 |
-
-Each cell now carries one value *for this model*, and a line has an identifiable key. This is the practical idea behind **first normal form (1NF)**. It does **not** yet establish 2NF or 3NF; the earlier combined table has single values in every cell and still repeats customer and product facts.
-
-“Atomic” does not mean physically indivisible: a date can remain one value despite containing a year, month, and day. A list or JSON document can also be a legitimate opaque value for a different requirement. The problem here is that the application treats its elements as independently related products.
 
 ## Understand a dependency with a question
 
@@ -125,7 +130,7 @@ In our bookstore:
 customer_id → customer_name
 product_id → product_title
 order_id → customer_id
-(order_id, line_number) → product_id, quantity, purchase_price
+(order_id, line_number) → product_id, quantity, purchase_price_cents
 ```
 
 These are assumed business rules. A sample with no contradictions does not prove a rule. Product titles, for example, need not determine product IDs because several products can share a title.
@@ -159,19 +164,14 @@ These examples illustrate how to check a proposed dependency against rows. They 
 
 ## Second normal form: use the whole key
 
-Our combined table has a two-column key `(order_id, line_number)`. But `order_id → customer_id`: finding the customer needs only part of that key.
+Return to the full combined table from the opening example. Its candidate key is `(order_id, line_number)`. But `order_id → customer_id`: finding the customer needs only part of that key. Through `customer_id → customer_name`, the customer's name also depends on `order_id` alone.
 
-The following table is in 1NF but not 2NF because the customer depends only on `order_id`:
+The combined table is in 1NF but not 2NF because these customer details depend on a proper subset of the key:
 
 ```text
-order_items(order_id, line_number, customer_id, product_id, quantity)
+order_lines(order_id, line_number, customer_id, customer_name,
+            product_id, product_title, quantity, purchase_price_cents)
 ```
-
-| order_id | line_number | customer_id | product_id | quantity |
-| --- | --- | --- | --- | --- |
-| 101 | 1 | 1 | 10 | 2 |
-| 101 | 2 | 1 | 20 | 1 |
-| 102 | 1 | 1 | 10 | 1 |
 
 The two rows for order 101 must repeat `customer_id = 1`, although the customer is a property of the order rather than of either individual line. If the order were reassigned to another customer, both rows would need an update to avoid contradictory customer IDs within the same order.
 
@@ -184,28 +184,34 @@ order_items(order_id, line_number, product_id, product_title, quantity, purchase
 
 The `orders` row represents each order once; line-specific quantity and charged price stay with the line. This is an *intermediate* 2NF design, **not yet 3NF**: customer names and product titles still live in tables identified by something other than their natural owner.
 
-For the original data, the intermediate tables contain the following rows. The customer name still appears once per order, but no longer once per order line.
+In the old combined line table, `order_id = 101` appears twice and each row repeats `customer_id = 1`. In the new `orders` table, order 101 appears once. This fixes the partial dependency because `customer_id` depends on `order_id`, not on the entire `(order_id, line_number)` key. By contrast, the quantity of product 10 is 2 on line `(101, 1)` and 1 on line `(102, 1)`: that value really does describe a particular line and should remain there.
 
-`orders`:
+Notice that 2NF does not mean all repetition has gone away. `customer_name` still appears in both orders and `product_title` still appears in two order items. Those repetitions have different causes, which 3NF addresses next. Repeated foreign-key values such as `product_id = 10` are needed to record which product each line refers to; they are not redundant copies of the product's title.
+
+A **candidate key** is a minimal set of attributes identifying a row: removing any column stops it being a key. **2NF** requires 1NF and that no non-prime attribute depend on a proper subset of **any** candidate key. A *prime attribute* belongs to at least one candidate key; for this example, `customer_id` is not prime in the combined line table. A single-column candidate key cannot have this kind of partial dependency, but any other candidate keys must still be checked.
+
+Before 2NF, `order_lines` (key: `(order_id, line_number)`):
+
+| order_id | line_number | customer_id | customer_name | product_id | product_title | quantity | purchase_price_cents |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 101 | 1 | 1 | Alice | 10 | Database Basics | 2 | 1500 |
+| 101 | 2 | 1 | Alice | 20 | SQL Practice | 1 | 2500 |
+| 102 | 1 | 1 | Alice | 10 | Database Basics | 1 | 1500 |
+
+After removing the partial dependencies, `orders` (key: `order_id`):
 
 | order_id | customer_id | customer_name |
 | --- | --- | --- |
 | 101 | 1 | Alice |
 | 102 | 1 | Alice |
 
-`order_items`:
+`order_items` (key: `(order_id, line_number)`; `order_id` references `orders`):
 
 | order_id | line_number | product_id | product_title | quantity | purchase_price_cents |
 | --- | --- | --- | --- | --- | --- |
 | 101 | 1 | 10 | Database Basics | 2 | 1500 |
 | 101 | 2 | 20 | SQL Practice | 1 | 2500 |
 | 102 | 1 | 10 | Database Basics | 1 | 1500 |
-
-In the old combined line table, `order_id = 101` appeared twice and each row repeated `customer_id = 1`. In the new `orders` table, order 101 appears once. This fixes the partial dependency because `customer_id` depends on `order_id`, not on the entire `(order_id, line_number)` key. By contrast, the quantity of product 10 is 2 on line `(101, 1)` and 1 on line `(102, 1)`: that value really does describe a particular line and should remain there.
-
-Notice that 2NF does not mean all repetition has gone away. `customer_name` still appears in both orders and `product_title` still appears in two order items. Those repetitions have different causes, which 3NF addresses next.
-
-A **candidate key** is a minimal set of attributes identifying a row: removing any column stops it being a key. **2NF** requires 1NF and that no non-prime attribute depend on a proper subset of **any** candidate key. A *prime attribute* belongs to at least one candidate key; for this example, `customer_id` is not prime in the combined line table. A single-column candidate key cannot have this kind of partial dependency.
 
 ## Third normal form: remove the extra hop
 
@@ -223,36 +229,55 @@ Separating customer and product details from orders and order lines produces the
 
 ```text
 customers(customer_id, customer_name)
-products(product_id, product_title, current_price_cents)
+products(product_id, product_title)
 orders(order_id, customer_id)
 order_items(order_id, line_number, product_id, quantity, purchase_price_cents)
 ```
 
 Now renaming Alice changes one customer row, and changing a catalog title changes one product row. Joins reconstruct the display for each order, rather than storing repeated names or titles.
 
-After separating customers and products, the same purchases are stored in four tables:
+The extra hop `order_id → customer_id → customer_name` is eliminated from `orders`: it has `customer_id` but no longer stores `customer_name`. The product title is also removed from each order item, because `product_id` already identifies it in `products`. A later name change from Alice to Alice Smith would affect only the customer row, without requiring edits to either order or any item. The split itself keeps the original name Alice.
 
-`customers`:
+The tables still need foreign keys. For example, `orders.customer_id` must refer to an existing customer and `order_items.product_id` must refer to an existing product. Merely moving columns without enforcing valid references would not give the same protection against inconsistent data.
+
+This illustrates **3NF**: in this example, a non-key attribute must not depend transitively on the key through another non-key attribute. This is a teaching shortcut, not the full definition for overlapping candidate keys; the formal criterion appears below. Here `customer_id` does not identify an order, and `product_id` does not identify an order line, so their names and titles belong in separate tables keyed by those IDs.
+
+Before 3NF, the two intermediate 2NF tables are `orders` (key: `order_id`):
+
+| order_id | customer_id | customer_name |
+| --- | --- | --- |
+| 101 | 1 | Alice |
+| 102 | 1 | Alice |
+
+`order_items` (key: `(order_id, line_number)`):
+
+| order_id | line_number | product_id | product_title | quantity | purchase_price_cents |
+| --- | --- | --- | --- | --- | --- |
+| 101 | 1 | 10 | Database Basics | 2 | 1500 |
+| 101 | 2 | 20 | SQL Practice | 1 | 2500 |
+| 102 | 1 | 10 | Database Basics | 1 | 1500 |
+
+After removing the transitive dependencies, the same purchases are stored in four tables. `customers` (key: `customer_id`):
 
 | customer_id | customer_name |
 | --- | --- |
-| 1 | Alice Smith |
+| 1 | Alice |
 
-`products`:
+`products` (key: `product_id`):
 
-| product_id | product_title | current_price_cents |
-| --- | --- | --- |
-| 10 | Database Basics | 1800 |
-| 20 | SQL Practice | 2500 |
+| product_id | product_title |
+| --- | --- |
+| 10 | Database Basics |
+| 20 | SQL Practice |
 
-`orders`:
+`orders` (key: `order_id`; `customer_id` references `customers`):
 
 | order_id | customer_id |
 | --- | --- |
 | 101 | 1 |
 | 102 | 1 |
 
-`order_items`:
+`order_items` (key: `(order_id, line_number)`; `order_id` references `orders`, and `product_id` references `products`):
 
 | order_id | line_number | product_id | quantity | purchase_price_cents |
 | --- | --- | --- | --- | --- |
@@ -260,15 +285,11 @@ After separating customers and products, the same purchases are stored in four t
 | 101 | 2 | 20 | 1 | 2500 |
 | 102 | 1 | 10 | 1 | 1500 |
 
-The extra hop `order_id → customer_id → customer_name` is eliminated from `orders`: it has `customer_id` but no longer stores `customer_name`. The product title is also removed from each order item, because `product_id` already identifies it in `products`. Changing the name from Alice to Alice Smith affects only the customer row shown above, without requiring edits to either order or any item.
-
-The tables still need foreign keys. For example, `orders.customer_id` must refer to an existing customer and `order_items.product_id` must refer to an existing product. Merely moving columns without enforcing valid references would not give the same protection against inconsistent data.
-
-This illustrates **3NF**: in this example, a non-key attribute must not depend transitively on the key through another non-key attribute. This is a teaching shortcut, not the full definition for overlapping candidate keys; the formal criterion appears below.
-
 ## Implement the corrected design in SQLite
 
 Run this after the raw-table experiment in the same SQLite database (with `PRAGMA foreign_keys = ON`). These four tables are the **correct** counterpart of `norm_raw_lines`. The primary and foreign keys make row identity and references explicit. Prices are integer cents.
+
+For this implementation, resolve the conflicting raw customer names to Alice Smith and also record the current catalog prices: 1800 cents for product 10 and 2500 cents for product 20. `current_price_cents` is an additional catalog fact; it is not created by normalization or inferred from the historical purchase prices. The next section explains why both prices belong in the model.
 
 ```sql
 CREATE TABLE norm_customers (
@@ -349,7 +370,7 @@ The numbers are not duplicate versions of the same fact: they describe the same 
 
 ## Split tables without inventing combinations
 
-A good decomposition must be **lossless**: joining the pieces reconstructs the original facts without adding false combinations or losing facts.
+A good decomposition must be **lossless**: joining the pieces reconstructs the original facts without adding false combinations or losing facts. Each piece is a projection of the original relation: keep selected columns and remove duplicate rows. The important question is whether joining those projections recovers exactly the original relation.
 
 For example, split `(customer_id, customer_name, email)` into tables connected by the customer ID, rather than separating a list of names from a list of emails with no reliable link.
 
@@ -429,7 +450,7 @@ If the only business restrictions are that `order_id` and `line_number` together
 | 101 | DE | 500 |
 | 102 | FR | 900 |
 
-A row `(103, DE, 900)` has a unique order ID, a recognized destination and a nonnegative fee, yet violates the stated rule for German orders. Separate domain and key checks do not express the required relationship between `destination` and `delivery_cents`. That relationship needs an additional constraint or a different representation; it does not follow automatically from the allowed values of either column or from the key. DKNF asks whether every required constraint can be expressed using only domains and keys, not whether a table happens to look small or well-organized.
+A row `(103, DE, 900)` has a unique order ID, a recognized destination and a nonnegative fee, yet violates the stated rule for German orders. Separate domain and key checks do not express the required relationship between `destination` and `delivery_cents`. That relationship needs an additional constraint or a different representation; it does not follow automatically from the allowed values of either column or from the key. DKNF asks whether every required constraint follows from domains and keys, not whether a table happens to look small or well-organized. Splitting tables does not automatically achieve this; see [Fagin's definition of domain-key normal form](https://s3.us.cloud-object-storage.appdomain.cloud/res-files/500-tods81.pdf).
 
 For a BCNF example, suppose each teacher teaches one subject and each student has one teacher per subject. In `(student, subject, teacher)`, `teacher → subject`, but teacher alone does not identify a row. Splitting teacher-subject and student-teacher facts is lossless, yet enforcing one teacher per student and subject now needs a cross-table rule. BCNF can therefore trade simpler facts for harder constraint enforcement.
 
@@ -437,30 +458,9 @@ For a BCNF example, suppose each teacher teaches one subject and each student ha
 
 Suppose each teacher teaches exactly one subject, and a student has one teacher for each subject. For `(student, subject, teacher)`, the candidate keys are `(student, subject)` and `(student, teacher)`. Every attribute is prime because it belongs to a candidate key.
 
-| student | subject | teacher |
-|---|---|---|
-| Alice | Databases | Lee |
-| Bob | Databases | Lee |
-| Alice | Networks | Rao |
+For example, Lee teaches Databases to Alice and Bob, while Rao teaches Networks to Alice. `teacher → subject` holds under the business rule. Teacher alone is not a superkey because Lee has several students. The dependency satisfies 3NF because `subject` is prime, even though `teacher` is not a superkey. It violates **Boyce–Codd normal form (BCNF)**, which requires a superkey on the left of every nontrivial functional dependency, without the prime-attribute exception.
 
-`teacher → subject` holds under the business rule. Teacher alone is not a superkey because Lee has several students. Thus the relation can meet 3NF's prime-attribute exception while violating **Boyce–Codd normal form (BCNF)**.
-
-To remove the repeated teacher–subject fact, keep each teacher's subject once and record student–teacher assignments separately.
-
-`teacher_subject` (key: `teacher`):
-
-| teacher | subject |
-|---|---|
-| Lee | Databases |
-| Rao | Networks |
-
-`student_teacher` (key: `(student, teacher)`):
-
-| student | teacher |
-|---|---|
-| Alice | Lee |
-| Bob | Lee |
-| Alice | Rao |
+To remove the repeated teacher–subject fact, keep each teacher's subject once in `teacher_subject(teacher, subject)`, keyed by `teacher`. Record assignments in `student_teacher(student, teacher)`, keyed by `(student, teacher)`, with `teacher` referencing `teacher_subject`.
 
 The shared `teacher` determines the subject, making the join lossless. However, the split does not automatically preserve every original rule. Assigning a new teacher Chen to Databases, then assigning Alice to Chen, would pass the individual table keys but break the rule that Alice has only one teacher for Databases. The corrected *BCNF structure* therefore still needs a cross-table constraint or transaction-safe validation for that business rule. This is why lossless decomposition and dependency preservation are distinct questions.
 
@@ -490,36 +490,38 @@ Joining them gives:
 
 Both tables satisfy their own keys and `teacher → subject`, but the original rule that Alice has only one teacher per subject is violated. This example explains exactly what was lost from local enforcement. The decomposition is lossless, yet the `(student, subject) → teacher` rule must now be checked across the tables, for example by a safely enforced database-level mechanism. Checking once in application code without concurrency protection would not be enough.
 
+Returning to the valid assignments, before BCNF, `student_subject_teacher` (candidate keys: `(student, subject)` and `(student, teacher)`):
+
+| student | subject | teacher |
+| --- | --- | --- |
+| Alice | Databases | Lee |
+| Bob | Databases | Lee |
+| Alice | Networks | Rao |
+
+After storing the teacher–subject fact in its own table, `teacher_subject` (key: `teacher`):
+
+| teacher | subject |
+| --- | --- |
+| Lee | Databases |
+| Rao | Networks |
+
+`student_teacher` (key: `(student, teacher)`; `teacher` references `teacher_subject`):
+
+| student | teacher |
+| --- | --- |
+| Alice | Lee |
+| Bob | Lee |
+| Alice | Rao |
+
 ## 4NF: independent lists create repeated combinations
 
-Suppose a customer can have several preferred languages and several favorite categories, and these lists are independent. Storing `(customer, language, category)` requires every language/category pairing:
+Suppose a customer can have several preferred languages and several favorite categories, and these lists are independent. Alice prefers English and German and likes History and Computing. Independence means neither language restricts the categories: storing `(customer_name, language, category)` requires all four language/category pairings.
 
-| customer | language | category |
-|---|---|---|
-| Alice | en | History |
-| Alice | en | Computing |
-| Alice | de | History |
-| Alice | de | Computing |
+These are **multivalued dependencies**: `customer_name →→ language` and `customer_name →→ category`. For one customer, the language list is the same regardless of which category is selected, and the category list is the same regardless of language. Adding a language requires a row for every category; deleting one combination can falsely suggest that a language is associated with only one category.
 
-These are **multivalued dependencies**: `customer →→ language` and `customer →→ category`. Adding a language requires a row for every category; deleting one combination can falsely suggest that a language is associated with only one category.
+Assume there are no other dependencies and the key is all three columns. The combined table has no nontrivial functional dependency with a non-superkey determinant, so it is in BCNF. It still violates **4NF**: the multivalued dependencies are nontrivial, and `customer_name` is not a superkey because a customer has several rows. BCNF alone does not remove this kind of repetition.
 
-The combined table above stores four rows for two independent lists; this is the 4NF violation.
-
-Represent the two independent lists in separate tables instead:
-
-`norm_languages`:
-
-| customer_name | language |
-| --- | --- |
-| Alice | en |
-| Alice | de |
-
-`norm_categories`:
-
-| customer_name | category |
-| --- | --- |
-| Alice | History |
-| Alice | Computing |
+Represent the two independent lists in `norm_languages(customer_name, language)` and `norm_categories(customer_name, category)` instead. Each table's two columns together form its key.
 
 Instead of four stored language-category combinations, we now store two language facts and two category facts. If Alice adds French, only `(Alice, fr)` needs to be inserted into `norm_languages`, not a row for every category. The query below produces all combinations when the application actually needs them.
 
@@ -556,26 +558,49 @@ The text name is a short teaching identifier here; a production schema would nor
 
 The independence assumption matters. Suppose Alice prefers English for Computing and German for History, rather than having two independent preference lists:
 
-| customer | language | category |
+| customer_name | language | category |
 | --- | --- | --- |
 | Alice | en | Computing |
 | Alice | de | History |
 
 If we split this table into languages and categories as above, their join also produces `(Alice, en, History)` and `(Alice, de, Computing)`. Those extra combinations would claim preferences Alice never expressed. In this situation the relationship itself is a fact, so the three-column table must retain the pairings. The 4NF split is justified by independent multivalued relationships, not by repetition alone.
 
+For the original independent lists, before 4NF, `customer_preferences` (key: `(customer_name, language, category)`):
+
+| customer_name | language | category |
+| --- | --- | --- |
+| Alice | en | History |
+| Alice | en | Computing |
+| Alice | de | History |
+| Alice | de | Computing |
+
+After separating the independent lists, `norm_languages` (key: `(customer_name, language)`):
+
+| customer_name | language |
+| --- | --- |
+| Alice | en |
+| Alice | de |
+
+`norm_categories` (key: `(customer_name, category)`):
+
+| customer_name | category |
+| --- | --- |
+| Alice | History |
+| Alice | Computing |
+
 ## 5NF: three pairwise facts do not always imply a triple
 
 A supplier–product–project relation can record which supplier is approved to supply which product to which project. Pairwise lists of supplier/product, supplier/project, and product/project are enough **only if** the business explicitly says every triple allowed by all three pairs is valid.
 
-Consider these approved triples:
-
 A supplier ID identifies a supplier, a product ID identifies a product, and a project ID identifies a project. In this example, a row means that the specific supplier is approved to deliver that specific product to that specific project. Merely having permission for each pair does not necessarily imply permission for the triple.
 
-```text
-(S1, P1, J1)
-(S1, P2, J2)
-(S2, P1, J2)
-```
+Consider these approved triples:
+
+| supplier | product | project |
+| --- | --- | --- |
+| S1 | P1 | J1 |
+| S1 | P2 | J2 |
+| S2 | P1 | J2 |
 
 Projecting them into pairs permits joining `(S1, P1)`, `(S1, J2)`, and `(P1, J2)` into `(S1, P1, J2)`, which was never approved. That is a **spurious tuple**: an invented combination. A naive three-way decomposition is lossy with respect to the intended association even if every original tuple can be recovered.
 
@@ -618,33 +643,15 @@ The row `(S1, P1, J2)` is not a harmless duplicate. It grants an approval that d
 
 Replacing the three original triples with only their pairwise projections would admit `(S1, P1, J2)`, so it changes the meaning of the data.
 
-In a different business, the rules may explicitly guarantee that any supplier, product and project combination is permitted whenever all three pairwise permissions hold. For that business, the pairwise relationships themselves are the facts. Consider:
+In a different business, the rules may explicitly guarantee that any supplier, product and project combination is permitted whenever all three pairwise permissions hold. For that business, the pairwise relationships themselves are the facts. A **join dependency** says that the triple relation must equal the join of these three projections for every valid state of the data.
 
-`supplier_product`:
+In the valid example below, `(S2, P2, J1)` does not appear because supplier S2 has no permission for project J1, even though S2 can supply product P2 and P2 is approved for J1. Conversely, `(S1, P2, J2)` appears because all three relevant pairs are present. Under this business rule, every generated triple is supposed to be present, so the decomposition is lossless. The difference from the earlier counterexample is the *meaning of the approval rule*, not the shape of the table.
 
-| supplier | product |
-| --- | --- |
-| S1 | P1 |
-| S1 | P2 |
-| S2 | P2 |
+Assume no pair of columns determines the third, so the candidate key of the combined table is `(supplier, product, project)`. There are also no independent lists that justify a two-table split. The table can therefore be in 4NF while still having a three-way join dependency not implied by its candidate key. **5NF** removes that remaining redundancy by storing the pairwise facts separately. Each resulting pair table has both columns as its key.
 
-`supplier_project`:
+5NF is useful for genuine multiway relationship rules, but a diagram with three pairwise edges is not enough evidence to remove the triple table. The first example must keep its triple approvals; only the second example's rule justifies the split.
 
-| supplier | project |
-| --- | --- |
-| S1 | J1 |
-| S1 | J2 |
-| S2 | J2 |
-
-`product_project`:
-
-| product | project |
-| --- | --- |
-| P1 | J1 |
-| P2 | J1 |
-| P2 | J2 |
-
-The three-way join gives exactly the triples approved by this rule:
+Before 5NF, `approved_supplies`, under the rule that all three pairwise permissions imply approval (key: `(supplier, product, project)`):
 
 | supplier | product | project |
 | --- | --- | --- |
@@ -653,39 +660,39 @@ The three-way join gives exactly the triples approved by this rule:
 | S1 | P2 | J2 |
 | S2 | P2 | J2 |
 
-For example, `(S2, P2, J1)` does not appear because supplier S2 has no permission for project J1, even though S2 can supply product P2 and P2 is approved for J1. Conversely, `(S1, P2, J2)` appears because all three relevant pairs are present. Under the stated business rule, every generated triple is supposed to be present, so this decomposition is lossless. The difference from the earlier counterexample is the *meaning of the approval rule*, not the shape of the table.
+After separating the pairwise facts, `supplier_product` (key: `(supplier, product)`):
 
-**5NF** addresses join dependencies: when can projections be joined without changing the facts? It is useful for genuine multiway relationship rules, but a diagram with three pairwise edges is not enough evidence to remove the triple table.
+| supplier | product |
+| --- | --- |
+| S1 | P1 |
+| S1 | P2 |
+| S2 | P2 |
+
+`supplier_project` (key: `(supplier, project)`):
+
+| supplier | project |
+| --- | --- |
+| S1 | J1 |
+| S1 | J2 |
+| S2 | J2 |
+
+`product_project` (key: `(product, project)`):
+
+| product | project |
+| --- | --- |
+| P1 | J1 |
+| P2 | J1 |
+| P2 | J2 |
 
 ## 6NF and temporal facts
 
 Some temporal designs split independently changing facts into very small relations. A customer's address and credit limit may have different validity intervals. Keeping them in one versioned row can require copying one whenever only the other changes.
 
-For example, separate address history `(customer_id, valid_from, address)` and credit-limit history `(customer_id, valid_from, limit_cents)` let each fact have its own timeline. Queries must still define interval endpoints, gaps, overlap rules, and how facts are combined at a chosen time. Timestamped tables are not automatically 6NF; the formal criterion concerns irreducible join dependencies.
+For example, separate address history `(customer_id, valid_from, valid_to, address)` and credit-limit history `(customer_id, valid_from, valid_to, limit_cents)` let each fact have its own timeline. Queries must still define interval endpoints, gaps, overlap rules, and how facts are combined at a chosen time. Timestamped tables are not automatically 6NF; the formal criterion concerns irreducible join dependencies.
 
 Suppose both facts were originally kept in a single versioned customer table, with dates representing the first valid day and the first day after the interval. A range from `2026-01-01` to `2026-02-01` includes January but not February 1.
 
-| customer_id | valid_from | valid_to | address | limit_cents |
-| --- | --- | --- | --- | --- |
-| 1 | 2026-01-01 | 2026-02-01 | Berlin | 100000 |
-| 1 | 2026-02-01 | 2026-03-01 | Berlin | 150000 |
-| 1 | 2026-03-01 | 2026-04-01 | Leipzig | 150000 |
-
-On February 1 only the credit limit changed, but the address had to be repeated in a new row. On March 1 only the address changed, but the credit limit had to be copied again. If these two facts genuinely vary independently, their histories can be stored separately:
-
-`customer_address_history`:
-
-| customer_id | valid_from | valid_to | address |
-| --- | --- | --- | --- |
-| 1 | 2026-01-01 | 2026-03-01 | Berlin |
-| 1 | 2026-03-01 | 2026-04-01 | Leipzig |
-
-`customer_limit_history`:
-
-| customer_id | valid_from | valid_to | limit_cents |
-| --- | --- | --- | --- |
-| 1 | 2026-01-01 | 2026-02-01 | 100000 |
-| 1 | 2026-02-01 | 2026-04-01 | 150000 |
+On February 1 only the credit limit changed, but the address had to be repeated in a new row. On March 1 only the address changed, but the credit limit had to be copied again. If these two facts genuinely vary independently, their histories can be stored separately. Adjacent intervals with the same address can be combined in the address history; adjacent intervals with the same limit can be combined in the limit history.
 
 For a query asking about `2026-02-15`, the address row valid on that date says Berlin and the limit row says 150000. The answer is obtained by matching the customer and the overlapping intervals, not by joining on equal `valid_from` dates: the starts of the two histories need not coincide.
 
@@ -693,9 +700,33 @@ For a query asking about `2026-02-15`, the address row valid on that date says B
 | --- | --- | --- | --- |
 | 2026-02-15 | 1 | Berlin | 150000 |
 
-Each history needs explicit rules about interval overlap, gaps, and inclusive or exclusive boundaries. This example shows why independently changing temporal facts may be separated; it does not establish that any table with timestamps is in 6NF. The formal requirement is that the relation have no nontrivial join dependency, which must be assessed against the full set of business constraints.
+To reconstruct the original history, join rows for the same customer whose intervals overlap, and use the intersection as the resulting interval. The Berlin address interval overlaps both credit-limit intervals, recovering the January and February rows; the Leipzig interval recovers the March row. This is a temporal join, rather than a natural join on the two date columns.
+
+Each history needs explicit rules about interval overlap, gaps, and inclusive or exclusive boundaries. This example shows why independently changing temporal facts may be separated; it does not establish that any table with timestamps is in 6NF. The formal requirement is that the relation have no nontrivial join dependency, assessed against the full set of business constraints. For interval data, the decomposition and join must use temporal semantics; see [Darwen's explanation of 6NF and temporal histories](https://www.dcs.warwick.ac.uk/~hugh/TTM/TemporalData.Warwick.pdf).
 
 Most operational designs begin with 3NF or a carefully reasoned BCNF design, then inspect actual rules that motivate higher forms. PostgreSQL and other relational engines implement the resulting tables and constraints; there is no `NORMALIZE TABLE` command that discovers your business dependencies for you.
+
+Before the temporal split discussed for 6NF, `customer_history` (key: `(customer_id, valid_from)`, with nonoverlapping intervals per customer):
+
+| customer_id | valid_from | valid_to | address | limit_cents |
+| --- | --- | --- | --- | --- |
+| 1 | 2026-01-01 | 2026-02-01 | Berlin | 100000 |
+| 1 | 2026-02-01 | 2026-03-01 | Berlin | 150000 |
+| 1 | 2026-03-01 | 2026-04-01 | Leipzig | 150000 |
+
+After giving each fact its own timeline, `customer_address_history` (key: `(customer_id, valid_from)`, with nonoverlapping intervals per customer):
+
+| customer_id | valid_from | valid_to | address |
+| --- | --- | --- | --- |
+| 1 | 2026-01-01 | 2026-03-01 | Berlin |
+| 1 | 2026-03-01 | 2026-04-01 | Leipzig |
+
+`customer_limit_history` (key: `(customer_id, valid_from)`, with nonoverlapping intervals per customer):
+
+| customer_id | valid_from | valid_to | limit_cents |
+| --- | --- | --- | --- |
+| 1 | 2026-01-01 | 2026-02-01 | 100000 |
+| 1 | 2026-02-01 | 2026-04-01 | 150000 |
 
 ## A design review procedure
 
@@ -731,11 +762,13 @@ Two items were sold, so the correct result is 8, but the final stored value is 9
 | Normal Form | Main Rule                                                                                                                    |
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | 1NF         | Each column contains atomic (single) values; no repeating groups or lists in a cell.                                         |
-| 2NF         | Must be in 1NF + no partial dependencies (every non-key attribute depends on the entire candidate key, not just part of it). |
+| 2NF         | Must be in 1NF + no non-prime attribute depends on a proper subset of any candidate key.                                    |
 | 3NF         | Must be in 2NF + no transitive dependencies of non-key attributes on keys (in the usual simplified rule).                    |
 | BCNF        | Must be in 3NF + every determinant is a superkey (for every non-trivial functional dependency X → Y, X must be a superkey).  |
 | 4NF         | Must be in BCNF + no non-trivial multivalued dependencies unless the determinant is a superkey.                              |
 | 5NF         | Must be in 4NF + no non-trivial join dependencies unless implied by candidate keys.                                          |
+| 6NF         | No non-trivial join dependencies at all; temporal decompositions use the appropriate interval semantics.                      |
+| DKNF        | Every constraint follows from domains and keys; this is a separate criterion, not the next numbered form.                     |
 
 ### Easy way to remember (1NF–BCNF)
 
@@ -744,7 +777,7 @@ Two items were sold, so the correct result is 8, but the final stored value is 9
 - 3NF: No transitive dependencies (simplified).
 - BCNF: Every determinant must be a superkey.
 
-Remember: Each higher normal form automatically satisfies all lower normal forms.
+Remember: In the chain from 1NF through 6NF, with BCNF between 3NF and 4NF, each higher form satisfies the lower forms. These are increasingly strict conditions on the business dependencies, not a requirement to split every table at every step. A table that already satisfies a form needs no further decomposition for that form.
 
 ## Check your understanding
 
