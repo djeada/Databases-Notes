@@ -84,9 +84,9 @@ The update succeeded because the raw table has no rule connecting the repeated n
 
 ## First normal form: represent separate facts separately
 
-Suppose the bookstore needs to find each ordered product and record its quantity. A column such as `products = '10,20,30'` bundles several independently meaningful product references into one value. Parsing this string to find product 20 or attach quantities is a warning sign.
+Suppose the bookstore needs to find each ordered product and record its quantity. A column such as `products` holding `'(10, 2), (20, 1)'` bundles several independently meaningful product references into one value. Having to parse this string to find product 20 or to read its quantity is a warning sign.
 
-For this first step, focus on order 101 and leave names, titles, and prices aside. In the table below, each entry inside `products` is a `(product_id, quantity)` pair. This makes the quantities part of the input rather than introducing them during the split.
+For this first step, focus on order 101 and leave names, titles, and prices aside. In the before table at the end of this section, each entry inside `products` is a `(product_id, quantity)` pair. This makes the quantities part of the input rather than introducing them during the split.
 
 Separating the order from its individual lines gives two tables:
 
@@ -223,7 +223,7 @@ order_id → customer_id → customer_name
 
 Similarly, in the 2NF line table, `(order_id, line_number) → product_id → product_title`.
 
-The intermediate 2NF tables still store a customer name with each order and a product title with each line: `orders(order_id, customer_id, customer_name)` and `order_items(..., product_id, product_title, ...)`.
+So the intermediate 2NF tables still store a customer name with each order and a product title with each line: `orders(order_id, customer_id, customer_name)` and `order_items(..., product_id, product_title, ...)`. Orders 101 and 102 both say Alice, and lines `(101, 1)` and `(102, 1)` both say *Database Basics*. In each case the repeated value is determined by a non-key column (`customer_id` or `product_id`), not by the key of the table it sits in.
 
 Separating customer and product details from orders and order lines produces the 3NF design:
 
@@ -234,7 +234,7 @@ orders(order_id, customer_id)
 order_items(order_id, line_number, product_id, quantity, purchase_price_cents)
 ```
 
-Now renaming Alice changes one customer row, and changing a catalog title changes one product row. Joins reconstruct the display for each order, rather than storing repeated names or titles.
+Now renaming Alice changes one customer row, and changing a catalog title changes one product row. The other two anomalies from the opening example also disappear: product 30, *Indexing Illustrated*, can be inserted into `products` before anyone orders it, and deleting order line `(101, 2)` removes only that line while product 20 stays in `products`. Joins reconstruct the display for each order, rather than storing repeated names or titles.
 
 The extra hop `order_id → customer_id → customer_name` is eliminated from `orders`: it has `customer_id` but no longer stores `customer_name`. The product title is also removed from each order item, because `product_id` already identifies it in `products`. A later name change from Alice to Alice Smith would affect only the customer row, without requiring edits to either order or any item. The split itself keeps the original name Alice.
 
@@ -435,6 +435,8 @@ Here `order_id` is a candidate key because it identifies a row without any addit
 | 6NF | No nontrivial join dependencies; useful in some temporal designs. Adding a timestamp alone does not establish 6NF. |
 | DKNF | All constraints follow from domains and keys. This is an ideal target, not simply the next numbered step. |
 
+The 3NF and BCNF rows differ only in the prime-attribute exception. For example, suppose each teacher teaches one subject and each student has one teacher per subject. In `(student, subject, teacher)`, `teacher → subject`, but teacher alone does not identify a row. Splitting teacher-subject and student-teacher facts is lossless, yet enforcing one teacher per student and subject now needs a cross-table rule. BCNF can therefore trade simpler facts for harder constraint enforcement. The BCNF section below works through this case with rows.
+
 For the DKNF distinction, imagine a small table of numbered order lines with a positive quantity:
 
 | order_id | line_number | quantity |
@@ -443,16 +445,36 @@ For the DKNF distinction, imagine a small table of numbered order lines with a p
 | 101 | 2 | 1 |
 | 102 | 1 | 1 |
 
-If the only business restrictions are that `order_id` and `line_number` together must be unique and `quantity` must be a positive integer, the restrictions follow from the key and the column domains. Now consider a different table with a rule that every order with `destination = DE` must have `delivery_cents = 500`:
+If the only business restrictions are that `order_id` and `line_number` together must be unique and `quantity` must be a positive integer, the restrictions follow from the key and the column domains. Now consider a different table where the delivery fee is set by the destination: every order with `destination = DE` must have `delivery_cents = 500`, and every order with `destination = FR` must have `delivery_cents = 900`.
+
+A row `(104, DE, 900)` has a unique order ID, a recognized destination and a nonnegative fee, yet violates the stated rule for German orders. Separate domain and key checks do not express the required relationship between `destination` and `delivery_cents`. That relationship needs an additional constraint or a different representation; it does not follow automatically from the allowed values of either column or from the key. DKNF asks whether every required constraint follows from domains and keys, not whether a table happens to look small or well-organized.
+
+Under this rule `destination → delivery_cents` is a functional dependency whose determinant is not a key, so the table also fails 3NF, and the same split fixes both. Store each destination's fee once in `delivery_rates`, keyed by `destination`, and let each order record only its destination. If the domain of an order's destination is the set of codes in `delivery_rates`, which a foreign key enforces, the fee rule now follows from the key of `delivery_rates`: the order no longer has a column in which 900 could be written for a German order.
+
+Splitting tables does not achieve DKNF in general. It works here because this rule can be rewritten as a key; a rule comparing several rows, such as "at most 50 orders per destination per day", would still need a separate constraint. See [Fagin's definition of domain-key normal form](https://s3.us.cloud-object-storage.appdomain.cloud/res-files/500-tods81.pdf).
+
+Before DKNF, `order_deliveries` (key: `order_id`; rule: the destination sets the fee):
 
 | order_id | destination | delivery_cents |
 | --- | --- | --- |
 | 101 | DE | 500 |
 | 102 | FR | 900 |
+| 103 | DE | 500 |
 
-A row `(103, DE, 900)` has a unique order ID, a recognized destination and a nonnegative fee, yet violates the stated rule for German orders. Separate domain and key checks do not express the required relationship between `destination` and `delivery_cents`. That relationship needs an additional constraint or a different representation; it does not follow automatically from the allowed values of either column or from the key. DKNF asks whether every required constraint follows from domains and keys, not whether a table happens to look small or well-organized. Splitting tables does not automatically achieve this; see [Fagin's definition of domain-key normal form](https://s3.us.cloud-object-storage.appdomain.cloud/res-files/500-tods81.pdf).
+After storing the fee with the destination, `delivery_rates` (key: `destination`):
 
-For a BCNF example, suppose each teacher teaches one subject and each student has one teacher per subject. In `(student, subject, teacher)`, `teacher → subject`, but teacher alone does not identify a row. Splitting teacher-subject and student-teacher facts is lossless, yet enforcing one teacher per student and subject now needs a cross-table rule. BCNF can therefore trade simpler facts for harder constraint enforcement.
+| destination | delivery_cents |
+| --- | --- |
+| DE | 500 |
+| FR | 900 |
+
+`order_destinations` (key: `order_id`; `destination` references `delivery_rates`):
+
+| order_id | destination |
+| --- | --- |
+| 101 | DE |
+| 102 | FR |
+| 103 | DE |
 
 ## BCNF: show why overlapping keys matter
 
@@ -463,8 +485,6 @@ For example, Lee teaches Databases to Alice and Bob, while Rao teaches Networks 
 To remove the repeated teacher–subject fact, keep each teacher's subject once in `teacher_subject(teacher, subject)`, keyed by `teacher`. Record assignments in `student_teacher(student, teacher)`, keyed by `(student, teacher)`, with `teacher` referencing `teacher_subject`.
 
 The shared `teacher` determines the subject, making the join lossless. However, the split does not automatically preserve every original rule. Assigning a new teacher Chen to Databases, then assigning Alice to Chen, would pass the individual table keys but break the rule that Alice has only one teacher for Databases. The corrected *BCNF structure* therefore still needs a cross-table constraint or transaction-safe validation for that business rule. This is why lossless decomposition and dependency preservation are distinct questions.
-
-BCNF is useful when repeated facts remain because of overlapping keys. It is not a command to split every table further regardless of enforcement costs.
 
 The constraint problem can be seen in actual rows. Suppose the `teacher_subject` table is extended with another Databases teacher:
 
@@ -490,7 +510,9 @@ Joining them gives:
 
 Both tables satisfy their own keys and `teacher → subject`, but the original rule that Alice has only one teacher per subject is violated. This example explains exactly what was lost from local enforcement. The decomposition is lossless, yet the `(student, subject) → teacher` rule must now be checked across the tables, for example by a safely enforced database-level mechanism. Checking once in application code without concurrency protection would not be enough.
 
-Returning to the valid assignments, before BCNF, `student_subject_teacher` (candidate keys: `(student, subject)` and `(student, teacher)`):
+BCNF is useful when repeated facts remain because of overlapping keys. It is not a command to split every table further regardless of enforcement costs.
+
+In the valid assignments, Lee's subject is repeated on both of Lee's rows. If Lee switched to teaching Networks, both rows would need an update, the same kind of update anomaly as Alice's name in the opening example. Returning to those valid assignments, before BCNF, `student_subject_teacher` (candidate keys: `(student, subject)` and `(student, teacher)`):
 
 | student | subject | teacher |
 | --- | --- | --- |
@@ -515,7 +537,7 @@ After storing the teacher–subject fact in its own table, `teacher_subject` (ke
 
 ## 4NF: independent lists create repeated combinations
 
-Suppose a customer can have several preferred languages and several favorite categories, and these lists are independent. Alice prefers English and German and likes History and Computing. Independence means neither language restricts the categories: storing `(customer_name, language, category)` requires all four language/category pairings.
+Suppose a customer can have several preferred languages and several favorite categories, and these lists are independent. Alice prefers English (`en`) and German (`de`) and likes History and Computing. Independence means neither language restricts the categories: storing `(customer_name, language, category)` requires all four language/category pairings.
 
 These are **multivalued dependencies**: `customer_name →→ language` and `customer_name →→ category`. For one customer, the language list is the same regardless of which category is selected, and the category list is the same regardless of language. Adding a language requires a row for every category; deleting one combination can falsely suggest that a language is associated with only one category.
 
@@ -645,7 +667,7 @@ Replacing the three original triples with only their pairwise projections would 
 
 In a different business, the rules may explicitly guarantee that any supplier, product and project combination is permitted whenever all three pairwise permissions hold. For that business, the pairwise relationships themselves are the facts. A **join dependency** says that the triple relation must equal the join of these three projections for every valid state of the data.
 
-In the valid example below, `(S2, P2, J1)` does not appear because supplier S2 has no permission for project J1, even though S2 can supply product P2 and P2 is approved for J1. Conversely, `(S1, P2, J2)` appears because all three relevant pairs are present. Under this business rule, every generated triple is supposed to be present, so the decomposition is lossless. The difference from the earlier counterexample is the *meaning of the approval rule*, not the shape of the table.
+This second business's approvals are the before table at the end of this section. There, `(S2, P2, J1)` does not appear because supplier S2 has no permission for project J1, even though S2 can supply product P2 and P2 is approved for J1. Conversely, `(S1, P2, J2)` appears because all three relevant pairs are present. Under this business rule, every generated triple is supposed to be present, so the decomposition is lossless. The difference from the earlier counterexample is the *meaning of the approval rule*, not the shape of the table.
 
 Assume no pair of columns determines the third, so the candidate key of the combined table is `(supplier, product, project)`. There are also no independent lists that justify a two-table split. The table can therefore be in 4NF while still having a three-way join dependency not implied by its candidate key. **5NF** removes that remaining redundancy by storing the pairwise facts separately. Each resulting pair table has both columns as its key.
 
@@ -692,7 +714,7 @@ For example, separate address history `(customer_id, valid_from, valid_to, addre
 
 Suppose both facts were originally kept in a single versioned customer table, with dates representing the first valid day and the first day after the interval. A range from `2026-01-01` to `2026-02-01` includes January but not February 1.
 
-On February 1 only the credit limit changed, but the address had to be repeated in a new row. On March 1 only the address changed, but the credit limit had to be copied again. If these two facts genuinely vary independently, their histories can be stored separately. Adjacent intervals with the same address can be combined in the address history; adjacent intervals with the same limit can be combined in the limit history.
+The combined history is the before table at the end of this section. On February 1 only the credit limit changed, but the address had to be repeated in a new row. On March 1 only the address changed, but the credit limit had to be copied again. If these two facts genuinely vary independently, their histories can be stored separately. Adjacent intervals with the same address can be combined in the address history; adjacent intervals with the same limit can be combined in the limit history.
 
 For a query asking about `2026-02-15`, the address row valid on that date says Berlin and the limit row says 150000. The answer is obtained by matching the customer and the overlapping intervals, not by joining on equal `valid_from` dates: the starts of the two histories need not coincide.
 
